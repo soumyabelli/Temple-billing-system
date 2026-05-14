@@ -1,0 +1,17 @@
+{
+  "name": "temple-billing-system",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Root workspace for Temple Billing System MERN app",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "install:all": "npm install --workspaces",
+    "dev:backend": "npm run dev --workspace backend",
+    "dev:frontend": "npm run dev --workspace frontend",
+    "build:frontend": "npm run build --workspace frontend"
+  }
+}
+
