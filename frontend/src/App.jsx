@@ -59,7 +59,7 @@ function App() {
         <input name="sevaType" placeholder="Seva Type" value={formData.sevaType} onChange={onChange} required />
         <input type="number" name="amount" placeholder="Amount" min="1" value={formData.amount} onChange={onChange} required />
         <select name="paymentMode" value={formData.paymentMode} onChange={onChange}>
-          <option>Cash</option>
+          <option></option>
           <option>UPI</option>
           <option>Card</option>
           <option>Bank Transfer</option>
