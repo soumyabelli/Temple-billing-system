@@ -9,13 +9,11 @@
   },
   "keywords": [
     "mern",
-    "temple-billing",
     "express",
-    "mongodb"
+    "mongodb",
+    "mongoose"
   ],
-  "author": "",
   "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",

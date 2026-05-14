@@ -17,22 +17,11 @@ const createBill = async (req, res) => {
       return res.status(400).json({ message: "devoteeName, sevaType and amount are required." });
     }
 
-    const bill = await Bill.create({
-      devoteeName,
-      sevaType,
-      amount,
-      paymentMode,
-      billDate,
-    });
-
+    const bill = await Bill.create({ devoteeName, sevaType, amount, paymentMode, billDate });
     return res.status(201).json(bill);
   } catch (error) {
     return res.status(500).json({ message: "Failed to create bill", error: error.message });
   }
 };
 
-module.exports = {
-  getBills,
-  createBill,
-};
-
+module.exports = { getBills, createBill };

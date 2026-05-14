@@ -7,4 +7,3 @@ router.get("/", getBills);
 router.post("/", createBill);
 
 module.exports = router;
-

@@ -11,10 +11,8 @@
   "keywords": [
     "react",
     "vite",
-    "mern",
-    "temple-billing"
+    "mern"
   ],
-  "author": "",
   "license": "ISC",
   "dependencies": {
     "react": "^19.2.6",
