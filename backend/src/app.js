@@ -14,4 +14,3 @@ app.get("/api/health", (req, res) => {
 app.use("/api/bills", billRoutes);
 
 module.exports = app;
-
