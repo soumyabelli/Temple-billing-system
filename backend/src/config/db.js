@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 const mongoose = require("mongoose");
 
 const connectDB = async () => {
@@ -16,3 +17,5 @@ const connectDB = async () => {
 
 module.exports = connectDB;
 
+=======
+>>>>>>> 6c4d3b5e37e05e713d8ed849cb682b216b7d396e
