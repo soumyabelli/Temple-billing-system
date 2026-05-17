@@ -2,52 +2,112 @@ import RoleSelector from "./RoleSelector";
 
 const LoginForm = () => {
   return (
-    <div className="bg-white/20 backdrop-blur-lg border border-white/20 rounded-3xl p-8 w-full max-w-md text-white shadow-2xl">
-
+    <div
+      className="
+      w-[480px]
+      bg-white/20
+      backdrop-blur-2xl
+      border border-white/30
+      rounded-[35px]
+      p-10
+      shadow-2xl
+      text-white
+      "
+    >
+      {/* Heading */}
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold">
+
+        <h1 className="text-4xl font-bold text-amber-900 drop-shadow-lg">
           Sri Shanti Mahadev Mandir
         </h1>
 
-        <p className="text-sm text-gray-200 mt-2">
-          Sacred Management Portal
-        </p>
+        <div className="flex items-center justify-center gap-3 mt-4">
+          <div className="h-[2px] w-16 bg-orange-300"></div>
+
+         <p className="text-amber-800 text-lg font-semibold">
+            Sacred Management Portal
+          </p>
+
+          <div className="h-[2px] w-16 bg-orange-300"></div>
+        </div>
       </div>
 
+      {/* Roles */}
       <RoleSelector />
 
-      <form className="mt-6 space-y-4">
+      {/* Form */}
+      <form className="mt-8 space-y-6">
 
+        {/* Username */}
         <div>
-          <label className="block mb-2 text-sm">
+          <label className="block mb-3 text-lg font-medium">
             Username or Email
           </label>
 
           <input
             type="text"
-            placeholder="Enter username"
-            className="w-full p-3 rounded-xl bg-white/20 border border-white/30 outline-none"
+            placeholder="Enter username or email"
+            className="
+            w-full
+            p-4
+            rounded-2xl
+            bg-white/90
+            text-black
+            outline-none
+            text-lg
+            shadow-lg
+            "
           />
         </div>
 
+        {/* Password */}
         <div>
-          <label className="block mb-2 text-sm">
+          <label className="block mb-3 text-lg font-medium">
             Password
           </label>
 
           <input
             type="password"
             placeholder="Enter password"
-            className="w-full p-3 rounded-xl bg-white/20 border border-white/30 outline-none"
+            className="
+            w-full
+            p-4
+            rounded-2xl
+            bg-white/90
+            text-black
+            outline-none
+            text-lg
+            shadow-lg
+            "
           />
         </div>
 
+        {/* Button */}
         <button
-          className="w-full bg-orange-500 hover:bg-orange-600 transition p-3 rounded-xl font-semibold"
+          className="
+          w-full
+          bg-gradient-to-r
+          from-orange-500
+          to-amber-500
+          hover:from-orange-600
+          hover:to-amber-600
+          transition-all
+          duration-300
+          p-4
+          rounded-2xl
+          font-bold
+          text-xl
+          shadow-xl
+          "
         >
           Login
         </button>
       </form>
+
+      {/* Footer */}
+      <div className="text-center mt-8 text-orange-100 text-xl">
+        हर हर महादेव
+      </div>
     </div>
   );
 };

@@ -1,6 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   background: #f4f4f5;
 }
 
@@ -35,15 +39,78 @@ button {
   color: #fff;
   border: none;
 }
-<<<<<<< HEAD
-=======
+/* Bell Swing Animation */
+@keyframes bellSwing {
+  0% {
+    transform: rotate(0deg);
+  }
 
->>>>>>> 1a24c67d495ddaf0017ed4b423ec0162a9b7f8be
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+  25% {
+    transform: rotate(12deg);
+  }
 
-body {
-  margin: 0;
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  50% {
+    transform: rotate(0deg);
+  }
+
+  75% {
+    transform: rotate(-12deg);
+  }
+
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+.animate-bellSwing {
+  animation: bellSwing 2s ease-in-out infinite;
+}
+@keyframes bellSwing {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  25% {
+    transform: rotate(12deg);
+  }
+
+  50% {
+    transform: rotate(0deg);
+  }
+
+  75% {
+    transform: rotate(-12deg);
+  }
+
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+.animate-bellSwing {
+  animation: bellSwing 2s ease-in-out infinite;
+}
+
+/* Flower Falling Animation */
+@keyframes flowerFall {
+  0% {
+    transform: translateY(-100px) rotate(0deg);
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(110vh) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+.animate-flowerFall {
+  animation-name: flowerFall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  pointer-events: none;
 }
