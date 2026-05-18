@@ -1,14 +1,15 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import RoleSelector from "./RoleSelector";
 import { login } from "../services/authService";
 import { useAuth } from "../context/AuthContext";
+import RoleSelector from "./RoleSelector";
 
 const LoginForm = () => {
   const navigate = useNavigate();
   const { loginUser } = useAuth();
 
   const [selectedRole, setSelectedRole] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -21,26 +22,39 @@ const LoginForm = () => {
     }));
   };
 
-  const handleLogin = async () => {
+  const handleLogin = async (e) => {
+    e.preventDefault();
+
+    if (!formData.email || !formData.password) {
+      alert("Please enter email and password");
+      return;
+    }
+
     if (!selectedRole) {
       alert("Please select a role");
       return;
     }
 
     try {
+      setIsLoading(true);
       const res = await login(formData);
       const userRole = res.user?.role;
-
-      if (userRole !== selectedRole) {
-        alert(`This account is for ${userRole}. Please select the correct role.`);
+      if (!userRole) {
+        alert("Role not found for this account. Please contact admin.");
         return;
       }
 
       loginUser({ token: res.token, user: res.user });
-      alert("Login Successful");
+      if (selectedRole !== userRole) {
+        alert(`Logged in as ${userRole}. Selected role was ${selectedRole}.`);
+      } else {
+        alert(`Login Successful as ${userRole}`);
+      }
       navigate(`/${userRole}`);
     } catch (error) {
-      alert(error.response?.data?.message || "Login failed");
+      alert(error.response?.data?.message || "Login failed. Please check server and credentials.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -57,7 +71,7 @@ const LoginForm = () => {
 
       <RoleSelector selectedRole={selectedRole} setSelectedRole={setSelectedRole} />
 
-      <form className="mt-8 space-y-6" onSubmit={(e) => e.preventDefault()}>
+      <form className="mt-8 space-y-6" onSubmit={handleLogin}>
         <div>
           <label className="block mb-3 text-lg font-medium">Email</label>
           <input
@@ -66,6 +80,7 @@ const LoginForm = () => {
             placeholder="Enter email"
             value={formData.email}
             onChange={handleChange}
+            required
             className="w-full p-4 rounded-2xl bg-white/90 text-black outline-none text-lg shadow-lg"
           />
         </div>
@@ -78,16 +93,17 @@ const LoginForm = () => {
             placeholder="Enter password"
             value={formData.password}
             onChange={handleChange}
+            required
             className="w-full p-4 rounded-2xl bg-white/90 text-black outline-none text-lg shadow-lg"
           />
         </div>
 
         <button
-          type="button"
-          onClick={handleLogin}
+          type="submit"
+          disabled={isLoading}
           className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 transition-all duration-300 p-4 rounded-2xl font-bold text-xl shadow-xl"
         >
-          Login
+          {isLoading ? "Logging in..." : "Login"}
         </button>
       </form>
 
