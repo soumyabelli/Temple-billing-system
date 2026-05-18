@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const billRoutes = require("./routes/billRoutes");
+const authRoutes = require("./routes/authRoutes");
 
 const app = express();
 
@@ -11,6 +11,6 @@ app.get("/api/health", (req, res) => {
   res.status(200).json({ status: "ok", service: "temple-billing-backend" });
 });
 
-app.use("/api/bills", billRoutes);
+app.use("/api/auth", authRoutes);
 
 module.exports = app;
