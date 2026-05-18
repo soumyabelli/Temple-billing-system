@@ -1,7 +1,14 @@
 import Background from "../components/Background";
 import LoginForm from "../components/LoginForm";
+import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 const LoginPage = () => {
+
+  const navigate = useNavigate();
+
+  const [selectedRole, setSelectedRole] = useState("");
+
   return (
     <div className="relative min-h-screen overflow-hidden flex items-center justify-between px-16">
 

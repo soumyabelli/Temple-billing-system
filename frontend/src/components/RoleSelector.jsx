@@ -1,38 +1,45 @@
-const roles = [
-  "Admin",
-  "Accountant",
-  "Cashier",
-  "Priest",
-  "Staff",
-  "Devotee",
-];
+import { useState } from "react";
 
-const RoleSelector = () => {
+const RoleSelector = ({ selectedRole, setSelectedRole }) => {
+
+  const roles = [
+    "admin",
+    "accountant",
+    "cashier",
+    "priest",
+    "staff",
+    "devotee",
+  ];
+
   return (
     <div className="grid grid-cols-3 gap-4">
+
       {roles.map((role) => (
         <button
           key={role}
-          className="
-          bg-white/90
-          hover:bg-gradient-to-r
-          hover:from-orange-400
-          hover:to-amber-400
-          text-black
-          hover:text-white
-          font-semibold
-          py-4
-          rounded-2xl
-          transition-all
-          duration-300
-          shadow-lg
-          hover:scale-105
-          border border-white/40
-          "
+          type="button"
+          onClick={() => setSelectedRole(role)}
+          className={`
+            p-4
+            rounded-2xl
+            font-semibold
+            capitalize
+            transition-all
+            duration-300
+            shadow-lg
+            border
+
+            ${
+              selectedRole === role
+                ? "bg-orange-500 text-white border-orange-600 scale-105"
+                : "bg-white/90 text-black border-white hover:bg-orange-100"
+            }
+          `}
         >
           {role}
         </button>
       ))}
+
     </div>
   );
 };

@@ -1,6 +1,13 @@
+import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import RoleSelector from "./RoleSelector";
 
 const LoginForm = () => {
+
+  const navigate = useNavigate();
+
+  const [selectedRole, setSelectedRole] = useState("");
+
   return (
     <div
       className="
@@ -14,6 +21,7 @@ const LoginForm = () => {
       text-white
       "
     >
+
       {/* Heading */}
       <div className="text-center mb-8">
 
@@ -22,18 +30,23 @@ const LoginForm = () => {
         </h1>
 
         <div className="flex items-center justify-center gap-3 mt-4">
+
           <div className="h-[2px] w-16 bg-orange-300"></div>
 
-         <p className="text-amber-800 text-lg font-semibold">
+          <p className="text-amber-800 text-lg font-semibold">
             Sacred Management Portal
           </p>
 
           <div className="h-[2px] w-16 bg-orange-300"></div>
+
         </div>
       </div>
 
       {/* Roles */}
-      <RoleSelector />
+      <RoleSelector
+        selectedRole={selectedRole}
+        setSelectedRole={setSelectedRole}
+      />
 
       {/* Form */}
       <form className="mt-8 space-y-6">
@@ -82,8 +95,16 @@ const LoginForm = () => {
           />
         </div>
 
-        {/* Button */}
+        {/* Login Button */}
         <button
+          type="button"
+          onClick={() => {
+            if (selectedRole) {
+              navigate(`/${selectedRole}`);
+            } else {
+              alert("Please select a role");
+            }
+          }}
           className="
           w-full
           bg-gradient-to-r
@@ -102,12 +123,14 @@ const LoginForm = () => {
         >
           Login
         </button>
+
       </form>
 
       {/* Footer */}
       <div className="text-center mt-8 text-orange-100 text-xl">
         हर हर महादेव
       </div>
+
     </div>
   );
 };
