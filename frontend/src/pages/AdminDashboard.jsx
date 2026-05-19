@@ -14,7 +14,7 @@ import DashboardCard from "../components/DashboardCard";
 const statCards = [
   {
     title: "Total Revenue",
-    amount: "? 2,45,680",
+    amount: "₹ 2,45,680",
     trend: "12.3%",
     trendUp: true,
     icon: <FaRupeeSign />,
@@ -22,7 +22,7 @@ const statCards = [
   },
   {
     title: "Daily Collection",
-    amount: "? 48,650",
+    amount: "₹ 48,650",
     trend: "8.2%",
     trendUp: true,
     icon: <FaDonate />,
@@ -38,7 +38,7 @@ const statCards = [
   },
   {
     title: "Total Donations",
-    amount: "? 75,230",
+    amount: "₹ 75,230",
     trend: "15.4%",
     trendUp: true,
     icon: <FaDonate />,
@@ -46,7 +46,7 @@ const statCards = [
   },
   {
     title: "Prasadam Sales",
-    amount: "? 21,430",
+    amount: "₹ 21,430",
     trend: "7.1%",
     trendUp: true,
     icon: <FaLeaf />,
@@ -54,7 +54,7 @@ const statCards = [
   },
   {
     title: "Pending Payments",
-    amount: "? 12,560",
+    amount: "₹ 12,560",
     trend: "2.2%",
     trendUp: false,
     icon: <MdOutlinePayments />,
@@ -85,7 +85,7 @@ const bookings = [
     name: "Venkatesh Kumar",
     service: "Special Seva",
     date: "14 May 2025",
-    amount: "? 1,100",
+    amount: "₹ 1,100",
     status: "Confirmed",
     avatar: "https://i.pravatar.cc/60?img=12",
   },
@@ -93,7 +93,7 @@ const bookings = [
     name: "Lakshmi Devi",
     service: "Archana",
     date: "14 May 2025",
-    amount: "? 550",
+    amount: "₹ 550",
     status: "Confirmed",
     avatar: "https://i.pravatar.cc/60?img=32",
   },
@@ -101,7 +101,7 @@ const bookings = [
     name: "Ravi Shankar",
     service: "Abhishekam",
     date: "14 May 2025",
-    amount: "? 1,500",
+    amount: "₹ 1,500",
     status: "Confirmed",
     avatar: "https://i.pravatar.cc/60?img=15",
   },
@@ -109,7 +109,7 @@ const bookings = [
     name: "Meera Iyer",
     service: "Homa",
     date: "14 May 2025",
-    amount: "? 2,200",
+    amount: "₹ 2,200",
     status: "Confirmed",
     avatar: "https://i.pravatar.cc/60?img=24",
   },
@@ -117,26 +117,26 @@ const bookings = [
     name: "Suresh Babu",
     service: "Archana",
     date: "14 May 2025",
-    amount: "? 550",
+    amount: "₹ 550",
     status: "Pending",
     avatar: "https://i.pravatar.cc/60?img=19",
   },
 ];
 
 const donors = [
-  ["Ramesh Kumar", "? 11,000", "https://i.pravatar.cc/60?img=52"],
-  ["Sita Mahalakshmi", "? 7,500", "https://i.pravatar.cc/60?img=47"],
-  ["Venkatesh Reddy", "? 5,100", "https://i.pravatar.cc/60?img=11"],
-  ["Lakshmi Narayanan", "? 3,600", "https://i.pravatar.cc/60?img=5"],
-  ["Krishna Prasad", "? 2,750", "https://i.pravatar.cc/60?img=8"],
+  ["Ramesh Kumar", "₹ 11,000", "https://i.pravatar.cc/60?img=52"],
+  ["Sita Mahalakshmi", "₹ 7,500", "https://i.pravatar.cc/60?img=47"],
+  ["Venkatesh Reddy", "₹ 5,100", "https://i.pravatar.cc/60?img=11"],
+  ["Lakshmi Narayanan", "₹ 3,600", "https://i.pravatar.cc/60?img=5"],
+  ["Krishna Prasad", "₹ 2,750", "https://i.pravatar.cc/60?img=8"],
 ];
 
 const lowStock = [
-  ["Camphor", "10 Units Left", "???"],
-  ["Ghee", "12 Units Left", "??"],
-  ["Incense Sticks", "15 Units Left", "??"],
-  ["Pooja Flowers", "18 Units Left", "??"],
-  ["Coconut", "20 Units Left", "??"],
+  ["Camphor", "10 Units Left", "🕯️"],
+  ["Ghee", "12 Units Left", "🫙"],
+  ["Incense Sticks", "15 Units Left", "🪔"],
+  ["Pooja Flowers", "18 Units Left", "🌺"],
+  ["Coconut", "20 Units Left", "🥥"],
 ];
 
 const buildPath = (points) => {
@@ -164,7 +164,7 @@ const AdminDashboard = () => {
 
         <div className="mt-5 px-1 flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-[40px] font-bold text-[#1d1b19] leading-tight">Welcome back, Admin! ??</h1>
+            <h1 className="text-[40px] font-bold text-[#1d1b19] leading-tight">Welcome back, Admin! 🙏</h1>
             <p className="text-gray-600 text-[28px]">Here's what's happening in your temple today.</p>
           </div>
           <div className="hidden xl:flex items-center gap-2 text-[#8a5f2d] border border-[#ece8e1] rounded-xl px-4 py-2 bg-white">
@@ -252,7 +252,7 @@ const AdminDashboard = () => {
             <div className="flex items-center gap-6">
               <div className="h-44 w-44 rounded-full grid place-items-center" style={{ background: "conic-gradient(#f29d1f 0 35%, #41a247 35% 60%, #2d7fd3 60% 80%, #7d59b5 80% 90%, #7d8791 90% 100%)" }}>
                 <div className="h-24 w-24 rounded-full bg-white flex flex-col items-center justify-center">
-                  <p className="text-[28px] font-bold">? 75,230</p>
+                  <p className="text-[28px] font-bold">₹ 75,230</p>
                   <p className="text-sm text-gray-500">Total</p>
                 </div>
               </div>
@@ -313,4 +313,3 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
-

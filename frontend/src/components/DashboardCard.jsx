@@ -7,7 +7,7 @@
   accent = "bg-orange-100 text-orange-600",
 }) => {
   const trendTextColor = trendUp ? "text-green-700" : "text-red-600";
-  const trendPrefix = trendUp ? "?" : "?";
+  const trendPrefix = trendUp ? "↑" : "↓";
 
   return (
     <div className="bg-white rounded-2xl p-4 shadow-sm border border-[#ece8e1] min-h-[108px]">

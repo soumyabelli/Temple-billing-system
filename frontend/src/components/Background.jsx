@@ -1,10 +1,14 @@
 ﻿import { useEffect, useMemo, useState } from "react";
-import banner1 from "../assets/login-banners/banner-1.jpg";
-import banner2 from "../assets/login-banners/banner-2.png";
-import banner3 from "../assets/login-banners/banner-3.jpeg";
 
+const bannerModules = import.meta.glob("../assets/login-banners/banner-*.*", {
+  eager: true,
+  import: "default",
+});
 
-const banners = [banner1, banner2, banner3];
+const banners = Object.entries(bannerModules)
+  .sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }))
+  .map(([, src]) => src)
+  .filter(Boolean);
 
 const flowerTypes = [
   "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><g fill='%23ffffff'><ellipse cx='32' cy='14' rx='8' ry='14'/><ellipse cx='46' cy='22' rx='8' ry='14' transform='rotate(45 46 22)'/><ellipse cx='50' cy='36' rx='8' ry='14' transform='rotate(90 50 36)'/><ellipse cx='32' cy='50' rx='8' ry='14'/><ellipse cx='14' cy='36' rx='8' ry='14' transform='rotate(90 14 36)'/><ellipse cx='18' cy='22' rx='8' ry='14' transform='rotate(45 18 22)'/><circle cx='32' cy='32' r='6' fill='%23f2d27a'/></g></svg>",
@@ -33,6 +37,8 @@ const Background = () => {
   );
 
   useEffect(() => {
+    if (banners.length <= 1) return;
+
     const timer = setInterval(() => {
       setPrevIndex(activeIndex);
       setActiveIndex((activeIndex + 1) % banners.length);

@@ -1,19 +1,7 @@
 import Background from "../components/Background";
 import LoginForm from "../components/LoginForm";
-import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
-import { useAuth } from "../context/AuthContext";
 
 const LoginPage = () => {
-  const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
-
-  useEffect(() => {
-    if (isAuthenticated && user?.role) {
-      navigate(`/${user.role}`, { replace: true });
-    }
-  }, [isAuthenticated, user?.role, navigate]);
-
   return (
     <div className="relative min-h-screen overflow-hidden flex items-center justify-between px-16">
 

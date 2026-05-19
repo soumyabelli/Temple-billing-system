@@ -18,7 +18,7 @@ const Sidebar = () => {
         </div>
       </div>
 
-      <div className="flex-1 px-3 pb-3 space-y-2 overflow-auto">
+      <div className="px-3 pb-3 space-y-2">
         {sidebarItems.map((item, index) => {
           const Icon = item.icon;
 
@@ -40,7 +40,7 @@ const Sidebar = () => {
       </div>
 
       <div
-        className="h-80 bg-cover bg-center"
+        className="mt-auto h-80 bg-cover bg-center"
         style={{ backgroundImage: `url('${templeBg}')` }}
       />
     </div>

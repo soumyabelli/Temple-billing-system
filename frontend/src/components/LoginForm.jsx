@@ -30,11 +30,6 @@ const LoginForm = () => {
       return;
     }
 
-    if (!selectedRole) {
-      alert("Please select a role");
-      return;
-    }
-
     try {
       setIsLoading(true);
       const res = await login(formData);
@@ -45,7 +40,7 @@ const LoginForm = () => {
       }
 
       loginUser({ token: res.token, user: res.user });
-      if (selectedRole !== userRole) {
+      if (selectedRole && selectedRole !== userRole) {
         alert(`Logged in as ${userRole}. Selected role was ${selectedRole}.`);
       } else {
         alert(`Login Successful as ${userRole}`);
