@@ -1,16 +1,15 @@
 import { sidebarItems } from "../data/sidebarData";
 import { MdTempleBuddhist } from "react-icons/md";
-import templeBg from "../assets/temple-bg.jpg";
 
-const Sidebar = () => {
+const Sidebar = ({ activeItem = "Dashboard", onSelect }) => {
   return (
     <div className="w-[250px] h-screen bg-gradient-to-b from-[#f6e7cc] via-[#f2deba] to-[#edd8b0] shadow-lg fixed left-0 top-0 flex flex-col border-r border-[#e7d7ba]">
-      <div className="p-6">
-        <div className="flex items-center gap-3 text-[#5f3a1f]">
-          <div className="h-9 w-9 rounded-lg bg-white/65 flex items-center justify-center">
-            <MdTempleBuddhist size={24} />
+      <div className="px-4 pt-4 pb-3 border-b border-[#e5d5b8]/80">
+        <div className="flex items-center gap-2 text-[#5f3a1f]">
+          <div className="h-8 w-8 rounded-lg bg-white/65 flex items-center justify-center shrink-0">
+            <MdTempleBuddhist size={20} />
           </div>
-          <h1 className="text-[18px] leading-tight font-bold">
+          <h1 className="text-[15px] leading-tight font-bold">
             Sri Shanti
             <br />
             Mahadev Mandir
@@ -18,31 +17,29 @@ const Sidebar = () => {
         </div>
       </div>
 
-      <div className="px-3 pb-3 space-y-2">
+      <div className="px-2 py-2 space-y-1 flex-1">
         {sidebarItems.map((item, index) => {
           const Icon = item.icon;
+          const isActive = activeItem === item.title;
 
           return (
-            <div
+            <button
+              type="button"
               key={index}
-              className={`flex items-center gap-4 px-4 py-3 rounded-xl cursor-pointer transition-all duration-200 text-[16px]
+              onClick={() => onSelect?.(item.title)}
+              className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 text-[13px] text-left
               ${
-                index === 0
+                isActive
                   ? "bg-[#d9962f] text-white shadow"
                   : "text-[#372818] hover:bg-white/60"
               }`}
             >
-              <Icon size={22} />
-              <span className="font-medium leading-none">{item.title}</span>
-            </div>
+              <Icon size={17} className="shrink-0" />
+              <span className="font-medium leading-tight">{item.title}</span>
+            </button>
           );
         })}
       </div>
-
-      <div
-        className="mt-auto h-80 bg-cover bg-center"
-        style={{ backgroundImage: `url('${templeBg}')` }}
-      />
     </div>
   );
 };
