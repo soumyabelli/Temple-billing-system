@@ -1,15 +1,13 @@
-import { Routes, Route } from "react-router-dom";
-
-import LoginPage from "./pages/LoginPage";
-import Register from "./pages/Register";
-
-import AdminDashboard from "./pages/AdminDashboard";
-import AccountantDashboard from "./pages/AccountantDashboard";
-import CashierDashboard from "./pages/CashierDashboard";
-import PriestDashboard from "./pages/PriestDashboard";
-import StaffDashboard from "./pages/StaffDashboard";
-import DevoteeDashboard from "./pages/DevoteeDashboard";
+import { Route, Routes } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AccountantDashboard from "./pages/AccountantDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
+import CashierDashboard from "./pages/CashierDashboard";
+import DevoteeDashboard from "./pages/DevoteeDashboard";
+import LoginPage from "./pages/LoginPage";
+import PriestDashboard from "./pages/PriestDashboard";
+import Register from "./pages/Register";
+import StaffDashboard from "./pages/StaffDashboard";
 
 function App() {
   return (
