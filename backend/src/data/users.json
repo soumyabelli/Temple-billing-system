@@ -7,5 +7,59 @@
     "role": "staff",
     "createdAt": "2026-05-18T09:36:43.104Z",
     "updatedAt": "2026-05-18T09:36:43.105Z"
+  },
+  {
+    "id": "384d8f8c-6300-4756-8bb6-be700dd13686",
+    "name": "admin",
+    "email": "admin@gmail.com",
+    "password": "$2b$10$9is50.eScuA6D3eaoFxPHesT22hHy8X1zUzP/h8fZ/zH3VaPiwlSS",
+    "role": "admin",
+    "createdAt": "2026-05-19T04:21:07.811Z",
+    "updatedAt": "2026-05-19T04:21:07.811Z"
+  },
+  {
+    "id": "5bf3ff3e-0f5f-4a32-b62b-dad91fde674c",
+    "name": "accountant",
+    "email": "accountant@gmail.com",
+    "password": "$2b$10$LHaYjQyQZkI7LAr8zctO..S/CeH/PaMNACVrTaAh5gGNJwP7RdFbC",
+    "role": "accountant",
+    "createdAt": "2026-05-19T04:22:09.502Z",
+    "updatedAt": "2026-05-19T04:22:09.502Z"
+  },
+  {
+    "id": "37cd90c5-79a2-41a3-b31e-9c52b70d1dcd",
+    "name": "cashier",
+    "email": "cashier@gmail.com",
+    "password": "$2b$10$Xz4nOKqb.AiN0CHeTxzBG.9U3r3D4VWotQFSXgc3zDYyDNvaReb5i",
+    "role": "cashier",
+    "createdAt": "2026-05-19T04:29:18.837Z",
+    "updatedAt": "2026-05-19T04:29:18.837Z"
+  },
+  {
+    "id": "b48fc7d5-ccc8-47a3-a58e-31a6fd2b4cd7",
+    "name": "priest",
+    "email": "priest@gmail.com",
+    "password": "$2b$10$8L8Vs1Ej8ZRjif7jXLcc/OZXrNEko5KQke2tSldReYSIv1.EtaOz.",
+    "role": "priest",
+    "createdAt": "2026-05-19T04:30:02.517Z",
+    "updatedAt": "2026-05-19T04:30:02.517Z"
+  },
+  {
+    "id": "351c77cb-0d85-4bdc-989a-9d9326359ccb",
+    "name": "staff",
+    "email": "staff@gmail.com",
+    "password": "$2b$10$Hfg5pIly8L/iwMus0ZSKZe7FOiGHKGiVY.xsgvgtEahtY/jx08/Zi",
+    "role": "staff",
+    "createdAt": "2026-05-19T04:30:31.061Z",
+    "updatedAt": "2026-05-19T04:30:31.061Z"
+  },
+  {
+    "id": "b4039b9d-a990-44f7-9a33-5921758c10e7",
+    "name": "devotee",
+    "email": "devotee@gmail.com",
+    "password": "$2b$10$7b.Vu2/o9qFB1oGFISZOqO7QRSHimPAdLBeLGEc95goq3TZPnWXcu",
+    "role": "devotee",
+    "createdAt": "2026-05-19T04:31:02.150Z",
+    "updatedAt": "2026-05-19T04:31:02.150Z"
   }
 ]
