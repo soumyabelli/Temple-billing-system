@@ -1,65 +1,29 @@
-﻿[
+[
   {
-    "id": "4c04ebca-c34d-49d3-900a-c6b7680a836c",
-    "name": "Test User",
-    "email": "test_1779097002614@example.com",
-    "password": "$2b$10$q6CbsN6.D0qP9Hs5ydxbW.uf1CecqoRPYj0urlp6ZQVe5RpXUnWge",
-    "role": "staff",
-    "createdAt": "2026-05-18T09:36:43.104Z",
-    "updatedAt": "2026-05-18T09:36:43.105Z"
-  },
-  {
-    "id": "384d8f8c-6300-4756-8bb6-be700dd13686",
+    "id": "26764e61-1807-4c28-9475-b924e63abd68",
     "name": "admin",
-    "email": "admin@gmail.com",
-    "password": "$2b$10$9is50.eScuA6D3eaoFxPHesT22hHy8X1zUzP/h8fZ/zH3VaPiwlSS",
+    "email": "admin@gamail.com",
+    "password": "$2b$10$gbTgS4yqowYDNjG86osN4eGVBCCWW1dN4C5v1dDUaW/eCIOZMP0He",
     "role": "admin",
-    "createdAt": "2026-05-19T04:21:07.811Z",
-    "updatedAt": "2026-05-19T04:21:07.811Z"
+    "createdAt": "2026-05-19T09:01:47.438Z",
+    "updatedAt": "2026-05-19T09:01:47.438Z"
   },
   {
-    "id": "5bf3ff3e-0f5f-4a32-b62b-dad91fde674c",
-    "name": "accountant",
-    "email": "accountant@gmail.com",
-    "password": "$2b$10$LHaYjQyQZkI7LAr8zctO..S/CeH/PaMNACVrTaAh5gGNJwP7RdFbC",
-    "role": "accountant",
-    "createdAt": "2026-05-19T04:22:09.502Z",
-    "updatedAt": "2026-05-19T04:22:09.502Z"
-  },
-  {
-    "id": "37cd90c5-79a2-41a3-b31e-9c52b70d1dcd",
-    "name": "cashier",
-    "email": "cashier@gmail.com",
-    "password": "$2b$10$Xz4nOKqb.AiN0CHeTxzBG.9U3r3D4VWotQFSXgc3zDYyDNvaReb5i",
-    "role": "cashier",
-    "createdAt": "2026-05-19T04:29:18.837Z",
-    "updatedAt": "2026-05-19T04:29:18.837Z"
-  },
-  {
-    "id": "b48fc7d5-ccc8-47a3-a58e-31a6fd2b4cd7",
-    "name": "priest",
-    "email": "priest@gmail.com",
-    "password": "$2b$10$8L8Vs1Ej8ZRjif7jXLcc/OZXrNEko5KQke2tSldReYSIv1.EtaOz.",
-    "role": "priest",
-    "createdAt": "2026-05-19T04:30:02.517Z",
-    "updatedAt": "2026-05-19T04:30:02.517Z"
-  },
-  {
-    "id": "351c77cb-0d85-4bdc-989a-9d9326359ccb",
-    "name": "staff",
-    "email": "staff@gmail.com",
-    "password": "$2b$10$Hfg5pIly8L/iwMus0ZSKZe7FOiGHKGiVY.xsgvgtEahtY/jx08/Zi",
-    "role": "staff",
-    "createdAt": "2026-05-19T04:30:31.061Z",
-    "updatedAt": "2026-05-19T04:30:31.061Z"
-  },
-  {
-    "id": "b4039b9d-a990-44f7-9a33-5921758c10e7",
+    "id": "24099a86-afce-4174-a149-5441d2f44835",
     "name": "devotee",
     "email": "devotee@gmail.com",
-    "password": "$2b$10$7b.Vu2/o9qFB1oGFISZOqO7QRSHimPAdLBeLGEc95goq3TZPnWXcu",
+    "password": "$2b$10$zwJ7cRbo4EJQYOznAmos7eClicOjxO.xDn4rbzUlyt4YnZIOtyRbO",
     "role": "devotee",
-    "createdAt": "2026-05-19T04:31:02.150Z",
-    "updatedAt": "2026-05-19T04:31:02.150Z"
+    "createdAt": "2026-05-19T09:13:42.677Z",
+    "updatedAt": "2026-05-19T09:13:42.677Z"
+  },
+  {
+    "id": "a02f3fc7-9da4-4dc5-b3c7-7fff6d04b124",
+    "name": "accountant",
+    "email": "accountant@gmail.com",
+    "password": "$2b$10$O2CyaUys.vyL8Aat2LevBuFPuZBj1584745yumtUkP9ShbQ67IK8e",
+    "role": "accountant",
+    "createdAt": "2026-05-19T14:00:47.912Z",
+    "updatedAt": "2026-05-19T14:00:47.912Z"
   }
 ]

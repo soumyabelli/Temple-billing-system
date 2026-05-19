@@ -187,11 +187,15 @@ const DevoteeDashboard = () => {
   return (
     <div className="min-h-screen bg-[#f7f7f9] text-[#181818]">
       <div className="mx-auto flex max-w-[1540px]">
-        <aside className="relative hidden min-h-screen w-[270px] overflow-hidden border-r border-[#e3d0bb] bg-[#f8f0e4] lg:block">
+        <aside className="relative hidden min-h-screen w-[270px] overflow-hidden border-r border-[#e3d0bb] bg-[#f6efe2] lg:block">
           <div className="pointer-events-none absolute inset-0">
-            <img src={templeImage} alt="Temple background" className="h-full w-full object-cover object-[56%_center]" />
-            <div className="absolute inset-0 bg-[#f6eadb]/28"></div>
-            <div className="absolute inset-0 bg-gradient-to-b from-[#f8efe2]/62 via-[#f5e7d6]/24 to-[#c98d44]/6"></div>
+            <img
+              src={templeImage}
+              alt="Temple background"
+              className="absolute inset-0 h-full w-full object-cover object-[58%_bottom]"
+            />
+            <div className="absolute inset-0 bg-[#f6efe2]/55"></div>
+            <div className="absolute inset-0 bg-gradient-to-b from-[#f6efe2]/75 via-[#f6efe2]/35 to-[#f6efe2]/18"></div>
           </div>
           <div className="relative z-10 px-5 pb-5 pt-8">
             <p className="text-[2.55rem] font-black leading-[1.03] text-[#bc6c10]">Sri Shanti</p>
