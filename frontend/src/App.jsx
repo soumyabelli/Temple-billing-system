@@ -8,12 +8,16 @@ import LoginPage from "./pages/auth/LoginPage";
 import PriestDashboard from "./pages/priest/PriestDashboard";
 import RegisterPage from "./pages/auth/RegisterPage";
 import StaffDashboard from "./pages/staff/StaffDashboard";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+
 
 function App() {
   return (
     <Routes>
       <Route path="/" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+
 
       <Route
         path="/admin"

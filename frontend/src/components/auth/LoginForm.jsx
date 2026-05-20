@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { changePassword, forgotPassword, googleLogin, login, resetPassword } from "../../services/authService";
+import { changePassword, googleLogin, login } from "../../services/authService";
+
 import { useAuth } from "../../context/AuthContext";
 import RoleSelector from "./RoleSelector";
 
@@ -10,12 +11,10 @@ const LoginForm = () => {
 
   const [selectedRole, setSelectedRole] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [forgotEmail, setForgotEmail] = useState("");
-  const [forgotToken, setForgotToken] = useState("");
-  const [forgotNewPassword, setForgotNewPassword] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [passwordResetToken, setPasswordResetToken] = useState(null);
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -94,27 +93,7 @@ const LoginForm = () => {
     }
   };
 
-  const handleForgotPassword = async () => {
-    try {
-      const res = await forgotPassword(forgotEmail);
-      alert(`Reset token: ${res.resetToken}`);
-    } catch (error) {
-      alert(error.response?.data?.message || "Failed to generate reset token");
-    }
-  };
 
-  const handleResetPassword = async () => {
-    try {
-      const res = await resetPassword({
-        email: forgotEmail,
-        token: forgotToken,
-        newPassword: forgotNewPassword,
-      });
-      alert(res.message);
-    } catch (error) {
-      alert(error.response?.data?.message || "Reset password failed");
-    }
-  };
 
   const handleGoogleLogin = async () => {
     const email = window.prompt("Enter Google email");
@@ -201,47 +180,18 @@ const LoginForm = () => {
         </form>
       )}
 
+      
+
       <div className="mt-5">
         <button
-          onClick={handleGoogleLogin}
-          disabled={selectedRole !== "devotee"}
-          className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-400 disabled:cursor-not-allowed p-3 rounded-xl font-semibold"
+          type="button"
+          onClick={() => navigate("/forgot-password")}
+          className="w-full bg-orange-600 hover:bg-orange-700 transition-colors p-3 rounded-xl font-semibold"
         >
-          Login with Google (Devotee)
+          Forgot Password
         </button>
       </div>
 
-      <div className="mt-5 space-y-2">
-        <p className="text-amber-100 text-sm font-semibold">Forgot password</p>
-        <input
-          type="email"
-          placeholder="Registered email"
-          value={forgotEmail}
-          onChange={(e) => setForgotEmail(e.target.value)}
-          className="w-full p-3 rounded-xl bg-white/90 text-black outline-none"
-        />
-        <button onClick={handleForgotPassword} className="w-full bg-orange-600 p-3 rounded-xl font-semibold">
-          Get Reset Token
-        </button>
-        <input
-          type="text"
-          placeholder="Reset token"
-          value={forgotToken}
-          onChange={(e) => setForgotToken(e.target.value)}
-          className="w-full p-3 rounded-xl bg-white/90 text-black outline-none"
-        />
-        <input
-          type="password"
-          placeholder="New password"
-          minLength={6}
-          value={forgotNewPassword}
-          onChange={(e) => setForgotNewPassword(e.target.value)}
-          className="w-full p-3 rounded-xl bg-white/90 text-black outline-none"
-        />
-        <button onClick={handleResetPassword} className="w-full bg-orange-700 p-3 rounded-xl font-semibold">
-          Reset Password
-        </button>
-      </div>
 
       <div className="text-center mt-6">
         {selectedRole === "devotee" ? (
@@ -253,8 +203,7 @@ const LoginForm = () => {
           </>
         ) : (
           <>
-            <p className="text-amber-100">Non-devotee roles cannot self-register.</p>
-            <p className="mt-2 text-yellow-300 font-semibold">Ask admin to create your account and assign your role.</p>
+            
           </>
         )}
       </div>
