@@ -1,19 +1,19 @@
 import { Route, Routes } from "react-router-dom";
-import ProtectedRoute from "./components/ProtectedRoute";
-import AccountantDashboard from "./pages/AccountantDashboard";
-import AdminDashboard from "./pages/AdminDashboard";
-import CashierDashboard from "./pages/CashierDashboard";
-import DevoteeDashboard from "./pages/DevoteeDashboard";
-import LoginPage from "./pages/LoginPage";
-import PriestDashboard from "./pages/PriestDashboard";
-import Register from "./pages/Register";
-import StaffDashboard from "./pages/StaffDashboard";
+import ProtectedRoute from "./components/common/ProtectedRoute";
+import AccountantDashboard from "./pages/accountant/AccountantDashboard";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import CashierDashboard from "./pages/cashier/CashierDashboard";
+import DevoteeDashboard from "./pages/devotee/DevoteeDashboard";
+import LoginPage from "./pages/auth/LoginPage";
+import PriestDashboard from "./pages/priest/PriestDashboard";
+import RegisterPage from "./pages/auth/RegisterPage";
+import StaffDashboard from "./pages/staff/StaffDashboard";
 
 function App() {
   return (
     <Routes>
       <Route path="/" element={<LoginPage />} />
-      <Route path="/register" element={<Register />} />
+      <Route path="/register" element={<RegisterPage />} />
 
       <Route
         path="/admin"

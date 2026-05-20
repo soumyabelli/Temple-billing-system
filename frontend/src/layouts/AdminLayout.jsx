@@ -1,10 +1,33 @@
-import Sidebar from "../components/Sidebar";
+import { useState } from "react";
+import Sidebar from "../components/common/Sidebar";
+import Topbar from "../components/common/Topbar";
 
 const AdminLayout = ({ children }) => {
+  const [activeItem, setActiveItem] = useState("Dashboard");
+  const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
+
   return (
-    <div className="flex bg-[#f8f6f2] min-h-screen">
-      <Sidebar />
-      <div className="ml-[260px] flex-1 p-8">{children}</div>
+    <div className={`${darkMode ? "bg-[#0f172a]" : "bg-[#f5f3ef]"} min-h-screen transition-colors duration-300`}>
+      <Sidebar
+        activeItem={activeItem}
+        onSelect={setActiveItem}
+        collapsed={collapsed}
+        setCollapsed={setCollapsed}
+        mobileOpen={mobileOpen}
+        setMobileOpen={setMobileOpen}
+        darkMode={darkMode}
+      />
+
+      <div className={`transition-all duration-300 p-4 md:p-5 ${collapsed ? "lg:ml-[84px]" : "lg:ml-[254px]"}`}>
+        <Topbar
+          darkMode={darkMode}
+          toggleDarkMode={() => setDarkMode((prev) => !prev)}
+          onOpenMobileSidebar={() => setMobileOpen(true)}
+        />
+        {typeof children === "function" ? children({ activeItem, darkMode }) : children}
+      </div>
     </div>
   );
 };
