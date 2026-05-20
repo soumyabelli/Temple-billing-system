@@ -26,6 +26,23 @@ const userSchema = new mongoose.Schema(
       enum: allowedRoles,
       default: "devotee",
     },
+    mustChangePassword: {
+      type: Boolean,
+      default: false,
+    },
+    provider: {
+      type: String,
+      enum: ["local", "google"],
+      default: "local",
+    },
+    resetPasswordToken: {
+      type: String,
+      default: null,
+    },
+    resetPasswordExpiresAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );

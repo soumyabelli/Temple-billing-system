@@ -2,8 +2,6 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { register } from "../../services/authService";
 
-const roles = ["admin", "accountant", "cashier", "priest", "staff", "devotee"];
-
 const RegisterPage = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -41,7 +39,7 @@ const RegisterPage = () => {
         className="w-full max-w-lg bg-white/25 backdrop-blur-2xl border border-white/60 shadow-[0_20px_70px_rgba(130,50,0,0.18)] rounded-3xl p-8 md:p-10"
       >
         <h1 className="text-3xl md:text-4xl font-extrabold text-amber-900 mb-2">Create Account</h1>
-        <p className="text-amber-800/90 mb-7">Register and continue to your role dashboard.</p>
+        <p className="text-amber-800/90 mb-7">Self registration is only for devotee. Other roles are created by admin.</p>
 
         <div className="space-y-4">
           <input
@@ -74,20 +72,6 @@ const RegisterPage = () => {
             minLength={6}
             required
           />
-
-          <select
-            name="role"
-            value={formData.role}
-            onChange={handleChange}
-            className="w-full rounded-xl border border-white/70 bg-white/80 p-3.5 capitalize outline-none focus:ring-2 focus:ring-amber-400"
-            required
-          >
-            {roles.map((role) => (
-              <option key={role} value={role}>
-                {role}
-              </option>
-            ))}
-          </select>
         </div>
 
         <button className="mt-6 w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-5 py-3.5 rounded-xl font-bold shadow-xl transition-all">

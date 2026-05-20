@@ -33,7 +33,12 @@ const findUserByEmail = async (email) => {
   return users.find((user) => user.email === email) || null;
 };
 
-const createUser = async ({ name, email, password, role }) => {
+const findUserById = async (id) => {
+  const users = await readUsers();
+  return users.find((user) => user.id === id) || null;
+};
+
+const createUser = async ({ name, email, password, role, mustChangePassword = false, provider = "local" }) => {
   const users = await readUsers();
   const user = {
     id: crypto.randomUUID(),
@@ -41,6 +46,8 @@ const createUser = async ({ name, email, password, role }) => {
     email,
     password,
     role,
+    mustChangePassword,
+    provider,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
@@ -51,7 +58,27 @@ const createUser = async ({ name, email, password, role }) => {
   return user;
 };
 
+const updateUser = async (id, updates) => {
+  const users = await readUsers();
+  const idx = users.findIndex((user) => user.id === id);
+  if (idx < 0) {
+    return null;
+  }
+
+  users[idx] = {
+    ...users[idx],
+    ...updates,
+    id: users[idx].id,
+    updatedAt: new Date().toISOString(),
+  };
+
+  await writeUsers(users);
+  return users[idx];
+};
+
 module.exports = {
   findUserByEmail,
+  findUserById,
   createUser,
+  updateUser,
 };

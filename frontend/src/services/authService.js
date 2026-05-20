@@ -12,6 +12,30 @@ export const login = async (credentials) => {
   return response.data;
 };
 
+export const googleLogin = async (payload) => {
+  const response = await axios.post(`${API_BASE}/google-login`, payload);
+  return response.data;
+};
+
+export const forgotPassword = async (email) => {
+  const response = await axios.post(`${API_BASE}/forgot-password`, { email });
+  return response.data;
+};
+
+export const resetPassword = async (payload) => {
+  const response = await axios.post(`${API_BASE}/reset-password`, payload);
+  return response.data;
+};
+
+export const changePassword = async ({ token, currentPassword, newPassword }) => {
+  const response = await axios.post(
+    `${API_BASE}/change-password`,
+    { currentPassword, newPassword },
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  return response.data;
+};
+
 export const setAuth = ({ token, user }) => {
   localStorage.setItem("token", token);
   localStorage.setItem("user", JSON.stringify(user));

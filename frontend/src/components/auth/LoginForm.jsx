@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { login } from "../../services/authService";
+import { changePassword, forgotPassword, googleLogin, login, resetPassword } from "../../services/authService";
 import { useAuth } from "../../context/AuthContext";
 import RoleSelector from "./RoleSelector";
 
@@ -10,6 +10,12 @@ const LoginForm = () => {
 
   const [selectedRole, setSelectedRole] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotToken, setForgotToken] = useState("");
+  const [forgotNewPassword, setForgotNewPassword] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [passwordResetToken, setPasswordResetToken] = useState(null);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -25,6 +31,11 @@ const LoginForm = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
 
+    if (!selectedRole) {
+      alert("Please select a role");
+      return;
+    }
+
     if (!formData.email || !formData.password) {
       alert("Please enter email and password");
       return;
@@ -32,10 +43,17 @@ const LoginForm = () => {
 
     try {
       setIsLoading(true);
-      const res = await login(formData);
+      const res = await login({ ...formData, role: selectedRole });
       const userRole = res.user?.role;
       if (!userRole) {
         alert("Role not found for this account. Please contact admin.");
+        return;
+      }
+
+      if (res.user?.mustChangePassword && userRole !== "devotee") {
+        setPasswordResetToken(res.token);
+        setCurrentPassword(formData.password);
+        alert("First login detected. Please change password to continue.");
         return;
       }
 
@@ -48,6 +66,69 @@ const LoginForm = () => {
       navigate(`/${userRole}`);
     } catch (error) {
       alert(error.response?.data?.message || "Login failed. Please check server and credentials.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleFirstLoginPasswordChange = async (e) => {
+    e.preventDefault();
+    if (!passwordResetToken) return;
+
+    try {
+      setIsLoading(true);
+      const res = await changePassword({
+        token: passwordResetToken,
+        currentPassword,
+        newPassword,
+      });
+      loginUser({ token: res.token, user: res.user });
+      setPasswordResetToken(null);
+      setNewPassword("");
+      alert("Password changed. Login completed.");
+      navigate(`/${res.user.role}`);
+    } catch (error) {
+      alert(error.response?.data?.message || "Password update failed");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    try {
+      const res = await forgotPassword(forgotEmail);
+      alert(`Reset token: ${res.resetToken}`);
+    } catch (error) {
+      alert(error.response?.data?.message || "Failed to generate reset token");
+    }
+  };
+
+  const handleResetPassword = async () => {
+    try {
+      const res = await resetPassword({
+        email: forgotEmail,
+        token: forgotToken,
+        newPassword: forgotNewPassword,
+      });
+      alert(res.message);
+    } catch (error) {
+      alert(error.response?.data?.message || "Reset password failed");
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    const email = window.prompt("Enter Google email");
+    if (!email) return;
+    const name = window.prompt("Enter display name", "Devotee") || "Devotee";
+
+    try {
+      setIsLoading(true);
+      const res = await googleLogin({ email, name });
+      loginUser({ token: res.token, user: res.user });
+      alert("Google login successful");
+      navigate("/devotee");
+    } catch (error) {
+      alert(error.response?.data?.message || "Google login failed");
     } finally {
       setIsLoading(false);
     }
@@ -102,11 +183,80 @@ const LoginForm = () => {
         </button>
       </form>
 
-      <div className="text-center mt-6">
-        <p className="text-amber-100">Don't have an account?</p>
-        <button onClick={() => navigate("/register")} className="mt-2 text-yellow-300 font-semibold hover:text-yellow-400">
-          Register Here
+      {passwordResetToken && (
+        <form className="mt-5 space-y-3" onSubmit={handleFirstLoginPasswordChange}>
+          <p className="text-amber-100 text-sm">Change password to continue (required for non-devotee first login).</p>
+          <input
+            type="password"
+            placeholder="New password"
+            minLength={6}
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            className="w-full p-3 rounded-xl bg-white/90 text-black outline-none"
+            required
+          />
+          <button type="submit" className="w-full bg-amber-600 p-3 rounded-xl font-semibold">
+            Update Password
+          </button>
+        </form>
+      )}
+
+      <div className="mt-5">
+        <button
+          onClick={handleGoogleLogin}
+          disabled={selectedRole !== "devotee"}
+          className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-400 disabled:cursor-not-allowed p-3 rounded-xl font-semibold"
+        >
+          Login with Google (Devotee)
         </button>
+      </div>
+
+      <div className="mt-5 space-y-2">
+        <p className="text-amber-100 text-sm font-semibold">Forgot password</p>
+        <input
+          type="email"
+          placeholder="Registered email"
+          value={forgotEmail}
+          onChange={(e) => setForgotEmail(e.target.value)}
+          className="w-full p-3 rounded-xl bg-white/90 text-black outline-none"
+        />
+        <button onClick={handleForgotPassword} className="w-full bg-orange-600 p-3 rounded-xl font-semibold">
+          Get Reset Token
+        </button>
+        <input
+          type="text"
+          placeholder="Reset token"
+          value={forgotToken}
+          onChange={(e) => setForgotToken(e.target.value)}
+          className="w-full p-3 rounded-xl bg-white/90 text-black outline-none"
+        />
+        <input
+          type="password"
+          placeholder="New password"
+          minLength={6}
+          value={forgotNewPassword}
+          onChange={(e) => setForgotNewPassword(e.target.value)}
+          className="w-full p-3 rounded-xl bg-white/90 text-black outline-none"
+        />
+        <button onClick={handleResetPassword} className="w-full bg-orange-700 p-3 rounded-xl font-semibold">
+          Reset Password
+        </button>
+      </div>
+
+      <div className="text-center mt-6">
+        {selectedRole === "devotee" ? (
+          <>
+            <p className="text-amber-100">Don't have an account?</p>
+            <button onClick={() => navigate("/register")} className="mt-2 text-yellow-300 font-semibold hover:text-yellow-400">
+              Register Here
+            </button>
+          </>
+        ) : (
+          <>
+            <p className="text-amber-100">Non-devotee roles cannot self-register.</p>
+            <p className="mt-2 text-yellow-300 font-semibold">Ask admin to create your account and assign your role.</p>
+          </>
+        )}
       </div>
 
       <div className="text-center mt-8 text-orange-100 text-xl">Har Har Mahadev</div>
