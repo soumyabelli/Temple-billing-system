@@ -1,24 +1,35 @@
-import { Route, Routes } from "react-router-dom";
-import ProtectedRoute from "./components/common/ProtectedRoute";
-import AccountantDashboard from "./pages/accountant/AccountantDashboard";
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import CashierDashboard from "./pages/cashier/CashierDashboard";
-import DevoteeDashboard from "./pages/devotee/DevoteeDashboard";
-import LoginPage from "./pages/auth/LoginPage";
-import PriestDashboard from "./pages/priest/PriestDashboard";
-import RegisterPage from "./pages/auth/RegisterPage";
-import StaffDashboard from "./pages/staff/StaffDashboard";
-import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import { Navigate, Route, Routes } from "react-router-dom";
 
+import ProtectedRoute from "./components/common/ProtectedRoute";
+
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import DonationManagement from "./pages/admin/DonationManagement";
+import MemberManagement from "./pages/admin/MemberManagement";
+import AdminLayout from "./layouts/AdminLayout";
+
+import AccountantDashboard from "./pages/accountant/AccountantDashboard";
+import CashierDashboard from "./pages/cashier/CashierDashboard";
+import PriestDashboard from "./pages/priest/PriestDashboard";
+import StaffDashboard from "./pages/staff/StaffDashboard";
+import DevoteeDashboard from "./pages/devotee/DevoteeDashboard";
+
+import LoginPage from "./pages/auth/LoginPage";
+import RegisterPage from "./pages/auth/RegisterPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 
 function App() {
   return (
     <Routes>
+
+      {/* AUTH */}
       <Route path="/" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
-      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route
+        path="/forgot-password"
+        element={<ForgotPasswordPage />}
+      />
 
-
+      {/* ADMIN */}
       <Route
         path="/admin"
         element={
@@ -27,6 +38,31 @@ function App() {
           </ProtectedRoute>
         }
       />
+
+      {/* DONATIONS */}
+      <Route
+        path="/admin/donations"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminLayout>
+              <DonationManagement />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/admin/members"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminLayout>
+              <MemberManagement />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* ACCOUNTANT */}
       <Route
         path="/accountant"
         element={
@@ -35,6 +71,8 @@ function App() {
           </ProtectedRoute>
         }
       />
+
+      {/* CASHIER */}
       <Route
         path="/cashier"
         element={
@@ -43,6 +81,8 @@ function App() {
           </ProtectedRoute>
         }
       />
+
+      {/* PRIEST */}
       <Route
         path="/priest"
         element={
@@ -51,6 +91,8 @@ function App() {
           </ProtectedRoute>
         }
       />
+
+      {/* STAFF */}
       <Route
         path="/staff"
         element={
@@ -59,6 +101,8 @@ function App() {
           </ProtectedRoute>
         }
       />
+
+      {/* DEVOTEE */}
       <Route
         path="/devotee"
         element={
@@ -67,6 +111,8 @@ function App() {
           </ProtectedRoute>
         }
       />
+
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

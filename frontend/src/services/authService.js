@@ -36,6 +36,13 @@ export const changePassword = async ({ token, currentPassword, newPassword }) =>
   return response.data;
 };
 
+export const createUserByAdmin = async (userData, token) => {
+  const response = await axios.post(`${API_BASE}/admin/create-user`, userData, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
 export const setAuth = ({ token, user }) => {
   localStorage.setItem("token", token);
   localStorage.setItem("user", JSON.stringify(user));

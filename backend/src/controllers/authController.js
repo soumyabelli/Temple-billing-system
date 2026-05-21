@@ -117,15 +117,13 @@ const loginUser = async (req, res) => {
       return res.status(400).json({ message: "User not registered. Please register as devotee." });
     }
 
-    if (normalizedRole && user.role !== normalizedRole) {
-      return res.status(400).json({
-        message: `This account belongs to role '${user.role}'. Please select the correct role to login.`,
-      });
-    }
-
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid password" });
+    }
+
+    if (normalizedRole && user.role !== normalizedRole) {
+      return issueAuthResponse(res, user, `Login successful as '${user.role}'. Selected role '${normalizedRole}' was ignored.`);
     }
 
     return issueAuthResponse(res, user);
@@ -162,7 +160,7 @@ const createUserByAdmin = async (req, res) => {
         password: hashedPassword,
         role: normalizedRole,
         provider: "local",
-        mustChangePassword: true,
+        mustChangePassword: false,
       });
     } else {
       user = await createFileUser({
@@ -171,7 +169,7 @@ const createUserByAdmin = async (req, res) => {
         password: hashedPassword,
         role: normalizedRole,
         provider: "local",
-        mustChangePassword: true,
+        mustChangePassword: false,
       });
     }
 

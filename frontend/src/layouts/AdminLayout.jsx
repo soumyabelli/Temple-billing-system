@@ -2,11 +2,28 @@ import { useState } from "react";
 import Sidebar from "../components/common/Sidebar";
 import Topbar from "../components/common/Topbar";
 
+import DonationManagement from "../pages/admin/DonationManagement";
+import MemberManagement from "../pages/admin/MemberManagement";
+
 const AdminLayout = ({ children }) => {
   const [activeItem, setActiveItem] = useState("Dashboard");
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
+
+  const renderContent = () => {
+    // Sidebar drives `activeItem`; route content may only mount AdminLayout.
+    if (activeItem === "Donations") {
+      return <DonationManagement />;
+    }
+
+    if (activeItem === "Employees & Staff") {
+      return <MemberManagement />;
+    }
+
+    if (typeof children === "function") return <children activeItem={activeItem} darkMode={darkMode} />;
+    return children;
+  };
 
   return (
     <div className={`${darkMode ? "bg-[#0f172a]" : "bg-[#f5f3ef]"} min-h-screen transition-colors duration-300`}>
@@ -26,10 +43,11 @@ const AdminLayout = ({ children }) => {
           toggleDarkMode={() => setDarkMode((prev) => !prev)}
           onOpenMobileSidebar={() => setMobileOpen(true)}
         />
-        {typeof children === "function" ? children({ activeItem, darkMode }) : children}
+        {renderContent()}
       </div>
     </div>
   );
 };
 
 export default AdminLayout;
+
