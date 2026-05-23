@@ -43,6 +43,13 @@ export const createUserByAdmin = async (userData, token) => {
   return response.data;
 };
 
+export const getAdminUsers = async (token) => {
+  const response = await axios.get(`${API_BASE}/admin/users`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
 export const setAuth = ({ token, user }) => {
   localStorage.setItem("token", token);
   localStorage.setItem("user", JSON.stringify(user));

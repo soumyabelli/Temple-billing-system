@@ -1,26 +1,22 @@
+﻿const recentDonations = [
+  { label: "₹22,000 Annadanam", time: "10 min ago" },
+  { label: "₹48,500 Temple Fund", time: "1 hour ago" },
+  { label: "₹12,000 Festival Donation", time: "3 hours ago" },
+];
+
 const RecentDonations = () => {
   return (
-    <div className="bg-white rounded-3xl p-6 border shadow-sm">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">
-        Recent Donations
-      </h2>
+    <div className="rounded-[32px] border border-white/10 bg-slate-950/85 p-6 shadow-2xl shadow-slate-950/20 backdrop-blur-xl text-white">
+      <h2 className="text-2xl font-semibold">Recent Donation Activity</h2>
+      <p className="mt-2 text-slate-400">Latest donation inflows that require admin attention or reporting.</p>
 
-      <div className="space-y-4">
-
-        <div className="p-4 rounded-2xl bg-gray-50">
-          <p className="font-semibold">₹5,000 donated</p>
-          <span className="text-gray-500 text-sm">
-            5 minutes ago
-          </span>
-        </div>
-
-        <div className="p-4 rounded-2xl bg-gray-50">
-          <p className="font-semibold">₹10,000 donated</p>
-          <span className="text-gray-500 text-sm">
-            20 minutes ago
-          </span>
-        </div>
-
+      <div className="mt-6 space-y-4">
+        {recentDonations.map((donation, index) => (
+          <div key={index} className="rounded-3xl bg-slate-900/70 p-4">
+            <p className="text-lg font-semibold text-white">{donation.label}</p>
+            <p className="text-sm text-slate-400">{donation.time}</p>
+          </div>
+        ))}
       </div>
     </div>
   );

@@ -76,9 +76,15 @@ const updateUser = async (id, updates) => {
   return users[idx];
 };
 
+const getAllUsers = async () => {
+  const users = await readUsers();
+  return users;
+};
+
 module.exports = {
   findUserByEmail,
   findUserById,
   createUser,
   updateUser,
+  getAllUsers,
 };

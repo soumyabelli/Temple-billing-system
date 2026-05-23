@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { createUserByAdmin } from "../../services/authService";
+import { createUserByAdmin, getAdminUsers } from "../../services/authService";
 
 const roles = ["admin", "accountant", "cashier", "priest", "staff"];
 
@@ -16,6 +16,9 @@ const MemberManagement = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [usersError, setUsersError] = useState(null);
 
   const handleChange = (e) => {
     setFormData((prev) => ({
@@ -38,12 +41,32 @@ const MemberManagement = () => {
       await createUserByAdmin(formData, token);
       setMessage({ type: "success", text: `${formData.role} created successfully.` });
       setFormData({ name: "", email: "", password: "", role: "staff" });
+      fetchUsers();
     } catch (error) {
       setMessage({ type: "error", text: error.response?.data?.message || "Could not create member." });
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const fetchUsers = async () => {
+    setUsersError(null);
+    setLoadingUsers(true);
+    try {
+      const data = await getAdminUsers(token);
+      setUsers(data);
+    } catch (error) {
+      setUsersError(error.response?.data?.message || "Unable to load existing members.");
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  useEffect(() => {
+    if (token) {
+      fetchUsers();
+    }
+  }, [token]);
 
   return (
     <div className="space-y-6 mt-5">
@@ -137,6 +160,59 @@ const MemberManagement = () => {
             </button>
           </div>
         </form>
+      </div>
+
+      <div className="rounded-3xl bg-white shadow-xl p-8 border border-[#ece8e1]">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-5">
+          <div>
+            <h2 className="text-2xl font-semibold text-slate-900">Existing Members</h2>
+            <p className="text-sm text-slate-500">View all assigned roles and staff accounts created by admin.</p>
+          </div>
+          <button
+            type="button"
+            onClick={fetchUsers}
+            className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+          >
+            Refresh list
+          </button>
+        </div>
+
+        {loadingUsers ? (
+          <div className="text-slate-600">Loading members...</div>
+        ) : usersError ? (
+          <div className="rounded-2xl bg-rose-100 p-4 text-rose-700">{usersError}</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-slate-200 text-sm">
+              <thead className="bg-slate-50 text-slate-700">
+                <tr>
+                  <th className="px-4 py-3 text-left font-semibold">Name</th>
+                  <th className="px-4 py-3 text-left font-semibold">Email</th>
+                  <th className="px-4 py-3 text-left font-semibold">Role</th>
+                  <th className="px-4 py-3 text-left font-semibold">Created</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200 bg-white">
+                {users.length > 0 ? (
+                  users.map((user) => (
+                    <tr key={user.id}>
+                      <td className="px-4 py-3 text-slate-900">{user.name}</td>
+                      <td className="px-4 py-3 text-slate-600">{user.email}</td>
+                      <td className="px-4 py-3 text-slate-700 capitalize">{user.role}</td>
+                      <td className="px-4 py-3 text-slate-500">{new Date(user.createdAt || user.updatedAt || Date.now()).toLocaleDateString()}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={4} className="px-4 py-6 text-center text-slate-500">
+                      No members found yet.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

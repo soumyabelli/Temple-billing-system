@@ -8,6 +8,7 @@ const {
   findUserById: findFileUserById,
   createUser: createFileUser,
   updateUser: updateFileUser,
+  getAllUsers: getAllFileUsers,
 } = require("../store/fileUserStore");
 
 const ALLOWED_ROLES = ["admin", "accountant", "cashier", "priest", "staff", "devotee"];
@@ -17,6 +18,7 @@ const sanitizeUser = (userDoc) => ({
   name: userDoc.name,
   email: userDoc.email,
   role: userDoc.role,
+  createdAt: userDoc.createdAt || userDoc.createdAt?.toISOString?.() || undefined,
   mustChangePassword: Boolean(userDoc.mustChangePassword),
 });
 
@@ -127,6 +129,23 @@ const loginUser = async (req, res) => {
     }
 
     return issueAuthResponse(res, user);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+const getUsersForAdmin = async (req, res) => {
+  try {
+    let users = [];
+    if (isDbConnected()) {
+      users = await User.find()
+        .select("-password -resetPasswordToken -resetPasswordExpiresAt")
+        .sort({ createdAt: -1 });
+    } else {
+      users = await getAllFileUsers();
+    }
+    const sanitizedUsers = users.map(sanitizeUser);
+    return res.status(200).json(sanitizedUsers);
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -315,6 +334,7 @@ module.exports = {
   registerUser,
   loginUser,
   createUserByAdmin,
+  getUsersForAdmin,
   changePassword,
   forgotPassword,
   resetPassword,

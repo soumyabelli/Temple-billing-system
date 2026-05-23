@@ -4,7 +4,30 @@ import ProtectedRoute from "./components/common/ProtectedRoute";
 
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import DonationManagement from "./pages/admin/DonationManagement";
+import AllDonations from "./pages/admin/donations/AllDonations";
+import AddDonation from "./pages/admin/donations/AddDonation";
+import DonationCategories from "./pages/admin/donations/DonationCategories";
+import DonorManagement from "./pages/admin/donations/DonorManagement";
+import SponsorshipPrograms from "./pages/admin/donations/SponsorshipPrograms";
+import CampaignManagement from "./pages/admin/donations/CampaignManagement";
+import FestivalDonations from "./pages/admin/donations/FestivalDonations";
+import RecurringDonations from "./pages/admin/donations/RecurringDonations";
+import DonationReceipts from "./pages/admin/donations/DonationReceipts";
+import PaymentVerification from "./pages/admin/donations/PaymentVerification";
+import DonationAnalytics from "./pages/admin/donations/DonationAnalytics";
+import DonationReports from "./pages/admin/donations/DonationReports";
+import QRUPIDonations from "./pages/admin/donations/QRUPIDonations";
+import RefundRequests from "./pages/admin/donations/RefundRequests";
+import DonorNotifications from "./pages/admin/donations/DonorNotifications";
+import DonationSettings from "./pages/admin/donations/DonationSettings";
 import MemberManagement from "./pages/admin/MemberManagement";
+import AllEmployees from "./pages/admin/employee/AllEmployees";
+import AddEmployee from "./pages/admin/employee/AddEmployee";
+import Attendance from "./pages/admin/employee/Attendance";
+import Payroll from "./pages/admin/employee/Payroll";
+import LeaveManagement from "./pages/admin/employee/LeaveManagement";
+import Performance from "./pages/admin/employee/Performance";
+import ShiftManagement from "./pages/admin/employee/ShiftManagement";
 import AdminLayout from "./layouts/AdminLayout";
 
 import AccountantDashboard from "./pages/accountant/AccountantDashboard";
@@ -46,6 +69,237 @@ function App() {
           <ProtectedRoute allowedRoles={["admin"]}>
             <AdminLayout>
               <DonationManagement />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/donations/all"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminLayout>
+              <AllDonations />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/donations/add"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminLayout>
+              <AddDonation />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/donations/categories"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminLayout>
+              <DonationCategories />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/donations/donors"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminLayout>
+              <DonorManagement />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/donations/sponsorships"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminLayout>
+              <SponsorshipPrograms />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/donations/campaigns"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminLayout>
+              <CampaignManagement />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/donations/festivals"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminLayout>
+              <FestivalDonations />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/donations/recurring"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminLayout>
+              <RecurringDonations />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/donations/receipts"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminLayout>
+              <DonationReceipts />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/donations/verification"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminLayout>
+              <PaymentVerification />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/donations/analytics"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminLayout>
+              <DonationAnalytics />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/donations/reports"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminLayout>
+              <DonationReports />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/donations/qr-upi"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminLayout>
+              <QRUPIDonations />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/donations/refunds"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminLayout>
+              <RefundRequests />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/donations/notifications"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminLayout>
+              <DonorNotifications />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/donations/settings"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminLayout>
+              <DonationSettings />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/admin/employees"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminLayout>
+              <AllEmployees />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/employees/add"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminLayout>
+              <AddEmployee />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/employees/attendance"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminLayout>
+              <Attendance />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/employees/payroll"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminLayout>
+              <Payroll />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/employees/leave"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminLayout>
+              <LeaveManagement />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/employees/performance"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminLayout>
+              <Performance />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/employees/shifts"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminLayout>
+              <ShiftManagement />
             </AdminLayout>
           </ProtectedRoute>
         }

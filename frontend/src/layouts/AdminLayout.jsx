@@ -1,56 +1,27 @@
-import { useState } from "react";
-
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import Sidebar from "../components/common/Sidebar";
 import Topbar from "../components/common/Topbar";
+import { sidebarItems } from "../data/sidebarData";
 
-import DonationManagement from "../pages/admin/DonationManagement";
-import MemberManagement from "../pages/admin/MemberManagement";
-import PoojaManagement from "../pages/admin/PoojaManagement";
-import SettingsManagement from "../pages/admin/SettingsManagement";
+const findActiveItem = (path) => {
+  const matched = sidebarItems.find((item) => item.path === path || item.subItems?.some((sub) => sub.path === path));
+  return matched ? matched.title : "Dashboard";
+};
 
-const AdminLayout = ({
-  children,
-  onLogoutClick,
-}) => {
-
-  const [activeItem, setActiveItem] = useState("Dashboard");
-
+const AdminLayout = ({ children, onLogoutClick }) => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [activeItem, setActiveItem] = useState(findActiveItem(location.pathname));
   const [collapsed, setCollapsed] = useState(false);
-
   const [mobileOpen, setMobileOpen] = useState(false);
-
   const [darkMode, setDarkMode] = useState(false);
 
-  const renderContent = () => {
-
-    if (activeItem === "Donations") {
-      return <DonationManagement />;
-    }
-
-    if (activeItem === "Pooja Booking") {
-      return <PoojaManagement />;
-    }
-
-    if (activeItem === "Employees & Staff") {
-      return <MemberManagement />;
-    }
-
-    if (activeItem === "Settings") {
-      return <SettingsManagement />;
-    }
-
-    if (typeof children === "function") {
-      return children({
-        activeItem,
-        darkMode,
-      });
-    }
-
-    return children;
-  };
+  useEffect(() => {
+    setActiveItem(findActiveItem(location.pathname));
+  }, [location.pathname]);
 
   return (
-
     <div
       className={`${
         darkMode
@@ -58,10 +29,11 @@ const AdminLayout = ({
           : "bg-[#f5f3ef]"
       } min-h-screen transition-colors duration-300`}
     >
-
       <Sidebar
         activeItem={activeItem}
+        activePath={location.pathname}
         onSelect={setActiveItem}
+        onNavigate={(path) => navigate(path)}
         collapsed={collapsed}
         setCollapsed={setCollapsed}
         mobileOpen={mobileOpen}
@@ -77,23 +49,14 @@ const AdminLayout = ({
             : "lg:ml-[254px]"
         }`}
       >
-
         <Topbar
           darkMode={darkMode}
-
-          toggleDarkMode={() =>
-            setDarkMode((prev) => !prev)
-          }
-
-          onOpenMobileSidebar={() =>
-            setMobileOpen(true)
-          }
+          toggleDarkMode={() => setDarkMode((prev) => !prev)}
+          onOpenMobileSidebar={() => setMobileOpen(true)}
         />
 
-        {renderContent()}
-
+        {typeof children === "function" ? children({ activeItem, darkMode }) : children}
       </div>
-
     </div>
   );
 };

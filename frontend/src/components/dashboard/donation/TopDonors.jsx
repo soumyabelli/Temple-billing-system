@@ -1,43 +1,23 @@
-const donors = [
-  {
-    name: "Ramesh Kumar",
-    amount: "₹50,000",
-  },
-  {
-    name: "Priya Shetty",
-    amount: "₹35,000",
-  },
-  {
-    name: "Suresh Rao",
-    amount: "₹28,000",
-  },
+﻿const donors = [
+  { name: "Ramesh Kumar", amount: "₹1,24,000", type: "Gold Donor" },
+  { name: "Priya Shetty", amount: "₹92,500", type: "Silver Donor" },
+  { name: "Suresh Rao", amount: "₹76,800", type: "Bronze Donor" },
 ];
 
 const TopDonors = () => {
   return (
-    <div className="bg-white rounded-3xl p-6 border shadow-sm">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">
-        Top Donors
-      </h2>
+    <div className="rounded-[32px] border border-white/10 bg-slate-950/85 p-6 shadow-2xl shadow-slate-950/20 backdrop-blur-xl text-white">
+      <h2 className="text-2xl font-semibold">Top Donors</h2>
+      <p className="mt-2 text-slate-400">Donor leaders by contribution, useful for recognition and stewardship planning.</p>
 
-      <div className="space-y-4">
+      <div className="mt-6 space-y-4">
         {donors.map((donor, index) => (
-          <div
-            key={index}
-            className="
-            flex items-center justify-between
-            p-4 rounded-2xl bg-orange-50
-          "
-          >
+          <div key={index} className="flex items-center justify-between rounded-3xl bg-slate-900/70 p-4">
             <div>
-              <h3 className="font-semibold text-gray-800">
-                {donor.name}
-              </h3>
+              <p className="text-lg font-semibold text-white">{donor.name}</p>
+              <p className="text-sm text-slate-400">{donor.type}</p>
             </div>
-
-            <p className="font-bold text-orange-600">
-              {donor.amount}
-            </p>
+            <p className="text-lg font-semibold text-amber-300">{donor.amount}</p>
           </div>
         ))}
       </div>
