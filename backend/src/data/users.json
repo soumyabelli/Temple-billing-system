@@ -34,5 +34,16 @@
     "role": "cashier",
     "createdAt": "2026-05-20T04:40:06.721Z",
     "updatedAt": "2026-05-20T04:40:06.721Z"
+  },
+  {
+    "id": "b97e748e-6393-4db1-804a-9c4d39384e69",
+    "name": "Deepthi",
+    "email": "deepthiskulal@gmail.com",
+    "password": "$2b$10$bUgGDy./LKoev2ZT6dv17O2751xwXoBVrHP1310ikhiC9tVaGa/y6",
+    "role": "devotee",
+    "mustChangePassword": false,
+    "provider": "local",
+    "createdAt": "2026-05-23T06:21:10.008Z",
+    "updatedAt": "2026-05-23T06:21:10.008Z"
   }
 ]

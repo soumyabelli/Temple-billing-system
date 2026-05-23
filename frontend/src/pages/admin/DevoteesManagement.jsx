@@ -147,7 +147,7 @@ const actionButtons = [
   { label: "Edit Profile", icon: FaEdit, theme: "bg-amber-50 text-amber-700" },
 ];
 
-const DevoteesManagement = ({ darkMode }) => {
+const DevoteesManagement = ({ darkMode, onEditProfile }) => {
   return (
     <div className="mt-5 space-y-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -245,7 +245,13 @@ const DevoteesManagement = ({ darkMode }) => {
                     <td className="px-3 py-3">
                       <div className="flex items-center gap-3 text-amber-600">
                         <button type="button" aria-label="View devotee"><FaEye /></button>
-                        <button type="button" aria-label="Edit devotee"><FaEdit /></button>
+                        <button
+                          type="button"
+                          aria-label="Edit devotee"
+                          onClick={() => onEditProfile?.(devotee)}
+                        >
+                          <FaEdit />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -300,6 +306,8 @@ const DevoteesManagement = ({ darkMode }) => {
                 return (
                   <button
                     key={action.label}
+                    type="button"
+                    onClick={action.label === "Edit Profile" ? () => onEditProfile?.(devotees[0]) : undefined}
                     className={`h-[86px] rounded-xl text-sm font-medium flex flex-col items-center justify-center gap-1 ${action.theme}`}
                   >
                     <Icon className="text-[20px]" />

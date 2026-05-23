@@ -5,6 +5,8 @@ import Topbar from "../components/common/Topbar";
 
 import DonationManagement from "../pages/admin/DonationManagement";
 import MemberManagement from "../pages/admin/MemberManagement";
+import PoojaManagement from "../pages/admin/PoojaManagement";
+import SettingsManagement from "../pages/admin/SettingsManagement";
 
 const AdminLayout = ({
   children,
@@ -25,8 +27,16 @@ const AdminLayout = ({
       return <DonationManagement />;
     }
 
+    if (activeItem === "Pooja Booking") {
+      return <PoojaManagement />;
+    }
+
     if (activeItem === "Employees & Staff") {
       return <MemberManagement />;
+    }
+
+    if (activeItem === "Settings") {
+      return <SettingsManagement />;
     }
 
     if (typeof children === "function") {
