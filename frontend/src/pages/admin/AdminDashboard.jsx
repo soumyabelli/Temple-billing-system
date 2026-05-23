@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 import { useState } from "react";
+=======
+>>>>>>> 9af9cbd3d72cbfd0dc75089526bcbb17c6321e0a
 import { useNavigate } from "react-router-dom";
 import { FaDonate, FaRupeeSign, FaUsers, FaBoxes } from "react-icons/fa";
 import { MdTempleBuddhist, MdOutlinePayments } from "react-icons/md";
@@ -8,10 +11,14 @@ import RevenueChart from "../../components/dashboard/RevenueChart";
 import DonationChart from "../../components/dashboard/DonationChart";
 import RecentBookings from "../../components/pooja/RecentBookings";
 import LowStock from "../../components/inventory/LowStock";
+<<<<<<< HEAD
 import LogoutModal from "../../components/LogoutModal";
 import { useAuth } from "../../context/AuthContext";
 import DevoteesManagement from "./DevoteesManagement";
 
+=======
+import DonationManagement from "./DonationManagement";
+>>>>>>> 9af9cbd3d72cbfd0dc75089526bcbb17c6321e0a
 const statCards = [
   { title: "Total Revenue", amount: "Rs 2,45,680", trend: "12.3%", trendUp: true, icon: <FaRupeeSign />, accent: "bg-orange-100 text-orange-600" },
   { title: "Daily Collection", amount: "Rs 48,650", trend: "8.2%", trendUp: true, icon: <FaDonate />, accent: "bg-green-100 text-green-600" },
@@ -64,6 +71,7 @@ const DashboardView = ({ darkMode }) => (
 );
 
 const AdminDashboard = () => {
+<<<<<<< HEAD
   const [showLogout, setShowLogout] = useState(false);
   const navigate = useNavigate();
   const { logoutUser } = useAuth();
@@ -73,6 +81,9 @@ const AdminDashboard = () => {
     setShowLogout(false);
     navigate("/login");
   };
+=======
+  const navigate = useNavigate();
+>>>>>>> 9af9cbd3d72cbfd0dc75089526bcbb17c6321e0a
 
   return (
     <>
@@ -82,9 +93,31 @@ const AdminDashboard = () => {
             return <DashboardView darkMode={darkMode} />;
           }
 
+<<<<<<< HEAD
           if (activeItem === "Devotees Management") {
             return <DevoteesManagement darkMode={darkMode} />;
           }
+=======
+        const navigate = useNavigate();
+
+        return (
+          <>
+            <div className="mt-5">
+              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <h1 className={`text-[30px] md:text-[38px] font-bold leading-tight ${darkMode ? "text-slate-100" : "text-[#1d1b19]"}`}>Welcome back, Admin</h1>
+                  <p className={`${darkMode ? "text-slate-300" : "text-gray-600"}`}>Manage collections, bookings and operations from one dashboard.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => navigate("/admin/members")}
+                  className="inline-flex items-center justify-center rounded-2xl bg-amber-500 px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-amber-600"
+                >
+                  Add Member / Staff
+                </button>
+              </div>
+            </div>
+>>>>>>> 9af9cbd3d72cbfd0dc75089526bcbb17c6321e0a
 
           return <PlaceholderView title={activeItem} darkMode={darkMode} />;
         }}

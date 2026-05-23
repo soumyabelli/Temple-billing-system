@@ -3,14 +3,26 @@ import { clearAuth, getStoredToken, getStoredUser, setAuth } from "../services/a
 
 const AuthContext = createContext(null);
 
+const normalizeUser = (user) => {
+  if (!user) return null;
+  return {
+    ...user,
+    role: String(user.role || "").toLowerCase(),
+  };
+};
+
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(getStoredUser());
+  const [user, setUser] = useState(normalizeUser(getStoredUser()));
   const [token, setToken] = useState(getStoredToken());
 
   const loginUser = (authPayload) => {
-    setAuth(authPayload);
-    setUser(authPayload.user);
-    setToken(authPayload.token);
+    const normalized = {
+      ...authPayload,
+      user: normalizeUser(authPayload.user),
+    };
+    setAuth(normalized);
+    setUser(normalized.user);
+    setToken(normalized.token);
   };
 
   const logoutUser = () => {

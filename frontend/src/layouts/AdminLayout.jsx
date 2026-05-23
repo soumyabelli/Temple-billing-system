@@ -1,6 +1,10 @@
 import { useState } from "react";
+
 import Sidebar from "../components/common/Sidebar";
 import Topbar from "../components/common/Topbar";
+
+import DonationManagement from "../pages/admin/DonationManagement";
+import MemberManagement from "../pages/admin/MemberManagement";
 
 const AdminLayout = ({
   children,
@@ -14,6 +18,26 @@ const AdminLayout = ({
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const [darkMode, setDarkMode] = useState(false);
+
+  const renderContent = () => {
+
+    if (activeItem === "Donations") {
+      return <DonationManagement />;
+    }
+
+    if (activeItem === "Employees & Staff") {
+      return <MemberManagement />;
+    }
+
+    if (typeof children === "function") {
+      return children({
+        activeItem,
+        darkMode,
+      });
+    }
+
+    return children;
+  };
 
   return (
 
@@ -33,7 +57,6 @@ const AdminLayout = ({
         mobileOpen={mobileOpen}
         setMobileOpen={setMobileOpen}
         darkMode={darkMode}
-
         onLogoutClick={onLogoutClick}
       />
 
@@ -57,14 +80,7 @@ const AdminLayout = ({
           }
         />
 
-        {
-          typeof children === "function"
-            ? children({
-                activeItem,
-                darkMode,
-              })
-            : children
-        }
+        {renderContent()}
 
       </div>
 

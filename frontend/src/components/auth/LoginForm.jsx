@@ -30,11 +30,6 @@ const LoginForm = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
 
-    if (!selectedRole) {
-      alert("Please select a role");
-      return;
-    }
-
     if (!formData.email || !formData.password) {
       alert("Please enter email and password");
       return;
@@ -50,9 +45,9 @@ const LoginForm = () => {
       }
 
       if (res.user?.mustChangePassword && userRole !== "devotee") {
-        setPasswordResetToken(res.token);
-        setCurrentPassword(formData.password);
-        alert("First login detected. Please change password to continue.");
+        loginUser({ token: res.token, user: res.user });
+        alert("First login detected. You are logged in, but please change your password soon.");
+        navigate(`/${userRole}`);
         return;
       }
 
