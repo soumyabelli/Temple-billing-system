@@ -25,5 +25,14 @@
     "role": "accountant",
     "createdAt": "2026-05-19T14:00:47.912Z",
     "updatedAt": "2026-05-19T14:00:47.912Z"
+  },
+  {
+    "id": "c7d5ff75-2f67-48e8-b703-5c6b66dc599f",
+    "name": "cashier",
+    "email": "cashier@gamil.com",
+    "password": "$2b$10$KEu4xecf8G3ac8Bk2X0yEu70ouD9GHlmqPyYkLmpk3j4o6cukpdNK",
+    "role": "cashier",
+    "createdAt": "2026-05-20T04:40:06.721Z",
+    "updatedAt": "2026-05-20T04:40:06.721Z"
   }
 ]

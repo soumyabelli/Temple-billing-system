@@ -1,7 +1,7 @@
 import { sidebarItems } from "../../data/sidebarData";
 import { MdMenu, MdTempleBuddhist } from "react-icons/md";
 
-const Sidebar = ({ activeItem, onSelect, collapsed, setCollapsed, mobileOpen, setMobileOpen, darkMode }) => {
+const Sidebar = ({ activeItem, onSelect, collapsed, setCollapsed, mobileOpen, setMobileOpen, darkMode, onLogoutClick }) => {
   const baseItem = "relative w-full flex items-center gap-3 rounded-lg transition-all duration-300 text-left";
 
   return (
@@ -57,7 +57,13 @@ const Sidebar = ({ activeItem, onSelect, collapsed, setCollapsed, mobileOpen, se
                 key={item.title}
                 type="button"
                 onClick={() => {
-                  onSelect(item.title);
+                  if (item.title === "Logout") {
+                    if (onLogoutClick) {
+                      onLogoutClick();
+                    }
+                  } else {
+                    onSelect(item.title);
+                  }
                   setMobileOpen(false);
                 }}
                 className={`${baseItem} ${collapsed ? "px-2.5 py-2.5 justify-center" : "px-3 py-2"}
