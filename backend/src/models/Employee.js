@@ -29,11 +29,63 @@ const employeeSchema = new mongoose.Schema({
     default: "staff",
   },
 
+  gender: {
+    type: String,
+  },
+
+  dob: {
+    type: String,
+  },
+
+  bloodGroup: {
+    type: String,
+  },
+
+  aadhaar: {
+    type: String,
+  },
+
+  phone: {
+    type: String,
+  },
+
+  address: {
+    type: String,
+  },
+
+  emergencyContact: {
+    type: String,
+  },
+
   shift: {
     type: String,
   },
 
   department: {
+    type: String,
+  },
+
+  salary: {
+    type: String,
+  },
+
+  joiningDate: {
+    type: String,
+  },
+
+  employmentType: {
+    type: String,
+  },
+
+  permissions: {
+    type: String,
+  },
+
+  photo: {
+    type: String,
+  },
+
+  documentUrl: {
     type: String,
   },
 

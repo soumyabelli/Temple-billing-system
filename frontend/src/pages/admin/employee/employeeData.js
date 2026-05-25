@@ -73,8 +73,14 @@ export const growthTrend = [
 ];
 
 export const departments = ["Priest Services", "Pooja Services", "Accounts", "Billing", "Prasadam", "Maintenance", "Security", "Devotee Services"];
-export const employeeRoles = ["Head Priest", "Priest", "Accountant", "Cashier", "Support Staff", "Inventory Manager", "Maintenance Lead", "Security Guard"];
-export const shifts = ["Morning", "Afternoon", "Evening", "Night"]; 
+export const employeeRoles = [
+  { value: "admin", label: "Admin" },
+  { value: "priest", label: "Priest" },
+  { value: "accountant", label: "Accountant" },
+  { value: "cashier", label: "Cashier" },
+  { value: "staff", label: "Staff" },
+];
+export const shifts = ["Morning", "Afternoon", "Evening", "Night"];
 export const empTypes = ["Full-time", "Part-time", "Contract", "Temporary"];
 
 export const leaveRequests = [

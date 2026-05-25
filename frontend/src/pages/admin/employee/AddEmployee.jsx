@@ -1,12 +1,15 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { FiUpload, FiChevronRight, FiSave } from "react-icons/fi";
+import { useNavigate } from "react-router-dom";
 import SectionCard from "../../../components/admin/employee/SectionCard";
 import { departments, employeeRoles, shifts, empTypes } from "./employeeData";
+import { createEmployee } from "../../../services/employeeService";
 
 const steps = ["Personal Details", "Professional Details", "Account Details"];
 
 const AddEmployee = () => {
+  const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [form, setForm] = useState({
     name: "",
@@ -16,7 +19,7 @@ const AddEmployee = () => {
     aadhaar: "",
     address: "",
     emergency: "",
-    role: "Head Priest",
+    role: "priest",
     department: "Priest Services",
     salary: "",
     shift: "Morning",
@@ -29,6 +32,7 @@ const AddEmployee = () => {
     document: null,
   });
   const [message, setMessage] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const previewData = useMemo(
     () => ({
@@ -55,9 +59,61 @@ const AddEmployee = () => {
     if (step > 0) setStep((prev) => prev - 1);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage({ type: "success", text: "Employee profile saved successfully." });
+    setIsSaving(true);
+    setMessage(null);
+
+    try {
+      const payload = {
+        name: form.name,
+        email: form.email,
+        password: form.password,
+        role: form.role,
+        department: form.department,
+        shift: form.shift,
+        gender: form.gender,
+        dob: form.dob,
+        bloodGroup: form.bloodGroup,
+        aadhaar: form.aadhaar,
+        address: form.address,
+        emergencyContact: form.emergency,
+        salary: form.salary,
+        joiningDate: form.joiningDate,
+        employmentType: form.employmentType,
+        permissions: form.permissions,
+        photo: "",
+        documentUrl: "",
+      };
+
+      await createEmployee(payload);
+      setMessage({ type: "success", text: "Employee created successfully." });
+      setForm({
+        name: "",
+        gender: "Male",
+        dob: "",
+        bloodGroup: "O+",
+        aadhaar: "",
+        address: "",
+        emergency: "",
+        role: "Head Priest",
+        department: "Priest Services",
+        salary: "",
+        shift: "Morning",
+        joiningDate: "",
+        employmentType: "Full-time",
+        email: "",
+        password: "",
+        permissions: "Standard",
+        photo: null,
+        document: null,
+      });
+      navigate("/admin/employees");
+    } catch (error) {
+      setMessage({ type: "error", text: error.response?.data?.message || "Unable to save employee." });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -137,7 +193,11 @@ const AddEmployee = () => {
                   <label className="block space-y-2 text-sm text-slate-700">
                     Role
                     <select value={form.role} onChange={handleChange("role")} className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none">
-                      {employeeRoles.map((role) => <option key={role}>{role}</option>)}
+                      {employeeRoles.map((roleOption) => (
+                        <option key={roleOption.value} value={roleOption.value}>
+                          {roleOption.label}
+                        </option>
+                      ))}
                     </select>
                   </label>
                   <label className="block space-y-2 text-sm text-slate-700">

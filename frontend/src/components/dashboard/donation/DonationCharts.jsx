@@ -1,4 +1,4 @@
-﻿import {
+import {
   AreaChart,
   Area,
   XAxis,
@@ -12,32 +12,49 @@
   Legend,
 } from "recharts";
 
-const monthlyData = [
-  { month: "Jan", collected: 32000, target: 28000 },
-  { month: "Feb", collected: 45000, target: 42000 },
-  { month: "Mar", collected: 50000, target: 47000 },
-  { month: "Apr", collected: 62000, target: 52000 },
-  { month: "May", collected: 54000, target: 56000 },
-];
+const COLORS = ["#7c3aed", "#f59e0b", "#ef4444", "#14b8a6", "#38bdf8", "#a855f7", "#22c55e"];
 
-const categoryData = [
-  { name: "Annadanam", value: 35 },
-  { name: "Temple Fund", value: 26 },
-  { name: "Festival", value: 18 },
-  { name: "Sponsorship", value: 12 },
-  { name: "QR/UPI", value: 9 },
-];
+const normalizeDate = (item) => {
+  const dateValue = item.createdAt || item.date;
+  const parsed = new Date(dateValue);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
 
-const COLORS = ["#7c3aed", "#f59e0b", "#ef4444", "#14b8a6", "#38bdf8"];
+const DonationCharts = ({ donations = [] }) => {
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-const DonationCharts = () => {
+  const monthlyMap = donations.reduce((acc, donation) => {
+    const date = normalizeDate(donation);
+    if (!date) return acc;
+    const month = monthNames[date.getMonth()];
+    acc[month] = (acc[month] || 0) + (Number(donation.amount) || 0);
+    return acc;
+  }, {});
+
+  const monthlyData = monthNames.map((month) => {
+    const collected = monthlyMap[month] || 0;
+    return {
+      month,
+      collected,
+      target: Math.round(collected * 1.1) + 2000,
+    };
+  });
+
+  const categoryMap = donations.reduce((acc, donation) => {
+    const category = donation.category || "General";
+    acc[category] = (acc[category] || 0) + (Number(donation.amount) || 0);
+    return acc;
+  }, {});
+
+  const categoryData = Object.entries(categoryMap).map(([name, value]) => ({ name, value }));
+
   return (
     <div className="grid grid-cols-1 gap-6">
       <div className="rounded-[32px] border border-white/10 bg-slate-950/85 p-6 shadow-2xl shadow-slate-950/20 backdrop-blur-xl text-white">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="text-2xl font-semibold">Monthly Donation Progress</h2>
-            <p className="mt-2 text-slate-400">Monitor monthly inflows against administrative targets.</p>
+            <p className="mt-2 text-slate-400">Live donation collection trends from the backend dataset.</p>
           </div>
         </div>
         <div className="mt-6 h-[300px]">
@@ -45,11 +62,11 @@ const DonationCharts = () => {
             <AreaChart data={monthlyData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
               <defs>
                 <linearGradient id="colCollected" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#b45309" stopOpacity={0.8} />
+                  <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.8} />
                   <stop offset="95%" stopColor="#fbbf24" stopOpacity={0.05} />
                 </linearGradient>
                 <linearGradient id="colTarget" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#9333ea" stopOpacity={0.8} />
+                  <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.8} />
                   <stop offset="95%" stopColor="#a78bfa" stopOpacity={0.05} />
                 </linearGradient>
               </defs>
@@ -68,7 +85,7 @@ const DonationCharts = () => {
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="text-2xl font-semibold">Category Share</h2>
-            <p className="mt-2 text-slate-400">Donation composition by category, useful for planning campaigns and admin reports.</p>
+            <p className="mt-2 text-slate-400">Current donation category breakdown by amount.</p>
           </div>
         </div>
         <div className="mt-6 h-[300px]">

@@ -1,19 +1,75 @@
+import { useEffect, useState } from "react";
+import axios from "axios";
 import SectionCard from "../../../components/admin/employee/SectionCard";
 import DonationPageShell from "../../../components/admin/donations/DonationPageShell";
 
-const donations = [
-  { id: "D-10234", donor: "Ramesh Kumar", type: "Annadanam", amount: "₹5,000", method: "UPI", tx: "UPI452312", date: "20 May 2026", status: "Success", verifiedBy: "Priya" },
-  { id: "D-10250", donor: "Priya Shetty", type: "Temple Fund", amount: "₹10,000", method: "Net Banking", tx: "NB-7891", date: "19 May 2026", status: "Success", verifiedBy: "Suresh" },
-  { id: "D-10271", donor: "Suresh Rao", type: "Festival Donation", amount: "₹2,500", method: "Cash", tx: "CASH-559", date: "18 May 2026", status: "Pending", verifiedBy: "N/A" },
-];
-
 const AllDonations = () => {
+  const [donations, setDonations] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const fetchDonations = async () => {
+    setLoading(true);
+    try {
+      const res = await axios.get("http://localhost:5000/api/donations");
+      setDonations(Array.isArray(res.data?.donations) ? res.data.donations : []);
+    } catch (error) {
+      console.error("Unable to fetch donations:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleExport = () => {
+    const headers = [
+      "Receipt ID",
+      "Donor",
+      "Donation Type",
+      "Amount",
+      "Payment Method",
+      "Transaction ID",
+      "Date",
+      "Status",
+    ];
+
+    const rows = donations.map((item) => [
+      item._id || "",
+      item.donorName || "",
+      item.category || "",
+      item.amount != null ? item.amount.toString() : "",
+      item.paymentMethod || "",
+      item.transactionId || "",
+      new Date(item.createdAt || Date.now()).toLocaleDateString(),
+      item.status || "",
+    ]);
+
+    const csvContent = [headers, ...rows]
+      .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "donations-report.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  useEffect(() => {
+    fetchDonations();
+  }, []);
+
   return (
     <DonationPageShell
       title="All Donations"
       subtitle="A comprehensive donation registry with search, status, verification and export workflows."
       actions={
-        <button className="rounded-2xl bg-amber-400 px-5 py-3 font-semibold text-slate-950 transition hover:bg-amber-300">
+        <button
+          onClick={handleExport}
+          className="rounded-2xl bg-amber-400 px-5 py-3 font-semibold text-slate-950 transition hover:bg-amber-300"
+        >
           Export Report
         </button>
       }
@@ -35,23 +91,37 @@ const AllDonations = () => {
               </tr>
             </thead>
             <tbody>
-              {donations.map((item) => (
-                <tr key={item.id} className="border-b border-slate-200 hover:bg-slate-50 transition">
-                  <td className="py-4 px-3 font-medium text-slate-900">{item.id}</td>
-                  <td className="py-4 px-3">{item.donor}</td>
-                  <td className="py-4 px-3">{item.type}</td>
-                  <td className="py-4 px-3 text-amber-600 font-semibold">{item.amount}</td>
-                  <td className="py-4 px-3">{item.method}</td>
-                  <td className="py-4 px-3">{item.tx}</td>
-                  <td className="py-4 px-3">{item.date}</td>
-                  <td className="py-4 px-3">
-                    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${item.status === "Success" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
-                      {item.status}
-                    </span>
+              {loading ? (
+                <tr>
+                  <td colSpan="9" className="py-8 px-3 text-center text-slate-500">
+                    Loading donations...
                   </td>
-                  <td className="py-4 px-3">{item.verifiedBy}</td>
                 </tr>
-              ))}
+              ) : donations.length === 0 ? (
+                <tr>
+                  <td colSpan="9" className="py-8 px-3 text-center text-slate-500">
+                    No donations found.
+                  </td>
+                </tr>
+              ) : (
+                donations.map((item) => (
+                  <tr key={item._id} className="border-b border-slate-200 hover:bg-slate-50 transition">
+                    <td className="py-4 px-3 font-medium text-slate-900">{item._id?.slice(-8).toUpperCase()}</td>
+                    <td className="py-4 px-3">{item.donorName}</td>
+                    <td className="py-4 px-3">{item.category}</td>
+                    <td className="py-4 px-3 text-amber-600 font-semibold">₹{item.amount?.toLocaleString()}</td>
+                    <td className="py-4 px-3">{item.paymentMethod}</td>
+                    <td className="py-4 px-3">{item.transactionId || "—"}</td>
+                    <td className="py-4 px-3">{new Date(item.createdAt).toLocaleDateString()}</td>
+                    <td className="py-4 px-3">
+                      <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${item.status === "Completed" ? "bg-emerald-100 text-emerald-700" : item.status === "Pending" ? "bg-amber-100 text-amber-700" : "bg-rose-100 text-rose-700"}`}>
+                        {item.status}
+                      </span>
+                    </td>
+                    <td className="py-4 px-3">{item.verifiedBy || "N/A"}</td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -61,12 +131,14 @@ const AllDonations = () => {
         <SectionCard title="Donation Summary" subtitle="Key insights from the current donation ledger." className="h-full">
           <div className="grid gap-4">
             <div className="rounded-3xl bg-slate-950/10 p-5">
-              <p className="text-sm text-slate-400">Payment success rate</p>
-              <p className="mt-3 text-3xl font-semibold text-white">98.5%</p>
+              <p className="text-sm text-slate-400">Total donations recorded</p>
+              <p className="mt-3 text-3xl font-semibold text-white">{donations.length}</p>
             </div>
             <div className="rounded-3xl bg-slate-950/10 p-5">
-              <p className="text-sm text-slate-400">Recent activity</p>
-              <p className="mt-3 text-xl text-white">3 donations verified in the last hour</p>
+              <p className="text-sm text-slate-400">Latest donation</p>
+              <p className="mt-3 text-xl text-white">
+                {donations[0]?.donorName ? `${donations[0].donorName} - ₹${donations[0].amount?.toLocaleString()}` : "No donations yet"}
+              </p>
             </div>
           </div>
         </SectionCard>
