@@ -34,6 +34,20 @@ const AddEmployee = () => {
   const [message, setMessage] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
 
+  const isValidEmail = (value) => /^\S+@\S+\.\S+$/.test(String(value || "").trim());
+  const isValidDate = (value) => {
+    if (!value) return false;
+    const date = new Date(value);
+    return !Number.isNaN(date.getTime());
+  };
+  const isPastOrToday = (value) => {
+    const date = new Date(value);
+    if (!isValidDate(value)) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return date <= today;
+  };
+
   const previewData = useMemo(
     () => ({
       name: form.name || "New Temple Employee",
@@ -61,13 +75,48 @@ const AddEmployee = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsSaving(true);
     setMessage(null);
+
+    if (!form.name.trim()) {
+      setMessage({ type: "error", text: "Employee name is required." });
+      return;
+    }
+
+    if (!form.email.trim() || !isValidEmail(form.email)) {
+      setMessage({ type: "error", text: "Please enter a valid email address." });
+      return;
+    }
+
+    if (!form.password || form.password.length < 6) {
+      setMessage({ type: "error", text: "Password must be at least 6 characters long." });
+      return;
+    }
+
+    if (!form.dob || !isValidDate(form.dob) || !isPastOrToday(form.dob)) {
+      setMessage({ type: "error", text: "Please enter a valid date of birth." });
+      return;
+    }
+
+    if (form.joiningDate && (!isValidDate(form.joiningDate) || !isPastOrToday(form.joiningDate))) {
+      setMessage({ type: "error", text: "Please enter a valid joining date." });
+      return;
+    }
+
+    if (form.dob && form.joiningDate) {
+      const dobDate = new Date(form.dob);
+      const joinDate = new Date(form.joiningDate);
+      if (joinDate < dobDate) {
+        setMessage({ type: "error", text: "Joining date cannot be earlier than date of birth." });
+        return;
+      }
+    }
+
+    setIsSaving(true);
 
     try {
       const payload = {
-        name: form.name,
-        email: form.email,
+        name: form.name.trim(),
+        email: form.email.trim(),
         password: form.password,
         role: form.role,
         department: form.department,
@@ -75,10 +124,10 @@ const AddEmployee = () => {
         gender: form.gender,
         dob: form.dob,
         bloodGroup: form.bloodGroup,
-        aadhaar: form.aadhaar,
-        address: form.address,
-        emergencyContact: form.emergency,
-        salary: form.salary,
+        aadhaar: form.aadhaar.trim(),
+        address: form.address.trim(),
+        emergencyContact: form.emergency.trim(),
+        salary: form.salary.trim(),
         joiningDate: form.joiningDate,
         employmentType: form.employmentType,
         permissions: form.permissions,
@@ -96,7 +145,7 @@ const AddEmployee = () => {
         aadhaar: "",
         address: "",
         emergency: "",
-        role: "Head Priest",
+        role: "priest",
         department: "Priest Services",
         salary: "",
         shift: "Morning",

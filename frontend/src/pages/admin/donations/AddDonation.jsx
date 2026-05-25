@@ -17,6 +17,16 @@ const AddDonation = () => {
   const [notes, setNotes] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
+  const isValidContactNumber = (value) => {
+    if (!value) return true;
+    return /^\+?[0-9\s-]{7,15}$/.test(value.trim());
+  };
+
+  const isValidAmount = (value) => {
+    const parsed = Number(String(value).replace(/[^0-9.-]+/g, ""));
+    return !Number.isNaN(parsed) && parsed > 0;
+  };
+
   const loadDonationTypes = () => {
     const savedTypes = getDonationTypes();
     setCategories(savedTypes);
@@ -38,21 +48,31 @@ const AddDonation = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    if (!donorName.trim() || !amount.trim()) {
-      alert("Please enter donor name and amount.");
+    if (!donorName.trim()) {
+      alert("Please enter donor name.");
+      return;
+    }
+
+    if (!amount.trim() || !isValidAmount(amount)) {
+      alert("Please enter a valid donation amount.");
+      return;
+    }
+
+    if (!isValidContactNumber(contactNumber)) {
+      alert("Please provide a valid contact number.");
       return;
     }
 
     try {
       setIsSaving(true);
       const res = await axios.post("http://localhost:5000/api/donations", {
-        donorName,
-        contactNumber,
+        donorName: donorName.trim(),
+        contactNumber: contactNumber.trim(),
         amount,
         category,
         paymentMethod: method,
-        transactionId,
-        notes,
+        transactionId: transactionId.trim(),
+        notes: notes.trim(),
       });
 
       if (res.data?.success) {
@@ -100,6 +120,7 @@ const AddDonation = () => {
             <label className="block text-sm text-slate-700">
               Contact Number
               <input
+                type="tel"
                 value={contactNumber}
                 onChange={(e) => setContactNumber(e.target.value)}
                 className="mt-2 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none"

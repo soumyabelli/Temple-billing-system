@@ -20,6 +20,13 @@ const createDonation = async (req, res) => {
       });
     }
 
+    if (contactNumber && !/^\+?[0-9\s-]{7,15}$/.test(contactNumber.trim())) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a valid contact number.",
+      });
+    }
+
     const numericAmount = Number(String(amount).replace(/[^0-9.-]+/g, ""));
 
     if (Number.isNaN(numericAmount) || numericAmount <= 0) {

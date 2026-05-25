@@ -5,6 +5,21 @@ const jwt = require("jsonwebtoken");
 
 const ALLOWED_AUTH_ROLES = ["admin", "accountant", "cashier", "priest", "staff"];
 
+const isValidEmail = (email) => /^\S+@\S+\.\S+$/.test(String(email || "").trim());
+const isValidDate = (value) => {
+  if (!value) return false;
+  const date = new Date(value);
+  return !Number.isNaN(date.getTime());
+};
+const isPastOrToday = (value) => {
+  if (!isValidDate(value)) return false;
+  const date = new Date(value);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  date.setHours(0, 0, 0, 0);
+  return date <= today;
+};
+
 // CREATE EMPLOYEE
 exports.createEmployee = async (req, res) => {
   try {
@@ -34,16 +49,36 @@ exports.createEmployee = async (req, res) => {
     const normalizedRole = String(role || "").toLowerCase().trim();
 
     if (!name || !normalizedEmail || !password || !normalizedRole) {
-      return res.status(400).json({ message: "Name, email, password and role are required" });
+      return res.status(400).json({ message: "Name, email, password and role are required." });
+    }
+
+    if (!isValidEmail(normalizedEmail)) {
+      return res.status(400).json({ message: "Invalid email address." });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ message: "Password must be at least 6 characters." });
     }
 
     if (!ALLOWED_AUTH_ROLES.includes(normalizedRole)) {
       return res.status(400).json({ message: "Invalid role. Please choose a valid employee role." });
     }
 
+    if (dob && (!isValidDate(dob) || !isPastOrToday(dob))) {
+      return res.status(400).json({ message: "Invalid date of birth." });
+    }
+
+    if (joiningDate && (!isValidDate(joiningDate) || !isPastOrToday(joiningDate))) {
+      return res.status(400).json({ message: "Invalid joining date." });
+    }
+
+    if (dob && joiningDate && new Date(joiningDate) < new Date(dob)) {
+      return res.status(400).json({ message: "Joining date cannot be earlier than date of birth." });
+    }
+
     const existingEmployee = await Employee.findOne({ email: normalizedEmail });
     if (existingEmployee) {
-      return res.status(400).json({ message: "Employee already exists" });
+      return res.status(400).json({ message: "Employee already exists." });
     }
 
     const existingUser = await User.findOne({ email: normalizedEmail });
