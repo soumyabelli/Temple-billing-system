@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Sidebar from "../components/common/Sidebar";
 import Topbar from "../components/common/Topbar";
+import LogoutModal from "../components/LogoutModal";
+import { useAuth } from "../context/AuthContext";
 import { sidebarItems } from "../data/sidebarData";
 
 const findActiveItem = (path) => {
@@ -12,14 +14,30 @@ const findActiveItem = (path) => {
 const AdminLayout = ({ children, onLogoutClick }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { logoutUser } = useAuth();
   const [activeItem, setActiveItem] = useState(findActiveItem(location.pathname));
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
+  const [showLogout, setShowLogout] = useState(false);
 
   useEffect(() => {
     setActiveItem(findActiveItem(location.pathname));
   }, [location.pathname]);
+
+  const handleLogout = () => {
+    logoutUser();
+    setShowLogout(false);
+    navigate("/login");
+  };
+
+  const handleSidebarLogoutClick = () => {
+    if (onLogoutClick) {
+      onLogoutClick();
+      return;
+    }
+    setShowLogout(true);
+  };
 
   return (
     <div
@@ -39,7 +57,7 @@ const AdminLayout = ({ children, onLogoutClick }) => {
         mobileOpen={mobileOpen}
         setMobileOpen={setMobileOpen}
         darkMode={darkMode}
-        onLogoutClick={onLogoutClick}
+        onLogoutClick={handleSidebarLogoutClick}
       />
 
       <div
@@ -57,6 +75,13 @@ const AdminLayout = ({ children, onLogoutClick }) => {
 
         {typeof children === "function" ? children({ activeItem, darkMode }) : children}
       </div>
+
+      {showLogout && (
+        <LogoutModal
+          onClose={() => setShowLogout(false)}
+          onLogout={handleLogout}
+        />
+      )}
     </div>
   );
 };

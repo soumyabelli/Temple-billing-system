@@ -28,6 +28,8 @@ import Payroll from "./pages/admin/employee/Payroll";
 import LeaveManagement from "./pages/admin/employee/LeaveManagement";
 import Performance from "./pages/admin/employee/Performance";
 import ShiftManagement from "./pages/admin/employee/ShiftManagement";
+import PoojaManagement from "./pages/admin/PoojaManagement";
+import SettingsManagement from "./pages/admin/SettingsManagement";
 import AdminLayout from "./layouts/AdminLayout";
 
 import AccountantDashboard from "./pages/accountant/AccountantDashboard";
@@ -46,6 +48,7 @@ function App() {
 
       {/* AUTH */}
       <Route path="/" element={<LoginPage />} />
+      <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route
         path="/forgot-password"
@@ -58,6 +61,34 @@ function App() {
         element={
           <ProtectedRoute allowedRoles={["admin"]}>
             <AdminDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/devotees"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/pooja"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminLayout>
+              <PoojaManagement />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/settings"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminLayout>
+              <SettingsManagement />
+            </AdminLayout>
           </ProtectedRoute>
         }
       />
