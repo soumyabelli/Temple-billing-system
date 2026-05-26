@@ -35,7 +35,9 @@ const EmployeeTable = ({ employees, onView, onDelete, loading }) => {
             {employees.map((employee, index) => {
               const recordId = employee.id || employee._id || "-";
               const contact = employee.phone || employee.emergencyContact || "—";
-              const joiningDate = employee.joiningDate || employee.createdAt ? new Date(employee.joiningDate || employee.createdAt).toLocaleDateString() : "—";
+              const joiningDate = employee.joiningDate || employee.createdAt
+                ? new Date(employee.joiningDate || employee.createdAt).toLocaleDateString()
+                : "—";
               const salary = employee.salary || "₹ 0";
               const photo = employee.photo || `https://i.pravatar.cc/120?u=${recordId}`;
 

@@ -64,16 +64,23 @@ exports.createEmployee = async (req, res) => {
       return res.status(400).json({ message: "Invalid role. Please choose a valid employee role." });
     }
 
-    if (dob && (!isValidDate(dob) || !isPastOrToday(dob))) {
-      return res.status(400).json({ message: "Invalid date of birth." });
+    if (!dob || !isValidDate(dob) || !isPastOrToday(dob)) {
+      return res.status(400).json({ message: "Date of birth is required and must be a valid past date." });
     }
 
-    if (joiningDate && (!isValidDate(joiningDate) || !isPastOrToday(joiningDate))) {
-      return res.status(400).json({ message: "Invalid joining date." });
+    if (!joiningDate || !isValidDate(joiningDate) || !isPastOrToday(joiningDate)) {
+      return res.status(400).json({ message: "Joining date is required and must be today or earlier." });
     }
 
-    if (dob && joiningDate && new Date(joiningDate) < new Date(dob)) {
+    const dobDate = new Date(dob);
+    const joinDate = new Date(joiningDate);
+    if (joinDate < dobDate) {
       return res.status(400).json({ message: "Joining date cannot be earlier than date of birth." });
+    }
+
+    const ageAtJoining = joinDate.getFullYear() - dobDate.getFullYear() - (joinDate.getMonth() < dobDate.getMonth() || (joinDate.getMonth() === dobDate.getMonth() && joinDate.getDate() < dobDate.getDate()) ? 1 : 0);
+    if (ageAtJoining < 14) {
+      return res.status(400).json({ message: "Employee must be at least 14 years old at joining." });
     }
 
     const existingEmployee = await Employee.findOne({ email: normalizedEmail });

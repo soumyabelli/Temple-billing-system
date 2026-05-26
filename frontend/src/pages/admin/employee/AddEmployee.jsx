@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { FiUpload, FiChevronRight, FiSave } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
@@ -6,33 +6,61 @@ import SectionCard from "../../../components/admin/employee/SectionCard";
 import { departments, employeeRoles, shifts, empTypes } from "./employeeData";
 import { createEmployee } from "../../../services/employeeService";
 
+const initialForm = {
+  name: "",
+  gender: "Male",
+  dob: "",
+  bloodGroup: "O+",
+  aadhaar: "",
+  address: "",
+  emergency: "",
+  role: "priest",
+  department: "Priest Services",
+  salary: "",
+  shift: "Morning",
+  joiningDate: "",
+  employmentType: "Full-time",
+  email: "",
+  password: "",
+  permissions: "Standard",
+  photo: null,
+  document: null,
+};
+
+const bloodGroups = ["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"];
+const draftKey = "adminEmployeeDraft";
+
+const isValidAadhaar = (value) => /^\d{12}$/.test(String(value).replace(/\D/g, ""));
+const isValidPhone = (value) => /^\+?[0-9]{10,15}$/.test(String(value).replace(/[\s-]/g, ""));
+
 const steps = ["Personal Details", "Professional Details", "Account Details"];
 
 const AddEmployee = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
-  const [form, setForm] = useState({
-    name: "",
-    gender: "Male",
-    dob: "",
-    bloodGroup: "O+",
-    aadhaar: "",
-    address: "",
-    emergency: "",
-    role: "priest",
-    department: "Priest Services",
-    salary: "",
-    shift: "Morning",
-    joiningDate: "",
-    employmentType: "Full-time",
-    email: "",
-    password: "",
-    permissions: "Standard",
-    photo: null,
-    document: null,
-  });
+  const [form, setForm] = useState(initialForm);
   const [message, setMessage] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    try {
+      const draft = localStorage.getItem(draftKey);
+      if (draft) {
+        setForm(JSON.parse(draft));
+      }
+    } catch (error) {
+      console.warn("Unable to load saved draft", error);
+    }
+  }, []);
+
+  const handleSaveDraft = () => {
+    try {
+      localStorage.setItem(draftKey, JSON.stringify(form));
+      setMessage({ type: "success", text: "Draft saved locally." });
+    } catch (error) {
+      setMessage({ type: "error", text: "Unable to save draft." });
+    }
+  };
 
   const isValidEmail = (value) => /^\S+@\S+\.\S+$/.test(String(value || "").trim());
   const isValidDate = (value) => {
@@ -92,12 +120,22 @@ const AddEmployee = () => {
       return;
     }
 
+    if (!form.aadhaar.trim() || !isValidAadhaar(form.aadhaar)) {
+      setMessage({ type: "error", text: "Aadhaar number must be a 12 digit number." });
+      return;
+    }
+
+    if (!form.emergency.trim() || !isValidPhone(form.emergency)) {
+      setMessage({ type: "error", text: "Please enter a valid emergency contact number." });
+      return;
+    }
+
     if (!form.dob || !isValidDate(form.dob) || !isPastOrToday(form.dob)) {
       setMessage({ type: "error", text: "Please enter a valid date of birth." });
       return;
     }
 
-    if (form.joiningDate && (!isValidDate(form.joiningDate) || !isPastOrToday(form.joiningDate))) {
+    if (!form.joiningDate || !isValidDate(form.joiningDate) || !isPastOrToday(form.joiningDate)) {
       setMessage({ type: "error", text: "Please enter a valid joining date." });
       return;
     }
@@ -105,8 +143,15 @@ const AddEmployee = () => {
     if (form.dob && form.joiningDate) {
       const dobDate = new Date(form.dob);
       const joinDate = new Date(form.joiningDate);
+      const ageAtJoining = joinDate.getFullYear() - dobDate.getFullYear() - (joinDate.getMonth() < dobDate.getMonth() || (joinDate.getMonth() === dobDate.getMonth() && joinDate.getDate() < dobDate.getDate()) ? 1 : 0);
+
       if (joinDate < dobDate) {
         setMessage({ type: "error", text: "Joining date cannot be earlier than date of birth." });
+        return;
+      }
+
+      if (ageAtJoining < 14) {
+        setMessage({ type: "error", text: "Employee must be at least 14 years old at joining." });
         return;
       }
     }
@@ -137,26 +182,8 @@ const AddEmployee = () => {
 
       await createEmployee(payload);
       setMessage({ type: "success", text: "Employee created successfully." });
-      setForm({
-        name: "",
-        gender: "Male",
-        dob: "",
-        bloodGroup: "O+",
-        aadhaar: "",
-        address: "",
-        emergency: "",
-        role: "priest",
-        department: "Priest Services",
-        salary: "",
-        shift: "Morning",
-        joiningDate: "",
-        employmentType: "Full-time",
-        email: "",
-        password: "",
-        permissions: "Standard",
-        photo: null,
-        document: null,
-      });
+      setForm(initialForm);
+      localStorage.removeItem(draftKey);
       navigate("/admin/employees");
     } catch (error) {
       setMessage({ type: "error", text: error.response?.data?.message || "Unable to save employee." });
@@ -174,7 +201,7 @@ const AddEmployee = () => {
             <h1 className="mt-3 text-4xl font-bold tracking-tight">Add Employee</h1>
             <p className="max-w-2xl text-slate-200/90 mt-2">A premium onboarding experience with step-by-step form flow and live profile preview.</p>
           </div>
-          <button className="inline-flex items-center gap-2 rounded-full bg-amber-400 px-5 py-3 font-semibold text-slate-950 shadow-xl shadow-amber-500/20 transition hover:-translate-y-0.5">
+          <button type="button" onClick={handleSaveDraft} className="inline-flex items-center gap-2 rounded-full bg-amber-400 px-5 py-3 font-semibold text-slate-950 shadow-xl shadow-amber-500/20 transition hover:-translate-y-0.5">
             <FiSave /> Save Draft
           </button>
         </div>
@@ -216,10 +243,11 @@ const AddEmployee = () => {
                   <label className="block space-y-2 text-sm text-slate-700">
                     Blood Group
                     <select value={form.bloodGroup} onChange={handleChange("bloodGroup")} className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none">
-                      <option>O+</option>
-                      <option>A+</option>
-                      <option>B+</option>
-                      <option>AB+</option>
+                      {bloodGroups.map((bloodGroup) => (
+                        <option key={bloodGroup} value={bloodGroup}>
+                          {bloodGroup}
+                        </option>
+                      ))}
                     </select>
                   </label>
                   <label className="block space-y-2 text-sm text-slate-700 md:col-span-2">
@@ -361,6 +389,16 @@ const AddEmployee = () => {
                 <div className="rounded-3xl bg-white p-4 shadow-sm">
                   <p className="text-sm text-slate-500">Department</p>
                   <p className="mt-1 font-semibold text-slate-900">{previewData.department}</p>
+                </div>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="rounded-3xl bg-white p-4 shadow-sm">
+                  <p className="text-sm text-slate-500">Shift</p>
+                  <p className="mt-1 font-semibold text-slate-900">{form.shift}</p>
+                </div>
+                <div className="rounded-3xl bg-white p-4 shadow-sm">
+                  <p className="text-sm text-slate-500">Employment Type</p>
+                  <p className="mt-1 font-semibold text-slate-900">{form.employmentType}</p>
                 </div>
               </div>
               <div className="rounded-3xl bg-white p-4 shadow-sm">

@@ -5,14 +5,7 @@ import { ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell, Tooltip } fr
 import { useNavigate } from "react-router-dom";
 import SectionCard from "../../../components/admin/employee/SectionCard";
 import EmployeeTable from "../../../components/admin/employee/EmployeeTable";
-import {
-  recentJoinings,
-  upcomingBirthdays,
-  distributionData,
-  attendanceTrend,
-  departmentStrength,
-  payrollTrend,
-} from "./employeeData";
+import { attendanceTrend, payrollTrend } from "./employeeData";
 import { getEmployees, deleteEmployee } from "../../../services/employeeService";
 
 const chartColors = ["#7c3aed", "#ec4899", "#38bdf8", "#f59e0b", "#10b981"];
@@ -69,6 +62,117 @@ const AllEmployees = () => {
   const handleViewEmployee = (employee) => {
     setSelectedEmployee(employee);
   };
+
+  const handleExport = () => {
+    if (!filteredEmployees.length) return;
+
+    const headers = [
+      "Name",
+      "Email",
+      "Role",
+      "Department",
+      "Contact",
+      "Shift",
+      "Status",
+      "Joining Date",
+      "Salary",
+      "Employment Type",
+    ];
+
+    const csvRows = [
+      headers.join(","),
+      ...filteredEmployees.map((employee) => {
+        const row = [
+          employee.name || "",
+          employee.email || "",
+          employee.role || "",
+          employee.department || "",
+          employee.phone || employee.emergencyContact || "",
+          employee.shift || "",
+          employee.status || "Active",
+          employee.joiningDate || "",
+          employee.salary || "",
+          employee.employmentType || "",
+        ]
+          .map((cell) => `"${String(cell).replace(/"/g, '""')}"`)
+          .join(",");
+        return row;
+      }),
+    ].join("\n");
+
+    const blob = new Blob([csvRows], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `temple-employees-${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const departmentStrength = useMemo(() => {
+    const counts = employees.reduce((total, employee) => {
+      const department = employee.department || "Unassigned";
+      total[department] = (total[department] || 0) + 1;
+      return total;
+    }, {});
+
+    return Object.entries(counts).map(([department, value]) => ({ department, value }));
+  }, [employees]);
+
+  const distributionData = useMemo(() => {
+    const counts = employees.reduce((total, employee) => {
+      const role = employee.role || "Unknown";
+      total[role] = (total[role] || 0) + 1;
+      return total;
+    }, {});
+
+    return Object.entries(counts).map(([name, value]) => ({ name, value }));
+  }, [employees]);
+
+  const recentJoinings = useMemo(() => {
+    return employees
+      .filter((employee) => employee.joiningDate)
+      .slice()
+      .sort((a, b) => new Date(b.joiningDate) - new Date(a.joiningDate))
+      .slice(0, 3)
+      .map((employee) => ({
+        name: employee.name,
+        role: employee.role,
+        date: new Date(employee.joiningDate).toLocaleDateString("en-IN", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        }),
+      }));
+  }, [employees]);
+
+  const upcomingBirthdays = useMemo(() => {
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    return employees
+      .filter((employee) => employee.dob)
+      .map((employee) => {
+        const dob = new Date(employee.dob);
+        const birthdayThisYear = new Date(currentYear, dob.getMonth(), dob.getDate());
+        const nextBirthday = birthdayThisYear < today ? new Date(currentYear + 1, dob.getMonth(), dob.getDate()) : birthdayThisYear;
+        return {
+          ...employee,
+          nextBirthday,
+        };
+      })
+      .sort((a, b) => a.nextBirthday - b.nextBirthday)
+      .slice(0, 3)
+      .map((employee) => ({
+        name: employee.name,
+        role: employee.role || employee.department || "Staff",
+        date: employee.nextBirthday.toLocaleDateString("en-IN", {
+          day: "2-digit",
+          month: "short",
+        }),
+      }));
+  }, [employees]);
 
   const employeeStats = useMemo(() => {
     const total = employees.length;
@@ -130,7 +234,7 @@ const AllEmployees = () => {
           <button className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-lg hover:bg-slate-800 transition">
             <FiFilter /> Filters
           </button>
-          <button className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-white px-4 py-2 text-sm font-semibold text-amber-600 shadow-sm hover:bg-amber-50 transition">
+          <button onClick={handleExport} className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-white px-4 py-2 text-sm font-semibold text-amber-600 shadow-sm hover:bg-amber-50 transition">
             <FiUpload /> Export
           </button>
         </div>}>
@@ -242,7 +346,7 @@ const AllEmployees = () => {
             </div>
           </SectionCard>
 
-          <SectionCard title="Employee Distribution" subtitle="Role proportion in the temple workforce." className="text-center">
+          <SectionCard title="Employee Distribution" subtitle="Live role proportion in the temple workforce." className="text-center">
             <ResponsiveContainer width="100%" height={280}>
               <PieChart>
                 <Pie data={distributionData} dataKey="value" cx="50%" cy="50%" innerRadius={52} outerRadius={90} paddingAngle={4}>
