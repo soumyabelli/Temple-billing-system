@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { FiUpload, FiChevronRight, FiSave } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import SectionCard from "../../../components/admin/employee/SectionCard";
-import { departments, employeeRoles, shifts, empTypes } from "./employeeData";
+import { departments as defaultDepartments, employeeRoles, empTypes } from "./employeeData";
 import { createEmployee } from "../../../services/employeeService";
 
 const initialForm = {
@@ -29,6 +29,8 @@ const initialForm = {
 
 const bloodGroups = ["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"];
 const draftKey = "adminEmployeeDraft";
+const departmentsKey = "templeDepartments";
+const shiftOptions = ["Day", "Night"];
 
 const isValidAadhaar = (value) => /^\d{12}$/.test(String(value).replace(/\D/g, ""));
 const isValidPhone = (value) => /^\+?[0-9]{10,15}$/.test(String(value).replace(/[\s-]/g, ""));
@@ -41,6 +43,9 @@ const AddEmployee = () => {
   const [form, setForm] = useState(initialForm);
   const [message, setMessage] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [departmentsList, setDepartmentsList] = useState(defaultDepartments);
+  const [newDepartment, setNewDepartment] = useState("");
+  const [showDepartmentManager, setShowDepartmentManager] = useState(false);
 
   useEffect(() => {
     try {
@@ -51,6 +56,15 @@ const AddEmployee = () => {
     } catch (error) {
       console.warn("Unable to load saved draft", error);
     }
+
+    try {
+      const storedDepartments = localStorage.getItem(departmentsKey);
+      if (storedDepartments) {
+        setDepartmentsList(JSON.parse(storedDepartments));
+      }
+    } catch (error) {
+      console.warn("Unable to load departments", error);
+    }
   }, []);
 
   const handleSaveDraft = () => {
@@ -60,6 +74,41 @@ const AddEmployee = () => {
     } catch (error) {
       setMessage({ type: "error", text: "Unable to save draft." });
     }
+  };
+
+  const saveDepartments = (items) => {
+    try {
+      localStorage.setItem(departmentsKey, JSON.stringify(items));
+    } catch (error) {
+      console.warn("Unable to save department list", error);
+    }
+  };
+
+  const handleAddDepartment = () => {
+    const trimmed = newDepartment.trim();
+    if (!trimmed) {
+      setMessage({ type: "error", text: "Please enter a department name." });
+      return;
+    }
+    if (departmentsList.some((dept) => dept.toLowerCase() === trimmed.toLowerCase())) {
+      setMessage({ type: "error", text: "That department already exists." });
+      return;
+    }
+    const nextDepartments = [...departmentsList, trimmed];
+    setDepartmentsList(nextDepartments);
+    saveDepartments(nextDepartments);
+    setNewDepartment("");
+    setMessage({ type: "success", text: "Department added successfully." });
+  };
+
+  const handleRemoveDepartment = (department) => {
+    const nextDepartments = departmentsList.filter((dept) => dept !== department);
+    setDepartmentsList(nextDepartments);
+    saveDepartments(nextDepartments);
+    if (form.department === department) {
+      setForm((prev) => ({ ...prev, department: nextDepartments[0] || "" }));
+    }
+    setMessage({ type: "success", text: "Department removed successfully." });
   };
 
   const isValidEmail = (value) => /^\S+@\S+\.\S+$/.test(String(value || "").trim());
@@ -277,12 +326,71 @@ const AddEmployee = () => {
                       ))}
                     </select>
                   </label>
-                  <label className="block space-y-2 text-sm text-slate-700">
-                    Department
-                    <select value={form.department} onChange={handleChange("department")} className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none">
-                      {departments.map((dept) => <option key={dept}>{dept}</option>)}
-                    </select>
-                  </label>
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between gap-3">
+                      <label className="block space-y-2 text-sm text-slate-700 flex-1">
+                        Department
+                        <select value={form.department} onChange={handleChange("department")} className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none">
+                          {departmentsList.map((dept) => (
+                            <option key={dept} value={dept}>
+                              {dept}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setShowDepartmentManager((prev) => !prev)}
+                        className="h-12 whitespace-nowrap rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-slate-800"
+                      >
+                        {showDepartmentManager ? "Hide departments" : "Show departments"}
+                      </button>
+                    </div>
+
+                    {showDepartmentManager && (
+                      <>
+                        <div className="grid gap-3 sm:grid-cols-[1fr_auto] items-end">
+                          <label className="block space-y-2 text-sm text-slate-700">
+                            Add Department
+                            <input
+                              type="text"
+                              value={newDepartment}
+                              onChange={(e) => setNewDepartment(e.target.value)}
+                              placeholder="New department name"
+                              className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none"
+                            />
+                          </label>
+                          <button
+                            type="button"
+                            onClick={handleAddDepartment}
+                            className="h-12 rounded-full bg-amber-400 px-5 py-3 text-sm font-semibold text-slate-950 shadow-lg hover:bg-amber-500 transition"
+                          >
+                            Add
+                          </button>
+                        </div>
+
+                        <div className="space-y-2">
+                          <p className="text-sm text-slate-600">Existing departments</p>
+                          <div className="grid gap-2">
+                            {departmentsList.map((dept) => (
+                              <div key={dept} className="flex items-center justify-between rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3">
+                                <span className="text-sm text-slate-800">{dept}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveDepartment(dept)}
+                                  className="rounded-full bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-100"
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <p className="text-xs text-slate-500">New departments added by admin appear immediately in the dropdown.</p>
+                      </>
+                    )}
+                  </div>
                   <label className="block space-y-2 text-sm text-slate-700">
                     Salary
                     <input value={form.salary} onChange={handleChange("salary")} placeholder="₹ 45,000" className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none" />
@@ -290,7 +398,11 @@ const AddEmployee = () => {
                   <label className="block space-y-2 text-sm text-slate-700">
                     Shift
                     <select value={form.shift} onChange={handleChange("shift")} className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none">
-                      {shifts.map((shift) => <option key={shift}>{shift}</option>)}
+                      {shiftOptions.map((shift) => (
+                        <option key={shift} value={shift}>
+                          {shift}
+                        </option>
+                      ))}
                     </select>
                   </label>
                   <label className="block space-y-2 text-sm text-slate-700">
