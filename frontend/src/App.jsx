@@ -30,13 +30,16 @@ import Performance from "./pages/admin/employee/Performance";
 import ShiftManagement from "./pages/admin/employee/ShiftManagement";
 import PoojaManagement from "./pages/admin/PoojaManagement";
 import SettingsManagement from "./pages/admin/SettingsManagement";
+import FestivalsEventsManagement from "./pages/admin/FestivalsEventsManagement";
 import AdminLayout from "./layouts/AdminLayout";
 
 import AccountantDashboard from "./pages/accountant/AccountantDashboard";
 import CashierDashboard from "./pages/cashier/CashierDashboard";
 import PriestDashboard from "./pages/priest/PriestDashboard";
 import StaffDashboard from "./pages/staff/StaffDashboard";
+import LeaveHistory from "./pages/staff/LeaveHistory";
 import DevoteeDashboard from "./pages/devotee/DevoteeDashboard";
+import AssignTask from "./pages/admin/AssignTask";
 
 import LoginPage from "./pages/auth/LoginPage";
 import RegisterPage from "./pages/auth/RegisterPage";
@@ -72,6 +75,25 @@ function App() {
           </ProtectedRoute>
         }
       />
+
+      <Route
+        path="/leave-history"
+        element={
+          <ProtectedRoute allowedRoles={["staff"]}>
+            <LeaveHistory />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/assign-task"
+        element={
+          <ProtectedRoute allowedRoles={["admin", "priest"]}>
+            <AssignTask />
+          </ProtectedRoute>
+        }
+      />
+
       <Route
         path="/admin/pooja"
         element={
@@ -88,6 +110,16 @@ function App() {
           <ProtectedRoute allowedRoles={["admin"]}>
             <AdminLayout>
               <SettingsManagement />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/events"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminLayout>
+              <FestivalsEventsManagement />
             </AdminLayout>
           </ProtectedRoute>
         }

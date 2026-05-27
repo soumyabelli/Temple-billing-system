@@ -1,141 +1,567 @@
-import { FaClipboardList, FaCheckCircle, FaClock, FaBoxOpen, FaBell } from "react-icons/fa";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import {
+  FiBell,
+  FiCalendar,
+  FiCheckCircle,
+  FiClipboard,
+  FiClock,
+  FiFileText,
+  FiHome,
+  FiLogOut,
+  FiMapPin,
+  FiUser,
+} from "react-icons/fi";
+import { MdTempleHindu } from "react-icons/md";
+import { TbChecklist, TbHourglassLow, TbProgressCheck } from "react-icons/tb";
+import { useAuth } from "../../context/AuthContext";
+import "./StaffDashboard.css";
 
-const statCards = [
-  { title: "Today's Tasks", value: "8", icon: <FaClipboardList />, color: "bg-amber-500" },
-  { title: "Completed", value: "5", icon: <FaCheckCircle />, color: "bg-emerald-500" },
-  { title: "Pending", value: "3", icon: <FaClock />, color: "bg-orange-500" },
-  { title: "Low Stock", value: "7", icon: <FaBoxOpen />, color: "bg-indigo-500" },
-];
+const API_BASE = "http://localhost:5000/api";
+const POLL_INTERVAL_MS = 10000;
+const TASK_STATUSES = ["Pending", "In Progress", "Completed"];
+const LEAVE_TYPES = ["Sick Leave", "Casual Leave", "Festival Leave", "Emergency Leave", "General"];
+
+const formatHeaderDate = () =>
+  new Date().toLocaleDateString("en-IN", {
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+
+const statusClassMap = {
+  Pending: "pending",
+  "In Progress": "progress",
+  Completed: "completed",
+  Approved: "approved",
+  Rejected: "rejected",
+};
+
+const parseDate = (value) => {
+  if (!value) return null;
+  const parsed = new Date(`${value}T00:00:00`);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
+const leaveDays = (fromDate, toDate) => {
+  const from = parseDate(fromDate);
+  const to = parseDate(toDate);
+  if (!from || !to || to < from) {
+    return 0;
+  }
+  const oneDayMs = 24 * 60 * 60 * 1000;
+  return Math.floor((to - from) / oneDayMs) + 1;
+};
+
+const leavePeriod = (fromDate, toDate) => {
+  const from = parseDate(fromDate);
+  const to = parseDate(toDate);
+  if (!from || !to) {
+    return `${fromDate || "-"} to ${toDate || "-"}`;
+  }
+  const fromLabel = from.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+  const toLabel = to.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+  return `${fromLabel} - ${toLabel}`;
+};
 
 const StaffDashboard = () => {
+  const navigate = useNavigate();
+  const { user, logoutUser } = useAuth();
+  const storedUser = JSON.parse(localStorage.getItem("user") || "null");
+  const staff = user || storedUser;
+
+  const [activeSection, setActiveSection] = useState("dashboard");
+  const [tasks, setTasks] = useState([]);
+  const [leaves, setLeaves] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [submittingLeave, setSubmittingLeave] = useState(false);
+  const [updatingTaskId, setUpdatingTaskId] = useState("");
+  const [error, setError] = useState("");
+  const [leaveForm, setLeaveForm] = useState({
+    leaveType: "General",
+    reason: "",
+    fromDate: "",
+    toDate: "",
+  });
+
+  const staffId = staff?.id || staff?._id || "";
+
+  const fetchDashboardData = useCallback(async () => {
+    if (!staffId) {
+      setError("Staff user not found. Please login again.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setError("");
+      const [taskRes, leaveRes] = await Promise.all([
+        axios.get(`${API_BASE}/staff/tasks/${staffId}`),
+        axios.get(`${API_BASE}/leaves/${staffId}`),
+      ]);
+      setTasks(Array.isArray(taskRes.data) ? taskRes.data : []);
+      setLeaves(Array.isArray(leaveRes.data) ? leaveRes.data : []);
+    } catch (apiError) {
+      setError(apiError.response?.data?.message || "Failed to load dashboard data");
+    } finally {
+      setLoading(false);
+    }
+  }, [staffId]);
+
+  useEffect(() => {
+    fetchDashboardData();
+    const timer = setInterval(fetchDashboardData, POLL_INTERVAL_MS);
+    return () => clearInterval(timer);
+  }, [fetchDashboardData]);
+
+  const taskSummary = useMemo(() => {
+    return tasks.reduce(
+      (acc, task) => {
+        acc.total += 1;
+        if (task.status === "Completed") acc.completed += 1;
+        if (task.status === "In Progress") acc.inProgress += 1;
+        if (task.status === "Pending") acc.pending += 1;
+        return acc;
+      },
+      { total: 0, completed: 0, inProgress: 0, pending: 0 }
+    );
+  }, [tasks]);
+
+  const leaveSummary = useMemo(() => {
+    return leaves.reduce(
+      (acc, leave) => {
+        acc.total += 1;
+        if (leave.status === "Approved") acc.approved += 1;
+        if (leave.status === "Rejected") acc.rejected += 1;
+        if (leave.status === "Pending") acc.pending += 1;
+        return acc;
+      },
+      { total: 0, approved: 0, rejected: 0, pending: 0 }
+    );
+  }, [leaves]);
+
+  const latestLeaveDecision = useMemo(() => {
+    return leaves.find((leave) => leave.status === "Approved" || leave.status === "Rejected");
+  }, [leaves]);
+
+  const handleTaskStatusChange = async (taskId, status) => {
+    try {
+      setUpdatingTaskId(taskId);
+      await axios.put(`${API_BASE}/staff/task-status/${taskId}`, { status });
+      setTasks((prev) => prev.map((task) => (task._id === taskId ? { ...task, status } : task)));
+    } catch (apiError) {
+      alert(apiError.response?.data?.message || "Failed to update task status");
+    } finally {
+      setUpdatingTaskId("");
+    }
+  };
+
+  const handleLeaveSubmit = async (event) => {
+    event.preventDefault();
+    if (!leaveForm.reason.trim() || !leaveForm.fromDate || !leaveForm.toDate) {
+      alert("Please fill all leave details");
+      return;
+    }
+    if (leaveForm.fromDate > leaveForm.toDate) {
+      alert("From date cannot be after To date");
+      return;
+    }
+
+    try {
+      setSubmittingLeave(true);
+      await axios.post(`${API_BASE}/leaves/apply`, {
+        ...leaveForm,
+        staffId,
+        staffName: staff?.name || "Staff",
+      });
+      setLeaveForm({
+        leaveType: "General",
+        reason: "",
+        fromDate: "",
+        toDate: "",
+      });
+      await fetchDashboardData();
+      setActiveSection("leaveRequests");
+      alert("Leave request sent to admin");
+    } catch (apiError) {
+      alert(apiError.response?.data?.message || "Failed to submit leave request");
+    } finally {
+      setSubmittingLeave(false);
+    }
+  };
+
+  const handleLogout = () => {
+    logoutUser();
+    navigate("/login");
+  };
+
   return (
-    <div className="min-h-screen bg-slate-100 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        <header className="rounded-3xl bg-white p-6 shadow-lg border border-slate-200">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <p className="text-sm uppercase tracking-[0.2em] text-slate-400">Sri Shanti Mahadev Mandir</p>
-              <h1 className="mt-3 text-4xl font-bold text-slate-900">Welcome back, Staff Member!</h1>
-              <p className="mt-2 text-slate-600">Here’s your overview and tasks for today.</p>
-            </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="rounded-3xl bg-slate-50 px-4 py-3 text-slate-700 shadow-sm border border-slate-200">14 May 2025, Wednesday</div>
-              <button className="inline-flex items-center gap-2 rounded-3xl bg-amber-500 px-5 py-3 text-white font-semibold shadow-lg hover:bg-amber-600">
-                <FaBell /> Notifications
-              </button>
-            </div>
+    <div className="staff-dashboard-page">
+      <aside className="staff-sidebar">
+        <div className="staff-brand">
+          <div className="brand-icon">
+            <MdTempleHindu />
+          </div>
+          <div>
+            <h2>Sri Shanti</h2>
+            <p>Mahadev Mandir</p>
+          </div>
+        </div>
+
+        <nav className="staff-nav">
+          <button
+            type="button"
+            className={activeSection === "dashboard" ? "nav-item active" : "nav-item"}
+            onClick={() => setActiveSection("dashboard")}
+          >
+            <FiHome /> Dashboard
+          </button>
+          <button
+            type="button"
+            className={activeSection === "leaveRequests" ? "nav-item active" : "nav-item"}
+            onClick={() => setActiveSection("leaveRequests")}
+          >
+            <FiFileText /> Leave Requests
+          </button>
+          <button
+            type="button"
+            className={activeSection === "applyLeave" ? "nav-item active" : "nav-item"}
+            onClick={() => setActiveSection("applyLeave")}
+          >
+            <FiCalendar /> Apply Leave
+          </button>
+          <button type="button" className="nav-item" onClick={handleLogout}>
+            <FiLogOut /> Logout
+          </button>
+        </nav>
+
+      </aside>
+
+      <main className="staff-main">
+        <header className="staff-header">
+          <div>
+            <h1>Welcome back, {staff?.name || "Staff"}</h1>
+            <p>Manage daily temple activities and assigned services.</p>
+          </div>
+          <div className="header-right">
+            <span className="header-date">
+              <FiCalendar /> {formatHeaderDate()}
+            </span>
+            <button type="button" className="notif-button" aria-label="Notifications">
+              <FiBell />
+              {taskSummary.pending > 0 ? <span>{taskSummary.pending}</span> : null}
+            </button>
           </div>
         </header>
 
-        <div className="grid gap-6 xl:grid-cols-[2fr_1fr]">
-          <div className="space-y-6">
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              {statCards.map((card) => (
-                <div key={card.title} className="rounded-3xl bg-white p-5 shadow-lg border border-slate-200">
-                  <div className="flex items-center justify-between gap-4">
-                    <div>
-                      <p className="text-sm font-medium text-slate-500">{card.title}</p>
-                      <p className="mt-3 text-3xl font-bold text-slate-900">{card.value}</p>
-                    </div>
-                    <div className={`${card.color} text-white rounded-3xl p-3`}>
-                      {card.icon}
-                    </div>
+        {error ? <div className="staff-error">{error}</div> : null}
+
+        {loading ? <div className="staff-loading">Loading dashboard...</div> : null}
+
+        {!loading && activeSection === "dashboard" ? (
+          <>
+            <section className="top-cards">
+              <article className="info-card">
+                <div className="icon-bg orange">
+                  <TbChecklist />
+                </div>
+                <div>
+                  <h3>Today's Duties</h3>
+                  <strong>{taskSummary.total.toString().padStart(2, "0")}</strong>
+                  <p>Total Assigned Tasks</p>
+                </div>
+              </article>
+              <article className="info-card">
+                <div className="icon-bg green">
+                  <FiCheckCircle />
+                </div>
+                <div>
+                  <h3>Completed Tasks</h3>
+                  <strong>{taskSummary.completed.toString().padStart(2, "0")}</strong>
+                  <p>Marked Completed</p>
+                </div>
+              </article>
+              <article className="info-card">
+                <div className="icon-bg violet">
+                  <TbProgressCheck />
+                </div>
+                <div>
+                  <h3>In Progress</h3>
+                  <strong>{taskSummary.inProgress.toString().padStart(2, "0")}</strong>
+                  <p>Ongoing Services</p>
+                </div>
+              </article>
+              <article className="info-card">
+                <div className="icon-bg red">
+                  <TbHourglassLow />
+                </div>
+                <div>
+                  <h3>Pending Tasks</h3>
+                  <strong>{taskSummary.pending.toString().padStart(2, "0")}</strong>
+                  <p>Need Attention</p>
+                </div>
+              </article>
+            </section>
+
+            <section className="dashboard-grid">
+              <div className="table-card">
+                <div className="card-heading">
+                  <h2>Today's Task Schedule</h2>
+                </div>
+
+                <div className="table-wrap">
+                  <table className="task-table">
+                    <thead>
+                      <tr>
+                        <th>Task</th>
+                        <th>Area</th>
+                        <th>Time</th>
+                        <th>Assigned By</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {tasks.length === 0 ? (
+                        <tr>
+                          <td colSpan="5" className="empty-cell">
+                            No task assigned
+                          </td>
+                        </tr>
+                      ) : (
+                        tasks.map((task) => (
+                          <tr key={task._id}>
+                            <td>{task.duty}</td>
+                            <td>{task.area}</td>
+                            <td>{task.time}</td>
+                            <td>{task.assignedBy}</td>
+                            <td>
+                              <div className="status-control">
+                                <span className={`status-chip ${statusClassMap[task.status] || ""}`}>
+                                  {task.status}
+                                </span>
+                                <select
+                                  value={task.status}
+                                  onChange={(e) => handleTaskStatusChange(task._id, e.target.value)}
+                                  disabled={updatingTaskId === task._id}
+                                >
+                                  {TASK_STATUSES.map((status) => (
+                                    <option key={status} value={status}>
+                                      {status}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div className="profile-card">
+                <h2>Staff Profile</h2>
+                <div className="profile-meta">
+                  <div className="avatar">{(staff?.name || "S").charAt(0).toUpperCase()}</div>
+                  <div>
+                    <h3>{staff?.name || "Staff Member"}</h3>
+                    <p className="role-badge">Temple Staff</p>
                   </div>
                 </div>
-              ))}
+                <ul>
+                  <li>
+                    <FiUser /> Employee ID: {staffId || "N/A"}
+                  </li>
+                  <li>
+                    <FiMapPin /> Temple Area Service
+                  </li>
+                  <li>
+                    <FiClock /> Shift: Morning / Evening
+                  </li>
+                </ul>
+                <button type="button" onClick={() => setActiveSection("applyLeave")}>
+                  Apply Leave
+                </button>
+              </div>
+            </section>
+
+            <section className="bottom-grid">
+              <div className="leave-summary-card">
+                <div className="card-heading">
+                  <h2>Leave Requests</h2>
+                  <button type="button" onClick={() => setActiveSection("leaveRequests")}>
+                    View All
+                  </button>
+                </div>
+                <div className="mini-stats">
+                  <span>Total: {leaveSummary.total}</span>
+                  <span>Approved: {leaveSummary.approved}</span>
+                  <span>Rejected: {leaveSummary.rejected}</span>
+                  <span>Pending: {leaveSummary.pending}</span>
+                </div>
+                <p className="latest-leave">
+                  {latestLeaveDecision
+                    ? `Latest decision: ${latestLeaveDecision.status}${latestLeaveDecision.adminReason ? ` (${latestLeaveDecision.adminReason})` : ""}`
+                    : "No leave decision yet"}
+                </p>
+              </div>
+
+              <div className="quick-actions-card">
+                <h2>Quick Actions</h2>
+                <div className="quick-actions">
+                  <button type="button" onClick={() => setActiveSection("dashboard")}>
+                    <FiClipboard />
+                    <span>Task List</span>
+                  </button>
+                  <button type="button" onClick={() => setActiveSection("applyLeave")}>
+                    <FiCalendar />
+                    <span>Apply Leave</span>
+                  </button>
+                  <button type="button" onClick={() => setActiveSection("leaveRequests")}>
+                    <FiFileText />
+                    <span>Leave Status</span>
+                  </button>
+                </div>
+              </div>
+            </section>
+          </>
+        ) : null}
+
+        {!loading && activeSection === "leaveRequests" ? (
+          <section className="leave-request-page">
+            <div className="leave-head">
+              <h2>My Leave Requests</h2>
+              <button type="button" onClick={() => setActiveSection("applyLeave")}>
+                Apply Leave
+              </button>
             </div>
 
-            <div className="rounded-3xl bg-white p-6 shadow-lg border border-slate-200">
-              <div className="flex items-center justify-between gap-4 mb-5">
-                <div>
-                  <h2 className="text-xl font-semibold text-slate-900">Today’s Assigned Duties</h2>
-                  <p className="text-sm text-slate-500">View the work scheduled for your shift.</p>
-                </div>
-                <button className="text-amber-600 font-semibold">View All</button>
+            <div className="leave-stat-grid">
+              <article>
+                <h3>{leaveSummary.total}</h3>
+                <p>Total Applied</p>
+              </article>
+              <article className="approved-box">
+                <h3>{leaveSummary.approved}</h3>
+                <p>Approved</p>
+              </article>
+              <article className="rejected-box">
+                <h3>{leaveSummary.rejected}</h3>
+                <p>Rejected</p>
+              </article>
+              <article className="pending-box">
+                <h3>{leaveSummary.pending}</h3>
+                <p>Pending</p>
+              </article>
+            </div>
+
+            <div className="table-card">
+              <div className="table-wrap">
+                <table className="task-table">
+                  <thead>
+                    <tr>
+                      <th>Type</th>
+                      <th>Reason</th>
+                      <th>Days</th>
+                      <th>Period</th>
+                      <th>Status</th>
+                      <th>Admin Reason</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {leaves.length === 0 ? (
+                      <tr>
+                        <td colSpan="6" className="empty-cell">
+                          No leave request submitted
+                        </td>
+                      </tr>
+                    ) : (
+                      leaves.map((leave) => (
+                        <tr key={leave._id}>
+                          <td>{leave.leaveType || "General"}</td>
+                          <td>{leave.reason}</td>
+                          <td>{leaveDays(leave.fromDate, leave.toDate)}</td>
+                          <td>{leavePeriod(leave.fromDate, leave.toDate)}</td>
+                          <td>
+                            <span className={`status-chip ${statusClassMap[leave.status] || ""}`}>
+                              {leave.status}
+                            </span>
+                          </td>
+                          <td>{leave.adminReason || "-"}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
               </div>
-              <div className="space-y-4">
-                {[
-                  { time: "06:00 AM", task: "Temple Cleaning (Main Hall)", status: "Completed" },
-                  { time: "08:00 AM", task: "Prasadam Preparation Support", status: "In Progress" },
-                  { time: "10:00 AM", task: "Flower Decoration", status: "Completed" },
-                  { time: "12:30 PM", task: "Passenger / Devotee Assistance", status: "In Progress" },
-                  { time: "03:00 PM", task: "Inventory Room Arrangement", status: "Pending" },
-                  { time: "05:00 PM", task: "Evening Aarti Preparation", status: "Pending" },
-                ].map((item) => (
-                  <div key={item.time} className="flex flex-col gap-2 rounded-3xl border border-slate-200 bg-slate-50 p-4 md:flex-row md:items-center md:justify-between">
-                    <div>
-                      <p className="text-sm text-slate-500">{item.time}</p>
-                      <p className="mt-1 text-lg font-semibold text-slate-900">{item.task}</p>
-                    </div>
-                    <span className={`rounded-full px-4 py-2 text-sm font-semibold ${item.status === "Completed" ? "bg-emerald-100 text-emerald-700" : item.status === "In Progress" ? "bg-amber-100 text-amber-700" : "bg-rose-100 text-rose-700"}`}>
-                      {item.status}
-                    </span>
-                  </div>
+            </div>
+          </section>
+        ) : null}
+
+        {!loading && activeSection === "applyLeave" ? (
+          <section className="apply-leave-page">
+            <h2>Apply Leave</h2>
+            <p>Submit your leave request to admin.</p>
+
+            <form onSubmit={handleLeaveSubmit} className="leave-form">
+              <label htmlFor="leaveType">Leave Type</label>
+              <select
+                id="leaveType"
+                value={leaveForm.leaveType}
+                onChange={(e) => setLeaveForm((prev) => ({ ...prev, leaveType: e.target.value }))}
+              >
+                {LEAVE_TYPES.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
                 ))}
-              </div>
-            </div>
-          </div>
+              </select>
 
-          <div className="space-y-6">
-            <div className="rounded-3xl bg-white p-6 shadow-lg border border-slate-200">
-              <div className="flex items-center justify-between gap-4 mb-5">
-                <div>
-                  <h3 className="text-xl font-semibold text-slate-900">Inventory Alerts</h3>
-                  <p className="text-sm text-slate-500">Items needing attention today.</p>
-                </div>
-                <button className="text-amber-600 font-semibold">View All</button>
-              </div>
-              <div className="space-y-4">
-                {[
-                  { name: "Camphor", detail: "Stock: 5 Units", status: "Low Stock" },
-                  { name: "Ghee", detail: "Stock: 3 Units", status: "Low Stock" },
-                  { name: "Incense Sticks", detail: "Stock: 2 Boxes", status: "Low Stock" },
-                  { name: "Pooja Flowers", detail: "Stock: 1 Basket", status: "Low Stock" },
-                  { name: "Coconut", detail: "Stock: 8 Units", status: "Reorder Soon" },
-                ].map((item) => (
-                  <div key={item.name} className="flex items-center justify-between rounded-3xl bg-slate-50 p-4 border border-slate-200">
-                    <div>
-                      <p className="font-semibold text-slate-900">{item.name}</p>
-                      <p className="text-sm text-slate-500">{item.detail}</p>
-                    </div>
-                    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${item.status === "Low Stock" ? "bg-rose-100 text-rose-700" : "bg-amber-100 text-amber-700"}`}>
-                      {item.status}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
+              <label htmlFor="reason">Reason</label>
+              <input
+                id="reason"
+                type="text"
+                placeholder="Enter leave reason"
+                value={leaveForm.reason}
+                onChange={(e) => setLeaveForm((prev) => ({ ...prev, reason: e.target.value }))}
+              />
 
-            <div className="rounded-3xl bg-white p-6 shadow-lg border border-slate-200">
-              <div className="flex items-center justify-between gap-4 mb-5">
+              <div className="date-grid">
                 <div>
-                  <h3 className="text-xl font-semibold text-slate-900">Attendance Overview</h3>
-                  <p className="text-sm text-slate-500">Today�s attendance snapshot.</p>
+                  <label htmlFor="fromDate">From Date</label>
+                  <input
+                    id="fromDate"
+                    type="date"
+                    value={leaveForm.fromDate}
+                    onChange={(e) => setLeaveForm((prev) => ({ ...prev, fromDate: e.target.value }))}
+                  />
                 </div>
-                <button className="text-amber-600 font-semibold">View Attendance</button>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="rounded-3xl bg-slate-50 p-5 border border-slate-200">
-                  <p className="text-sm text-slate-500">Present</p>
-                  <p className="mt-3 text-3xl font-bold text-slate-900">14</p>
-                </div>
-                <div className="rounded-3xl bg-slate-50 p-5 border border-slate-200">
-                  <p className="text-sm text-slate-500">Absent</p>
-                  <p className="mt-3 text-3xl font-bold text-slate-900">2</p>
-                </div>
-                <div className="rounded-3xl bg-slate-50 p-5 border border-slate-200">
-                  <p className="text-sm text-slate-500">On Leave</p>
-                  <p className="mt-3 text-3xl font-bold text-slate-900">2</p>
-                </div>
-                <div className="rounded-3xl bg-slate-50 p-5 border border-slate-200">
-                  <p className="text-sm text-slate-500">Team Members</p>
-                  <p className="mt-3 text-3xl font-bold text-slate-900">18</p>
+                <div>
+                  <label htmlFor="toDate">To Date</label>
+                  <input
+                    id="toDate"
+                    type="date"
+                    value={leaveForm.toDate}
+                    onChange={(e) => setLeaveForm((prev) => ({ ...prev, toDate: e.target.value }))}
+                  />
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-      </div>
+
+              <div className="form-actions">
+                <button type="submit" disabled={submittingLeave}>
+                  {submittingLeave ? "Submitting..." : "Send Leave Request"}
+                </button>
+                <button type="button" className="secondary-btn" onClick={() => setActiveSection("dashboard")}>
+                  Back to Dashboard
+                </button>
+              </div>
+            </form>
+          </section>
+        ) : null}
+      </main>
     </div>
   );
 };
