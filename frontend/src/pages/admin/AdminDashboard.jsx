@@ -12,6 +12,7 @@ import LogoutModal from "../../components/LogoutModal";
 import { useAuth } from "../../context/AuthContext";
 import DevoteesManagement from "./DevoteesManagement";
 import DevoteeDetails from "./DevoteeDetails";
+import NotificationsCenter from "./NotificationsCenter";
 const statCards = [
   { title: "Total Revenue", amount: "Rs 2,45,680", trend: "12.3%", trendUp: true, icon: <FaRupeeSign />, accent: "bg-orange-100 text-orange-600" },
   { title: "Daily Collection", amount: "Rs 48,650", trend: "8.2%", trendUp: true, icon: <FaDonate />, accent: "bg-green-100 text-green-600" },
@@ -108,6 +109,10 @@ const AdminDashboard = () => {
                 onEditProfile={handleEditDevotee}
               />
             );
+          }
+
+          if (activeItem === "Notifications") {
+            return <NotificationsCenter darkMode={darkMode} />;
           }
 
           return <PlaceholderView title={activeItem} darkMode={darkMode} />;

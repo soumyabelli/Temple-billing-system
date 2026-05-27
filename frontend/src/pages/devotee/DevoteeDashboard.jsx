@@ -7,10 +7,14 @@ import {
   getDevoteeDonations,
   getDevoteeNotifications,
   getDevoteeProfile,
+  updateDevoteeProfile,
   getDevoteeEvents,
   createDevoteeDonation,
   createDevoteeBooking,
   submitDevoteeSupport,
+  getPrasadamOrders,
+  createPrasadamOrder,
+  cancelPrasadamOrder,
 } from "../../services/devoteeService";
 
 const menuItems = [
@@ -154,6 +158,7 @@ const DevoteeDashboard = () => {
   const [donationsData, setDonationsData] = useState([]);
   const [notificationsData, setNotificationsData] = useState([]);
   const [eventsData, setEventsData] = useState([]);
+  const [prasadamOrders, setPrasadamOrders] = useState([]);
   const [profileData, setProfileData] = useState({
     name: user?.name || "Devotee User",
     email: user?.email || "devotee@example.com",
@@ -176,6 +181,27 @@ const DevoteeDashboard = () => {
   const [donationLoading, setDonationLoading] = useState(false);
   const [donationError, setDonationError] = useState("");
   const [donationSuccess, setDonationSuccess] = useState("");
+  const [profileEditMode, setProfileEditMode] = useState(false);
+  const [profileForm, setProfileForm] = useState({ name: "", email: "" });
+  const [profileMessage, setProfileMessage] = useState("");
+  const [profileError, setProfileError] = useState("");
+  const [prasadamForm, setPrasadamForm] = useState({
+    itemName: "Laddu Prasadam",
+    quantity: 1,
+    paymentMethod: "UPI",
+  });
+  const [prasadamMessage, setPrasadamMessage] = useState("");
+  const [supportStatus, setSupportStatus] = useState("");
+  const prasadamMenu = useMemo(
+    () => ({
+      "Laddu Prasadam": 151,
+      "Panchamrit Prasadam": 101,
+      "Pulihora Prasadam": 121,
+      "Sweet Pongal Prasadam": 131,
+      "Curd Rice Prasadam": 111,
+    }),
+    []
+  );
 
   const availablePoojaServices = [
     "Abhisheka",
@@ -197,10 +223,7 @@ const DevoteeDashboard = () => {
     [donationsData]
   );
 
-  const prasadamOrdersCount = useMemo(
-    () => donationsData.filter((donation) => (donation.category || donation.type || "").toLowerCase().includes("prasadam")).length,
-    [donationsData]
-  );
+  const prasadamOrdersCount = useMemo(() => prasadamOrders.length, [prasadamOrders]);
 
   const stats = useMemo(
     () => [
@@ -225,13 +248,6 @@ const DevoteeDashboard = () => {
         tone: "bg-[#ffefea] text-[#f26037]",
         icon: "bag",
       },
-      {
-        title: "Wallet Balance",
-        value: "₹ 250",
-        action: "Add Money",
-        tone: "bg-[#eaf1ff] text-[#3468db]",
-        icon: "wallet",
-      },
     ],
     [bookingsData.length, totalDonations, prasadamOrdersCount]
   );
@@ -239,12 +255,13 @@ const DevoteeDashboard = () => {
   useEffect(() => {
     const loadDevoteeData = async () => {
       try {
-        const [bookingsRes, donationsRes, notificationsRes, profileRes, eventsRes] = await Promise.all([
+        const [bookingsRes, donationsRes, notificationsRes, profileRes, eventsRes, prasadamRes] = await Promise.all([
           getDevoteeBookings(),
           getDevoteeDonations(),
           getDevoteeNotifications(),
-          getDevoteeProfile(),
+          getDevoteeProfile(user?.email),
           getDevoteeEvents(),
+          getPrasadamOrders(),
         ]);
 
         setBookingsData(bookingsRes.bookings || []);
@@ -263,12 +280,17 @@ const DevoteeDashboard = () => {
           }))
         );
         setProfileData(profileRes.profile || profileData);
+        setProfileForm({
+          name: profileRes?.profile?.name || user?.name || "",
+          email: profileRes?.profile?.email || user?.email || "",
+        });
         setEventsData(
           (eventsRes.events || []).map((event) => ({
             ...event,
             formattedDate: event.date ? new Date(event.date).toLocaleDateString() : event.date || "",
           }))
         );
+        setPrasadamOrders(prasadamRes.orders || []);
       } catch (error) {
         console.warn("Unable to load devotee data", error);
       }
@@ -341,6 +363,8 @@ const DevoteeDashboard = () => {
 
       const updatedDonations = await getDevoteeDonations();
       setDonationsData(updatedDonations.donations || []);
+      const notificationsRes = await getDevoteeNotifications();
+      setNotificationsData(notificationsRes.notifications || []);
       setDonationSuccess("Donation recorded successfully. Your receipt is available in Receipts.");
       setDonationCategory("General");
       setDonationAmount(501);
@@ -368,9 +392,99 @@ const DevoteeDashboard = () => {
       });
       setSupportSubject("");
       setSupportMessage("");
-      setActivePage("Dashboard");
+      setSupportStatus("Support request sent to admin successfully.");
+      const notificationsRes = await getDevoteeNotifications();
+      setNotificationsData(notificationsRes.notifications || []);
     } catch (error) {
+      setSupportStatus("Unable to send support request.");
       console.warn("Unable to send support request", error);
+    }
+  };
+
+  const downloadTextFile = (filename, content) => {
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleReceiptDownload = (item) => {
+    const receiptDate = item.date || new Date(item.createdAt).toLocaleDateString();
+    const receiptText = [
+      "Temple Billing System Receipt",
+      "--------------------------------",
+      `Receipt ID: ${item._id?.slice(-8) || "N/A"}`,
+      `Date: ${receiptDate}`,
+      `Devotee: ${profileData.name}`,
+      `Transaction: ${item.category || item.type || "Donation"}`,
+      `Amount: ${formatCurrency(item.amount)}`,
+      `Method: ${item.paymentMethod || "UPI"}`,
+      `Status: ${item.status || "Completed"}`,
+    ].join("\n");
+    downloadTextFile(`receipt-${item._id?.slice(-8) || "donation"}.txt`, receiptText);
+  };
+
+  const handlePaymentHistoryDownload = () => {
+    const lines = ["Temple Billing System - Payment History", "--------------------------------"];
+    donationsData.forEach((item) => {
+      lines.push(
+        `${item.date || new Date(item.createdAt).toLocaleDateString()} | ${item.category || item.type || "Donation"} | ${formatCurrency(item.amount)} | ${item.status || "Paid"}`
+      );
+    });
+    downloadTextFile("payment-history.txt", lines.join("\n"));
+  };
+
+  const handlePrasadamSubmit = async () => {
+    setPrasadamMessage("");
+    try {
+      await createPrasadamOrder({
+        devoteeName: profileData.name,
+        email: profileData.email,
+        ...prasadamForm,
+      });
+      const ordersRes = await getPrasadamOrders();
+      setPrasadamOrders(ordersRes.orders || []);
+      const notificationsRes = await getDevoteeNotifications();
+      setNotificationsData(notificationsRes.notifications || []);
+      setPrasadamForm({
+        itemName: "Laddu Prasadam",
+        quantity: 1,
+        paymentMethod: "UPI",
+      });
+      setPrasadamMessage("Prasadam order placed successfully.");
+    } catch (error) {
+      setPrasadamMessage(error?.response?.data?.error || "Unable to place prasadam order.");
+    }
+  };
+
+  const handleCancelPrasadam = async (id) => {
+    try {
+      await cancelPrasadamOrder(id);
+      const ordersRes = await getPrasadamOrders();
+      setPrasadamOrders(ordersRes.orders || []);
+      setPrasadamMessage("Order cancelled successfully.");
+    } catch (error) {
+      setPrasadamMessage(error?.response?.data?.error || "Unable to cancel order.");
+    }
+  };
+
+  const handleProfileSave = async () => {
+    setProfileError("");
+    setProfileMessage("");
+    try {
+      const res = await updateDevoteeProfile({
+        currentEmail: profileData.email,
+        name: profileForm.name,
+        email: profileForm.email,
+      });
+      setProfileData(res.profile);
+      setProfileEditMode(false);
+      setProfileMessage("Profile updated successfully.");
+    } catch (error) {
+      setProfileError(error?.response?.data?.error || "Unable to update profile.");
     }
   };
 
@@ -557,7 +671,11 @@ const DevoteeDashboard = () => {
                       <td className="px-5 py-3 text-[1.45rem] font-bold">{row.type}</td>
                       <td className="px-5 py-3 text-[1.15rem] text-[#3f3f3f]">{row.date}</td>
                       <td className="px-5 py-3 text-[1.45rem] font-bold">{formatCurrency(row.amount)}</td>
-                      <td className="px-5 py-3 text-[1.15rem] text-[#af6317]">Download</td>
+                      <td className="px-5 py-3 text-[1.15rem] text-[#af6317]">
+                        <button type="button" onClick={() => handleReceiptDownload(row)} className="font-semibold">
+                          Download
+                        </button>
+                      </td>
                     </tr>
                   ))
                 ) : (
@@ -849,29 +967,57 @@ const DevoteeDashboard = () => {
       </div>
     </div>
   );
-
   const renderPrasadam = () => {
-    const prasadamDonations = donationsData.filter((item) => (item.type || item.category || "").toLowerCase().includes("prasadam"));
+    const selectedUnitPrice = prasadamMenu[prasadamForm.itemName] || 0;
+    const totalPrice = selectedUnitPrice * (Number(prasadamForm.quantity) || 1);
 
     return (
       <div className="space-y-6">
         <div className="rounded-2xl border border-[#ececec] bg-white p-5 shadow-sm">
           <h2 className="text-[2rem] font-bold">Prasadam Orders</h2>
-          <div className="mt-6 grid gap-4 md:grid-cols-2">
-            {prasadamDonations.length > 0 ? (
-              prasadamDonations.map((item) => (
-                <div key={`${item.type}-${item.date}-${item._id || Math.random()}`} className="rounded-3xl border border-[#f0f0f0] p-5">
-                  <p className="text-xl font-semibold">{item.type}</p>
-                  <p className="mt-2 text-sm text-[#5d5d5d]">Order date: {item.date}</p>
-                  <p className="mt-3 text-lg font-bold">{formatCurrency(item.amount)}</p>
-                  <button type="button" className="mt-4 rounded-2xl bg-[#1b7f77] px-4 py-3 text-sm font-semibold text-white">
-                    Track Order
-                  </button>
-                </div>
-              ))
-            ) : (
-              <p className="rounded-xl border border-[#efefef] p-4 text-[#5d5d5d]">No prasadam orders available.</p>
-            )}
+          <div className="mt-6 grid gap-6 lg:grid-cols-[1.1fr_1fr]">
+            <div className="rounded-3xl border border-[#f0f0f0] bg-[#fbfaf8] p-5">
+              <h3 className="text-xl font-semibold">Order Prasadam</h3>
+              <div className="mt-4 grid gap-3">
+                <select className="rounded-2xl border border-[#ececec] px-4 py-3" value={prasadamForm.itemName} onChange={(e) => setPrasadamForm((prev) => ({ ...prev, itemName: e.target.value }))}>
+                  {Object.keys(prasadamMenu).map((item) => (
+                    <option key={item} value={item}>{item}</option>
+                  ))}
+                </select>
+                <div className="rounded-xl bg-[#f5f5f5] px-4 py-3 text-sm">Price: {formatCurrency(selectedUnitPrice)} each</div>
+                <input type="number" min="1" className="rounded-2xl border border-[#ececec] px-4 py-3" value={prasadamForm.quantity} onChange={(e) => setPrasadamForm((prev) => ({ ...prev, quantity: Number(e.target.value) }))} placeholder="Quantity" />
+                <select className="rounded-2xl border border-[#ececec] px-4 py-3" value={prasadamForm.paymentMethod} onChange={(e) => setPrasadamForm((prev) => ({ ...prev, paymentMethod: e.target.value }))}>
+                  <option value="UPI">UPI</option>
+                  <option value="Cash">Cash</option>
+                  <option value="Card">Card</option>
+                  <option value="Net Banking">Net Banking</option>
+                </select>
+                <div className="rounded-xl bg-[#fff7e7] px-4 py-3 text-sm font-semibold text-[#8b5a0a]">Total: {formatCurrency(totalPrice)}</div>
+                <button type="button" onClick={handlePrasadamSubmit} className="rounded-2xl bg-[#1b7f77] px-4 py-3 text-sm font-semibold text-white">Pay & Place Order</button>
+                {prasadamMessage && <p className="text-sm text-[#1b7f77]">{prasadamMessage}</p>}
+              </div>
+            </div>
+
+            <div className="grid gap-4">
+              {prasadamOrders.length > 0 ? (
+                prasadamOrders.map((item) => (
+                  <div key={item._id} className="rounded-3xl border border-[#f0f0f0] p-5">
+                    <p className="text-xl font-semibold">{item.itemName}</p>
+                    <p className="mt-2 text-sm text-[#5d5d5d]">Order date: {new Date(item.createdAt).toLocaleDateString()}</p>
+                    <p className="mt-1 text-sm text-[#5d5d5d]">Qty: {item.quantity} | Payment: {item.paymentMethod || "UPI"}</p>
+                    <p className="mt-3 text-lg font-bold">{formatCurrency(item.amount)}</p>
+                    <div className="mt-3 flex items-center gap-2">
+                      <span className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${item.status === "Cancelled" ? "bg-[#fde8e8] text-[#a12525]" : "bg-[#edf7ee] text-[#16853f]"}`}>{item.status}</span>
+                      {item.status !== "Cancelled" && (
+                        <button type="button" onClick={() => handleCancelPrasadam(item._id)} className="rounded-lg bg-[#f26037] px-3 py-1 text-xs font-semibold text-white">Cancel</button>
+                      )}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="rounded-xl border border-[#efefef] p-4 text-[#5d5d5d]">No prasadam orders available.</p>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -883,7 +1029,7 @@ const DevoteeDashboard = () => {
       <div className="rounded-2xl border border-[#ececec] bg-white p-5 shadow-sm">
         <div className="flex items-center justify-between">
           <h2 className="text-[2rem] font-bold">Payment History</h2>
-          <button type="button" className="rounded-2xl bg-[#1b7f77] px-4 py-2 text-sm font-semibold text-white">Download</button>
+          <button type="button" onClick={handlePaymentHistoryDownload} className="rounded-2xl bg-[#1b7f77] px-4 py-2 text-sm font-semibold text-white">Download</button>
         </div>
         <div className="mt-6 overflow-x-auto">
           <table className="w-full min-w-[650px] text-left text-sm text-[#3f3f3f]">
@@ -906,11 +1052,7 @@ const DevoteeDashboard = () => {
                   </tr>
                 ))
               ) : (
-                <tr>
-                  <td colSpan="4" className="px-5 py-6 text-center text-[#5d5d5d]">
-                    No payment history available.
-                  </td>
-                </tr>
+                <tr><td colSpan="4" className="px-5 py-6 text-center text-[#5d5d5d]">No payment history available.</td></tr>
               )}
             </tbody>
           </table>
@@ -918,7 +1060,6 @@ const DevoteeDashboard = () => {
       </div>
     </div>
   );
-
   const renderReceipts = () => (
     <div className="space-y-6">
       <div className="rounded-2xl border border-[#ececec] bg-white p-5 shadow-sm">
@@ -932,7 +1073,7 @@ const DevoteeDashboard = () => {
                   <p className="text-sm text-[#5d5d5d]">{item.date || new Date(item.createdAt).toLocaleDateString()}</p>
                   <p className="mt-1 text-sm text-[#6b6b6b]">Receipt ID: {item._id?.slice(-8) || "N/A"}</p>
                 </div>
-                <button type="button" className="rounded-2xl bg-[#1b7f77] px-4 py-2 text-sm font-semibold text-white">
+                <button type="button" onClick={() => handleReceiptDownload(item)} className="rounded-2xl bg-[#1b7f77] px-4 py-2 text-sm font-semibold text-white">
                   Download
                 </button>
               </div>
@@ -993,10 +1134,19 @@ const DevoteeDashboard = () => {
             <h2 className="text-[2rem] font-bold">Profile</h2>
             <p className="mt-2 text-[#5d5d5d]">Manage your devotee profile and contact information.</p>
           </div>
-          <button type="button" className="rounded-2xl bg-[#bc630f] px-4 py-2 text-sm font-semibold text-white">
-            Edit Profile
+          <button type="button" onClick={() => setProfileEditMode((prev) => !prev)} className="rounded-2xl bg-[#bc630f] px-4 py-2 text-sm font-semibold text-white">
+            {profileEditMode ? "Cancel" : "Edit Profile"}
           </button>
         </div>
+        {profileMessage && <div className="mt-4 rounded-xl bg-[#e8f7ef] p-3 text-sm text-[#1c6f3d]">{profileMessage}</div>}
+        {profileError && <div className="mt-4 rounded-xl bg-[#fde8e8] p-3 text-sm text-[#a12525]">{profileError}</div>}
+        {profileEditMode && (
+          <div className="mt-4 grid gap-3 rounded-2xl border border-[#f0f0f0] bg-[#fbfaf8] p-4 sm:grid-cols-2">
+            <input className="rounded-xl border border-[#ececec] px-3 py-2" value={profileForm.name} onChange={(e) => setProfileForm((prev) => ({ ...prev, name: e.target.value }))} placeholder="Name" />
+            <input className="rounded-xl border border-[#ececec] px-3 py-2" value={profileForm.email} onChange={(e) => setProfileForm((prev) => ({ ...prev, email: e.target.value }))} placeholder="Email" />
+            <button type="button" onClick={handleProfileSave} className="sm:col-span-2 rounded-xl bg-[#1b7f77] px-4 py-2 text-sm font-semibold text-white">Save Profile</button>
+          </div>
+        )}
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
           <div className="rounded-3xl border border-[#f0f0f0] bg-[#fbf6ef] p-5">
             <p className="text-sm text-[#7a6f5d]">Name</p>
@@ -1053,6 +1203,7 @@ const DevoteeDashboard = () => {
         >
           Send Request
         </button>
+        {supportStatus && <p className="mt-3 text-sm font-semibold text-[#1b7f77]">{supportStatus}</p>}
       </div>
     </div>
   );
@@ -1175,3 +1326,8 @@ const DevoteeDashboard = () => {
 };
 
 export default DevoteeDashboard;
+
+
+
+
+

@@ -1,0 +1,44 @@
+import Background from "../../components/Background";
+import LoginForm from "../../components/auth/LoginForm";
+
+const AuthLoginPage = () => {
+  return (
+    <div className="relative min-h-screen overflow-hidden flex items-center justify-between px-16">
+      <Background />
+
+      <div className="relative z-10 max-w-2xl text-white">
+        <p className="text-4xl text-amber-300 mb-6 tracking-widest font-semibold drop-shadow-lg">
+          ॐ नमः शिवाय
+        </p>
+
+        <h2 className="text-5xl md:text-7xl font-bold leading-tight text-white drop-shadow-[0_5px_20px_rgba(0,0,0,0.8)]">
+          Welcome to
+        </h2>
+
+        <h1 className="text-6xl md:text-8xl font-extrabold text-amber-400 mt-4 leading-tight drop-shadow-[0_5px_25px_rgba(0,0,0,0.9)]">
+          Sri Shanti
+        </h1>
+
+        <h1 className="text-6xl md:text-8xl font-extrabold text-white leading-tight drop-shadow-[0_5px_25px_rgba(0,0,0,0.9)]">
+          Mahadev Mandir
+        </h1>
+
+        <div className="h-1 w-56 bg-amber-400 rounded-full my-8 shadow-lg"></div>
+
+        <p className="text-4xl font-semibold text-amber-300 drop-shadow-lg">
+          Billing System
+        </p>
+
+        <p className="mt-6 text-2xl text-orange-100 tracking-wide font-medium drop-shadow-lg">
+          Divine Management. Devoted Service.
+        </p>
+      </div>
+
+      <div className="relative z-10">
+        <LoginForm />
+      </div>
+    </div>
+  );
+};
+
+export default AuthLoginPage;

@@ -39,16 +39,19 @@ import StaffDashboard from "./pages/staff/StaffDashboard";
 import DevoteeDashboard from "./pages/devotee/DevoteeDashboard";
 
 import LoginPage from "./pages/auth/LoginPage";
+import AuthLoginPage from "./pages/auth/AuthLoginPage";
 import RegisterPage from "./pages/auth/RegisterPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import LandingPage from "./pages/LandingPage";
 
 function App() {
   return (
     <Routes>
 
       {/* AUTH */}
-      <Route path="/" element={<LoginPage />} />
-      <Route path="/login" element={<LoginPage />} />
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/login" element={<LandingPage />} />
+      <Route path="/auth-login" element={<AuthLoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route
         path="/forgot-password"
@@ -66,6 +69,14 @@ function App() {
       />
       <Route
         path="/admin/devotees"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/notifications"
         element={
           <ProtectedRoute allowedRoles={["admin"]}>
             <AdminDashboard />

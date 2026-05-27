@@ -17,8 +17,12 @@ export const getDevoteeNotifications = async () => {
   return response.data;
 };
 
-export const getDevoteeProfile = async () => {
-  const response = await axios.get(`${API_BASE}/profile`);
+export const getDevoteeProfile = async (email) => {
+  const response = await axios.get(`${API_BASE}/profile`, { params: email ? { email } : {} });
+  return response.data;
+};
+export const updateDevoteeProfile = async (payload) => {
+  const response = await axios.put(`${API_BASE}/profile`, payload);
   return response.data;
 };
 
@@ -37,5 +41,30 @@ export const createDevoteeBooking = async (payload) => {
 
 export const submitDevoteeSupport = async (payload) => {
   const response = await axios.post(`${API_BASE}/support`, payload);
+  return response.data;
+};
+
+export const getSupportRequests = async () => {
+  const response = await axios.get(`${API_BASE}/support`);
+  return response.data;
+};
+
+export const createNotification = async (payload) => {
+  const response = await axios.post(`${API_BASE}/notifications`, payload);
+  return response.data;
+};
+
+export const getPrasadamOrders = async () => {
+  const response = await axios.get(`${API_BASE}/prasadam-orders`);
+  return response.data;
+};
+
+export const createPrasadamOrder = async (payload) => {
+  const response = await axios.post(`${API_BASE}/prasadam-orders`, payload);
+  return response.data;
+};
+
+export const cancelPrasadamOrder = async (id) => {
+  const response = await axios.patch(`${API_BASE}/prasadam-orders/${id}/cancel`);
   return response.data;
 };
