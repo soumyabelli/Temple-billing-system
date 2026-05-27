@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaDonate, FaRupeeSign, FaUsers, FaBoxes } from "react-icons/fa";
 import { MdTempleBuddhist, MdOutlinePayments } from "react-icons/md";
@@ -13,6 +13,9 @@ import { useAuth } from "../../context/AuthContext";
 import DevoteesManagement from "./DevoteesManagement";
 import DevoteeDetails from "./DevoteeDetails";
 import NotificationsCenter from "./NotificationsCenter";
+import { getAdminUsers } from "../../services/authService";
+import { getDevoteeBookings, getDevoteeDonations } from "../../services/devoteeService";
+
 const statCards = [
   { title: "Total Revenue", amount: "Rs 2,45,680", trend: "12.3%", trendUp: true, icon: <FaRupeeSign />, accent: "bg-orange-100 text-orange-600" },
   { title: "Daily Collection", amount: "Rs 48,650", trend: "8.2%", trendUp: true, icon: <FaDonate />, accent: "bg-green-100 text-green-600" },
@@ -67,8 +70,54 @@ const DashboardView = ({ darkMode }) => (
 const AdminDashboard = () => {
   const [showLogout, setShowLogout] = useState(false);
   const [selectedDevotee, setSelectedDevotee] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [bookings, setBookings] = useState([]);
+  const [donations, setDonations] = useState([]);
   const navigate = useNavigate();
-  const { logoutUser } = useAuth();
+  const { logoutUser, token } = useAuth();
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [usersRes, bookingsRes, donationsRes] = await Promise.all([
+          getAdminUsers(token),
+          getDevoteeBookings(),
+          getDevoteeDonations(),
+        ]);
+        setUsers(usersRes.users || []);
+        setBookings(bookingsRes.bookings || []);
+        setDonations(donationsRes.donations || []);
+      } catch (error) {
+        console.warn("Unable to load admin devotee data", error);
+      }
+    };
+    if (token) load();
+  }, [token]);
+
+  const devoteeUsers = useMemo(() => {
+    const fromUsers = users.filter((u) => (u.role || "").toLowerCase() === "devotee");
+    const map = new Map(fromUsers.map((u) => [String(u.email || "").toLowerCase(), u]));
+
+    bookings.forEach((b) => {
+      const name = String(b.devoteeName || "").trim();
+      if (!name) return;
+      const pseudoEmail = `${name.toLowerCase().replace(/\s+/g, ".")}@temple.local`;
+      if (!map.has(pseudoEmail)) {
+        map.set(pseudoEmail, { name, email: pseudoEmail, role: "devotee", _id: `booking-${name}` });
+      }
+    });
+
+    donations.forEach((d) => {
+      const name = String(d.donorName || "").trim();
+      if (!name) return;
+      const pseudoEmail = `${name.toLowerCase().replace(/\s+/g, ".")}@temple.local`;
+      if (!map.has(pseudoEmail)) {
+        map.set(pseudoEmail, { name, email: pseudoEmail, role: "devotee", _id: `donation-${name}` });
+      }
+    });
+
+    return Array.from(map.values());
+  }, [users, bookings, donations]);
 
   const handleLogout = () => {
     logoutUser();
@@ -99,6 +148,8 @@ const AdminDashboard = () => {
                   darkMode={darkMode}
                   devotee={selectedDevotee}
                   onBack={handleBackToDevotees}
+                  bookings={bookings}
+                  donations={donations}
                 />
               );
             }
@@ -107,6 +158,9 @@ const AdminDashboard = () => {
               <DevoteesManagement
                 darkMode={darkMode}
                 onEditProfile={handleEditDevotee}
+                devotees={devoteeUsers}
+                bookings={bookings}
+                donations={donations}
               />
             );
           }
@@ -119,12 +173,7 @@ const AdminDashboard = () => {
         }}
       </AdminLayout>
 
-      {showLogout && (
-        <LogoutModal
-          onClose={() => setShowLogout(false)}
-          onLogout={handleLogout}
-        />
-      )}
+      {showLogout && <LogoutModal onClose={() => setShowLogout(false)} onLogout={handleLogout} />}
     </>
   );
 };

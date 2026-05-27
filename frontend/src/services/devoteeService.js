@@ -2,18 +2,18 @@ import axios from "axios";
 
 const API_BASE = "http://localhost:5000/api/devotee";
 
-export const getDevoteeBookings = async () => {
-  const response = await axios.get(`${API_BASE}/bookings`);
+export const getDevoteeBookings = async (email) => {
+  const response = await axios.get(`${API_BASE}/bookings`, { params: email ? { email } : {} });
   return response.data;
 };
 
-export const getDevoteeDonations = async () => {
-  const response = await axios.get(`${API_BASE}/donations`);
+export const getDevoteeDonations = async (email) => {
+  const response = await axios.get(`${API_BASE}/donations`, { params: email ? { email } : {} });
   return response.data;
 };
 
-export const getDevoteeNotifications = async () => {
-  const response = await axios.get(`${API_BASE}/notifications`);
+export const getDevoteeNotifications = async (email) => {
+  const response = await axios.get(`${API_BASE}/notifications`, { params: email ? { email } : {} });
   return response.data;
 };
 
@@ -54,8 +54,8 @@ export const createNotification = async (payload) => {
   return response.data;
 };
 
-export const getPrasadamOrders = async () => {
-  const response = await axios.get(`${API_BASE}/prasadam-orders`);
+export const getPrasadamOrders = async (email) => {
+  const response = await axios.get(`${API_BASE}/prasadam-orders`, { params: email ? { email } : {} });
   return response.data;
 };
 
@@ -66,5 +66,10 @@ export const createPrasadamOrder = async (payload) => {
 
 export const cancelPrasadamOrder = async (id) => {
   const response = await axios.patch(`${API_BASE}/prasadam-orders/${id}/cancel`);
+  return response.data;
+};
+
+export const updateBookingStatus = async (id, status) => {
+  const response = await axios.patch(`${API_BASE}/bookings/${id}/status`, { status });
   return response.data;
 };

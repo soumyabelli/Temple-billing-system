@@ -142,7 +142,9 @@ const SidebarItem = ({ label, icon, active, onClick }) => (
     type="button"
     onClick={onClick}
     className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-base font-semibold transition ${
-      active ? "bg-[#d78722] text-white shadow-[0_6px_16px_rgba(202,122,29,0.3)]" : "text-[#211b13] hover:bg-white/70"
+      active
+        ? "bg-gradient-to-r from-[#ff9f2f] to-[#ff6a00] text-white shadow-[0_8px_24px_rgba(255,106,0,0.38)]"
+        : "text-[#2d1608] border border-white/35 bg-white/35 backdrop-blur-sm hover:bg-white/60"
     }`}
   >
     <AppIcon name={icon} className="h-[17px] w-[17px]" />
@@ -192,6 +194,7 @@ const DevoteeDashboard = () => {
   });
   const [prasadamMessage, setPrasadamMessage] = useState("");
   const [supportStatus, setSupportStatus] = useState("");
+  const [currentDateTime, setCurrentDateTime] = useState(new Date());
   const prasadamMenu = useMemo(
     () => ({
       "Laddu Prasadam": 151,
@@ -256,12 +259,12 @@ const DevoteeDashboard = () => {
     const loadDevoteeData = async () => {
       try {
         const [bookingsRes, donationsRes, notificationsRes, profileRes, eventsRes, prasadamRes] = await Promise.all([
-          getDevoteeBookings(),
-          getDevoteeDonations(),
-          getDevoteeNotifications(),
+          getDevoteeBookings(user?.email),
+          getDevoteeDonations(user?.email),
+          getDevoteeNotifications(user?.email),
           getDevoteeProfile(user?.email),
           getDevoteeEvents(),
-          getPrasadamOrders(),
+          getPrasadamOrders(user?.email),
         ]);
 
         setBookingsData(bookingsRes.bookings || []);
@@ -299,6 +302,11 @@ const DevoteeDashboard = () => {
     loadDevoteeData();
   }, []);
 
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentDateTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   const handleLogout = () => {
     logoutUser();
     navigate("/");
@@ -311,6 +319,7 @@ const DevoteeDashboard = () => {
     try {
       const payload = {
         devoteeName: profileData.name,
+        devoteeEmail: profileData.email,
         service: bookingService,
         datetime: bookingDatetime,
         amount: bookingAmount,
@@ -320,7 +329,7 @@ const DevoteeDashboard = () => {
       };
 
       await createDevoteeBooking(payload);
-      const bookingsRes = await getDevoteeBookings();
+      const bookingsRes = await getDevoteeBookings(user?.email);
       setBookingsData(bookingsRes.bookings || []);
       setBookingService("Abhisheka");
       setBookingDatetime("");
@@ -354,6 +363,7 @@ const DevoteeDashboard = () => {
     try {
       await createDevoteeDonation({
         donorName: profileData.name,
+        donorEmail: profileData.email,
         amount: donationAmount,
         category: donationCategory,
         paymentMethod: donationMethod,
@@ -361,9 +371,9 @@ const DevoteeDashboard = () => {
         notes: donationNotes,
       });
 
-      const updatedDonations = await getDevoteeDonations();
+      const updatedDonations = await getDevoteeDonations(user?.email);
       setDonationsData(updatedDonations.donations || []);
-      const notificationsRes = await getDevoteeNotifications();
+      const notificationsRes = await getDevoteeNotifications(user?.email);
       setNotificationsData(notificationsRes.notifications || []);
       setDonationSuccess("Donation recorded successfully. Your receipt is available in Receipts.");
       setDonationCategory("General");
@@ -393,7 +403,7 @@ const DevoteeDashboard = () => {
       setSupportSubject("");
       setSupportMessage("");
       setSupportStatus("Support request sent to admin successfully.");
-      const notificationsRes = await getDevoteeNotifications();
+      const notificationsRes = await getDevoteeNotifications(user?.email);
       setNotificationsData(notificationsRes.notifications || []);
     } catch (error) {
       setSupportStatus("Unable to send support request.");
@@ -445,9 +455,9 @@ const DevoteeDashboard = () => {
         email: profileData.email,
         ...prasadamForm,
       });
-      const ordersRes = await getPrasadamOrders();
+      const ordersRes = await getPrasadamOrders(user?.email);
       setPrasadamOrders(ordersRes.orders || []);
-      const notificationsRes = await getDevoteeNotifications();
+      const notificationsRes = await getDevoteeNotifications(user?.email);
       setNotificationsData(notificationsRes.notifications || []);
       setPrasadamForm({
         itemName: "Laddu Prasadam",
@@ -463,7 +473,7 @@ const DevoteeDashboard = () => {
   const handleCancelPrasadam = async (id) => {
     try {
       await cancelPrasadamOrder(id);
-      const ordersRes = await getPrasadamOrders();
+      const ordersRes = await getPrasadamOrders(user?.email);
       setPrasadamOrders(ordersRes.orders || []);
       setPrasadamMessage("Order cancelled successfully.");
     } catch (error) {
@@ -503,7 +513,15 @@ const DevoteeDashboard = () => {
               <p className="text-[1.06rem] text-[#383838]">{item.title}</p>
             </div>
             <p className="text-[2.15rem] font-extrabold leading-none">{item.value}</p>
-            <button type="button" className="mt-4 bg-transparent p-0 text-base font-semibold text-[#bc630f]">
+            <button
+              type="button"
+              onClick={() => {
+                if (item.action === "View Details") setActivePage("My Bookings");
+                if (item.action === "View History") setActivePage("Payment History");
+                if (item.action === "View Orders") setActivePage("Prasadam Orders");
+              }}
+              className="mt-4 bg-transparent p-0 text-base font-semibold text-[#bc630f]"
+            >
               {item.action}
             </button>
           </article>
@@ -514,7 +532,7 @@ const DevoteeDashboard = () => {
         <article className="rounded-2xl border border-[#ececec] bg-white p-5 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-[2rem] font-bold">Upcoming Bookings</h2>
-            <button type="button" className="bg-transparent p-0 text-base font-semibold text-[#bc630f]">
+            <button type="button" onClick={() => setActivePage("My Bookings")} className="bg-transparent p-0 text-base font-semibold text-[#bc630f]">
               View All
             </button>
           </div>
@@ -523,12 +541,12 @@ const DevoteeDashboard = () => {
               bookingsData.slice(0, 3).map((item) => (
                 <div key={`${item.service}-${item.datetime}-${item._id || Math.random()}`} className="rounded-xl border border-[#efefef] p-4">
                   <div className="flex items-center justify-between gap-3">
-                    <p className="text-[1.45rem] font-bold">{item.service}</p>
+                    <p className="text-xl font-bold">{item.service}</p>
                     <span className={`rounded-full px-3 py-1 text-sm font-semibold ${item.status === "Confirmed" ? "bg-[#def5e5] text-[#16853f]" : "bg-[#faefcf] text-[#ce7a0f]"}`}>
                       {item.status}
                     </span>
                   </div>
-                  <p className="mt-1 text-[1.15rem] text-[#4f4f4f]">{item.datetime}</p>
+                  <p className="mt-1 text-sm text-[#4f4f4f]">{item.datetime ? new Date(item.datetime).toLocaleString() : "-"}</p>
                 </div>
               ))
             ) : (
@@ -536,7 +554,7 @@ const DevoteeDashboard = () => {
             )}
           </div>
           <div className="pt-4 text-right">
-            <button type="button" className="bg-transparent p-0 text-base font-semibold text-[#3058d6]">
+            <button type="button" onClick={() => setActivePage("My Bookings")} className="bg-transparent p-0 text-base font-semibold text-[#3058d6]">
               View All Bookings
             </button>
           </div>
@@ -545,7 +563,7 @@ const DevoteeDashboard = () => {
         <article className="rounded-2xl border border-[#ececec] bg-white p-5 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-[2rem] font-bold">Recent Donations</h2>
-            <button type="button" className="bg-transparent p-0 text-base font-semibold text-[#bc630f]">
+            <button type="button" onClick={() => setActivePage("Payment History")} className="bg-transparent p-0 text-base font-semibold text-[#bc630f]">
               View All
             </button>
           </div>
@@ -554,8 +572,8 @@ const DevoteeDashboard = () => {
               donationsData.slice(0, 3).map((item) => (
                 <div key={`${item.type}-${item.date}-${item._id || Math.random()}`} className="flex items-center justify-between rounded-xl border border-[#efefef] p-4">
                   <div>
-                    <p className="text-[1.45rem] font-bold">{item.type}</p>
-                    <p className="text-[1.15rem] text-[#4f4f4f]">{item.date}</p>
+                    <p className="text-xl font-bold">{item.type}</p>
+                    <p className="text-sm text-[#4f4f4f]">{item.date}</p>
                   </div>
                   <p className="text-[1.45rem] font-bold">{formatCurrency(item.amount)}</p>
                 </div>
@@ -565,7 +583,7 @@ const DevoteeDashboard = () => {
             )}
           </div>
           <div className="pt-4 text-right">
-            <button type="button" className="bg-transparent p-0 text-base font-semibold text-[#3058d6]">
+            <button type="button" onClick={() => setActivePage("Payment History")} className="bg-transparent p-0 text-base font-semibold text-[#3058d6]">
               View All Donations
             </button>
           </div>
@@ -574,7 +592,7 @@ const DevoteeDashboard = () => {
         <article className="rounded-2xl border border-[#ececec] bg-white p-5 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-[2rem] font-bold">Notifications</h2>
-            <button type="button" className="bg-transparent p-0 text-base font-semibold text-[#bc630f]">
+            <button type="button" onClick={() => setActivePage("Notifications")} className="bg-transparent p-0 text-base font-semibold text-[#bc630f]">
               View All
             </button>
           </div>
@@ -602,7 +620,11 @@ const DevoteeDashboard = () => {
             <h3 className="text-[2.35rem] font-extrabold leading-tight">Brahmotsavam 2025</h3>
             <p className="text-[1.35rem]">20 May 2025 - 28 May 2025</p>
           </div>
-          <button type="button" className="rounded-xl border border-white/60 bg-white/20 px-5 py-2 text-lg font-semibold text-white backdrop-blur-sm">
+          <button
+            type="button"
+            onClick={() => setActivePage("Festival Events")}
+            className="rounded-xl border border-white/60 bg-white/20 px-5 py-2 text-lg font-semibold text-white backdrop-blur-sm"
+          >
             View Details
           </button>
         </div>
@@ -625,9 +647,9 @@ const DevoteeDashboard = () => {
                 {bookingsData.length > 0 ? (
                   bookingsData.map((row) => (
                     <tr key={`${row.service}-${row.datetime || row._id}`} className="border-t border-[#f0f0f0]">
-                      <td className="px-5 py-3 text-[1.45rem] font-bold">{row.service}</td>
-                      <td className="px-5 py-3 text-[1.15rem] text-[#3f3f3f]">{row.datetime}</td>
-                      <td className="px-5 py-3 text-[1.45rem] font-bold">{formatCurrency(row.amount)}</td>
+                      <td className="px-5 py-3 text-base font-semibold">{row.service}</td>
+                      <td className="px-5 py-3 text-sm text-[#3f3f3f]">{row.datetime ? new Date(row.datetime).toLocaleString() : "-"}</td>
+                      <td className="px-5 py-3 text-base font-semibold">{formatCurrency(row.amount)}</td>
                       <td className="px-5 py-3">
                         <span className={`rounded-full px-3 py-1 text-sm font-semibold ${row.status === "Confirmed" ? "bg-[#def5e5] text-[#16853f]" : "bg-[#faefcf] text-[#ce7a0f]"}`}>
                           {row.status}
@@ -646,7 +668,7 @@ const DevoteeDashboard = () => {
             </table>
           </div>
           <div className="px-5 py-4 text-right">
-            <button type="button" className="rounded-xl bg-[#1b7f77] px-5 py-2 text-base font-semibold text-white">
+            <button type="button" onClick={() => setActivePage("My Bookings")} className="rounded-xl bg-[#1b7f77] px-5 py-2 text-base font-semibold text-white">
               View All Bookings
             </button>
           </div>
@@ -668,9 +690,9 @@ const DevoteeDashboard = () => {
                 {donationsData.length > 0 ? (
                   donationsData.map((row) => (
                     <tr key={`${row.type}-${row.date}-${row._id || Math.random()}`} className="border-t border-[#f0f0f0]">
-                      <td className="px-5 py-3 text-[1.45rem] font-bold">{row.type}</td>
-                      <td className="px-5 py-3 text-[1.15rem] text-[#3f3f3f]">{row.date}</td>
-                      <td className="px-5 py-3 text-[1.45rem] font-bold">{formatCurrency(row.amount)}</td>
+                      <td className="px-5 py-3 text-base font-semibold">{row.type}</td>
+                      <td className="px-5 py-3 text-sm text-[#3f3f3f]">{row.date}</td>
+                      <td className="px-5 py-3 text-base font-semibold">{formatCurrency(row.amount)}</td>
                       <td className="px-5 py-3 text-[1.15rem] text-[#af6317]">
                         <button type="button" onClick={() => handleReceiptDownload(row)} className="font-semibold">
                           Download
@@ -689,7 +711,7 @@ const DevoteeDashboard = () => {
             </table>
           </div>
           <div className="px-5 py-4 text-right">
-            <button type="button" className="rounded-xl bg-[#1b7f77] px-5 py-2 text-base font-semibold text-white">
+            <button type="button" onClick={() => setActivePage("Payment History")} className="rounded-xl bg-[#1b7f77] px-5 py-2 text-base font-semibold text-white">
               View All Donations
             </button>
           </div>
@@ -1236,13 +1258,13 @@ const DevoteeDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f7f7f9] text-[#181818]">
-      <div className="mx-auto flex max-w-[1540px]">
-        <aside className="relative hidden min-h-screen w-[270px] overflow-hidden border-r border-[#e3d0bb] bg-[#f8f0e4] lg:block">
+    <div className="min-h-screen w-full bg-gradient-to-br from-[#fff4df] via-[#ffe7c7] to-[#ffd59e] text-[#181818]">
+      <div className="flex w-full">
+        <aside className="relative hidden min-h-screen w-[320px] overflow-hidden border-r border-white/40 bg-gradient-to-b from-[#ffd8a8]/60 to-[#ffbd75]/35 shadow-[0_0_40px_rgba(255,135,33,0.25)] backdrop-blur-md lg:block">
           <div className="pointer-events-none absolute inset-0">
             <img src={templeImage} alt="Temple background" className="h-full w-full object-cover object-[56%_center]" />
-            <div className="absolute inset-0 bg-[#f6eadb]/28"></div>
-            <div className="absolute inset-0 bg-gradient-to-b from-[#f8efe2]/62 via-[#f5e7d6]/24 to-[#c98d44]/6"></div>
+            <div className="absolute inset-0 bg-[#fff0dc]/22"></div>
+            <div className="absolute inset-0 bg-gradient-to-b from-[#fff4df]/68 via-[#ffdcb1]/24 to-[#ff9f44]/20"></div>
           </div>
           <div className="relative z-10 px-5 pb-5 pt-8">
             <p className="text-[2.55rem] font-black leading-[1.03] text-[#bc6c10]">Sri Shanti</p>
@@ -1261,7 +1283,7 @@ const DevoteeDashboard = () => {
             <button
               type="button"
               onClick={handleLogout}
-              className="mt-1 w-full rounded-xl px-3 py-3 text-left text-base font-semibold text-[#7f470a] hover:bg-white/80"
+              className="mt-1 w-full rounded-xl border border-white/40 bg-white/45 px-3 py-3 text-left text-base font-semibold text-[#7f470a] hover:bg-white/80"
             >
               <span className="inline-flex items-center gap-3">
                 <AppIcon name="gear" className="h-[17px] w-[17px]" />
@@ -1271,8 +1293,8 @@ const DevoteeDashboard = () => {
           </div>
         </aside>
 
-        <main className="flex-1 px-6 py-6 lg:px-7">
-          <header className="rounded-2xl border border-[#ebebeb] bg-white px-5 py-4 shadow-sm">
+        <main className="flex-1 px-3 py-3 sm:px-5 sm:py-5 lg:px-8">
+          <header className="rounded-2xl border border-white/65 bg-white/82 px-5 py-4 shadow-[0_12px_30px_rgba(80,40,10,0.12)] backdrop-blur-md">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="flex min-w-[360px] flex-1 items-center gap-4">
                 <button type="button" className="hidden text-[#8d551f] lg:block">
@@ -1280,11 +1302,11 @@ const DevoteeDashboard = () => {
                     <path d="M3 6h18v2H3zM3 11h18v2H3zM3 16h18v2H3z"></path>
                   </svg>
                 </button>
-                <div className="relative w-full max-w-[460px]">
+                <div className="relative w-full max-w-[520px]">
                   <input
                     type="text"
                     placeholder="Search here..."
-                    className="w-full rounded-xl border border-[#ebebeb] bg-[#fdfdfd] py-3 pl-12 pr-4 text-sm text-[#4d4d4d] outline-none placeholder:text-[#9a9a9a]"
+                    className="w-full rounded-xl border border-[#e8d8c2] bg-white/85 py-3 pl-12 pr-4 text-sm text-[#4d4d4d] outline-none placeholder:text-[#9a9a9a]"
                   />
                   <svg viewBox="0 0 24 24" className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 fill-none stroke-[#8d551f] stroke-2">
                     <circle cx="11" cy="11" r="7"></circle>
@@ -1293,13 +1315,15 @@ const DevoteeDashboard = () => {
                 </div>
               </div>
               <div className="flex items-center gap-4">
-                <div className="relative mr-1 hidden lg:block">
+                <button type="button" onClick={() => setActivePage("Notifications")} className="relative mr-1 hidden rounded-xl bg-white/80 p-2 shadow-sm transition hover:scale-105 lg:block">
                   <AppIcon name="bell" className="h-7 w-7 text-[#302d2b]" />
                   <span className="absolute -right-1 -top-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-[#e4262c] text-[10px] font-bold text-white">
                     {notificationsData.length}
                   </span>
+                </button>
+                <div className="rounded-xl border border-[#ead6c0] bg-white/70 px-4 py-2 text-sm font-bold text-[#7e4310]">
+                  {currentDateTime.toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "short", day: "numeric" })} {currentDateTime.toLocaleTimeString()}
                 </div>
-                <div className="rounded-xl border border-[#ead6c0] px-4 py-2 text-sm font-bold text-[#7e4310]">14 May 2025, Wednesday</div>
                 <div className="flex items-center gap-3 rounded-full px-1">
                   <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#e2ccb2] text-sm font-bold text-[#5d3310]">
                     {devoteeName
@@ -1318,7 +1342,9 @@ const DevoteeDashboard = () => {
             </div>
           </header>
 
-          {renderContent()}
+          <div className="mt-4 rounded-2xl border border-white/70 bg-white/85 p-3 shadow-[0_10px_30px_rgba(80,40,10,0.1)] backdrop-blur-sm md:p-4">
+            {renderContent()}
+          </div>
         </main>
       </div>
     </div>
@@ -1326,6 +1352,9 @@ const DevoteeDashboard = () => {
 };
 
 export default DevoteeDashboard;
+
+
+
 
 
 

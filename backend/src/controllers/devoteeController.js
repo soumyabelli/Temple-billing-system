@@ -4,10 +4,21 @@ const Notification = require("../models/Notification");
 const Event = require("../models/Event");
 const SupportRequest = require("../models/SupportRequest");
 const User = require("../models/User");
+const PrasadamOrder = require("../models/PrasadamOrder");
+const PRASADAM_MENU = {
+  "Laddu Prasadam": 151,
+  "Panchamrit Prasadam": 101,
+  "Pulihora Prasadam": 121,
+  "Sweet Pongal Prasadam": 131,
+  "Curd Rice Prasadam": 111,
+};
 
 const getBookings = async (req, res) => {
   try {
-    const bookings = await Booking.find().sort({ createdAt: -1 });
+    const email = String(req.query.email || "").trim().toLowerCase();
+    const bookings = email
+      ? await Booking.find({ devoteeEmail: email }).sort({ createdAt: -1 })
+      : await Booking.find().sort({ createdAt: -1 });
     return res.status(200).json({ bookings });
   } catch (error) {
     return res.status(500).json({ error: "Failed to load bookings." });
@@ -16,7 +27,7 @@ const getBookings = async (req, res) => {
 
 const createBooking = async (req, res) => {
   try {
-    const { devoteeName, service, datetime, amount, status, contactNumber, notes } = req.body;
+    const { devoteeName, devoteeEmail, service, datetime, amount, status, contactNumber, notes } = req.body;
 
     if (!devoteeName || !service || !datetime || amount == null) {
       return res.status(400).json({ error: "Missing required booking fields." });
@@ -24,12 +35,18 @@ const createBooking = async (req, res) => {
 
     const booking = await Booking.create({
       devoteeName,
+      devoteeEmail: devoteeEmail ? String(devoteeEmail).toLowerCase() : undefined,
       service,
       datetime,
       amount,
       status: status || "Pending",
       contactNumber,
       notes,
+    });
+    await Notification.create({
+      title: "Booking Submitted",
+      message: `Your ${service} booking is pending approval.`,
+      audienceEmail: devoteeEmail ? String(devoteeEmail).toLowerCase() : undefined,
     });
 
     return res.status(201).json({ booking });
@@ -40,7 +57,10 @@ const createBooking = async (req, res) => {
 
 const getDonations = async (req, res) => {
   try {
-    const donations = await Donation.find().sort({ createdAt: -1 });
+    const email = String(req.query.email || "").trim().toLowerCase();
+    const donations = email
+      ? await Donation.find({ donorEmail: email }).sort({ createdAt: -1 })
+      : await Donation.find().sort({ createdAt: -1 });
     return res.status(200).json({ donations });
   } catch (error) {
     return res.status(500).json({ error: "Failed to load donations." });
@@ -51,10 +71,12 @@ const createDonation = async (req, res) => {
   try {
     const {
       donorName,
+      donorEmail,
       amount,
       category = "General",
       paymentMethod = "UPI",
       contactNumber,
+      donorEmail,
       transactionId,
       notes,
     } = req.body;
@@ -83,6 +105,12 @@ const createDonation = async (req, res) => {
       status: "Completed",
     });
 
+    await Notification.create({
+      title: "Donation Received",
+      message: `${donorName.trim()} donated INR ${numericAmount} for ${category}.`,
+      audienceEmail: donorEmail ? String(donorEmail).toLowerCase() : undefined,
+    });
+
     return res.status(201).json({ donation });
   } catch (error) {
     return res.status(500).json({ error: "Unable to create donation." });
@@ -91,7 +119,10 @@ const createDonation = async (req, res) => {
 
 const getNotifications = async (req, res) => {
   try {
-    const notifications = await Notification.find().sort({ date: -1, createdAt: -1 });
+    const email = String(req.query.email || "").trim().toLowerCase();
+    const notifications = email
+      ? await Notification.find({ $or: [{ audienceEmail: email }, { audienceEmail: { $exists: false } }, { audienceEmail: null }] }).sort({ date: -1, createdAt: -1 })
+      : await Notification.find().sort({ date: -1, createdAt: -1 });
     return res.status(200).json({ notifications });
   } catch (error) {
     return res.status(500).json({ error: "Failed to load notifications." });
@@ -144,9 +175,164 @@ const submitSupportRequest = async (req, res) => {
       message,
     });
 
+    await Notification.create({
+      title: "New Support Request",
+      message: `${supportRequest.name} raised: ${supportRequest.subject}`,
+    });
+
     return res.status(201).json({ status: "success", message: "Support request received.", request: supportRequest });
   } catch (error) {
     return res.status(500).json({ error: "Failed to submit support request." });
+  }
+};
+
+const updateProfile = async (req, res) => {
+  try {
+    const { currentEmail, name, email } = req.body;
+    if (!currentEmail) {
+      return res.status(400).json({ error: "currentEmail is required." });
+    }
+
+    const user = await User.findOne({ email: currentEmail.trim().toLowerCase() });
+    if (!user) {
+      return res.status(404).json({ error: "Profile not found." });
+    }
+
+    if (name && String(name).trim()) user.name = String(name).trim();
+    if (email && String(email).trim()) user.email = String(email).trim().toLowerCase();
+    await user.save();
+
+    await Notification.create({
+      title: "Profile Updated",
+      message: `${user.name} updated devotee profile details.`,
+    });
+
+    return res.status(200).json({
+      profile: {
+        name: user.name,
+        email: user.email,
+        role: user.role || "devotee",
+        memberSince: user.createdAt?.getFullYear?.() || "2025",
+      },
+    });
+  } catch (error) {
+    if (error?.code === 11000) {
+      return res.status(409).json({ error: "Email already exists. Please use a different email." });
+    }
+    return res.status(500).json({ error: "Failed to update profile." });
+  }
+};
+
+const getSupportRequests = async (req, res) => {
+  try {
+    const requests = await SupportRequest.find().sort({ createdAt: -1 });
+    return res.status(200).json({ requests });
+  } catch (error) {
+    return res.status(500).json({ error: "Failed to load support requests." });
+  }
+};
+
+const createNotification = async (req, res) => {
+  try {
+    const { title, message } = req.body;
+    if (!title || !message) return res.status(400).json({ error: "title and message are required." });
+    const notification = await Notification.create({ title, message });
+    return res.status(201).json({ notification });
+  } catch (error) {
+    return res.status(500).json({ error: "Failed to create notification." });
+  }
+};
+
+const getPrasadamOrders = async (req, res) => {
+  try {
+    const email = String(req.query.email || "").trim().toLowerCase();
+    const orders = email
+      ? await PrasadamOrder.find({ email }).sort({ createdAt: -1 })
+      : await PrasadamOrder.find().sort({ createdAt: -1 });
+    return res.status(200).json({ orders });
+  } catch (error) {
+    return res.status(500).json({ error: "Failed to load prasadam orders." });
+  }
+};
+
+const createPrasadamOrder = async (req, res) => {
+  try {
+    const { devoteeName, email, itemName, quantity, paymentMethod } = req.body;
+    if (!devoteeName || !itemName) {
+      return res.status(400).json({ error: "devoteeName and itemName are required." });
+    }
+
+    const normalizedQty = Number(quantity || 1);
+    if (Number.isNaN(normalizedQty) || normalizedQty < 1) {
+      return res.status(400).json({ error: "Quantity must be at least 1." });
+    }
+    const unitPrice = PRASADAM_MENU[itemName];
+    if (!unitPrice) {
+      return res.status(400).json({ error: "Selected prasadam item is not available in temple menu." });
+    }
+    const totalAmount = unitPrice * normalizedQty;
+
+    const order = await PrasadamOrder.create({
+      devoteeName,
+      email,
+      itemName,
+      quantity: normalizedQty,
+      unitPrice,
+      amount: totalAmount,
+      paymentMethod: paymentMethod || "UPI",
+      status: "Placed",
+    });
+
+    await Notification.create({
+      title: "New Prasadam Order",
+      message: `${devoteeName} ordered ${itemName} x${normalizedQty}.`,
+      audienceEmail: email ? String(email).toLowerCase() : undefined,
+    });
+
+    return res.status(201).json({ order });
+  } catch (error) {
+    return res.status(500).json({ error: "Failed to place prasadam order." });
+  }
+};
+
+const cancelPrasadamOrder = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const order = await PrasadamOrder.findById(id);
+    if (!order) return res.status(404).json({ error: "Prasadam order not found." });
+    if (order.status === "Cancelled") return res.status(200).json({ order });
+    order.status = "Cancelled";
+    await order.save();
+    await Notification.create({
+      title: "Prasadam Order Cancelled",
+      message: `${order.devoteeName} cancelled ${order.itemName} order.`,
+      audienceEmail: order.email || undefined,
+    });
+    return res.status(200).json({ order });
+  } catch (error) {
+    return res.status(500).json({ error: "Failed to cancel prasadam order." });
+  }
+};
+
+const updateBookingStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    if (!["Confirmed", "Rejected", "Cancelled", "Pending"].includes(status)) {
+      return res.status(400).json({ error: "Invalid booking status." });
+    }
+    const booking = await Booking.findById(id);
+    if (!booking) return res.status(404).json({ error: "Booking not found." });
+    booking.status = status;
+    await booking.save();
+    await Notification.create({
+      title: "Booking Status Updated",
+      message: `Your ${booking.service} booking is now ${status}.`,
+      audienceEmail: booking.devoteeEmail || undefined,
+    });
+    return res.status(200).json({ booking });
+  } catch (error) {
+    return res.status(500).json({ error: "Failed to update booking status." });
   }
 };
 
@@ -159,4 +345,11 @@ module.exports = {
   getProfile,
   getEvents,
   submitSupportRequest,
+  updateProfile,
+  getSupportRequests,
+  createNotification,
+  getPrasadamOrders,
+  createPrasadamOrder,
+  cancelPrasadamOrder,
+  updateBookingStatus,
 };
