@@ -557,6 +557,46 @@
   background: #fff;
 }
 
+.leave-form textarea {
+  border: 1px solid #ddd3c6;
+  border-radius: 10px;
+  padding: 11px 12px;
+  font: inherit;
+  resize: vertical;
+  background: #fff;
+}
+
+.profile-settings-page .leave-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.profile-settings-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 2fr 1fr;
+}
+
+.section-title {
+  margin: 0;
+  font-size: 24px;
+}
+
+.section-subtitle {
+  margin: 6px 0 14px;
+  color: #63584d;
+  font-weight: 600;
+}
+
+.profile-note {
+  margin: 4px 0 0;
+  color: #674f22;
+  font-size: 14px;
+  font-weight: 600;
+}
+
 .date-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -567,6 +607,12 @@
   margin-top: 8px;
   display: flex;
   gap: 10px;
+}
+
+.form-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .secondary-btn {
@@ -581,7 +627,8 @@
   }
 
   .dashboard-grid,
-  .bottom-grid {
+  .bottom-grid,
+  .profile-settings-grid {
     grid-template-columns: 1fr;
   }
 

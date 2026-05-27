@@ -9,19 +9,31 @@ import {
   FiClock,
   FiFileText,
   FiHome,
+  FiLock,
   FiLogOut,
   FiMapPin,
+  FiSave,
+  FiSettings,
   FiUser,
 } from "react-icons/fi";
 import { MdTempleHindu } from "react-icons/md";
 import { TbChecklist, TbHourglassLow, TbProgressCheck } from "react-icons/tb";
 import { useAuth } from "../../context/AuthContext";
+import {
+  changeEmployeePassword,
+  getEmployeeProfile,
+  updateEmployeeProfile,
+} from "../../services/employeeService";
 import "./StaffDashboard.css";
 
 const API_BASE = "http://localhost:5000/api";
 const POLL_INTERVAL_MS = 10000;
 const TASK_STATUSES = ["Pending", "In Progress", "Completed"];
 const LEAVE_TYPES = ["Sick Leave", "Casual Leave", "Festival Leave", "Emergency Leave", "General"];
+const BLOOD_GROUPS = ["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"];
+const GENDER_OPTIONS = ["Male", "Female", "Other"];
+const SHIFT_OPTIONS = ["Morning", "Day", "Afternoon", "Evening", "Night"];
+const EMPLOYMENT_TYPES = ["Full-time", "Part-time", "Contract", "Temporary"];
 
 const formatHeaderDate = () =>
   new Date().toLocaleDateString("en-IN", {
@@ -66,6 +78,26 @@ const leavePeriod = (fromDate, toDate) => {
   return `${fromLabel} - ${toLabel}`;
 };
 
+const toProfileForm = (profile = {}) => ({
+  name: profile.name || "",
+  email: profile.email || "",
+  role: profile.role || "staff",
+  gender: profile.gender || "Male",
+  dob: profile.dob || "",
+  bloodGroup: profile.bloodGroup || "O+",
+  aadhaar: profile.aadhaar || "",
+  phone: profile.phone || "",
+  emergencyContact: profile.emergencyContact || "",
+  address: profile.address || "",
+  shift: profile.shift || "Morning",
+  department: profile.department || "",
+  salary: profile.salary || "",
+  joiningDate: profile.joiningDate || "",
+  employmentType: profile.employmentType || "Full-time",
+  permissions: profile.permissions || "",
+  status: profile.status || "Active",
+});
+
 const StaffDashboard = () => {
   const navigate = useNavigate();
   const { user, logoutUser } = useAuth();
@@ -78,15 +110,27 @@ const StaffDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [submittingLeave, setSubmittingLeave] = useState(false);
   const [updatingTaskId, setUpdatingTaskId] = useState("");
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [passwordSaving, setPasswordSaving] = useState(false);
   const [error, setError] = useState("");
+  const [profileMessage, setProfileMessage] = useState("");
+  const [passwordMessage, setPasswordMessage] = useState("");
   const [leaveForm, setLeaveForm] = useState({
     leaveType: "General",
     reason: "",
     fromDate: "",
     toDate: "",
   });
+  const [profileForm, setProfileForm] = useState(toProfileForm());
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
 
   const staffId = staff?.id || staff?._id || "";
+  const displayName = profileForm.name || staff?.name || "Staff";
 
   const fetchDashboardData = useCallback(async () => {
     if (!staffId) {
@@ -110,11 +154,29 @@ const StaffDashboard = () => {
     }
   }, [staffId]);
 
+  const fetchProfileData = useCallback(async () => {
+    if (!staffId) return;
+    try {
+      setProfileLoading(true);
+      setProfileMessage("");
+      const response = await getEmployeeProfile(staffId);
+      setProfileForm(toProfileForm(response.profile));
+    } catch (apiError) {
+      setProfileMessage(apiError.response?.data?.message || "Failed to load profile details");
+    } finally {
+      setProfileLoading(false);
+    }
+  }, [staffId]);
+
   useEffect(() => {
     fetchDashboardData();
     const timer = setInterval(fetchDashboardData, POLL_INTERVAL_MS);
     return () => clearInterval(timer);
   }, [fetchDashboardData]);
+
+  useEffect(() => {
+    fetchProfileData();
+  }, [fetchProfileData]);
 
   const taskSummary = useMemo(() => {
     return tasks.reduce(
@@ -174,7 +236,7 @@ const StaffDashboard = () => {
       await axios.post(`${API_BASE}/leaves/apply`, {
         ...leaveForm,
         staffId,
-        staffName: staff?.name || "Staff",
+        staffName: displayName,
       });
       setLeaveForm({
         leaveType: "General",
@@ -189,6 +251,71 @@ const StaffDashboard = () => {
       alert(apiError.response?.data?.message || "Failed to submit leave request");
     } finally {
       setSubmittingLeave(false);
+    }
+  };
+
+  const handleProfileInputChange = (field, value) => {
+    setProfileForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleProfileSave = async (event) => {
+    event.preventDefault();
+    if (!profileForm.name.trim() || !profileForm.email.trim()) {
+      setProfileMessage("Name and email are required");
+      return;
+    }
+
+    try {
+      setProfileSaving(true);
+      setProfileMessage("");
+      const response = await updateEmployeeProfile(staffId, profileForm);
+      setProfileForm(toProfileForm(response.profile));
+      if (response.authUser) {
+        const token = localStorage.getItem("token");
+        if (token) {
+          localStorage.setItem("user", JSON.stringify(response.authUser));
+        }
+      }
+      setProfileMessage("Profile updated successfully");
+    } catch (apiError) {
+      setProfileMessage(apiError.response?.data?.message || "Failed to update profile");
+    } finally {
+      setProfileSaving(false);
+    }
+  };
+
+  const handlePasswordSave = async (event) => {
+    event.preventDefault();
+    if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
+      setPasswordMessage("Please fill all password fields");
+      return;
+    }
+    if (passwordForm.newPassword.length < 6) {
+      setPasswordMessage("New password must be at least 6 characters");
+      return;
+    }
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordMessage("New password and confirm password do not match");
+      return;
+    }
+
+    try {
+      setPasswordSaving(true);
+      setPasswordMessage("");
+      await changeEmployeePassword(staffId, {
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword,
+      });
+      setPasswordForm({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+      setPasswordMessage("Password changed successfully");
+    } catch (apiError) {
+      setPasswordMessage(apiError.response?.data?.message || "Failed to change password");
+    } finally {
+      setPasswordSaving(false);
     }
   };
 
@@ -232,6 +359,16 @@ const StaffDashboard = () => {
           >
             <FiCalendar /> Apply Leave
           </button>
+          <button
+            type="button"
+            className={activeSection === "profile" ? "nav-item active" : "nav-item"}
+            onClick={() => {
+              setActiveSection("profile");
+              fetchProfileData();
+            }}
+          >
+            <FiSettings /> Profile
+          </button>
           <button type="button" className="nav-item" onClick={handleLogout}>
             <FiLogOut /> Logout
           </button>
@@ -242,7 +379,7 @@ const StaffDashboard = () => {
       <main className="staff-main">
         <header className="staff-header">
           <div>
-            <h1>Welcome back, {staff?.name || "Staff"}</h1>
+            <h1>Welcome back, {displayName}</h1>
             <p>Manage daily temple activities and assigned services.</p>
           </div>
           <div className="header-right">
@@ -365,9 +502,9 @@ const StaffDashboard = () => {
               <div className="profile-card">
                 <h2>Staff Profile</h2>
                 <div className="profile-meta">
-                  <div className="avatar">{(staff?.name || "S").charAt(0).toUpperCase()}</div>
+                  <div className="avatar">{displayName.charAt(0).toUpperCase()}</div>
                   <div>
-                    <h3>{staff?.name || "Staff Member"}</h3>
+                    <h3>{displayName}</h3>
                     <p className="role-badge">Temple Staff</p>
                   </div>
                 </div>
@@ -382,8 +519,8 @@ const StaffDashboard = () => {
                     <FiClock /> Shift: Morning / Evening
                   </li>
                 </ul>
-                <button type="button" onClick={() => setActiveSection("applyLeave")}>
-                  Apply Leave
+                <button type="button" onClick={() => setActiveSection("profile")}>
+                  Open Profile Settings
                 </button>
               </div>
             </section>
@@ -496,6 +633,267 @@ const StaffDashboard = () => {
                     )}
                   </tbody>
                 </table>
+              </div>
+            </div>
+          </section>
+        ) : null}
+
+        {!loading && activeSection === "profile" ? (
+          <section className="profile-settings-page">
+            <div className="leave-head">
+              <h2>Profile Settings</h2>
+              <button type="button" onClick={fetchProfileData} disabled={profileLoading}>
+                {profileLoading ? "Refreshing..." : "Refresh"}
+              </button>
+            </div>
+
+            <div className="profile-settings-grid">
+              <div className="table-card">
+                <h3 className="section-title">My Details</h3>
+                <p className="section-subtitle">Update your employee details added by admin.</p>
+                <form onSubmit={handleProfileSave} className="leave-form">
+                  <div className="date-grid">
+                    <div>
+                      <label htmlFor="profile-name">Full Name</label>
+                      <input
+                        id="profile-name"
+                        type="text"
+                        value={profileForm.name}
+                        onChange={(e) => handleProfileInputChange("name", e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="profile-email">Email</label>
+                      <input
+                        id="profile-email"
+                        type="email"
+                        value={profileForm.email}
+                        onChange={(e) => handleProfileInputChange("email", e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="date-grid">
+                    <div>
+                      <label htmlFor="profile-role">Role</label>
+                      <input id="profile-role" type="text" value={profileForm.role} disabled />
+                    </div>
+                    <div>
+                      <label htmlFor="profile-status">Status</label>
+                      <input
+                        id="profile-status"
+                        type="text"
+                        value={profileForm.status}
+                        onChange={(e) => handleProfileInputChange("status", e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="date-grid">
+                    <div>
+                      <label htmlFor="profile-gender">Gender</label>
+                      <select
+                        id="profile-gender"
+                        value={profileForm.gender}
+                        onChange={(e) => handleProfileInputChange("gender", e.target.value)}
+                      >
+                        {GENDER_OPTIONS.map((gender) => (
+                          <option key={gender} value={gender}>
+                            {gender}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label htmlFor="profile-blood">Blood Group</label>
+                      <select
+                        id="profile-blood"
+                        value={profileForm.bloodGroup}
+                        onChange={(e) => handleProfileInputChange("bloodGroup", e.target.value)}
+                      >
+                        {BLOOD_GROUPS.map((bloodGroup) => (
+                          <option key={bloodGroup} value={bloodGroup}>
+                            {bloodGroup}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="date-grid">
+                    <div>
+                      <label htmlFor="profile-dob">Date of Birth</label>
+                      <input
+                        id="profile-dob"
+                        type="date"
+                        value={profileForm.dob}
+                        onChange={(e) => handleProfileInputChange("dob", e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="profile-joining">Joining Date</label>
+                      <input
+                        id="profile-joining"
+                        type="date"
+                        value={profileForm.joiningDate}
+                        onChange={(e) => handleProfileInputChange("joiningDate", e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="date-grid">
+                    <div>
+                      <label htmlFor="profile-aadhaar">Aadhaar</label>
+                      <input
+                        id="profile-aadhaar"
+                        type="text"
+                        value={profileForm.aadhaar}
+                        onChange={(e) => handleProfileInputChange("aadhaar", e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="profile-phone">Phone</label>
+                      <input
+                        id="profile-phone"
+                        type="text"
+                        value={profileForm.phone}
+                        onChange={(e) => handleProfileInputChange("phone", e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="date-grid">
+                    <div>
+                      <label htmlFor="profile-emergency">Emergency Contact</label>
+                      <input
+                        id="profile-emergency"
+                        type="text"
+                        value={profileForm.emergencyContact}
+                        onChange={(e) => handleProfileInputChange("emergencyContact", e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="profile-shift">Shift</label>
+                      <select
+                        id="profile-shift"
+                        value={profileForm.shift}
+                        onChange={(e) => handleProfileInputChange("shift", e.target.value)}
+                      >
+                        {SHIFT_OPTIONS.map((shift) => (
+                          <option key={shift} value={shift}>
+                            {shift}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="date-grid">
+                    <div>
+                      <label htmlFor="profile-department">Department</label>
+                      <input
+                        id="profile-department"
+                        type="text"
+                        value={profileForm.department}
+                        onChange={(e) => handleProfileInputChange("department", e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="profile-employment">Employment Type</label>
+                      <select
+                        id="profile-employment"
+                        value={profileForm.employmentType}
+                        onChange={(e) => handleProfileInputChange("employmentType", e.target.value)}
+                      >
+                        {EMPLOYMENT_TYPES.map((employmentType) => (
+                          <option key={employmentType} value={employmentType}>
+                            {employmentType}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="date-grid">
+                    <div>
+                      <label htmlFor="profile-salary">Salary</label>
+                      <input
+                        id="profile-salary"
+                        type="text"
+                        value={profileForm.salary}
+                        onChange={(e) => handleProfileInputChange("salary", e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="profile-permissions">Permissions</label>
+                      <input
+                        id="profile-permissions"
+                        type="text"
+                        value={profileForm.permissions}
+                        onChange={(e) => handleProfileInputChange("permissions", e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <label htmlFor="profile-address">Address</label>
+                  <textarea
+                    id="profile-address"
+                    rows="3"
+                    value={profileForm.address}
+                    onChange={(e) => handleProfileInputChange("address", e.target.value)}
+                  />
+
+                  {profileMessage ? <p className="profile-note">{profileMessage}</p> : null}
+
+                  <div className="form-actions">
+                    <button type="submit" disabled={profileSaving}>
+                      <FiSave />
+                      {profileSaving ? "Saving..." : "Save Profile"}
+                    </button>
+                    <button type="button" className="secondary-btn" onClick={() => setActiveSection("dashboard")}>
+                      Back to Dashboard
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              <div className="table-card">
+                <h3 className="section-title">Change Password</h3>
+                <p className="section-subtitle">Use your current password to create a new secure password.</p>
+                <form onSubmit={handlePasswordSave} className="leave-form">
+                  <label htmlFor="current-password">Current Password</label>
+                  <input
+                    id="current-password"
+                    type="password"
+                    value={passwordForm.currentPassword}
+                    onChange={(e) => setPasswordForm((prev) => ({ ...prev, currentPassword: e.target.value }))}
+                  />
+
+                  <label htmlFor="new-password">New Password</label>
+                  <input
+                    id="new-password"
+                    type="password"
+                    value={passwordForm.newPassword}
+                    onChange={(e) => setPasswordForm((prev) => ({ ...prev, newPassword: e.target.value }))}
+                  />
+
+                  <label htmlFor="confirm-password">Confirm Password</label>
+                  <input
+                    id="confirm-password"
+                    type="password"
+                    value={passwordForm.confirmPassword}
+                    onChange={(e) => setPasswordForm((prev) => ({ ...prev, confirmPassword: e.target.value }))}
+                  />
+
+                  {passwordMessage ? <p className="profile-note">{passwordMessage}</p> : null}
+
+                  <div className="form-actions">
+                    <button type="submit" disabled={passwordSaving}>
+                      <FiLock />
+                      {passwordSaving ? "Updating..." : "Update Password"}
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
           </section>

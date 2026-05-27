@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import SectionCard from "../../../components/admin/employee/SectionCard";
 import EmployeeTable from "../../../components/admin/employee/EmployeeTable";
 import { attendanceTrend, payrollTrend } from "./employeeData";
-import { getEmployees, deleteEmployee } from "../../../services/employeeService";
+import { getEmployees, getEmployee, deleteEmployee } from "../../../services/employeeService";
 
 const chartColors = ["#7c3aed", "#ec4899", "#38bdf8", "#f59e0b", "#10b981"];
 
@@ -59,8 +59,14 @@ const AllEmployees = () => {
     }
   };
 
-  const handleViewEmployee = (employee) => {
-    setSelectedEmployee(employee);
+  const handleViewEmployee = async (employee) => {
+    try {
+      const latestEmployee = await getEmployee(employee._id);
+      setSelectedEmployee(latestEmployee);
+    } catch (error) {
+      console.error("Failed to load employee details", error);
+      setSelectedEmployee(employee);
+    }
   };
 
   const handleExport = () => {
@@ -247,18 +253,64 @@ const AllEmployees = () => {
             <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
               <p className="text-sm text-slate-500">Name</p>
               <h3 className="mt-2 text-xl font-semibold text-slate-900">{selectedEmployee.name}</h3>
-              <p className="mt-1 text-sm text-slate-600">{selectedEmployee.role}</p>
+              <p className="mt-1 text-sm text-slate-600">
+                {selectedEmployee.role} | {selectedEmployee.status || "Active"}
+              </p>
             </div>
             <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
               <p className="text-sm text-slate-500">Department</p>
-              <p className="mt-2 text-lg font-semibold text-slate-900">{selectedEmployee.department || "—"}</p>
-              <p className="mt-1 text-sm text-slate-600">Status: {selectedEmployee.status || "Active"}</p>
+              <p className="mt-2 text-lg font-semibold text-slate-900">{selectedEmployee.department || "-"}</p>
+              <p className="mt-1 text-sm text-slate-600">Shift: {selectedEmployee.shift || "-"}</p>
             </div>
             <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
               <p className="text-sm text-slate-500">Contact</p>
-              <p className="mt-2 text-lg font-semibold text-slate-900">{selectedEmployee.phone || selectedEmployee.emergencyContact || "—"}</p>
+              <p className="mt-2 text-lg font-semibold text-slate-900">{selectedEmployee.phone || selectedEmployee.emergencyContact || "-"}</p>
               <p className="mt-1 text-sm text-slate-600">Joined: {selectedEmployee.joiningDate || new Date(selectedEmployee.createdAt).toLocaleDateString()}</p>
             </div>
+          </div>
+
+          <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="rounded-3xl border border-slate-200 bg-white p-4">
+              <p className="text-sm text-slate-500">Email</p>
+              <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.email || "-"}</p>
+            </div>
+            <div className="rounded-3xl border border-slate-200 bg-white p-4">
+              <p className="text-sm text-slate-500">Gender</p>
+              <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.gender || "-"}</p>
+            </div>
+            <div className="rounded-3xl border border-slate-200 bg-white p-4">
+              <p className="text-sm text-slate-500">Date of Birth</p>
+              <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.dob || "-"}</p>
+            </div>
+            <div className="rounded-3xl border border-slate-200 bg-white p-4">
+              <p className="text-sm text-slate-500">Blood Group</p>
+              <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.bloodGroup || "-"}</p>
+            </div>
+            <div className="rounded-3xl border border-slate-200 bg-white p-4">
+              <p className="text-sm text-slate-500">Aadhaar</p>
+              <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.aadhaar || "-"}</p>
+            </div>
+            <div className="rounded-3xl border border-slate-200 bg-white p-4">
+              <p className="text-sm text-slate-500">Emergency Contact</p>
+              <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.emergencyContact || "-"}</p>
+            </div>
+            <div className="rounded-3xl border border-slate-200 bg-white p-4">
+              <p className="text-sm text-slate-500">Employment Type</p>
+              <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.employmentType || "-"}</p>
+            </div>
+            <div className="rounded-3xl border border-slate-200 bg-white p-4">
+              <p className="text-sm text-slate-500">Salary</p>
+              <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.salary || "-"}</p>
+            </div>
+            <div className="rounded-3xl border border-slate-200 bg-white p-4">
+              <p className="text-sm text-slate-500">Permissions</p>
+              <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.permissions || "-"}</p>
+            </div>
+          </div>
+
+          <div className="mt-4 rounded-3xl border border-slate-200 bg-white p-4">
+            <p className="text-sm text-slate-500">Address</p>
+            <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.address || "-"}</p>
           </div>
         </SectionCard>
       )}

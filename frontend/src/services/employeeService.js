@@ -22,6 +22,21 @@ export const updateEmployee = async (id, employeeData) => {
   return response.data;
 };
 
+export const getEmployeeProfile = async (userId) => {
+  const response = await axios.get(`${API_BASE}/profile/${userId}`);
+  return response.data;
+};
+
+export const updateEmployeeProfile = async (userId, profileData) => {
+  const response = await axios.put(`${API_BASE}/profile/${userId}`, profileData);
+  return response.data;
+};
+
+export const changeEmployeePassword = async (userId, passwordData) => {
+  const response = await axios.put(`${API_BASE}/profile/${userId}/password`, passwordData);
+  return response.data;
+};
+
 export const deleteEmployee = async (id) => {
   const response = await axios.delete(`${API_BASE}/${id}`);
   return response.data;

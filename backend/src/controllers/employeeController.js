@@ -4,6 +4,26 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 const ALLOWED_AUTH_ROLES = ["admin", "accountant", "cashier", "priest", "staff"];
+const PROFILE_EDITABLE_FIELDS = [
+  "name",
+  "email",
+  "gender",
+  "dob",
+  "bloodGroup",
+  "aadhaar",
+  "phone",
+  "address",
+  "emergencyContact",
+  "shift",
+  "department",
+  "salary",
+  "joiningDate",
+  "employmentType",
+  "permissions",
+  "photo",
+  "documentUrl",
+  "status",
+];
 
 const isValidEmail = (email) => /^\S+@\S+\.\S+$/.test(String(email || "").trim());
 const isValidDate = (value) => {
@@ -11,6 +31,7 @@ const isValidDate = (value) => {
   const date = new Date(value);
   return !Number.isNaN(date.getTime());
 };
+
 const isPastOrToday = (value) => {
   if (!isValidDate(value)) return false;
   const date = new Date(value);
@@ -18,6 +39,22 @@ const isPastOrToday = (value) => {
   today.setHours(0, 0, 0, 0);
   date.setHours(0, 0, 0, 0);
   return date <= today;
+};
+
+const sanitizeEmployee = (employeeDoc) => {
+  if (!employeeDoc) return null;
+  const employee = employeeDoc.toObject ? employeeDoc.toObject() : { ...employeeDoc };
+  delete employee.password;
+  return employee;
+};
+
+const findUserAndEmployeeByUserId = async (userId) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    return {};
+  }
+  const employee = await Employee.findOne({ email: user.email });
+  return { user, employee };
 };
 
 // CREATE EMPLOYEE
@@ -78,7 +115,14 @@ exports.createEmployee = async (req, res) => {
       return res.status(400).json({ message: "Joining date cannot be earlier than date of birth." });
     }
 
-    const ageAtJoining = joinDate.getFullYear() - dobDate.getFullYear() - (joinDate.getMonth() < dobDate.getMonth() || (joinDate.getMonth() === dobDate.getMonth() && joinDate.getDate() < dobDate.getDate()) ? 1 : 0);
+    const ageAtJoining =
+      joinDate.getFullYear() -
+      dobDate.getFullYear() -
+      (joinDate.getMonth() < dobDate.getMonth() ||
+      (joinDate.getMonth() === dobDate.getMonth() && joinDate.getDate() < dobDate.getDate())
+        ? 1
+        : 0);
+
     if (ageAtJoining < 14) {
       return res.status(400).json({ message: "Employee must be at least 14 years old at joining." });
     }
@@ -126,12 +170,11 @@ exports.createEmployee = async (req, res) => {
       mustChangePassword: false,
     });
 
-    res.status(201).json({ message: "Employee created successfully", employee });
+    res.status(201).json({ message: "Employee created successfully", employee: sanitizeEmployee(employee) });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
-
 
 // LOGIN
 exports.loginEmployee = async (req, res) => {
@@ -149,23 +192,21 @@ exports.loginEmployee = async (req, res) => {
     }
 
     const token = jwt.sign({ id: employee._id, role: employee.role }, "temple_secret_key", { expiresIn: "7d" });
-    res.json({ token, employee });
+    res.json({ token, employee: sanitizeEmployee(employee) });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
-
 
 // GET ALL EMPLOYEES
 exports.getEmployees = async (req, res) => {
   try {
-    const employees = await Employee.find();
-    res.json(employees);
+    const employees = await Employee.find().sort({ createdAt: -1 });
+    res.json(employees.map(sanitizeEmployee));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
-
 
 // GET EMPLOYEE BY ID
 exports.getEmployeeById = async (req, res) => {
@@ -175,34 +216,197 @@ exports.getEmployeeById = async (req, res) => {
     if (!employee) {
       return res.status(404).json({ message: "Employee not found" });
     }
-    res.json(employee);
+    res.json(sanitizeEmployee(employee));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-
-// UPDATE EMPLOYEE
+// UPDATE EMPLOYEE (ADMIN)
 exports.updateEmployee = async (req, res) => {
   try {
     const { id } = req.params;
     const updateData = { ...req.body };
+    const existingEmployee = await Employee.findById(id);
+    if (!existingEmployee) {
+      return res.status(404).json({ message: "Employee not found" });
+    }
+
+    if (updateData.email) {
+      const normalizedEmail = String(updateData.email).toLowerCase().trim();
+      if (!isValidEmail(normalizedEmail)) {
+        return res.status(400).json({ message: "Invalid email address." });
+      }
+      if (normalizedEmail !== existingEmployee.email) {
+        const duplicateEmployee = await Employee.findOne({ email: normalizedEmail, _id: { $ne: existingEmployee._id } });
+        if (duplicateEmployee) {
+          return res.status(400).json({ message: "Email is already used by another employee." });
+        }
+        const duplicateUser = await User.findOne({ email: normalizedEmail });
+        if (duplicateUser) {
+          return res.status(400).json({ message: "Email is already used by another account." });
+        }
+      }
+      updateData.email = normalizedEmail;
+    }
 
     if (updateData.password) {
       updateData.password = await bcrypt.hash(updateData.password, 10);
     }
 
     const employee = await Employee.findByIdAndUpdate(id, updateData, { new: true });
-    if (!employee) {
-      return res.status(404).json({ message: "Employee not found" });
+
+    const userUpdate = {};
+    if (updateData.name) userUpdate.name = updateData.name;
+    if (updateData.email) userUpdate.email = updateData.email;
+    if (updateData.role) userUpdate.role = updateData.role;
+    if (updateData.password) userUpdate.password = updateData.password;
+    if (Object.keys(userUpdate).length > 0) {
+      await User.findOneAndUpdate({ email: existingEmployee.email }, userUpdate, { new: true });
     }
 
-    res.json({ message: "Employee updated successfully", employee });
+    res.json({ message: "Employee updated successfully", employee: sanitizeEmployee(employee) });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
+// STAFF PROFILE BY AUTH USER ID
+exports.getEmployeeProfileByUserId = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { user, employee } = await findUserAndEmployeeByUserId(userId);
+
+    if (!user || !employee) {
+      return res.status(404).json({ message: "Employee profile not found" });
+    }
+
+    return res.json({
+      message: "Profile loaded",
+      profile: sanitizeEmployee(employee),
+      authUser: {
+        id: user._id.toString(),
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+// STAFF PROFILE UPDATE BY AUTH USER ID
+exports.updateEmployeeProfileByUserId = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { user, employee } = await findUserAndEmployeeByUserId(userId);
+
+    if (!user || !employee) {
+      return res.status(404).json({ message: "Employee profile not found" });
+    }
+
+    const updateData = {};
+    PROFILE_EDITABLE_FIELDS.forEach((field) => {
+      if (Object.prototype.hasOwnProperty.call(req.body, field)) {
+        updateData[field] = req.body[field];
+      }
+    });
+
+    if (Object.prototype.hasOwnProperty.call(updateData, "email")) {
+      const normalizedEmail = String(updateData.email || "").toLowerCase().trim();
+      if (!isValidEmail(normalizedEmail)) {
+        return res.status(400).json({ message: "Invalid email address." });
+      }
+      if (normalizedEmail !== employee.email) {
+        const existingEmployee = await Employee.findOne({ email: normalizedEmail, _id: { $ne: employee._id } });
+        if (existingEmployee) {
+          return res.status(400).json({ message: "Email is already used by another employee." });
+        }
+        const existingUser = await User.findOne({ email: normalizedEmail, _id: { $ne: user._id } });
+        if (existingUser) {
+          return res.status(400).json({ message: "Email is already used by another account." });
+        }
+      }
+      updateData.email = normalizedEmail;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(updateData, "dob")) {
+      if (updateData.dob && (!isValidDate(updateData.dob) || !isPastOrToday(updateData.dob))) {
+        return res.status(400).json({ message: "Date of birth must be a valid past date." });
+      }
+    }
+
+    if (Object.prototype.hasOwnProperty.call(updateData, "joiningDate")) {
+      if (updateData.joiningDate && (!isValidDate(updateData.joiningDate) || !isPastOrToday(updateData.joiningDate))) {
+        return res.status(400).json({ message: "Joining date must be today or earlier." });
+      }
+    }
+
+    if ((updateData.dob || employee.dob) && (updateData.joiningDate || employee.joiningDate)) {
+      const dobDate = new Date(updateData.dob || employee.dob);
+      const joinDate = new Date(updateData.joiningDate || employee.joiningDate);
+      if (joinDate < dobDate) {
+        return res.status(400).json({ message: "Joining date cannot be earlier than date of birth." });
+      }
+    }
+
+    const updatedEmployee = await Employee.findByIdAndUpdate(employee._id, updateData, { new: true });
+
+    const userUpdates = {};
+    if (Object.prototype.hasOwnProperty.call(updateData, "name")) userUpdates.name = updateData.name;
+    if (Object.prototype.hasOwnProperty.call(updateData, "email")) userUpdates.email = updateData.email;
+    if (Object.keys(userUpdates).length > 0) {
+      await User.findByIdAndUpdate(user._id, userUpdates, { new: true });
+    }
+
+    return res.json({
+      message: "Profile updated successfully",
+      profile: sanitizeEmployee(updatedEmployee),
+      authUser: {
+        id: user._id.toString(),
+        name: userUpdates.name || user.name,
+        email: userUpdates.email || user.email,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+// STAFF PASSWORD CHANGE BY AUTH USER ID
+exports.changeEmployeePasswordByUserId = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: "Current password and new password are required." });
+    }
+    if (String(newPassword).length < 6) {
+      return res.status(400).json({ message: "New password must be at least 6 characters." });
+    }
+
+    const { user, employee } = await findUserAndEmployeeByUserId(userId);
+    if (!user || !employee) {
+      return res.status(404).json({ message: "Employee profile not found" });
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Current password is incorrect." });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await User.findByIdAndUpdate(user._id, { password: hashedPassword, mustChangePassword: false }, { new: true });
+    await Employee.findByIdAndUpdate(employee._id, { password: hashedPassword }, { new: true });
+
+    return res.json({ message: "Password updated successfully." });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
 
 // DELETE EMPLOYEE
 exports.deleteEmployee = async (req, res) => {
@@ -212,6 +416,8 @@ exports.deleteEmployee = async (req, res) => {
     if (!employee) {
       return res.status(404).json({ message: "Employee not found" });
     }
+
+    await User.findOneAndDelete({ email: employee.email });
     res.json({ message: "Employee deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
