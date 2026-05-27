@@ -4,6 +4,8 @@ const authRoutes = require("./routes/authRoutes");
 const employeeRoutes = require("./routes/employeeRoutes");
 const donationRoutes = require("./routes/donationRoutes");
 const devoteeRoutes = require("./routes/devoteeRoutes");
+const staffRoutes = require("./routes/staffRoutes");
+const leaveRoutes = require("./routes/leaveRoutes");
 
 const app = express();
 
@@ -18,5 +20,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/employees", employeeRoutes);
 app.use("/api/donations", donationRoutes);
 app.use("/api/devotee", devoteeRoutes);
+app.use("/api/staff", staffRoutes);
+app.use("/api/leaves", leaveRoutes);
 
 module.exports = app;
