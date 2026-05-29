@@ -5,6 +5,7 @@ const Event = require("../models/Event");
 const SupportRequest = require("../models/SupportRequest");
 const User = require("../models/User");
 const PrasadamOrder = require("../models/PrasadamOrder");
+const { createStaffBroadcastNotifications } = require("../utils/notificationService");
 const PRASADAM_MENU = {
   "Laddu Prasadam": 151,
   "Panchamrit Prasadam": 101,
@@ -76,7 +77,6 @@ const createDonation = async (req, res) => {
       category = "General",
       paymentMethod = "UPI",
       contactNumber,
-      donorEmail,
       transactionId,
       notes,
     } = req.body;
@@ -121,8 +121,14 @@ const getNotifications = async (req, res) => {
   try {
     const email = String(req.query.email || "").trim().toLowerCase();
     const notifications = email
-      ? await Notification.find({ $or: [{ audienceEmail: email }, { audienceEmail: { $exists: false } }, { audienceEmail: null }] }).sort({ date: -1, createdAt: -1 })
-      : await Notification.find().sort({ date: -1, createdAt: -1 });
+      ? await Notification.find({
+          $or: [
+            { audienceEmail: email },
+            { audienceEmail: { $exists: false }, audienceRole: { $exists: false } },
+            { audienceEmail: null, audienceRole: { $exists: false } },
+          ],
+        }).sort({ date: -1, createdAt: -1 })
+      : await Notification.find({ audienceRole: { $ne: "staff" } }).sort({ date: -1, createdAt: -1 });
     return res.status(200).json({ notifications });
   } catch (error) {
     return res.status(500).json({ error: "Failed to load notifications." });
@@ -157,6 +163,33 @@ const getEvents = async (req, res) => {
     return res.status(200).json({ events });
   } catch (error) {
     return res.status(500).json({ error: "Failed to load events." });
+  }
+};
+
+const createEvent = async (req, res) => {
+  try {
+    const { title, date, location, description } = req.body;
+
+    if (!title || !date || !location) {
+      return res.status(400).json({ error: "title, date and location are required." });
+    }
+
+    const event = await Event.create({
+      title,
+      date,
+      location,
+      description,
+    });
+
+    await createStaffBroadcastNotifications({
+      title: "Festival Announcement",
+      message: `${title} has been scheduled at ${location}.`,
+      category: "festival",
+    });
+
+    return res.status(201).json({ event });
+  } catch (error) {
+    return res.status(500).json({ error: "Failed to create event." });
   }
 };
 
@@ -344,6 +377,7 @@ module.exports = {
   getNotifications,
   getProfile,
   getEvents,
+  createEvent,
   submitSupportRequest,
   updateProfile,
   getSupportRequests,

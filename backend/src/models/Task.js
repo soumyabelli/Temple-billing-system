@@ -15,6 +15,28 @@ const taskSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    employeeId: {
+      type: String,
+      trim: true,
+      index: true,
+    },
+    staffEmail: {
+      type: String,
+      trim: true,
+      lowercase: true,
+    },
+    title: {
+      type: String,
+      trim: true,
+    },
+    description: {
+      type: String,
+      trim: true,
+    },
+    dueDate: {
+      type: String,
+      trim: true,
+    },
     duty: {
       type: String,
       required: true,

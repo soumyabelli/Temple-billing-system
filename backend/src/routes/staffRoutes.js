@@ -2,16 +2,27 @@ const express = require("express");
 
 const router = express.Router();
 
-const Task = require("../models/Task");
-
 const {
+  assignTask,
+  createInventoryRequestNotification,
+  deleteTask,
+  getAllTasks,
+  getStaffNotifications,
+  getStaffUnreadCount,
   getTasks,
+  markStaffNotificationRead,
+  markStaffNotificationsRead,
   updateTaskStatus,
 } = require("../controllers/staffController");
 
 
 
 /* GET STAFF TASKS */
+
+router.get(
+  "/tasks",
+  getAllTasks
+);
 
 router.get(
   "/tasks/:staffId",
@@ -27,52 +38,43 @@ router.put(
   updateTaskStatus
 );
 
+router.delete(
+  "/tasks/:id",
+  deleteTask
+);
+
+router.get(
+  "/notifications/:staffId",
+  getStaffNotifications
+);
+
+router.get(
+  "/notifications/:staffId/unread-count",
+  getStaffUnreadCount
+);
+
+router.patch(
+  "/notifications/:staffId/read-all",
+  markStaffNotificationsRead
+);
+
+router.patch(
+  "/notifications/read/:id",
+  markStaffNotificationRead
+);
+
+router.post(
+  "/notifications/inventory-request-status",
+  createInventoryRequestNotification
+);
+
 
 
 /* ASSIGN TASK BY ADMIN OR PRIEST */
 
 router.post(
   "/assign-task",
-  async (req, res) => {
-
-    try {
-      const { staffId, staffName, duty, area, time, assignedBy } = req.body;
-
-      if (!staffId || !staffName || !duty || !area || !time || !assignedBy) {
-        return res.status(400).json({
-          success: false,
-          message: "staffId, staffName, duty, area, time and assignedBy are required",
-        });
-      }
-
-      const task = await Task.create(
-        {
-          staffId,
-          staffName,
-          duty,
-          area,
-          time,
-          assignedBy,
-          status: "Pending",
-        }
-      );
-
-      res.json({
-        success: true,
-        message: "Task Assigned Successfully",
-        task,
-      });
-
-    } catch (error) {
-
-      res.status(500).json({
-        success: false,
-        message: error.message,
-      });
-
-    }
-
-  }
+  assignTask
 );
 
 
