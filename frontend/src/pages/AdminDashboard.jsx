@@ -122,6 +122,8 @@ const DashboardView = ({ darkMode }) => {
 };
 
 const DevoteesView = ({ darkMode }) => {
+  // Devotees list is currently placeholder in this file; real data is handled in /src/pages/admin/AdminDashboard.jsx
+
   const [page, setPage] = useState(1);
   const perPage = 4;
   const totalPages = Math.ceil(devotees.length / perPage);
