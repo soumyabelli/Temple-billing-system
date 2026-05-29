@@ -24,6 +24,7 @@ import {
   getEmployeeProfile,
   updateEmployeeProfile,
 } from "../../services/employeeService";
+import Notifications from "./Notifications";
 import "./StaffDashboard.css";
 
 const API_BASE = "http://localhost:5000/api";
@@ -78,6 +79,18 @@ const leavePeriod = (fromDate, toDate) => {
   return `${fromLabel} - ${toLabel}`;
 };
 
+const formatTaskDate = (value) => {
+  if (!value) return "-";
+  const normalizedValue = String(value);
+  const date = new Date(normalizedValue.includes("T") ? normalizedValue : `${normalizedValue}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return normalizedValue;
+  return date.toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+};
+
 const toProfileForm = (profile = {}) => ({
   name: profile.name || "",
   email: profile.email || "",
@@ -110,6 +123,7 @@ const StaffDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [submittingLeave, setSubmittingLeave] = useState(false);
   const [updatingTaskId, setUpdatingTaskId] = useState("");
+  const [notificationUnreadCount, setNotificationUnreadCount] = useState(0);
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileSaving, setProfileSaving] = useState(false);
   const [passwordSaving, setPasswordSaving] = useState(false);
@@ -131,6 +145,16 @@ const StaffDashboard = () => {
 
   const staffId = staff?.id || staff?._id || "";
   const displayName = profileForm.name || staff?.name || "Staff";
+
+  const fetchUnreadCount = useCallback(async () => {
+    if (!staffId) return;
+    try {
+      const response = await axios.get(`${API_BASE}/staff/notifications/${staffId}/unread-count`);
+      setNotificationUnreadCount(Number(response.data?.unreadCount || 0));
+    } catch (apiError) {
+      console.warn("Failed to load staff notification count", apiError);
+    }
+  }, [staffId]);
 
   const fetchDashboardData = useCallback(async () => {
     if (!staffId) {
@@ -177,6 +201,12 @@ const StaffDashboard = () => {
   useEffect(() => {
     fetchProfileData();
   }, [fetchProfileData]);
+
+  useEffect(() => {
+    fetchUnreadCount();
+    const timer = setInterval(fetchUnreadCount, POLL_INTERVAL_MS);
+    return () => clearInterval(timer);
+  }, [fetchUnreadCount]);
 
   const taskSummary = useMemo(() => {
     return tasks.reduce(
@@ -361,6 +391,14 @@ const StaffDashboard = () => {
           </button>
           <button
             type="button"
+            className={activeSection === "notifications" ? "nav-item active" : "nav-item"}
+            onClick={() => setActiveSection("notifications")}
+          >
+            <FiBell /> Notifications
+            {notificationUnreadCount > 0 ? <span className="nav-count">{notificationUnreadCount}</span> : null}
+          </button>
+          <button
+            type="button"
             className={activeSection === "profile" ? "nav-item active" : "nav-item"}
             onClick={() => {
               setActiveSection("profile");
@@ -386,9 +424,14 @@ const StaffDashboard = () => {
             <span className="header-date">
               <FiCalendar /> {formatHeaderDate()}
             </span>
-            <button type="button" className="notif-button" aria-label="Notifications">
+            <button
+              type="button"
+              className="notif-button"
+              aria-label="Notifications"
+              onClick={() => setActiveSection("notifications")}
+            >
               <FiBell />
-              {taskSummary.pending > 0 ? <span>{taskSummary.pending}</span> : null}
+              {notificationUnreadCount > 0 ? <span>{notificationUnreadCount}</span> : null}
             </button>
           </div>
         </header>
@@ -445,7 +488,7 @@ const StaffDashboard = () => {
             <section className="dashboard-grid">
               <div className="table-card">
                 <div className="card-heading">
-                  <h2>Today's Task Schedule</h2>
+                  <h2>Assigned Task Schedule</h2>
                 </div>
 
                 <div className="table-wrap">
@@ -453,8 +496,8 @@ const StaffDashboard = () => {
                     <thead>
                       <tr>
                         <th>Task</th>
-                        <th>Area</th>
-                        <th>Time</th>
+                        <th>Description</th>
+                        <th>Due Date</th>
                         <th>Assigned By</th>
                         <th>Status</th>
                       </tr>
@@ -469,9 +512,9 @@ const StaffDashboard = () => {
                       ) : (
                         tasks.map((task) => (
                           <tr key={task._id}>
-                            <td>{task.duty}</td>
-                            <td>{task.area}</td>
-                            <td>{task.time}</td>
+                            <td>{task.title || task.duty}</td>
+                            <td>{task.description || task.area}</td>
+                            <td>{formatTaskDate(task.dueDate || task.time)}</td>
                             <td>{task.assignedBy}</td>
                             <td>
                               <div className="status-control">
@@ -897,6 +940,10 @@ const StaffDashboard = () => {
               </div>
             </div>
           </section>
+        ) : null}
+
+        {!loading && activeSection === "notifications" ? (
+          <Notifications staffId={staffId} onUnreadCountChange={setNotificationUnreadCount} />
         ) : null}
 
         {!loading && activeSection === "applyLeave" ? (

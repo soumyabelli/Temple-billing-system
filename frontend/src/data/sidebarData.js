@@ -45,6 +45,7 @@ export const sidebarItems = [
       { title: "Leave Management", path: "/admin/employees/leave" },
       { title: "Performance", path: "/admin/employees/performance" },
       { title: "Shift Management", path: "/admin/employees/shifts" },
+      { title: "Task Assign", path: "/admin/employees/tasks" },
     ],
   },
   { title: "Festivals & Events", icon: FaCalendarAlt, path: "/admin/events" },

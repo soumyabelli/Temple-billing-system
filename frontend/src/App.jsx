@@ -411,6 +411,16 @@ function App() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/admin/employees/tasks"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminLayout>
+              <AssignTask />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
 
       <Route
         path="/admin/members"

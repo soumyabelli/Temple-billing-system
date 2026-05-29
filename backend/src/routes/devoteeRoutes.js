@@ -7,6 +7,7 @@ const {
   getNotifications,
   getProfile,
   getEvents,
+  createEvent,
   submitSupportRequest,
   updateProfile,
   getSupportRequests,
@@ -29,6 +30,7 @@ router.get("/notifications", getNotifications);
 router.get("/profile", getProfile);
 router.put("/profile", updateProfile);
 router.get("/events", getEvents);
+router.post("/events", createEvent);
 router.post("/support", submitSupportRequest);
 router.get("/support", getSupportRequests);
 router.patch("/support/:id", replySupportRequest);

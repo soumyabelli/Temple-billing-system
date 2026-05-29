@@ -1,4 +1,5 @@
 const Leave = require("../models/Leave");
+const { createStaffNotification } = require("../utils/notificationService");
 
 const LEAVE_STATUSES = ["Pending", "Approved", "Rejected"];
 
@@ -79,6 +80,13 @@ exports.applyLeave = async (req, res) => {
       adminReason: "",
       reviewedBy: "",
       reviewedAt: null,
+    });
+
+    await createStaffNotification({
+      title: "Leave Request Submitted",
+      message: "Your leave request has been submitted to Admin.",
+      audienceId: staffId,
+      category: "leave",
     });
 
     return res.json({
@@ -177,6 +185,24 @@ exports.updateLeaveStatus = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: "Leave request not found",
+      });
+    }
+
+    if (status === "Approved") {
+      await createStaffNotification({
+        title: "Leave Approved",
+        message: "Your leave request has been approved.",
+        audienceId: updatedLeave.staffId,
+        category: "leave",
+      });
+    }
+
+    if (status === "Rejected") {
+      await createStaffNotification({
+        title: "Leave Rejected",
+        message: `Your leave request has been rejected. Reason: ${updatePayload.adminReason}`,
+        audienceId: updatedLeave.staffId,
+        category: "leave",
       });
     }
 
