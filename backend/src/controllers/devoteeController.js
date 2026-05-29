@@ -226,10 +226,45 @@ const updateProfile = async (req, res) => {
 
 const getSupportRequests = async (req, res) => {
   try {
-    const requests = await SupportRequest.find().sort({ createdAt: -1 });
+    const email = String(req.query.email || "").trim().toLowerCase();
+    const filter = email ? { email } : {};
+    const requests = await SupportRequest.find(filter).sort({ createdAt: -1 });
     return res.status(200).json({ requests });
   } catch (error) {
     return res.status(500).json({ error: "Failed to load support requests." });
+  }
+};
+
+const replySupportRequest = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reply, status } = req.body;
+    if (!reply) {
+      return res.status(400).json({ error: "Reply text is required." });
+    }
+
+    const supportRequest = await SupportRequest.findById(id);
+    if (!supportRequest) {
+      return res.status(404).json({ error: "Support request not found." });
+    }
+
+    supportRequest.reply = String(reply).trim();
+    if (status && ["Open", "In Progress", "Closed"].includes(status)) {
+      supportRequest.status = status;
+    } else {
+      supportRequest.status = "Closed";
+    }
+    await supportRequest.save();
+
+    await Notification.create({
+      title: "Feedback Response",
+      message: `Your feedback on '${supportRequest.subject}' has been replied to.`,
+      audienceEmail: supportRequest.email,
+    });
+
+    return res.status(200).json({ request: supportRequest });
+  } catch (error) {
+    return res.status(500).json({ error: "Failed to reply to support request." });
   }
 };
 
@@ -348,6 +383,7 @@ module.exports = {
   submitSupportRequest,
   updateProfile,
   getSupportRequests,
+  replySupportRequest,
   createNotification,
   getPrasadamOrders,
   createPrasadamOrder,

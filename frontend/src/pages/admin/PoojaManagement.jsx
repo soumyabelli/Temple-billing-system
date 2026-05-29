@@ -12,6 +12,7 @@ import {
 } from "react-icons/md";
 import { FaDownload } from "react-icons/fa6";
 import { getDevoteeBookings, getDevoteeDonations, updateBookingStatus } from "../../services/devoteeService";
+import { getPoojaTypes, savePoojaTypes, removePoojaType } from "../../services/poojaTypeService";
 
 const formatCurrency = (value) => `Rs ${Number(value || 0).toLocaleString()}`;
 
@@ -26,6 +27,49 @@ const PoojaManagement = () => {
   const [bookings, setBookings] = useState([]);
   const [donations, setDonations] = useState([]);
   const [query, setQuery] = useState("");
+  const [poojaTypes, setPoojaTypes] = useState(getPoojaTypes());
+  const [typeName, setTypeName] = useState("");
+  const [typePrice, setTypePrice] = useState(501);
+  const [editingType, setEditingType] = useState(null);
+  const [typeMessage, setTypeMessage] = useState("");
+
+  const loadPoojaTypes = () => setPoojaTypes(getPoojaTypes());
+
+  const handleSaveType = () => {
+    const name = typeName.trim();
+    const price = Number(typePrice);
+    if (!name || price <= 0) {
+      setTypeMessage("Please enter a valid name and price.");
+      return;
+    }
+    const updated = savePoojaTypes([
+      ...getPoojaTypes().filter((type) => type.name !== (editingType || name)),
+      { name, price },
+    ]);
+    setPoojaTypes(updated);
+    setTypeMessage(editingType ? "Pooja type updated." : "Pooja type added.");
+    setEditingType(null);
+    setTypeName("");
+    setTypePrice(501);
+  };
+
+  const handleEditType = (type) => {
+    setTypeName(type.name);
+    setTypePrice(type.price);
+    setEditingType(type.name);
+    setTypeMessage("");
+  };
+
+  const handleDeleteType = (name) => {
+    const updated = removePoojaType(name);
+    setPoojaTypes(updated);
+    if (editingType === name) {
+      setEditingType(null);
+      setTypeName("");
+      setTypePrice(501);
+    }
+    setTypeMessage("Pooja type removed.");
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -123,6 +167,92 @@ const PoojaManagement = () => {
             </div>
           );
         })}
+      </div>
+
+      <div className="rounded-2xl border border-[#ece8e1] bg-white p-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <h2 className="text-[30px] font-bold text-[#15141f]">Manage Pooja Types</h2>
+            <p className="mt-1 text-sm text-[#5d6674]">Add, edit or remove pooja services and their booking prices.</p>
+          </div>
+          <div className="w-full max-w-[360px] rounded-3xl border border-[#f0f0f0] bg-[#fafaf9] p-5">
+            <label className="block text-sm font-semibold text-[#4f4f4f]">
+              Pooja Name
+              <input
+                type="text"
+                value={typeName}
+                onChange={(e) => setTypeName(e.target.value)}
+                className="mt-2 w-full rounded-3xl border border-[#ded6c6] bg-white px-4 py-3 text-base outline-none"
+                placeholder="e.g. Lakshmi Archana"
+              />
+            </label>
+            <label className="mt-4 block text-sm font-semibold text-[#4f4f4f]">
+              Price
+              <input
+                type="number"
+                min="1"
+                value={typePrice}
+                onChange={(e) => setTypePrice(Number(e.target.value))}
+                className="mt-2 w-full rounded-3xl border border-[#ded6c6] bg-white px-4 py-3 text-base outline-none"
+                placeholder="Enter price"
+              />
+            </label>
+            <div className="mt-4 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleSaveType}
+                className="rounded-2xl bg-[#1b7f77] px-4 py-3 text-sm font-semibold text-white"
+              >
+                {editingType ? "Update Type" : "Add Type"}
+              </button>
+              {editingType && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingType(null);
+                    setTypeName("");
+                    setTypePrice(501);
+                    setTypeMessage("");
+                  }}
+                  className="rounded-2xl border border-[#d1d5db] bg-white px-4 py-3 text-sm font-semibold text-[#374151]"
+                >
+                  Cancel
+                </button>
+              )}
+            </div>
+            {typeMessage && <p className="mt-3 text-sm text-[#1f6f5d]">{typeMessage}</p>}
+          </div>
+        </div>
+
+        <div className="mt-6 overflow-x-auto">
+          <table className="w-full text-left text-sm text-[#3f3f3f]">
+            <thead className="bg-[#fafafa] text-[#575757]">
+              <tr>
+                <th className="px-4 py-3 font-semibold">Pooja Type</th>
+                <th className="px-4 py-3 font-semibold">Price</th>
+                <th className="px-4 py-3 font-semibold">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {poojaTypes.length > 0 ? (
+                poojaTypes.map((type) => (
+                  <tr key={type.name} className="border-t border-[#f0ece6]">
+                    <td className="px-4 py-3 font-medium">{type.name}</td>
+                    <td className="px-4 py-3">{`₹ ${type.price.toLocaleString()}`}</td>
+                    <td className="px-4 py-3 space-x-2">
+                      <button type="button" onClick={() => handleEditType(type)} className="rounded-lg bg-[#f8fafc] px-3 py-2 text-sm font-semibold text-[#1f2937]">Edit</button>
+                      <button type="button" onClick={() => handleDeleteType(type.name)} className="rounded-lg bg-[#fef2f2] px-3 py-2 text-sm font-semibold text-[#b91c1c]">Delete</button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="3" className="px-4 py-6 text-center text-[#5d5d5d]">No pooja types available.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">

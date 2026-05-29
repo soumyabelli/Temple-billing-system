@@ -29,8 +29,11 @@ import LeaveManagement from "./pages/admin/employee/LeaveManagement";
 import Performance from "./pages/admin/employee/Performance";
 import ShiftManagement from "./pages/admin/employee/ShiftManagement";
 import PoojaManagement from "./pages/admin/PoojaManagement";
+import FeedbackManagement from "./pages/admin/FeedbackManagement";
 import SettingsManagement from "./pages/admin/SettingsManagement";
 import FestivalsEventsManagement from "./pages/admin/FestivalsEventsManagement";
+import BillingManagement from "./pages/admin/BillingManagement";
+import InventoryManagement from "./pages/admin/InventoryManagement";
 import AdminLayout from "./layouts/AdminLayout";
 
 import AccountantDashboard from "./pages/accountant/AccountantDashboard";
@@ -106,11 +109,41 @@ function App() {
         }
       />
       <Route
+        path="/admin/feedback"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminLayout>
+              <FeedbackManagement />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/admin/pooja"
         element={
           <ProtectedRoute allowedRoles={["admin"]}>
             <AdminLayout>
               <PoojaManagement />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/billing"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminLayout>
+              <BillingManagement />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/inventory"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminLayout>
+              <InventoryManagement />
             </AdminLayout>
           </ProtectedRoute>
         }

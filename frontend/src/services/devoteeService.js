@@ -44,8 +44,14 @@ export const submitDevoteeSupport = async (payload) => {
   return response.data;
 };
 
-export const getSupportRequests = async () => {
-  const response = await axios.get(`${API_BASE}/support`);
+export const getSupportRequests = async (email) => {
+  const params = email ? { email } : {};
+  const response = await axios.get(`${API_BASE}/support`, { params });
+  return response.data;
+};
+
+export const replySupportRequest = async (id, payload) => {
+  const response = await axios.patch(`${API_BASE}/support/${id}`, payload);
   return response.data;
 };
 

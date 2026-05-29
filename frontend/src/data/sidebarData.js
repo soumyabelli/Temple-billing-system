@@ -11,6 +11,7 @@ import {
   MdPeopleAlt,
   MdFestival,
   MdVerified,
+  MdFeedback,
 } from "react-icons/md";
 import { FaDonate, FaBoxes, FaCalendarAlt, FaListAlt, FaPlusCircle, FaBullhorn, FaUsers } from "react-icons/fa";
 import { HiDocumentReport } from "react-icons/hi";
@@ -47,6 +48,7 @@ export const sidebarItems = [
     ],
   },
   { title: "Festivals & Events", icon: FaCalendarAlt, path: "/admin/events" },
+  { title: "Feedback & Complaints", icon: MdFeedback, path: "/admin/feedback" },
   { title: "Notifications", icon: MdNotifications, path: "/admin/notifications" },
   { title: "Reports & Analytics", icon: HiDocumentReport, path: "/admin/reports" },
   { title: "Receipts & Documents", icon: MdReceiptLong, path: "/admin/receipts" },

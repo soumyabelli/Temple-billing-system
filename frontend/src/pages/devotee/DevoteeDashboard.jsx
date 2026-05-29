@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { jsPDF } from "jspdf";
 import templeImage from "../../assets/temple.jpg.png";
 import { useAuth } from "../../context/AuthContext";
+import { getDonationTypes } from "../../services/donationTypeService";
+import { getPoojaTypes } from "../../services/poojaTypeService";
 import {
   getDevoteeBookings,
   getDevoteeDonations,
@@ -12,6 +15,7 @@ import {
   createDevoteeDonation,
   createDevoteeBooking,
   submitDevoteeSupport,
+  getSupportRequests,
   getPrasadamOrders,
   createPrasadamOrder,
   cancelPrasadamOrder,
@@ -36,6 +40,19 @@ const formatCurrency = (value) => {
   if (typeof value === "string" && value.trim()) return value;
   return "₹ 0";
 };
+
+const glassCard =
+  "rounded-[28px] border border-white/45 bg-white/60 p-5 shadow-[0_28px_80px_rgba(115,83,27,0.12)] backdrop-blur-xl";
+const glassSection =
+  "rounded-[28px] border border-white/40 bg-white/55 p-5 shadow-[0_22px_60px_rgba(104,78,30,0.10)] backdrop-blur-xl";
+const glassInput =
+  "w-full rounded-[24px] border border-white/70 bg-white/75 px-4 py-3 text-base text-[#4f3f26] outline-none shadow-sm shadow-[#d9c8a1]/40 backdrop-blur-sm";
+const glassButton =
+  "rounded-[24px] bg-gradient-to-r from-[#b46a13] via-[#f29f41] to-[#ffbc6e] px-5 py-3 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(184,122,57,0.22)] transition hover:shadow-[0_18px_38px_rgba(184,122,57,0.24)]";
+const glassButtonSoft =
+  "rounded-[24px] bg-[#fff3d8] px-5 py-3 text-sm font-semibold text-[#7f4b11] shadow-[0_8px_22px_rgba(128,88,40,0.14)] transition hover:bg-[#ffe4b4]";
+const glassItem =
+  "rounded-[26px] border border-white/35 bg-white/55 p-4 shadow-sm backdrop-blur-sm";
 
 const AppIcon = ({ name, className = "h-5 w-5" }) => {
   const base = "fill-none stroke-current stroke-2";
@@ -154,7 +171,7 @@ const SidebarItem = ({ label, icon, active, onClick }) => (
 
 const DevoteeDashboard = () => {
   const navigate = useNavigate();
-  const { user, logoutUser } = useAuth();
+  const { user, logoutUser, updateUser } = useAuth();
   const [activePage, setActivePage] = useState("Dashboard");
   const [bookingsData, setBookingsData] = useState([]);
   const [donationsData, setDonationsData] = useState([]);
@@ -169,13 +186,16 @@ const DevoteeDashboard = () => {
   });
   const [supportSubject, setSupportSubject] = useState("");
   const [supportMessage, setSupportMessage] = useState("");
-  const [bookingService, setBookingService] = useState("Abhisheka");
+  const [poojaTypes, setPoojaTypes] = useState(getPoojaTypes());
+  const [bookingService, setBookingService] = useState(getPoojaTypes()[0]?.name || "Abhisheka");
   const [bookingDatetime, setBookingDatetime] = useState("");
-  const [bookingAmount, setBookingAmount] = useState(501);
+  const [bookingAmount, setBookingAmount] = useState(getPoojaTypes()[0]?.price || 501);
   const [bookingContact, setBookingContact] = useState("");
   const [bookingNotes, setBookingNotes] = useState("");
   const [bookingLoading, setBookingLoading] = useState(false);
-  const [donationCategory, setDonationCategory] = useState("General");
+  const [donationCategories, setDonationCategories] = useState(getDonationTypes());
+  const [donationCategory, setDonationCategory] = useState(getDonationTypes()[0] || "General");
+  const [supportRequests, setSupportRequests] = useState([]);
   const [donationAmount, setDonationAmount] = useState(501);
   const [donationMethod, setDonationMethod] = useState("UPI");
   const [donationContact, setDonationContact] = useState("");
@@ -206,20 +226,20 @@ const DevoteeDashboard = () => {
     []
   );
 
-  const availablePoojaServices = [
-    "Abhisheka",
-    "Archana",
-    "Special Homa",
-    "Satyanarayana Puja",
-    "Maha Lakshmi Pooja",
-  ];
-  const donationCategories = ["General", "Festival Donation", "Prasadam", "Temple Restoration", "Annadanam"];
   const paymentMethods = ["UPI", "Cash", "Card", "Bank Transfer", "Net Banking"];
 
-  const devoteeName = useMemo(() => {
-    if (user?.name) return user.name;
-    return profileData.name;
-  }, [profileData.name, user?.name]);
+  const devoteeName = useMemo(() => profileData.name || user?.name || "Devotee User", [profileData.name, user?.name]);
+
+  const formatNotifications = (notifications = []) =>
+    (notifications || []).map((notification) => ({
+      ...notification,
+      date: notification.date
+        ? new Date(notification.date).toLocaleDateString()
+        : notification.createdAt
+        ? new Date(notification.createdAt).toLocaleDateString()
+        : "",
+      message: notification.message || notification.title || "",
+    }));
 
   const totalDonations = useMemo(
     () => donationsData.reduce((sum, donation) => sum + (typeof donation.amount === "number" ? donation.amount : Number(donation.amount) || 0), 0),
@@ -279,7 +299,12 @@ const DevoteeDashboard = () => {
         setNotificationsData(
           (notificationsRes.notifications || []).map((notification) => ({
             ...notification,
-            date: notification.date ? new Date(notification.date).toLocaleDateString() : notification.date || "",
+            date: notification.date
+              ? new Date(notification.date).toLocaleDateString()
+              : notification.createdAt
+              ? new Date(notification.createdAt).toLocaleDateString()
+              : "",
+            message: notification.message || notification.title || "",
           }))
         );
         setProfileData(profileRes.profile || profileData);
@@ -287,6 +312,22 @@ const DevoteeDashboard = () => {
           name: profileRes?.profile?.name || user?.name || "",
           email: profileRes?.profile?.email || user?.email || "",
         });
+        setPoojaTypes(getPoojaTypes());
+        setBookingService((prevService) => {
+          const savedTypes = getPoojaTypes();
+          if (!savedTypes.length) return prevService;
+          return savedTypes.some((type) => type.name === prevService) ? prevService : savedTypes[0].name;
+        });
+        setBookingAmount((prevAmount) => {
+          const selected = getPoojaTypes().find((type) => type.name === bookingService);
+          return selected?.price || prevAmount;
+        });
+        setDonationCategories(getDonationTypes());
+        setDonationCategory((prevCategory) => {
+          const types = getDonationTypes();
+          return types.includes(prevCategory) ? prevCategory : types[0] || "General";
+        });
+        setSupportRequests((await getSupportRequests(user?.email)).requests || []);
         setEventsData(
           (eventsRes.events || []).map((event) => ({
             ...event,
@@ -301,6 +342,13 @@ const DevoteeDashboard = () => {
 
     loadDevoteeData();
   }, []);
+
+  useEffect(() => {
+    const selected = poojaTypes.find((type) => type.name === bookingService);
+    if (selected) {
+      setBookingAmount(selected.price);
+    }
+  }, [bookingService, poojaTypes]);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentDateTime(new Date()), 1000);
@@ -374,7 +422,7 @@ const DevoteeDashboard = () => {
       const updatedDonations = await getDevoteeDonations(user?.email);
       setDonationsData(updatedDonations.donations || []);
       const notificationsRes = await getDevoteeNotifications(user?.email);
-      setNotificationsData(notificationsRes.notifications || []);
+      setNotificationsData(formatNotifications(notificationsRes.notifications || []));
       setDonationSuccess("Donation recorded successfully. Your receipt is available in Receipts.");
       setDonationCategory("General");
       setDonationAmount(501);
@@ -403,48 +451,103 @@ const DevoteeDashboard = () => {
       setSupportSubject("");
       setSupportMessage("");
       setSupportStatus("Support request sent to admin successfully.");
-      const notificationsRes = await getDevoteeNotifications(user?.email);
-      setNotificationsData(notificationsRes.notifications || []);
+      const [notificationsRes, supportRes] = await Promise.all([
+        getDevoteeNotifications(user?.email),
+        getSupportRequests(user?.email),
+      ]);
+      setNotificationsData(formatNotifications(notificationsRes.notifications || []));
+      setSupportRequests(supportRes.requests || []);
     } catch (error) {
       setSupportStatus("Unable to send support request.");
       console.warn("Unable to send support request", error);
     }
   };
 
-  const downloadTextFile = (filename, content) => {
-    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = filename;
-    link.click();
-    URL.revokeObjectURL(url);
+  const downloadPdfFile = (filename, lines) => {
+    const doc = new jsPDF();
+    const pageWidth = 170;
+    const lineHeight = 8;
+    let y = 20;
+
+    doc.setFontSize(16);
+    doc.text("Temple Billing System Receipt", 20, y);
+    doc.setFontSize(11);
+    y += 10;
+
+    lines.forEach((line) => {
+      const splitLines = doc.splitTextToSize(String(line), pageWidth);
+      splitLines.forEach((text) => {
+        if (y > 280) {
+          doc.addPage();
+          y = 20;
+        }
+        doc.text(text, 20, y);
+        y += lineHeight;
+      });
+    });
+
+    doc.save(filename);
   };
 
-  const handleReceiptDownload = (item) => {
-    const receiptDate = item.date || new Date(item.createdAt).toLocaleDateString();
-    const receiptText = [
-      "Temple Billing System Receipt",
-      "--------------------------------",
-      `Receipt ID: ${item._id?.slice(-8) || "N/A"}`,
+  const handleReceiptDownload = (item, type = "donation") => {
+    const receiptDate =
+      item.date || (item.createdAt ? new Date(item.createdAt).toLocaleDateString() : "");
+    const receiptId = item._id?.slice(-8) || "N/A";
+    const baseLines = [
+      `Receipt ID: ${receiptId}`,
       `Date: ${receiptDate}`,
       `Devotee: ${profileData.name}`,
-      `Transaction: ${item.category || item.type || "Donation"}`,
+      `Email: ${profileData.email}`,
+      `Role: ${profileData.role}`,
+      "",
+    ];
+
+    if (type === "prasadam") {
+      downloadPdfFile(`prasadam-receipt-${receiptId}.pdf`, [
+        "Prasadam Receipt",
+        "----------------",
+        ...baseLines,
+        `Item: ${item.itemName || "Prasadam"}`,
+        `Quantity: ${item.quantity || 1}`,
+        `Unit Price: ${formatCurrency(item.unitPrice || 0)}`,
+        `Total Amount: ${formatCurrency(item.amount)}`,
+        `Payment Method: ${item.paymentMethod || "UPI"}`,
+        `Status: ${item.status || "Placed"}`,
+      ]);
+      return;
+    }
+
+    downloadPdfFile(`donation-receipt-${receiptId}.pdf`, [
+      "Donation Receipt",
+      "----------------",
+      ...baseLines,
+      `Donation Type: ${item.category || item.type || "Donation"}`,
       `Amount: ${formatCurrency(item.amount)}`,
-      `Method: ${item.paymentMethod || "UPI"}`,
+      `Payment Method: ${item.paymentMethod || "UPI"}`,
       `Status: ${item.status || "Completed"}`,
-    ].join("\n");
-    downloadTextFile(`receipt-${item._id?.slice(-8) || "donation"}.txt`, receiptText);
+      item.notes ? `Notes: ${item.notes}` : "",
+    ].filter(Boolean));
   };
 
   const handlePaymentHistoryDownload = () => {
-    const lines = ["Temple Billing System - Payment History", "--------------------------------"];
+    if (historyTab === "Prasadam") {
+      const lines = ["Temple Billing System - Prasadam Orders History", "--------------------------------------------"];
+      prasadamOrders.forEach((item) => {
+        lines.push(
+          `${item.createdAt ? new Date(item.createdAt).toLocaleDateString() : item.date || ""} | ${item.itemName}${item.quantity ? ` x${item.quantity}` : ""} | ${formatCurrency(item.amount)} | ${item.status || "Placed"}`
+        );
+      });
+      downloadPdfFile("prasadam-history.pdf", lines);
+      return;
+    }
+
+    const lines = ["Temple Billing System - Donation History", "-------------------------------------"];
     donationsData.forEach((item) => {
       lines.push(
-        `${item.date || new Date(item.createdAt).toLocaleDateString()} | ${item.category || item.type || "Donation"} | ${formatCurrency(item.amount)} | ${item.status || "Paid"}`
+        `${item.date || (item.createdAt ? new Date(item.createdAt).toLocaleDateString() : "")} | ${item.category || item.type || "Donation"} | ${formatCurrency(item.amount)} | ${item.status || "Completed"}`
       );
     });
-    downloadTextFile("payment-history.txt", lines.join("\n"));
+    downloadPdfFile("donation-history.pdf", lines);
   };
 
   const handlePrasadamSubmit = async () => {
@@ -458,7 +561,7 @@ const DevoteeDashboard = () => {
       const ordersRes = await getPrasadamOrders(user?.email);
       setPrasadamOrders(ordersRes.orders || []);
       const notificationsRes = await getDevoteeNotifications(user?.email);
-      setNotificationsData(notificationsRes.notifications || []);
+      setNotificationsData(formatNotifications(notificationsRes.notifications || []));
       setPrasadamForm({
         itemName: "Laddu Prasadam",
         quantity: 1,
@@ -491,6 +594,9 @@ const DevoteeDashboard = () => {
         email: profileForm.email,
       });
       setProfileData(res.profile);
+      if (updateUser) {
+        updateUser({ name: res.profile.name, email: res.profile.email, role: res.profile.role });
+      }
       setProfileEditMode(false);
       setProfileMessage("Profile updated successfully.");
     } catch (error) {
@@ -507,7 +613,7 @@ const DevoteeDashboard = () => {
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {stats.map((item) => (
-          <article key={item.title} className="rounded-2xl border border-[#ececec] bg-white p-4 shadow-sm">
+          <article key={item.title} className={glassItem}>
             <div className="mb-4 flex items-center gap-4">
               <IconCircle className={item.tone} icon={item.icon} />
               <p className="text-[1.06rem] text-[#383838]">{item.title}</p>
@@ -529,7 +635,7 @@ const DevoteeDashboard = () => {
       </section>
 
       <section className="mt-4 grid gap-4 xl:grid-cols-3">
-        <article className="rounded-2xl border border-[#ececec] bg-white p-5 shadow-sm">
+        <article className={`${glassCard}`}>
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-[2rem] font-bold">Upcoming Bookings</h2>
             <button type="button" onClick={() => setActivePage("My Bookings")} className="bg-transparent p-0 text-base font-semibold text-[#bc630f]">
@@ -539,7 +645,7 @@ const DevoteeDashboard = () => {
           <div className="space-y-3">
             {bookingsData.length > 0 ? (
               bookingsData.slice(0, 3).map((item) => (
-                <div key={`${item.service}-${item.datetime}-${item._id || Math.random()}`} className="rounded-xl border border-[#efefef] p-4">
+                <div key={`${item.service}-${item.datetime}-${item._id || Math.random()}`} className={glassItem}>
                   <div className="flex items-center justify-between gap-3">
                     <p className="text-xl font-bold">{item.service}</p>
                     <span className={`rounded-full px-3 py-1 text-sm font-semibold ${item.status === "Confirmed" ? "bg-[#def5e5] text-[#16853f]" : "bg-[#faefcf] text-[#ce7a0f]"}`}>
@@ -550,7 +656,7 @@ const DevoteeDashboard = () => {
                 </div>
               ))
             ) : (
-              <p className="rounded-xl border border-[#efefef] p-4 text-[#5d5d5d]">No bookings found yet.</p>
+              <div className={`${glassItem} text-[#5d5d5d]`}>No bookings found yet.</div>
             )}
           </div>
           <div className="pt-4 text-right">
@@ -560,7 +666,7 @@ const DevoteeDashboard = () => {
           </div>
         </article>
 
-        <article className="rounded-2xl border border-[#ececec] bg-white p-5 shadow-sm">
+        <article className={`${glassCard}`}>
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-[2rem] font-bold">Recent Donations</h2>
             <button type="button" onClick={() => setActivePage("Payment History")} className="bg-transparent p-0 text-base font-semibold text-[#bc630f]">
@@ -570,7 +676,7 @@ const DevoteeDashboard = () => {
           <div className="space-y-3">
             {donationsData.length > 0 ? (
               donationsData.slice(0, 3).map((item) => (
-                <div key={`${item.type}-${item.date}-${item._id || Math.random()}`} className="flex items-center justify-between rounded-xl border border-[#efefef] p-4">
+                <div key={`${item.type}-${item.date}-${item._id || Math.random()}`} className={`${glassItem} flex items-center justify-between`}>
                   <div>
                     <p className="text-xl font-bold">{item.type}</p>
                     <p className="text-sm text-[#4f4f4f]">{item.date}</p>
@@ -579,7 +685,7 @@ const DevoteeDashboard = () => {
                 </div>
               ))
             ) : (
-              <p className="rounded-xl border border-[#efefef] p-4 text-[#5d5d5d]">No donations yet.</p>
+              <div className={`${glassItem} text-[#5d5d5d]`}>No donations yet.</div>
             )}
           </div>
           <div className="pt-4 text-right">
@@ -589,7 +695,7 @@ const DevoteeDashboard = () => {
           </div>
         </article>
 
-        <article className="rounded-2xl border border-[#ececec] bg-white p-5 shadow-sm">
+        <article className={`${glassCard}`}>
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-[2rem] font-bold">Notifications</h2>
             <button type="button" onClick={() => setActivePage("Notifications")} className="bg-transparent p-0 text-base font-semibold text-[#bc630f]">
@@ -599,7 +705,7 @@ const DevoteeDashboard = () => {
           <div className="space-y-3">
               {notificationsData.length > 0 ? (
                 notificationsData.slice(0, 3).map((item) => (
-                  <div key={`${item.title}-${item.date}-${item._id || Math.random()}`} className="rounded-xl border border-[#efefef] p-4">
+                  <div key={`${item.title}-${item.date}-${item._id || Math.random()}`} className="rounded-[24px] border border-white/40 bg-white/55 p-4 shadow-sm backdrop-blur-sm">
                     <p className="text-[1.45rem] font-bold">{item.title}</p>
                     <p className="text-[1.15rem] text-[#4f4f4f]">{item.date}</p>
                     {item.message ? (
@@ -608,7 +714,7 @@ const DevoteeDashboard = () => {
                   </div>
                 ))
               ) : (
-                <p className="rounded-xl border border-[#efefef] p-4 text-[#5d5d5d]">No notifications yet.</p>
+                <div className={`${glassItem} text-[#5d5d5d]`}>No notifications yet.</div>
               )}
           </div>
         </article>
@@ -634,7 +740,7 @@ const DevoteeDashboard = () => {
       </section>
 
       <section className="mt-4 grid gap-4 pb-8 xl:grid-cols-2">
-        <article className="overflow-hidden rounded-2xl border border-[#ececec] bg-white shadow-sm">
+        <article className={glassSection}>
           <h2 className="px-5 py-4 text-[2rem] font-bold">My Recent Bookings</h2>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[650px]">
@@ -677,7 +783,7 @@ const DevoteeDashboard = () => {
           </div>
         </article>
 
-        <article className="overflow-hidden rounded-2xl border border-[#ececec] bg-white shadow-sm">
+        <article className={glassSection}>
           <h2 className="px-5 py-4 text-[2rem] font-bold">Donation History</h2>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[650px]">
@@ -725,22 +831,27 @@ const DevoteeDashboard = () => {
 
   const renderBookPooja = () => (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-[#ececec] bg-white p-5 shadow-sm">
+      <div className={`${glassCard}`}>
         <h2 className="text-[2rem] font-bold">Book Pooja</h2>
         <p className="mt-2 text-[#4f4f4f]">Choose a service and book your next pooja online. Your new booking will appear under My Bookings.</p>
 
         <div className="mt-6 grid gap-6 lg:grid-cols-[1.5fr_1fr]">
-          <div className="space-y-5 rounded-3xl border border-[#f0f0f0] bg-[#fbfaf8] p-6">
+          <div className="space-y-5 rounded-[28px] border border-white/45 bg-white/62 p-6 shadow-[0_20px_52px_rgba(113,82,28,0.12)] backdrop-blur-xl">
             <div>
               <p className="text-sm uppercase tracking-[0.08em] text-[#8d6925]">Service</p>
               <select
                 value={bookingService}
-                onChange={(e) => setBookingService(e.target.value)}
-                className="mt-3 w-full rounded-3xl border border-[#ded6c6] bg-white px-4 py-3 text-base outline-none"
+                onChange={(e) => {
+                  const selectedService = e.target.value;
+                  const selectedType = poojaTypes.find((type) => type.name === selectedService);
+                  setBookingService(selectedService);
+                  setBookingAmount(selectedType?.price || 0);
+                }}
+                className={glassInput}
               >
-                {availablePoojaServices.map((service) => (
-                  <option key={service} value={service}>
-                    {service}
+                {poojaTypes.map((service) => (
+                  <option key={service.name} value={service.name}>
+                    {service.name}
                   </option>
                 ))}
               </select>
@@ -752,7 +863,7 @@ const DevoteeDashboard = () => {
                 type="datetime-local"
                 value={bookingDatetime}
                 onChange={(e) => setBookingDatetime(e.target.value)}
-                className="mt-3 w-full rounded-3xl border border-[#ded6c6] bg-white px-4 py-3 text-base outline-none"
+                className={glassInput}
               />
             </div>
 
@@ -762,8 +873,8 @@ const DevoteeDashboard = () => {
                 type="number"
                 min="1"
                 value={bookingAmount}
-                onChange={(e) => setBookingAmount(Number(e.target.value))}
-                className="mt-3 w-full rounded-3xl border border-[#ded6c6] bg-white px-4 py-3 text-base outline-none"
+                readOnly
+                className={glassInput}
               />
             </div>
 
@@ -774,7 +885,7 @@ const DevoteeDashboard = () => {
                 value={bookingContact}
                 onChange={(e) => setBookingContact(e.target.value)}
                 placeholder="Optional phone number"
-                className="mt-3 w-full rounded-3xl border border-[#ded6c6] bg-white px-4 py-3 text-base outline-none"
+                className={glassInput}
               />
             </div>
 
@@ -785,7 +896,7 @@ const DevoteeDashboard = () => {
                 value={bookingNotes}
                 onChange={(e) => setBookingNotes(e.target.value)}
                 placeholder="Any special requests"
-                className="mt-3 w-full rounded-3xl border border-[#ded6c6] bg-white px-4 py-3 text-base outline-none"
+                className={glassInput}
               />
             </div>
 
@@ -799,24 +910,30 @@ const DevoteeDashboard = () => {
             </button>
           </div>
 
-          <div className="space-y-4 rounded-3xl border border-[#f0f0f0] bg-white p-6">
+          <div className="space-y-4 rounded-[28px] border border-white/45 bg-white/62 p-6 shadow-[0_20px_52px_rgba(113,82,28,0.12)] backdrop-blur-xl">
             <h3 className="text-xl font-semibold">Popular Pooja services</h3>
             <p className="text-sm text-[#5d5d5d]">Select a service to book and check your newest booking immediately in My Bookings.</p>
             <div className="grid gap-3">
-              {availablePoojaServices.map((service) => (
+              {poojaTypes.map((service) => (
                 <button
                   type="button"
-                  key={service}
-                  onClick={() => setBookingService(service)}
+                  key={service.name}
+                  onClick={() => {
+                    setBookingService(service.name);
+                    setBookingAmount(service.price);
+                  }}
                   className={`w-full rounded-3xl border px-4 py-4 text-left text-sm font-semibold transition ${
-                    bookingService === service ? "border-[#bc630f] bg-[#fff5e7] text-[#9b5a1e]" : "border-[#ececec] bg-[#fafafa] text-[#4f4f4f] hover:border-[#bc630f]"
+                    bookingService === service.name ? "border-[#bc630f] bg-[#fff5e7] text-[#9b5a1e]" : "border-[#ececec] bg-[#fafafa] text-[#4f4f4f] hover:border-[#bc630f]"
                   }`}
                 >
-                  {service}
+                  <div className="flex items-center justify-between">
+                    <span>{service.name}</span>
+                    <span className="text-sm text-[#7a5d1b]">{formatCurrency(service.price)}</span>
+                  </div>
                 </button>
               ))}
             </div>
-            <div className="rounded-3xl border border-[#f0f0f0] bg-[#fffdf8] p-4 text-sm text-[#6d5a35]">
+            <div className="rounded-[26px] border border-white/45 bg-white/65 p-4 text-sm text-[#6d5a35] shadow-sm backdrop-blur-sm">
               <p className="font-semibold">Booking summary</p>
               <p className="mt-3">Service: {bookingService}</p>
               <p>Date: {bookingDatetime ? new Date(bookingDatetime).toLocaleString() : "Not selected"}</p>
@@ -830,7 +947,7 @@ const DevoteeDashboard = () => {
 
   const renderMyBookings = () => (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-[#ececec] bg-white p-5 shadow-sm">
+      <div className={`${glassCard}`}>
         <div className="flex items-center justify-between">
           <h2 className="text-[2rem] font-bold">My Bookings</h2>
           <button type="button" className="rounded-2xl bg-[#1b7f77] px-4 py-2 text-sm font-semibold text-white">New Booking</button>
@@ -875,7 +992,7 @@ const DevoteeDashboard = () => {
 
   const renderDonations = () => (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-[#ececec] bg-white p-5 shadow-sm">
+      <div className={`${glassCard}`}>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-[2rem] font-bold">Donate</h2>
@@ -887,14 +1004,14 @@ const DevoteeDashboard = () => {
         </div>
 
         <div className="mt-6 grid gap-6 xl:grid-cols-[1.2fr_1fr]">
-          <div className="rounded-3xl border border-[#f0f0f0] bg-[#fbfaf8] p-6">
+          <div className={glassSection}>
             <div className="grid gap-4">
               <div>
                 <label className="block text-sm font-semibold text-[#5d5d5d]">Donation Category</label>
                 <select
                   value={donationCategory}
                   onChange={(e) => setDonationCategory(e.target.value)}
-                  className="mt-2 w-full rounded-3xl border border-[#ded6c6] bg-white px-4 py-3 text-base outline-none"
+                  className={glassInput}
                 >
                   {donationCategories.map((category) => (
                     <option key={category} value={category}>
@@ -911,7 +1028,7 @@ const DevoteeDashboard = () => {
                   min="1"
                   value={donationAmount}
                   onChange={(e) => setDonationAmount(Number(e.target.value))}
-                  className="mt-2 w-full rounded-3xl border border-[#ded6c6] bg-white px-4 py-3 text-base outline-none"
+                  className={glassInput}
                 />
               </div>
 
@@ -920,7 +1037,7 @@ const DevoteeDashboard = () => {
                 <select
                   value={donationMethod}
                   onChange={(e) => setDonationMethod(e.target.value)}
-                  className="mt-2 w-full rounded-3xl border border-[#ded6c6] bg-white px-4 py-3 text-base outline-none"
+                  className={glassInput}
                 >
                   {paymentMethods.map((method) => (
                     <option key={method} value={method}>
@@ -937,7 +1054,7 @@ const DevoteeDashboard = () => {
                   value={donationContact}
                   placeholder="Optional contact"
                   onChange={(e) => setDonationContact(e.target.value)}
-                  className="mt-2 w-full rounded-3xl border border-[#ded6c6] bg-white px-4 py-3 text-base outline-none"
+                  className={glassInput}
                 />
               </div>
 
@@ -948,7 +1065,7 @@ const DevoteeDashboard = () => {
                   value={donationNotes}
                   onChange={(e) => setDonationNotes(e.target.value)}
                   placeholder="Any message for the temple"
-                  className="mt-2 w-full rounded-3xl border border-[#ded6c6] bg-white px-4 py-3 text-base outline-none"
+                  className={glassInput}
                 />
               </div>
 
@@ -959,20 +1076,20 @@ const DevoteeDashboard = () => {
                 type="button"
                 onClick={handleDonationSubmit}
                 disabled={donationLoading}
-                className="mt-2 w-full rounded-2xl bg-[#1b7f77] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#166353] disabled:cursor-not-allowed disabled:bg-[#9bb8af]"
+                className={glassButton}
               >
                 {donationLoading ? "Processing donation..." : "Donate Now"}
               </button>
             </div>
           </div>
 
-          <div className="rounded-3xl border border-[#f0f0f0] bg-white p-6">
+          <div className={glassSection}>
             <h3 className="text-xl font-semibold">Donation History</h3>
             <p className="mt-2 text-sm text-[#5d5d5d]">Your latest donations are stored here and used in payment history and receipts.</p>
             <div className="mt-6 space-y-3">
               {donationsData.length > 0 ? (
                 donationsData.map((item) => (
-                  <div key={`${item._id || Math.random()}`} className="rounded-3xl border border-[#ececec] p-4">
+                  <div key={`${item._id || Math.random()}`} className="rounded-[26px] border border-white/40 bg-white/55 p-4 shadow-sm backdrop-blur-sm">
                     <div className="flex flex-wrap items-center justify-between gap-4">
                       <div>
                         <p className="font-semibold text-[#1f1f1f]">{item.category || item.type || "Donation"}</p>
@@ -984,7 +1101,7 @@ const DevoteeDashboard = () => {
                   </div>
                 ))
               ) : (
-                <div className="rounded-3xl border border-[#efefef] p-4 text-[#5d5d5d]">No donations have been recorded yet.</div>
+                <div className={glassItem}>No donations have been recorded yet.</div>
               )}
             </div>
           </div>
@@ -998,27 +1115,27 @@ const DevoteeDashboard = () => {
 
     return (
       <div className="space-y-6">
-        <div className="rounded-2xl border border-[#ececec] bg-white p-5 shadow-sm">
+        <div className={`${glassCard}`}>
           <h2 className="text-[2rem] font-bold">Prasadam Orders</h2>
           <div className="mt-6 grid gap-6 lg:grid-cols-[1.1fr_1fr]">
-            <div className="rounded-3xl border border-[#f0f0f0] bg-[#fbfaf8] p-5">
+            <div className={glassSection}>
               <h3 className="text-xl font-semibold">Order Prasadam</h3>
               <div className="mt-4 grid gap-3">
-                <select className="rounded-2xl border border-[#ececec] px-4 py-3" value={prasadamForm.itemName} onChange={(e) => setPrasadamForm((prev) => ({ ...prev, itemName: e.target.value }))}>
+                <select className={glassInput} value={prasadamForm.itemName} onChange={(e) => setPrasadamForm((prev) => ({ ...prev, itemName: e.target.value }))}>
                   {Object.keys(prasadamMenu).map((item) => (
                     <option key={item} value={item}>{item}</option>
                   ))}
                 </select>
-                <div className="rounded-xl bg-[#f5f5f5] px-4 py-3 text-sm">Price: {formatCurrency(selectedUnitPrice)} each</div>
-                <input type="number" min="1" className="rounded-2xl border border-[#ececec] px-4 py-3" value={prasadamForm.quantity} onChange={(e) => setPrasadamForm((prev) => ({ ...prev, quantity: Number(e.target.value) }))} placeholder="Quantity" />
-                <select className="rounded-2xl border border-[#ececec] px-4 py-3" value={prasadamForm.paymentMethod} onChange={(e) => setPrasadamForm((prev) => ({ ...prev, paymentMethod: e.target.value }))}>
+                <div className="rounded-[24px] bg-[#fff8ec] px-4 py-3 text-sm">Price: {formatCurrency(selectedUnitPrice)} each</div>
+                <input type="number" min="1" className={glassInput} value={prasadamForm.quantity} onChange={(e) => setPrasadamForm((prev) => ({ ...prev, quantity: Number(e.target.value) }))} placeholder="Quantity" />
+                <select className={glassInput} value={prasadamForm.paymentMethod} onChange={(e) => setPrasadamForm((prev) => ({ ...prev, paymentMethod: e.target.value }))}>
                   <option value="UPI">UPI</option>
                   <option value="Cash">Cash</option>
                   <option value="Card">Card</option>
                   <option value="Net Banking">Net Banking</option>
                 </select>
-                <div className="rounded-xl bg-[#fff7e7] px-4 py-3 text-sm font-semibold text-[#8b5a0a]">Total: {formatCurrency(totalPrice)}</div>
-                <button type="button" onClick={handlePrasadamSubmit} className="rounded-2xl bg-[#1b7f77] px-4 py-3 text-sm font-semibold text-white">Pay & Place Order</button>
+                <div className="rounded-[24px] bg-[#fff7e7] px-4 py-3 text-sm font-semibold text-[#8b5a0a]">Total: {formatCurrency(totalPrice)}</div>
+                <button type="button" onClick={handlePrasadamSubmit} className={glassButton}>Pay & Place Order</button>
                 {prasadamMessage && <p className="text-sm text-[#1b7f77]">{prasadamMessage}</p>}
               </div>
             </div>
@@ -1026,9 +1143,9 @@ const DevoteeDashboard = () => {
             <div className="grid gap-4">
               {prasadamOrders.length > 0 ? (
                 prasadamOrders.map((item) => (
-                  <div key={item._id} className="rounded-3xl border border-[#f0f0f0] p-5">
+                  <div key={item._id} className={glassItem}>
                     <p className="text-xl font-semibold">{item.itemName}</p>
-                    <p className="mt-2 text-sm text-[#5d5d5d]">Order date: {new Date(item.createdAt).toLocaleDateString()}</p>
+                    <p className="mt-2 text-sm text-[#5d5d5d]">Order date: {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : ""}</p>
                     <p className="mt-1 text-sm text-[#5d5d5d]">Qty: {item.quantity} | Payment: {item.paymentMethod || "UPI"}</p>
                     <p className="mt-3 text-lg font-bold">{formatCurrency(item.amount)}</p>
                     <div className="mt-3 flex items-center gap-2">
@@ -1040,7 +1157,7 @@ const DevoteeDashboard = () => {
                   </div>
                 ))
               ) : (
-                <p className="rounded-xl border border-[#efefef] p-4 text-[#5d5d5d]">No prasadam orders available.</p>
+                <div className={`${glassItem} text-[#5d5d5d]`}>No prasadam orders available.</div>
               )}
             </div>
           </div>
@@ -1049,63 +1166,210 @@ const DevoteeDashboard = () => {
     );
   };
 
+  const [historyTab, setHistoryTab] = useState("Donations");
+
+  const renderDonationHistoryForTab = () => {
+    const donationRows = (donationsData || []).map((d) => ({
+      _id: d._id,
+      transaction: d.category || d.type || "Donation",
+      date: d.date || (d.createdAt ? new Date(d.createdAt).toLocaleDateString() : ""),
+      amount: d.amount,
+      status: d.status || "Completed",
+    }));
+
+    return (
+      <div className="mt-6 overflow-x-auto">
+        <table className="w-full min-w-[650px] text-left text-sm text-[#3f3f3f]">
+          <thead className="bg-[#fafafa] text-[#575757]">
+            <tr>
+              <th className="px-5 py-3">Type</th>
+              <th className="px-5 py-3">Date</th>
+              <th className="px-5 py-3">Amount</th>
+              <th className="px-5 py-3">Receipt</th>
+            </tr>
+          </thead>
+          <tbody>
+            {donationRows.length > 0 ? (
+              donationRows.map((row) => (
+                <tr key={`Donation-${row._id || Math.random()}`} className="border-t border-[#f0f0f0]">
+                  <td className="px-5 py-3 font-semibold">{row.transaction}</td>
+                  <td className="px-5 py-3 text-sm text-[#3f3f3f]">{row.date}</td>
+                  <td className="px-5 py-3 font-semibold">{formatCurrency(row.amount)}</td>
+                  <td className="px-5 py-3 text-[1.15rem] text-[#af6317]">
+                    <button type="button" onClick={() => handleReceiptDownload(donationsData.find((x) => x._id === row._id) || row)} className="font-semibold">
+                      Download
+                    </button>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="4" className="px-5 py-6 text-center text-[#5d5d5d]">
+                  No donations available.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
+
+  const renderPrasadamHistoryForTab = () => {
+    const prasadamRows = (prasadamOrders || []).map((o) => ({
+      _id: o._id,
+      transaction: `${o.itemName}${o.quantity ? ` x${o.quantity}` : ""}`,
+      date: o.createdAt ? new Date(o.createdAt).toLocaleDateString() : "",
+      amount: o.amount,
+      status: o.status || "Placed",
+    }));
+
+    return (
+      <div className="mt-6 overflow-x-auto">
+        <table className="w-full min-w-[650px] text-left text-sm text-[#3f3f3f]">
+          <thead className="bg-[#fafafa] text-[#575757]">
+            <tr>
+              <th className="px-5 py-3">Item</th>
+              <th className="px-5 py-3">Date</th>
+              <th className="px-5 py-3">Amount</th>
+              <th className="px-5 py-3">Status</th>
+              <th className="px-5 py-3">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {prasadamRows.length > 0 ? (
+              prasadamRows.map((row) => (
+                <tr key={`Prasadam-${row._id || Math.random()}`} className="border-t border-[#f0f0f0]">
+                  <td className="px-5 py-3 font-semibold">{row.transaction}</td>
+                  <td className="px-5 py-3 text-sm text-[#3f3f3f]">{row.date}</td>
+                  <td className="px-5 py-3 font-semibold">{formatCurrency(row.amount)}</td>
+                  <td className="px-5 py-3 text-[#16853f]">{row.status}</td>
+                  <td className="px-5 py-3">
+                    {row.status !== "Cancelled" ? (
+                      <button
+                        type="button"
+                        onClick={() => handleCancelPrasadam(row._id)}
+                        className="rounded-lg bg-[#f26037] px-3 py-1 text-xs font-semibold text-white"
+                      >
+                        Cancel
+                      </button>
+                    ) : (
+                      <span className="text-xs font-semibold text-[#a12525]">Cancelled</span>
+                    )}
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="5" className="px-5 py-6 text-center text-[#5d5d5d]">
+                  No prasadam orders available.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
+
   const renderPaymentHistory = () => (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-[#ececec] bg-white p-5 shadow-sm">
-        <div className="flex items-center justify-between">
+      <div className={`${glassCard}`}>
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-[2rem] font-bold">Payment History</h2>
-          <button type="button" onClick={handlePaymentHistoryDownload} className="rounded-2xl bg-[#1b7f77] px-4 py-2 text-sm font-semibold text-white">Download</button>
+
+          <div className="flex items-center gap-2 rounded-2xl bg-[#f7f7f7] p-2">
+            <button
+              type="button"
+              onClick={() => setHistoryTab("Donations")}
+              className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${
+                historyTab === "Donations" ? "bg-[#1b7f77] text-white" : "bg-transparent text-[#3058d6] hover:bg-white"
+              }`}
+            >
+              Donations
+            </button>
+            <button
+              type="button"
+              onClick={() => setHistoryTab("Prasadam")}
+              className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${
+                historyTab === "Prasadam" ? "bg-[#1b7f77] text-white" : "bg-transparent text-[#3058d6] hover:bg-white"
+              }`}
+            >
+              Prasadam Orders
+            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={historyTab === "Donations" ? handlePaymentHistoryDownload : handlePaymentHistoryDownload}
+            className="rounded-2xl bg-[#1b7f77] px-4 py-2 text-sm font-semibold text-white"
+          >
+            Download
+          </button>
         </div>
-        <div className="mt-6 overflow-x-auto">
-          <table className="w-full min-w-[650px] text-left text-sm text-[#3f3f3f]">
-            <thead className="bg-[#fafafa] text-[#575757]">
-              <tr>
-                <th className="px-5 py-3">Transaction</th>
-                <th className="px-5 py-3">Date</th>
-                <th className="px-5 py-3">Amount</th>
-                <th className="px-5 py-3">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {donationsData.length > 0 ? (
-                donationsData.map((item) => (
-                  <tr key={`${item.category || item.type}-${item.date}-${item._id || Math.random()}`} className="border-t border-[#f0f0f0]">
-                    <td className="px-5 py-3 font-semibold">{item.category || item.type || "Donation"}</td>
-                    <td className="px-5 py-3">{item.date || new Date(item.createdAt).toLocaleDateString()}</td>
-                    <td className="px-5 py-3">{formatCurrency(item.amount)}</td>
-                    <td className="px-5 py-3 text-[#16853f]">{item.status || "Paid"}</td>
-                  </tr>
-                ))
-              ) : (
-                <tr><td colSpan="4" className="px-5 py-6 text-center text-[#5d5d5d]">No payment history available.</td></tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+
+        {historyTab === "Donations" ? renderDonationHistoryForTab() : renderPrasadamHistoryForTab()}
       </div>
     </div>
   );
   const renderReceipts = () => (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-[#ececec] bg-white p-5 shadow-sm">
+      <div className={`${glassCard}`}>
         <h2 className="text-[2rem] font-bold">Receipts</h2>
-        <div className="mt-6 space-y-3">
-          {donationsData.length > 0 ? (
-            donationsData.map((item) => (
-              <div key={`${item._id || Math.random()}`} className="flex flex-wrap items-center justify-between rounded-3xl border border-[#f0f0f0] p-4">
-                <div>
-                  <p className="text-xl font-semibold">{item.category || item.type || "Donation"}</p>
-                  <p className="text-sm text-[#5d5d5d]">{item.date || new Date(item.createdAt).toLocaleDateString()}</p>
-                  <p className="mt-1 text-sm text-[#6b6b6b]">Receipt ID: {item._id?.slice(-8) || "N/A"}</p>
-                </div>
-                <button type="button" onClick={() => handleReceiptDownload(item)} className="rounded-2xl bg-[#1b7f77] px-4 py-2 text-sm font-semibold text-white">
-                  Download
-                </button>
-              </div>
-            ))
-          ) : (
-            <p className="rounded-xl border border-[#efefef] p-4 text-[#5d5d5d]">No receipts found.</p>
-          )}
+        <div className="mt-6 grid gap-6 xl:grid-cols-2">
+          <div className={glassSection}>
+            <h3 className="text-xl font-semibold">Donation Receipts</h3>
+            <div className="mt-4 space-y-3">
+              {donationsData.length > 0 ? (
+                donationsData.map((item) => (
+                  <div key={`${item._id || Math.random()}`} className={glassItem}>
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                      <div>
+                        <p className="text-lg font-semibold">{item.category || item.type || "Donation"}</p>
+                        <p className="text-sm text-[#5d5d5d]">{item.date || new Date(item.createdAt).toLocaleDateString()}</p>
+                        <p className="mt-1 text-sm text-[#6b6b6b]">Receipt ID: {item._id?.slice(-8) || "N/A"}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-lg font-bold text-[#1b7f77]">{formatCurrency(item.amount)}</p>
+                        <button type="button" onClick={() => handleReceiptDownload(item, "donation")} className="mt-3 rounded-2xl bg-[#1b7f77] px-4 py-2 text-sm font-semibold text-white">
+                          Download PDF
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className={`${glassItem} text-[#5d5d5d]`}>No donation receipts available.</div>
+              )}
+            </div>
+          </div>
+
+          <div className={glassSection}>
+            <h3 className="text-xl font-semibold">Prasadam Receipts</h3>
+            <div className="mt-4 space-y-3">
+              {prasadamOrders.length > 0 ? (
+                prasadamOrders.map((item) => (
+                  <div key={item._id} className={glassItem}>
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                      <div>
+                        <p className="text-lg font-semibold">{item.itemName}</p>
+                        <p className="text-sm text-[#5d5d5d]">{item.createdAt ? new Date(item.createdAt).toLocaleDateString() : ""}</p>
+                        <p className="mt-1 text-sm text-[#6b6b6b]">Qty: {item.quantity || 1}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-lg font-bold text-[#1b7f77]">{formatCurrency(item.amount)}</p>
+                        <button type="button" onClick={() => handleReceiptDownload(item, "prasadam")} className="mt-3 rounded-2xl bg-[#1b7f77] px-4 py-2 text-sm font-semibold text-white">
+                          Download PDF
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className={`${glassItem} text-[#5d5d5d]`}>No prasadam receipts available.</div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1113,18 +1377,18 @@ const DevoteeDashboard = () => {
 
   const renderFestivalEvents = () => (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-[#ececec] bg-white p-5 shadow-sm">
+      <div className={`${glassCard}`}>
         <h2 className="text-[2rem] font-bold">Festival Events</h2>
         <div className="mt-6 grid gap-4 md:grid-cols-2">
           {eventsData.length > 0 ? (
             eventsData.map((item) => (
-              <div key={`${item.title}-${item.formattedDate || item._id}`} className="rounded-3xl border border-[#f0f0f0] p-5">
+              <div key={`${item.title}-${item.formattedDate || item._id}`} className={glassItem}>
                 <p className="text-xl font-semibold">{item.title}</p>
                 <p className="mt-2 text-sm text-[#5d5d5d]">{item.formattedDate || item.date}</p>
               </div>
             ))
           ) : (
-            <p className="rounded-xl border border-[#efefef] p-4 text-[#5d5d5d]">No festival events available.</p>
+            <div className={`${glassItem} text-[#5d5d5d]`}>No festival events available.</div>
           )}
         </div>
       </div>
@@ -1133,12 +1397,12 @@ const DevoteeDashboard = () => {
 
   const renderNotifications = () => (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-[#ececec] bg-white p-5 shadow-sm">
+      <div className={`${glassCard}`}>
         <h2 className="text-[2rem] font-bold">Notifications</h2>
         <div className="mt-6 space-y-4">
           {notificationsData.length > 0 ? (
             notificationsData.map((item) => (
-              <div key={`${item.title}-${item.date}-${item._id || Math.random()}`} className="rounded-3xl border border-[#f0f0f0] p-4">
+              <div key={`${item.title}-${item.date}-${item._id || Math.random()}`} className={glassItem}>
                 <p className="text-xl font-semibold">{item.title}</p>
                 <p className="mt-1 text-sm text-[#5d5d5d]">{item.date}</p>
                 {item.message ? (
@@ -1147,7 +1411,7 @@ const DevoteeDashboard = () => {
               </div>
             ))
           ) : (
-            <p className="rounded-xl border border-[#efefef] p-4 text-[#5d5d5d]">No notifications available.</p>
+            <div className={`${glassItem} text-[#5d5d5d]`}>No notifications available.</div>
           )}
         </div>
       </div>
@@ -1156,7 +1420,7 @@ const DevoteeDashboard = () => {
 
   const renderProfile = () => (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-[#ececec] bg-white p-5 shadow-sm">
+      <div className={`${glassCard}`}>
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h2 className="text-[2rem] font-bold">Profile</h2>
@@ -1170,25 +1434,25 @@ const DevoteeDashboard = () => {
         {profileError && <div className="mt-4 rounded-xl bg-[#fde8e8] p-3 text-sm text-[#a12525]">{profileError}</div>}
         {profileEditMode && (
           <div className="mt-4 grid gap-3 rounded-2xl border border-[#f0f0f0] bg-[#fbfaf8] p-4 sm:grid-cols-2">
-            <input className="rounded-xl border border-[#ececec] px-3 py-2" value={profileForm.name} onChange={(e) => setProfileForm((prev) => ({ ...prev, name: e.target.value }))} placeholder="Name" />
-            <input className="rounded-xl border border-[#ececec] px-3 py-2" value={profileForm.email} onChange={(e) => setProfileForm((prev) => ({ ...prev, email: e.target.value }))} placeholder="Email" />
-            <button type="button" onClick={handleProfileSave} className="sm:col-span-2 rounded-xl bg-[#1b7f77] px-4 py-2 text-sm font-semibold text-white">Save Profile</button>
+            <input className={glassInput} value={profileForm.name} onChange={(e) => setProfileForm((prev) => ({ ...prev, name: e.target.value }))} placeholder="Name" />
+            <input className={glassInput} value={profileForm.email} onChange={(e) => setProfileForm((prev) => ({ ...prev, email: e.target.value }))} placeholder="Email" />
+            <button type="button" onClick={handleProfileSave} className={`${glassButton} sm:col-span-2`}>Save Profile</button>
           </div>
         )}
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
-          <div className="rounded-3xl border border-[#f0f0f0] bg-[#fbf6ef] p-5">
+          <div className={glassItem}>
             <p className="text-sm text-[#7a6f5d]">Name</p>
             <p className="mt-2 text-xl font-semibold">{devoteeName}</p>
           </div>
-          <div className="rounded-3xl border border-[#f0f0f0] bg-[#fbf6ef] p-5">
+          <div className={glassItem}>
             <p className="text-sm text-[#7a6f5d]">Email</p>
             <p className="mt-2 text-xl font-semibold">{profileData.email}</p>
           </div>
-          <div className="rounded-3xl border border-[#f0f0f0] bg-[#fbf6ef] p-5">
+          <div className={glassItem}>
             <p className="text-sm text-[#7a6f5d]">Role</p>
             <p className="mt-2 text-xl font-semibold">{profileData.role}</p>
           </div>
-          <div className="rounded-3xl border border-[#f0f0f0] bg-[#fbf6ef] p-5">
+          <div className={glassItem}>
             <p className="text-sm text-[#7a6f5d]">Member Since</p>
             <p className="mt-2 text-xl font-semibold">{profileData.memberSince}</p>
           </div>
@@ -1199,7 +1463,7 @@ const DevoteeDashboard = () => {
 
   const renderSupport = () => (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-[#ececec] bg-white p-5 shadow-sm">
+      <div className={`${glassCard}`}>
         <h2 className="text-[2rem] font-bold">Support</h2>
         <p className="mt-2 text-[#5d5d5d]">Raise an issue or get help with your bookings and donations.</p>
         <div className="mt-6 grid gap-4 md:grid-cols-2">
@@ -1210,7 +1474,7 @@ const DevoteeDashboard = () => {
               value={supportSubject}
               onChange={(e) => setSupportSubject(e.target.value)}
               placeholder="Enter subject"
-              className="w-full rounded-3xl border border-[#ececec] bg-[#fafafa] px-4 py-3 outline-none"
+              className={glassInput}
             />
           </label>
           <label className="block space-y-2 text-sm text-[#5d5d5d] md:col-span-2">
@@ -1220,18 +1484,46 @@ const DevoteeDashboard = () => {
               value={supportMessage}
               onChange={(e) => setSupportMessage(e.target.value)}
               placeholder="Describe your issue"
-              className="w-full rounded-3xl border border-[#ececec] bg-[#fafafa] px-4 py-3 outline-none"
+              className={glassInput}
             />
           </label>
         </div>
         <button
           type="button"
           onClick={handleSupportSubmit}
-          className="mt-5 rounded-2xl bg-[#1b7f77] px-5 py-3 text-sm font-semibold text-white"
+          className={`${glassButton} mt-5`}
         >
           Send Request
         </button>
         {supportStatus && <p className="mt-3 text-sm font-semibold text-[#1b7f77]">{supportStatus}</p>}
+      </div>
+
+      <div className={glassSection}>
+        <h3 className="text-xl font-bold">Your Feedback & Replies</h3>
+        <div className="mt-4 space-y-4">
+          {supportRequests.length > 0 ? (
+            supportRequests.map((request) => (
+              <div key={request._id} className={glassItem}>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className="font-semibold">{request.subject}</p>
+                    <p className="text-sm text-[#6b7280]">{new Date(request.createdAt).toLocaleString()}</p>
+                  </div>
+                  <span className={`rounded-full px-3 py-1 text-sm font-semibold ${request.status === "Closed" ? "bg-[#def5e5] text-[#166534]" : "bg-[#fef3c7] text-[#92400e]"}`}>{request.status || "Open"}</span>
+                </div>
+                <p className="mt-3 text-sm text-[#374151]">{request.message}</p>
+                {request.reply && (
+                  <div className="mt-4 rounded-[26px] border border-white/35 bg-white/70 p-3 text-sm text-[#1f2937] shadow-sm backdrop-blur-sm">
+                    <p className="font-semibold">Admin Reply</p>
+                    <p className="mt-2">{request.reply}</p>
+                  </div>
+                )}
+              </div>
+            ))
+          ) : (
+            <p className="text-sm text-[#5d5d5d]">You have not submitted any feedback yet.</p>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -1264,9 +1556,9 @@ const DevoteeDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-[#fff4df] via-[#ffe7c7] to-[#ffd59e] text-[#181818]">
+    <div className="min-h-screen w-full bg-gradient-to-br from-[#fff7ed] via-[#fff1d4] to-[#ffe2aa] text-[#2c1d12]">
       <div className="flex w-full">
-        <aside className="relative hidden min-h-screen w-[320px] overflow-hidden border-r border-white/40 bg-gradient-to-b from-[#ffd8a8]/60 to-[#ffbd75]/35 shadow-[0_0_40px_rgba(255,135,33,0.25)] backdrop-blur-md lg:block">
+        <aside className="relative hidden min-h-screen w-[320px] overflow-hidden border-r border-white/35 bg-[radial-gradient(circle_at_top_left,_rgba(255,220,146,0.36),_transparent_28%)] bg-gradient-to-b from-[#ffecce]/70 to-[#ffd6a6]/40 shadow-[0_0_42px_rgba(153,90,31,0.22)] backdrop-blur-md lg:block">
           <div className="pointer-events-none absolute inset-0">
             <img src={templeImage} alt="Temple background" className="h-full w-full object-cover object-[56%_center]" />
             <div className="absolute inset-0 bg-[#fff0dc]/22"></div>

@@ -6,6 +6,7 @@ const supportRequestSchema = new mongoose.Schema(
     email: { type: String, trim: true, required: true },
     subject: { type: String, trim: true, required: true },
     message: { type: String, trim: true, required: true },
+    reply: { type: String, trim: true },
     status: {
       type: String,
       enum: ["Open", "In Progress", "Closed"],

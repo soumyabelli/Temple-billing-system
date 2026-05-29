@@ -25,6 +25,18 @@ export const AuthProvider = ({ children }) => {
     setToken(normalized.token);
   };
 
+  const updateUser = (newUser) => {
+    const normalizedUser = normalizeUser(newUser);
+    setUser(normalizedUser);
+    const storedToken = getStoredToken();
+    if (storedToken) {
+      setAuth({ token: storedToken, user: normalizedUser });
+      setToken(storedToken);
+    } else {
+      localStorage.setItem("user", JSON.stringify(normalizedUser));
+    }
+  };
+
   const logoutUser = () => {
     clearAuth();
     setUser(null);
@@ -32,7 +44,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const value = useMemo(
-    () => ({ user, token, isAuthenticated: Boolean(token && user), loginUser, logoutUser }),
+    () => ({ user, token, isAuthenticated: Boolean(token && user), loginUser, updateUser, logoutUser }),
     [user, token]
   );
 

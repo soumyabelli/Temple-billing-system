@@ -10,6 +10,7 @@ const {
   submitSupportRequest,
   updateProfile,
   getSupportRequests,
+  replySupportRequest,
   createNotification,
   getPrasadamOrders,
   createPrasadamOrder,
@@ -30,6 +31,7 @@ router.put("/profile", updateProfile);
 router.get("/events", getEvents);
 router.post("/support", submitSupportRequest);
 router.get("/support", getSupportRequests);
+router.patch("/support/:id", replySupportRequest);
 router.post("/notifications", createNotification);
 router.get("/prasadam-orders", getPrasadamOrders);
 router.post("/prasadam-orders", createPrasadamOrder);
