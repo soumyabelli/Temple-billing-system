@@ -597,16 +597,19 @@ const DevoteeDashboard = () => {
             </button>
           </div>
           <div className="space-y-3">
-            {notificationsData.length > 0 ? (
-              notificationsData.slice(0, 3).map((item) => (
-                <div key={`${item.title}-${item.date}-${item._id || Math.random()}`} className="rounded-xl border border-[#efefef] p-4">
-                  <p className="text-[1.45rem] font-bold">{item.title}</p>
-                  <p className="text-[1.15rem] text-[#4f4f4f]">{item.date}</p>
-                </div>
-              ))
-            ) : (
-              <p className="rounded-xl border border-[#efefef] p-4 text-[#5d5d5d]">No notifications yet.</p>
-            )}
+              {notificationsData.length > 0 ? (
+                notificationsData.slice(0, 3).map((item) => (
+                  <div key={`${item.title}-${item.date}-${item._id || Math.random()}`} className="rounded-xl border border-[#efefef] p-4">
+                    <p className="text-[1.45rem] font-bold">{item.title}</p>
+                    <p className="text-[1.15rem] text-[#4f4f4f]">{item.date}</p>
+                    {item.message ? (
+                      <p className="mt-2 text-sm text-[#6b6b6b]">{item.message}</p>
+                    ) : null}
+                  </div>
+                ))
+              ) : (
+                <p className="rounded-xl border border-[#efefef] p-4 text-[#5d5d5d]">No notifications yet.</p>
+              )}
           </div>
         </article>
       </section>
@@ -1138,6 +1141,9 @@ const DevoteeDashboard = () => {
               <div key={`${item.title}-${item.date}-${item._id || Math.random()}`} className="rounded-3xl border border-[#f0f0f0] p-4">
                 <p className="text-xl font-semibold">{item.title}</p>
                 <p className="mt-1 text-sm text-[#5d5d5d]">{item.date}</p>
+                {item.message ? (
+                  <p className="mt-2 text-sm text-[#6b6b6b]">{item.message}</p>
+                ) : null}
               </div>
             ))
           ) : (

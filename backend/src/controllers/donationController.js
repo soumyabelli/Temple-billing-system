@@ -5,6 +5,7 @@ const createDonation = async (req, res) => {
   try {
     const {
       donorName,
+      donorEmail,
       amount,
       category = "General",
       paymentMethod = "UPI",
@@ -38,6 +39,7 @@ const createDonation = async (req, res) => {
 
     const donation = await Donation.create({
       donorName: donorName.trim(),
+      donorEmail: donorEmail ? String(donorEmail).trim().toLowerCase() : undefined,
       contactNumber,
       amount: numericAmount,
       category,

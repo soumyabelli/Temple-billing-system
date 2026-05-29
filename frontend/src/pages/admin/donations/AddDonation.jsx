@@ -65,8 +65,14 @@ const AddDonation = () => {
 
     try {
       setIsSaving(true);
+      // Devotee side filters donations by donorEmail, so we must send it.
+      // If you don't have a dedicated UI for selecting donor, use the logged-in user email (if available)
+      // or leave blank (devotee won't see the donation).
+      const donorEmail = (localStorage.getItem("user") && JSON.parse(localStorage.getItem("user") || "{}").email) ? JSON.parse(localStorage.getItem("user") || "{}").email : "";
+
       const res = await axios.post("http://localhost:5000/api/donations", {
         donorName: donorName.trim(),
+        donorEmail: donorEmail ? String(donorEmail).toLowerCase().trim() : undefined,
         contactNumber: contactNumber.trim(),
         amount,
         category,

@@ -96,6 +96,7 @@ const createDonation = async (req, res) => {
 
     const donation = await Donation.create({
       donorName: donorName.trim(),
+      donorEmail: donorEmail ? String(donorEmail).trim().toLowerCase() : undefined,
       amount: numericAmount,
       category,
       paymentMethod,
