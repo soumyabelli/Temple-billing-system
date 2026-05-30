@@ -1,3 +1,5 @@
+import { useState, useEffect } from "react";
+import axios from "axios";
 import {
   MdCalendarMonth,
   MdOutlineFilterAlt,
@@ -14,6 +16,7 @@ import {
   MdQrCode2,
   MdAssessment,
   MdGroups,
+  MdClose,
 } from "react-icons/md";
 import { FaRegCalendarAlt } from "react-icons/fa";
 
@@ -127,6 +130,61 @@ const statusClass = {
 };
 
 const FestivalsEventsManagement = () => {
+
+  const [festivalRows, setFestivalRows] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+
+  const [title, setTitle] = useState("");
+  const [date, setDate] = useState("");
+  const [location, setLocation] = useState("");
+  const [description, setDescription] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  const fetchEvents = async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/events");
+      setFestivalRows(res.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleAddFestival = async () => {
+    if (!title.trim() || !date || !location.trim()) {
+      alert("Please fill in all required fields");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await axios.post("http://localhost:5000/api/events/add", {
+        title,
+        date,
+        location,
+        description,
+      });
+
+      alert("Festival Added Successfully!");
+
+      fetchEvents();
+
+      setTitle("");
+      setDate("");
+      setLocation("");
+      setDescription("");
+      setShowModal(false);
+
+    } catch (error) {
+      console.log(error);
+      alert("Error adding festival: " + (error.response?.data?.message || error.message));
+    } finally {
+      setIsLoading(false);
+    }
+  };
   return (
     <div className="mt-5 space-y-4 pb-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -168,9 +226,7 @@ const FestivalsEventsManagement = () => {
               <button className="inline-flex h-11 items-center gap-2 rounded-xl border border-[#ece8e1] px-4 text-[18px] text-[#4f5866]">
                 <MdOutlineFilterAlt size={18} /> Filter
               </button>
-              <button className="inline-flex h-11 items-center gap-2 rounded-xl bg-[#ff8b00] px-4 text-[18px] font-semibold text-white hover:bg-[#ec7f00]">
-                + Add Festival
-              </button>
+              <button onClick={() => setShowModal(true)} className="inline-flex h-11 items-center gap-2 rounded-xl bg-[#ff8b00] px-4 text-[18px] font-semibold text-white hover:bg-[#ec7f00]" > + Add Festival </button>
             </div>
           </div>
 
@@ -193,34 +249,53 @@ const FestivalsEventsManagement = () => {
                 </tr>
               </thead>
               <tbody>
-                {festivalRows.map((row) => (
-                  <tr key={row.name} className="border-t border-[#f1ede6] text-[#2f3645]">
-                    <td className="px-3 py-3">
-                      <div className="flex items-center gap-2">
-                        <img src={row.avatar} alt={row.name} className="h-9 w-9 rounded-full object-cover" />
-                        <span>{row.name}</span>
-                      </div>
-                    </td>
-                    <td className="px-3 py-3">{row.date}</td>
-                    <td className="px-3 py-3">{row.venue}</td>
-                    <td className="px-3 py-3">{row.slots}</td>
-                    <td className="px-3 py-3">{row.registrations}</td>
-                    <td className="px-3 py-3">
-                      <span className={`rounded-xl px-3 py-1 text-[14px] font-semibold ${statusClass[row.status]}`}>{row.status}</span>
-                    </td>
-                    <td className="px-3 py-3">
-                      <div className="flex items-center gap-2">
-                        <button className="inline-flex h-8 w-10 items-center justify-center rounded-lg border border-[#ece8e1] bg-[#faf7f2] text-[#7b5324]">
-                          <MdOutlineRemoveRedEye />
-                        </button>
-                        <button className="inline-flex h-8 w-10 items-center justify-center rounded-lg border border-[#ece8e1] bg-[#faf7f2] text-[#7b5324]">
-                          <MdOutlineEdit />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
+  {festivalRows.map((row) => (
+    <tr
+      key={row._id}
+      className="border-t border-[#f1ede6] text-[#2f3645]"
+    >
+      <td className="px-3 py-3">
+        <div className="flex items-center gap-2">
+          <span>{row.title}</span>
+        </div>
+      </td>
+
+      <td className="px-3 py-3">
+        {new Date(row.date).toLocaleDateString()}
+      </td>
+
+      <td className="px-3 py-3">
+        {row.location}
+      </td>
+
+      <td className="px-3 py-3">
+        500
+      </td>
+
+      <td className="px-3 py-3">
+        0
+      </td>
+
+      <td className="px-3 py-3">
+        <span className="rounded-xl px-3 py-1 text-[14px] font-semibold bg-[#e8f0ff] text-[#3573cb]">
+          Upcoming
+        </span>
+      </td>
+
+      <td className="px-3 py-3">
+        <div className="flex items-center gap-2">
+          <button className="inline-flex h-8 w-10 items-center justify-center rounded-lg border border-[#ece8e1] bg-[#faf7f2] text-[#7b5324]">
+            <MdOutlineRemoveRedEye />
+          </button>
+
+          <button className="inline-flex h-8 w-10 items-center justify-center rounded-lg border border-[#ece8e1] bg-[#faf7f2] text-[#7b5324]">
+            <MdOutlineEdit />
+          </button>
+        </div>
+      </td>
+    </tr>
+  ))}
+</tbody>
             </table>
           </div>
         </div>
@@ -283,7 +358,7 @@ const FestivalsEventsManagement = () => {
               </thead>
               <tbody>
                 {registrations.map((row) => (
-                  <tr key={row.name} className="border-t border-[#f1ede6] text-[#2f3645]">
+                  <tr key={row.title} className="border-t border-[#f1ede6] text-[#2f3645]">
                     <td className="px-3 py-3">
                       <div className="flex items-center gap-2">
                         <img src={row.avatar} alt={row.name} className="h-8 w-8 rounded-full object-cover" />
@@ -330,6 +405,84 @@ const FestivalsEventsManagement = () => {
         <span>(C) 2026 Sri Shanti Mahadev Mandir. All rights reserved.</span>
         <span className="font-medium text-[#8b5b2d]">Sacred Event Management Portal</span>
       </div>
+
+      {/* Add Festival Modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="w-full max-w-md rounded-2xl border border-[#ece8e1] bg-white p-6 shadow-2xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-[28px] font-bold text-[#17151f]">Add New Festival</h2>
+              <button
+                onClick={() => setShowModal(false)}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[#ece8e1] bg-[#faf7f2] text-[#7b5324] hover:bg-[#f0ebe3]"
+              >
+                <MdClose size={20} />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-[16px] font-semibold text-[#17151f] mb-2">Festival Name *</label>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="e.g., Maha Shivaratri"
+                  className="w-full rounded-xl border border-[#ece8e1] bg-[#faf9f7] px-4 py-2.5 text-[16px] text-[#202632] outline-none focus:border-[#ff8b00] focus:ring-1 focus:ring-[#ff8b00]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[16px] font-semibold text-[#17151f] mb-2">Date *</label>
+                <input
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  className="w-full rounded-xl border border-[#ece8e1] bg-[#faf9f7] px-4 py-2.5 text-[16px] text-[#202632] outline-none focus:border-[#ff8b00] focus:ring-1 focus:ring-[#ff8b00]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[16px] font-semibold text-[#17151f] mb-2">Venue/Location *</label>
+                <input
+                  type="text"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  placeholder="e.g., Main Temple Hall"
+                  className="w-full rounded-xl border border-[#ece8e1] bg-[#faf9f7] px-4 py-2.5 text-[16px] text-[#202632] outline-none focus:border-[#ff8b00] focus:ring-1 focus:ring-[#ff8b00]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[16px] font-semibold text-[#17151f] mb-2">Description</label>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Enter festival details..."
+                  rows="3"
+                  className="w-full rounded-xl border border-[#ece8e1] bg-[#faf9f7] px-4 py-2.5 text-[16px] text-[#202632] outline-none focus:border-[#ff8b00] focus:ring-1 focus:ring-[#ff8b00] resize-none"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="flex-1 rounded-xl border border-[#ece8e1] bg-[#faf9f7] px-4 py-2.5 text-[16px] font-semibold text-[#4f5866] hover:bg-[#f0ebe3]"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAddFestival}
+                  disabled={isLoading}
+                  className="flex-1 rounded-xl bg-[#ff8b00] px-4 py-2.5 text-[16px] font-semibold text-white hover:bg-[#ec7f00] disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {isLoading ? "Adding..." : "Add Festival"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

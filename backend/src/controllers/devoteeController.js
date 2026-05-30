@@ -6,6 +6,7 @@ const SupportRequest = require("../models/SupportRequest");
 const User = require("../models/User");
 const PrasadamOrder = require("../models/PrasadamOrder");
 const { createStaffBroadcastNotifications } = require("../utils/notificationService");
+const { sendBookingConfirmation, sendDonationReceipt, sendPrasadamOrderConfirmation } = require("../utils/communicationService");
 const PRASADAM_MENU = {
   "Laddu Prasadam": 151,
   "Panchamrit Prasadam": 101,
@@ -28,15 +29,17 @@ const getBookings = async (req, res) => {
 
 const createBooking = async (req, res) => {
   try {
-    const { devoteeName, devoteeEmail, service, datetime, amount, status, contactNumber, notes } = req.body;
+    const { devoteeName, devoteeEmail, devoteePhone, service, datetime, amount, status, contactNumber, notes, devoteeId } = req.body;
 
     if (!devoteeName || !service || !datetime || amount == null) {
       return res.status(400).json({ error: "Missing required booking fields." });
     }
 
     const booking = await Booking.create({
+      devoteeId: devoteeId || undefined,
       devoteeName,
       devoteeEmail: devoteeEmail ? String(devoteeEmail).toLowerCase() : undefined,
+      devoteePhone: devoteePhone || contactNumber,
       service,
       datetime,
       amount,
@@ -44,11 +47,24 @@ const createBooking = async (req, res) => {
       contactNumber,
       notes,
     });
+
+    // Send notification to database
     await Notification.create({
       title: "Booking Submitted",
       message: `Your ${service} booking is pending approval.`,
       audienceEmail: devoteeEmail ? String(devoteeEmail).toLowerCase() : undefined,
     });
+
+    // Send multi-channel notifications (Email & SMS) if devotee info is available
+    if (devoteeEmail && (devoteePhone || contactNumber)) {
+      const devotee = { name: devoteeName, email: devoteeEmail, phone: devoteePhone || contactNumber };
+      await sendBookingConfirmation(devotee, {
+        service,
+        datetime,
+        amount,
+        status: status || "Pending",
+      });
+    }
 
     return res.status(201).json({ booking });
   } catch (error) {
@@ -73,12 +89,14 @@ const createDonation = async (req, res) => {
     const {
       donorName,
       donorEmail,
+      donorPhone,
       amount,
       category = "General",
       paymentMethod = "UPI",
       contactNumber,
       transactionId,
       notes,
+      donatedBy,
     } = req.body;
 
     if (!donorName || amount == null) {
@@ -97,6 +115,7 @@ const createDonation = async (req, res) => {
     const donation = await Donation.create({
       donorName: donorName.trim(),
       donorEmail: donorEmail ? String(donorEmail).trim().toLowerCase() : undefined,
+      donorPhone: donorPhone || contactNumber,
       amount: numericAmount,
       category,
       paymentMethod,
@@ -104,6 +123,7 @@ const createDonation = async (req, res) => {
       transactionId,
       notes,
       status: "Completed",
+      donatedBy: donatedBy || undefined,
     });
 
     await Notification.create({
@@ -111,6 +131,16 @@ const createDonation = async (req, res) => {
       message: `${donorName.trim()} donated INR ${numericAmount} for ${category}.`,
       audienceEmail: donorEmail ? String(donorEmail).toLowerCase() : undefined,
     });
+
+    // Send multi-channel notifications (Email & SMS) if donor info is available
+    if (donorEmail && (donorPhone || contactNumber)) {
+      const donor = { name: donorName.trim(), email: donorEmail, phone: donorPhone || contactNumber };
+      await sendDonationReceipt(donor, {
+        amount: numericAmount,
+        category,
+        transactionId: transactionId || "N/A",
+      });
+    }
 
     return res.status(201).json({ donation });
   } catch (error) {
@@ -121,15 +151,16 @@ const createDonation = async (req, res) => {
 const getNotifications = async (req, res) => {
   try {
     const email = String(req.query.email || "").trim().toLowerCase();
-    const notifications = email
-      ? await Notification.find({
-          $or: [
-            { audienceEmail: email },
-            { audienceEmail: { $exists: false }, audienceRole: { $exists: false } },
-            { audienceEmail: null, audienceRole: { $exists: false } },
-          ],
-        }).sort({ date: -1, createdAt: -1 })
-      : await Notification.find({ audienceRole: { $ne: "staff" } }).sort({ date: -1, createdAt: -1 });
+    
+    // Devotees should ONLY see their own notifications, not broadcasts
+    if (!email) {
+      return res.status(400).json({ error: "Email is required to fetch your notifications." });
+    }
+    
+    const notifications = await Notification.find({
+      audienceEmail: email,
+    }).sort({ createdAt: -1 });
+    
     return res.status(200).json({ notifications });
   } catch (error) {
     return res.status(500).json({ error: "Failed to load notifications." });
@@ -141,7 +172,18 @@ const getProfile = async (req, res) => {
     if (req.query.email) {
       const user = await User.findOne({ email: req.query.email }).select("-password");
       if (user) {
-        return res.status(200).json({ profile: { name: user.name, email: user.email, role: user.role || "devotee", memberSince: user.createdAt?.getFullYear?.() || "2025" } });
+        return res.status(200).json({
+          profile: {
+            id: user._id?.toString?.() || user.id,
+            name: user.name,
+            email: user.email,
+            phone: user.phone || "",
+            address: user.address || "",
+            place: user.place || "",
+            role: user.role || "devotee",
+            memberSince: user.createdAt?.getFullYear?.() || "2025",
+          },
+        });
       }
     }
 
@@ -149,6 +191,9 @@ const getProfile = async (req, res) => {
       profile: {
         name: "Devotee User",
         email: "devotee@example.com",
+        phone: "",
+        address: "",
+        place: "",
         role: "devotee",
         memberSince: "2025",
       },
@@ -222,7 +267,7 @@ const submitSupportRequest = async (req, res) => {
 
 const updateProfile = async (req, res) => {
   try {
-    const { currentEmail, name, email } = req.body;
+    const { currentEmail, name, email, phone, address, place } = req.body;
     if (!currentEmail) {
       return res.status(400).json({ error: "currentEmail is required." });
     }
@@ -234,6 +279,9 @@ const updateProfile = async (req, res) => {
 
     if (name && String(name).trim()) user.name = String(name).trim();
     if (email && String(email).trim()) user.email = String(email).trim().toLowerCase();
+    if (phone && String(phone).trim()) user.phone = String(phone).trim();
+    if (address && String(address).trim()) user.address = String(address).trim();
+    if (place && String(place).trim()) user.place = String(place).trim();
     await user.save();
 
     await Notification.create({
@@ -243,8 +291,12 @@ const updateProfile = async (req, res) => {
 
     return res.status(200).json({
       profile: {
+        id: user._id?.toString?.() || user.id,
         name: user.name,
         email: user.email,
+        phone: user.phone || "",
+        address: user.address || "",
+        place: user.place || "",
         role: user.role || "devotee",
         memberSince: user.createdAt?.getFullYear?.() || "2025",
       },
@@ -326,7 +378,7 @@ const getPrasadamOrders = async (req, res) => {
 
 const createPrasadamOrder = async (req, res) => {
   try {
-    const { devoteeName, email, itemName, quantity, paymentMethod } = req.body;
+    const { devoteeName, email, phone, itemName, quantity, paymentMethod, devoteeId } = req.body;
     if (!devoteeName || !itemName) {
       return res.status(400).json({ error: "devoteeName and itemName are required." });
     }
@@ -342,8 +394,10 @@ const createPrasadamOrder = async (req, res) => {
     const totalAmount = unitPrice * normalizedQty;
 
     const order = await PrasadamOrder.create({
+      devoteeId: devoteeId || undefined,
       devoteeName,
       email,
+      phone: phone || undefined,
       itemName,
       quantity: normalizedQty,
       unitPrice,
@@ -357,6 +411,17 @@ const createPrasadamOrder = async (req, res) => {
       message: `${devoteeName} ordered ${itemName} x${normalizedQty}.`,
       audienceEmail: email ? String(email).toLowerCase() : undefined,
     });
+
+    // Send multi-channel notifications (Email & SMS) if devotee info is available
+    if (email && phone) {
+      const devotee = { name: devoteeName, email, phone };
+      await sendPrasadamOrderConfirmation(devotee, {
+        item: itemName,
+        quantity: normalizedQty,
+        amount: totalAmount,
+        status: "Placed",
+      });
+    }
 
     return res.status(201).json({ order });
   } catch (error) {

@@ -2,8 +2,14 @@ const mongoose = require("mongoose");
 
 const bookingSchema = new mongoose.Schema(
   {
+    devoteeId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      sparse: true,
+    },
     devoteeName: { type: String, trim: true, required: true },
     devoteeEmail: { type: String, trim: true, lowercase: true },
+    devoteePhone: { type: String, trim: true },
     service: { type: String, trim: true, required: true },
     datetime: { type: String, trim: true, required: true },
     amount: { type: Number, required: true, min: 0 },

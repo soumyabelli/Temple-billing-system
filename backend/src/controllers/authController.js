@@ -17,6 +17,9 @@ const sanitizeUser = (userDoc) => ({
   id: userDoc._id?.toString?.() || userDoc.id,
   name: userDoc.name,
   email: userDoc.email,
+  phone: userDoc.phone || "",
+  address: userDoc.address || "",
+  place: userDoc.place || "",
   role: userDoc.role,
   createdAt: userDoc.createdAt || userDoc.createdAt?.toISOString?.() || undefined,
   mustChangePassword: Boolean(userDoc.mustChangePassword),
@@ -52,12 +55,23 @@ const findUserById = async (id) => {
 
 const registerUser = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, confirmPassword, phone, address, place, role } = req.body;
     const normalizedEmail = String(email || "").toLowerCase().trim();
     const normalizedRole = String(role || "").toLowerCase().trim();
 
-    if (!name || !email || !password || !role) {
-      return res.status(400).json({ message: "Name, email, password and role are required" });
+    // Validate required fields
+    if (!name || !email || !password || !confirmPassword || !phone) {
+      return res.status(400).json({ message: "Name, email, password, confirm password, and phone number are required" });
+    }
+
+    // Validate passwords match
+    if (password !== confirmPassword) {
+      return res.status(400).json({ message: "Passwords do not match" });
+    }
+
+    // Validate password length
+    if (password.length < 6) {
+      return res.status(400).json({ message: "Password must be at least 6 characters long" });
     }
 
     if (normalizedRole !== "devotee") {
@@ -74,6 +88,9 @@ const registerUser = async (req, res) => {
     const user = await createUserRecord({
       name,
       email: normalizedEmail,
+      phone: phone.trim(),
+      address: address ? address.trim() : "",
+      place: place ? place.trim() : "",
       password: hashedPassword,
       role: normalizedRole,
     });

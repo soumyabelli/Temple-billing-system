@@ -1379,16 +1379,35 @@ const DevoteeDashboard = () => {
     <div className="space-y-6">
       <div className={`${glassCard}`}>
         <h2 className="text-[2rem] font-bold">Festival Events</h2>
-        <div className="mt-6 grid gap-4 md:grid-cols-2">
+        <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {eventsData.length > 0 ? (
             eventsData.map((item) => (
-              <div key={`${item.title}-${item.formattedDate || item._id}`} className={glassItem}>
-                <p className="text-xl font-semibold">{item.title}</p>
-                <p className="mt-2 text-sm text-[#5d5d5d]">{item.formattedDate || item.date}</p>
+              <div key={`${item.title}-${item.formattedDate || item._id}`} className={`${glassItem} p-4`}>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1">
+                    <p className="text-lg font-semibold text-[#17151f]">{item.title}</p>
+                    <p className="mt-2 flex items-center gap-2 text-sm text-[#5d5d5d]">
+                      <span className="text-base">📅</span>
+                      {item.formattedDate || item.date}
+                    </p>
+                    {item.location && (
+                      <p className="mt-1 flex items-center gap-2 text-sm text-[#5d5d5d]">
+                        <span className="text-base">📍</span>
+                        {item.location}
+                      </p>
+                    )}
+                    {item.description && (
+                      <p className="mt-2 text-xs text-[#6b6b6b]">{item.description.substring(0, 60)}...</p>
+                    )}
+                  </div>
+                </div>
               </div>
             ))
           ) : (
-            <div className={`${glassItem} text-[#5d5d5d]`}>No festival events available.</div>
+            <div className={`${glassItem} col-span-full text-center text-[#5d5d5d] py-8`}>
+              <p className="text-lg">No festival events available.</p>
+              <p className="mt-1 text-sm">Check back later for upcoming festivals!</p>
+            </div>
           )}
         </div>
       </div>

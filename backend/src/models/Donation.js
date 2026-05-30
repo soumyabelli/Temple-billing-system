@@ -18,6 +18,11 @@ const donationSchema = new mongoose.Schema(
       trim: true,
     },
 
+    donorPhone: {
+      type: String,
+      trim: true,
+    },
+
     amount: {
       type: Number,
       required: true,
