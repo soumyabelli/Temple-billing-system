@@ -12,6 +12,7 @@ const {
   getTasks,
   markStaffNotificationRead,
   markStaffNotificationsRead,
+  markStaffNotificationsViewed,
   updateTaskStatus,
 } = require("../controllers/staffController");
 
@@ -56,6 +57,11 @@ router.get(
 router.patch(
   "/notifications/:staffId/read-all",
   markStaffNotificationsRead
+);
+
+router.patch(
+  "/notifications/:staffId/view-all",
+  markStaffNotificationsViewed
 );
 
 router.patch(

@@ -9,6 +9,8 @@ const notificationSchema = new mongoose.Schema(
     audienceRole: { type: String, trim: true, lowercase: true },
     category: { type: String, trim: true },
     date: { type: Date, default: Date.now },
+    viewed: { type: Boolean, default: false },
+    viewedAt: { type: Date, default: null },
     read: { type: Boolean, default: false },
     readAt: { type: Date, default: null },
   },

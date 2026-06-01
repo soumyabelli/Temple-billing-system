@@ -38,24 +38,23 @@ const Notifications = ({ staffId, onUnreadCountChange }) => {
       const notificationList = Array.isArray(response.data?.notifications) ? response.data.notifications : [];
       setNotifications(notificationList);
 
-      const hasUnread = notificationList.some((notification) => !notification.read);
-      if (hasUnread) {
-        await axios.patch(`${API_BASE}/staff/notifications/${staffId}/read-all`);
+      const hasUnviewed = notificationList.some((notification) => !notification.viewed);
+      if (hasUnviewed) {
+        await axios.patch(`${API_BASE}/staff/notifications/${staffId}/view-all`);
         setNotifications((current) =>
           current.map((notification) => ({
             ...notification,
-            read: true,
-            readAt: notification.readAt || new Date().toISOString(),
+            viewed: true,
+            viewedAt: notification.viewedAt || new Date().toISOString(),
           }))
         );
-        onUnreadCountChange?.(0);
       }
     } catch (apiError) {
       setError(apiError.response?.data?.message || "Failed to load notifications");
     } finally {
       setLoading(false);
     }
-  }, [onUnreadCountChange, staffId]);
+  }, [staffId]);
 
   useEffect(() => {
     loadNotifications();
@@ -119,8 +118,8 @@ const Notifications = ({ staffId, onUnreadCountChange }) => {
               <div className="notification-content">
                 <div className="notification-title-row">
                   <h3>{notification.title}</h3>
-                  <span className={notification.read ? "read-status" : "read-status unread"}>
-                    {notification.read ? "Read" : "Unread"}
+                  <span className={notification.read ? "read-status" : notification.viewed ? "read-status viewed" : "read-status unread"}>
+                    {notification.read ? "Read" : notification.viewed ? "Viewed" : "Unread"}
                   </span>
                 </div>
                 <p>{notification.message}</p>

@@ -275,6 +275,24 @@ exports.markStaffNotificationsRead = async (req, res) => {
   }
 };
 
+exports.markStaffNotificationsViewed = async (req, res) => {
+  try {
+    const { staffId } = req.params;
+    const query = await buildStaffNotificationQuery(staffId);
+    await Notification.updateMany({ ...query, viewed: false }, { viewed: true, viewedAt: new Date() });
+
+    return res.json({
+      success: true,
+      message: "Notifications marked as viewed",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 exports.createInventoryRequestNotification = async (req, res) => {
   try {
     const { staffId, staffEmail, status, itemName, adminReason } = req.body;

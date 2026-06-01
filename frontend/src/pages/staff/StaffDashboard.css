@@ -694,6 +694,11 @@
   color: #bf5b00;
 }
 
+.read-status.viewed {
+  background: #f3e8ff;
+  color: #7e22ce;
+}
+
 .notifications-empty {
   border: 1px dashed #e4d5c5;
   border-radius: 16px;
