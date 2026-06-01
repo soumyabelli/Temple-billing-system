@@ -91,6 +91,34 @@ const formatTaskDate = (value) => {
   });
 };
 
+const parseTaskTime = (value) => {
+  if (!value) return 0;
+  const timeValue = String(value).trim();
+  if (/\d+:\d+\s*(AM|PM)/i.test(timeValue)) {
+    const [timePart, meridiem] = timeValue.split(/\s+/);
+    const [hours, minutes] = timePart.split(":").map(Number);
+    const normalizedHours = hours % 12 + (meridiem.toUpperCase() === "PM" ? 12 : 0);
+    return normalizedHours * 60 + (minutes || 0);
+  }
+  if (/\d+:\d+/.test(timeValue)) {
+    const [hours, minutes] = timeValue.split(":").map(Number);
+    return (hours || 0) * 60 + (minutes || 0);
+  }
+  return 0;
+};
+
+const sortTasksByDateTime = (a, b) => {
+  const dateA = a.dueDate ? new Date(a.dueDate) : null;
+  const dateB = b.dueDate ? new Date(b.dueDate) : null;
+  if (dateA && dateB) {
+    const dayDiff = dateA.getTime() - dateB.getTime();
+    if (dayDiff !== 0) return dayDiff;
+  }
+  const timeA = parseTaskTime(a.time);
+  const timeB = parseTaskTime(b.time);
+  return timeA - timeB;
+};
+
 const toProfileForm = (profile = {}) => ({
   name: profile.name || "",
   email: profile.email || "",
@@ -130,6 +158,10 @@ const StaffDashboard = () => {
   const [error, setError] = useState("");
   const [profileMessage, setProfileMessage] = useState("");
   const [passwordMessage, setPasswordMessage] = useState("");
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [filteredStatus, setFilteredStatus] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [detailStatus, setDetailStatus] = useState("Pending");
   const [leaveForm, setLeaveForm] = useState({
     leaveType: "General",
     reason: "",
@@ -221,6 +253,42 @@ const StaffDashboard = () => {
     );
   }, [tasks]);
 
+  const latestDuties = useMemo(() => {
+    return tasks.slice().sort(sortTasksByDateTime).slice(0, 5);
+  }, [tasks]);
+
+  const filteredDuties = useMemo(() => {
+    return tasks
+      .slice()
+      .sort(sortTasksByDateTime)
+      .filter((task) => {
+        const matchesStatus = filteredStatus === "all" || task.status === filteredStatus;
+        const matchesSearch = searchQuery
+          ? `${task.title || task.duty || ""} ${task.area || task.description || ""}`
+              .toLowerCase()
+              .includes(searchQuery.toLowerCase())
+          : true;
+        return matchesStatus && matchesSearch;
+      });
+  }, [tasks, filteredStatus, searchQuery]);
+
+  const timelineItems = useMemo(() => filteredDuties, [filteredDuties]);
+
+  useEffect(() => {
+    if (activeSection === "duties" && tasks.length > 0) {
+      setSelectedTask((current) => {
+        const updated = current ? tasks.find((task) => task._id === current._id) : null;
+        return updated || tasks[0] || null;
+      });
+    }
+  }, [activeSection, tasks]);
+
+  useEffect(() => {
+    if (selectedTask) {
+      setDetailStatus(selectedTask.status || "Pending");
+    }
+  }, [selectedTask]);
+
   const leaveSummary = useMemo(() => {
     return leaves.reduce(
       (acc, leave) => {
@@ -243,6 +311,10 @@ const StaffDashboard = () => {
       setUpdatingTaskId(taskId);
       await axios.put(`${API_BASE}/staff/task-status/${taskId}`, { status });
       setTasks((prev) => prev.map((task) => (task._id === taskId ? { ...task, status } : task)));
+      setSelectedTask((prev) => (prev && prev._id === taskId ? { ...prev, status } : prev));
+      if (selectedTask && selectedTask._id === taskId) {
+        setDetailStatus(status);
+      }
     } catch (apiError) {
       alert(apiError.response?.data?.message || "Failed to update task status");
     } finally {
@@ -373,7 +445,14 @@ const StaffDashboard = () => {
             className={activeSection === "dashboard" ? "nav-item active" : "nav-item"}
             onClick={() => setActiveSection("dashboard")}
           >
-            <FiHome /> Dashboard
+            <FiHome /> Overview
+          </button>
+          <button
+            type="button"
+            className={activeSection === "duties" ? "nav-item active" : "nav-item"}
+            onClick={() => setActiveSection("duties")}
+          >
+            <TbChecklist /> My Duties
           </button>
           <button
             type="button"
@@ -486,59 +565,34 @@ const StaffDashboard = () => {
             </section>
 
             <section className="dashboard-grid">
-              <div className="table-card">
+              <div className="recent-duties-card">
                 <div className="card-heading">
-                  <h2>Assigned Task Schedule</h2>
+                  <div>
+                    <h2>Recent Duties</h2>
+                    <p>Latest assigned duties for today.</p>
+                  </div>
+                  <button type="button" className="secondary-btn" onClick={() => setActiveSection("duties")}>View All Duties →</button>
                 </div>
 
-                <div className="table-wrap">
-                  <table className="task-table">
-                    <thead>
-                      <tr>
-                        <th>Task</th>
-                        <th>Description</th>
-                        <th>Due Date</th>
-                        <th>Assigned By</th>
-                        <th>Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {tasks.length === 0 ? (
-                        <tr>
-                          <td colSpan="5" className="empty-cell">
-                            No task assigned
-                          </td>
-                        </tr>
-                      ) : (
-                        tasks.map((task) => (
-                          <tr key={task._id}>
-                            <td>{task.title || task.duty}</td>
-                            <td>{task.description || task.area}</td>
-                            <td>{formatTaskDate(task.dueDate || task.time)}</td>
-                            <td>{task.assignedBy}</td>
-                            <td>
-                              <div className="status-control">
-                                <span className={`status-chip ${statusClassMap[task.status] || ""}`}>
-                                  {task.status}
-                                </span>
-                                <select
-                                  value={task.status}
-                                  onChange={(e) => handleTaskStatusChange(task._id, e.target.value)}
-                                  disabled={updatingTaskId === task._id}
-                                >
-                                  {TASK_STATUSES.map((status) => (
-                                    <option key={status} value={status}>
-                                      {status}
-                                    </option>
-                                  ))}
-                                </select>
-                              </div>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
+                <div className="duties-list">
+                  {latestDuties.length === 0 ? (
+                    <div className="empty-cell">No duties assigned yet.</div>
+                  ) : (
+                    latestDuties.map((task) => (
+                      <div key={task._id} className="duty-item">
+                        <div>
+                          <p className="duty-title">{task.title || task.duty || "Untitled Duty"}</p>
+                          <p className="duty-meta">{task.area || task.description || "General duty"}</p>
+                        </div>
+                        <div className="duty-right">
+                          <span className="duty-time">{task.time || "-"}</span>
+                          <span className={`status-chip ${statusClassMap[task.status] || ""}`}>
+                            {task.status}
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
 
@@ -562,9 +616,7 @@ const StaffDashboard = () => {
                     <FiClock /> Shift: Morning / Evening
                   </li>
                 </ul>
-                <button type="button" onClick={() => setActiveSection("profile")}>
-                  Open Profile Settings
-                </button>
+                <button type="button" onClick={() => setActiveSection("profile")}>Open Profile Settings</button>
               </div>
             </section>
 
@@ -608,6 +660,201 @@ const StaffDashboard = () => {
               </div>
             </section>
           </>
+        ) : null}
+
+        {!loading && activeSection === "duties" ? (
+          <section className="duties-page">
+            <div className="duties-head">
+              <div>
+                <h2>My Duties</h2>
+                <p>Full duty management for today's staff assignments.</p>
+              </div>
+              <div className="duties-head-actions">
+                <button type="button" className="secondary-btn" onClick={() => setActiveSection("dashboard")}>
+                  Back to Overview
+                </button>
+                <button type="button" onClick={() => setSelectedTask(tasks[0] || null)}>
+                  Select First Duty
+                </button>
+              </div>
+            </div>
+
+            <div className="duties-filters">
+              <div>
+                <label htmlFor="searchQuery">Search duties</label>
+                <input
+                  id="searchQuery"
+                  type="text"
+                  placeholder="Search duty name or area"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              <div>
+                <label htmlFor="statusFilter">Status</label>
+                <select
+                  id="statusFilter"
+                  value={filteredStatus}
+                  onChange={(e) => setFilteredStatus(e.target.value)}
+                >
+                  <option value="all">All Statuses</option>
+                  {TASK_STATUSES.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <button type="button" className="export-btn" onClick={() => {
+                const rows = [
+                  ["Duty Name", "Area", "Time", "Assigned By", "Status", "Description"],
+                  ...filteredDuties.map((task) => [
+                    task.title || task.duty || "",
+                    task.area || task.description || "",
+                    task.time || "",
+                    task.assignedBy || "",
+                    task.status || "",
+                    task.description || task.area || "",
+                  ]),
+                ];
+                const csv = rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")).join("\r\n");
+                const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.href = url;
+                link.download = "daily-duties.csv";
+                link.click();
+                URL.revokeObjectURL(url);
+              }}>
+                Export
+              </button>
+            </div>
+
+            <div className="duties-grid">
+              <div>
+                <div className="card-heading">
+                  <h2>All Duties Assigned for Today</h2>
+                  <p>{filteredDuties.length} duties found</p>
+                </div>
+                <div className="table-wrap duties-table">
+                  <table className="task-table">
+                    <thead>
+                      <tr>
+                        <th>Duty</th>
+                        <th>Area</th>
+                        <th>Time</th>
+                        <th>Status</th>
+                        <th>Assigned By</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredDuties.length === 0 ? (
+                        <tr>
+                          <td colSpan="5" className="empty-cell">
+                            No duties match the filter.
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredDuties.map((task) => (
+                          <tr
+                            key={task._id}
+                            className={selectedTask?._id === task._id ? "selected-row" : ""}
+                            onClick={() => setSelectedTask(task)}
+                          >
+                            <td>{task.title || task.duty}</td>
+                            <td>{task.area || task.description}</td>
+                            <td>{task.time || "-"}</td>
+                            <td>
+                              <span className={`status-chip ${statusClassMap[task.status] || ""}`}>
+                                {task.status}
+                              </span>
+                            </td>
+                            <td>{task.assignedBy}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="timeline-card">
+                  <div className="card-heading">
+                    <h2>Duty Timeline</h2>
+                  </div>
+                  <div className="timeline-list">
+                    {timelineItems.length === 0 ? (
+                      <div className="empty-cell">No duties to show</div>
+                    ) : (
+                      timelineItems.map((task) => (
+                        <div key={task._id} className="timeline-item">
+                          <div>
+                            <p className="duty-time">{task.time || "-"}</p>
+                            <p className="duty-title">{task.title || task.duty}</p>
+                          </div>
+                          <span className={`status-chip ${statusClassMap[task.status] || ""}`}>{task.status}</span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <aside className="details-panel">
+                <div className="card-heading">
+                  <h2>Duty Information</h2>
+                </div>
+                {selectedTask ? (
+                  <div className="details-content">
+                    <div className="detail-row">
+                      <span>Duty Name</span>
+                      <strong>{selectedTask.title || selectedTask.duty}</strong>
+                    </div>
+                    <div className="detail-row">
+                      <span>Area</span>
+                      <strong>{selectedTask.area || selectedTask.description || "General duty"}</strong>
+                    </div>
+                    <div className="detail-row">
+                      <span>Assigned By</span>
+                      <strong>{selectedTask.assignedBy || "Admin"}</strong>
+                    </div>
+                    <div className="detail-row">
+                      <span>Time</span>
+                      <strong>{selectedTask.time || "-"}</strong>
+                    </div>
+                    <div className="detail-row">
+                      <span>Description</span>
+                      <p>{selectedTask.description || selectedTask.area || "No additional details."}</p>
+                    </div>
+                    <div className="detail-row status-update-row">
+                      <label htmlFor="detailStatus">Status</label>
+                      <select
+                        id="detailStatus"
+                        value={detailStatus}
+                        onChange={(e) => setDetailStatus(e.target.value)}
+                        disabled={updatingTaskId === selectedTask._id}
+                      >
+                        {TASK_STATUSES.map((status) => (
+                          <option key={status} value={status}>
+                            {status}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <button
+                      type="button"
+                      className="status-update-button"
+                      onClick={() => handleTaskStatusChange(selectedTask._id, detailStatus)}
+                      disabled={updatingTaskId === selectedTask._id}
+                    >
+                      Update Status
+                    </button>
+                  </div>
+                ) : (
+                  <div className="empty-cell">Select a duty to view details.</div>
+                )}
+              </aside>
+            </div>
+          </section>
         ) : null}
 
         {!loading && activeSection === "leaveRequests" ? (

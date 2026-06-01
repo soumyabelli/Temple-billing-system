@@ -383,6 +383,215 @@
   border-color: #ffc8c5;
 }
 
+.recent-duties-card,
+.duties-page,
+.duty-item,
+.timeline-card,
+.details-panel {
+  background: var(--panel);
+}
+
+.recent-duties-card {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 18px;
+}
+
+.recent-duties-card .card-heading {
+  gap: 16px;
+}
+
+.duties-list {
+  display: grid;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.duty-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid #ece3d8;
+  border-radius: 16px;
+}
+
+.duty-title {
+  margin: 0 0 6px;
+  font-weight: 700;
+}
+
+.duty-meta {
+  margin: 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.duty-right {
+  display: grid;
+  gap: 8px;
+  text-align: right;
+}
+
+.duty-time {
+  color: #4b5563;
+  font-weight: 700;
+}
+
+.duties-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.duties-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.duties-filters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  align-items: end;
+  margin-bottom: 18px;
+}
+
+.duties-filters label {
+  display: block;
+  margin-bottom: 6px;
+  color: #5f5d5a;
+  font-weight: 700;
+}
+
+.duties-filters input,
+.duties-filters select {
+  width: 100%;
+  border: 1px solid #d8d2c8;
+  border-radius: 10px;
+  padding: 11px 12px;
+  background: #fff;
+  font: inherit;
+}
+
+.export-btn,
+.status-update-button,
+.secondary-btn {
+  background: linear-gradient(120deg, #ff7e00, #ff9f2f);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 11px 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.secondary-btn {
+  background: #fff;
+  color: #5f4430;
+  border: 1px solid #e7dac7;
+}
+
+.duties-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+}
+
+.details-panel {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 18px;
+}
+
+.details-content {
+  display: grid;
+  gap: 14px;
+}
+
+.detail-row {
+  display: grid;
+  gap: 6px;
+}
+
+.detail-row span {
+  color: #5f5f5f;
+  font-weight: 700;
+}
+
+.detail-row strong {
+  font-size: 16px;
+}
+
+.detail-row p {
+  margin: 0;
+  color: #4f4a44;
+  line-height: 1.6;
+}
+
+.status-update-row {
+  display: grid;
+  gap: 8px;
+}
+
+.duties-page .card-heading h2,
+.duties-page .card-heading p {
+  margin: 0;
+}
+
+.timeline-card {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 18px;
+  margin-top: 18px;
+}
+
+.timeline-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.timeline-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid #ece3d8;
+}
+
+.timeline-item .duty-title {
+  margin: 0;
+}
+
+.timeline-item .duty-time {
+  color: #4b5563;
+  font-weight: 700;
+}
+
+.selected-row {
+  background: #fffbf2;
+}
+
+.duties-page .card-heading {
+  margin-bottom: 12px;
+}
+
+.duties-page .card-heading h2 {
+  font-size: 26px;
+}
+
+.duties-page .card-heading p {
+  margin-top: 8px;
+  color: #6b7280;
+}
+
 .profile-meta {
   display: flex;
   align-items: center;
