@@ -56,7 +56,7 @@ const createBooking = async (req, res) => {
     });
 
     // Send multi-channel notifications (Email & SMS) if devotee info is available
-    if (devoteeEmail && (devoteePhone || contactNumber)) {
+    if (devoteeEmail || devoteePhone || contactNumber) {
       const devotee = { name: devoteeName, email: devoteeEmail, phone: devoteePhone || contactNumber };
       await sendBookingConfirmation(devotee, {
         service,
@@ -133,7 +133,7 @@ const createDonation = async (req, res) => {
     });
 
     // Send multi-channel notifications (Email & SMS) if donor info is available
-    if (donorEmail && (donorPhone || contactNumber)) {
+    if (donorEmail || donorPhone || contactNumber) {
       const donor = { name: donorName.trim(), email: donorEmail, phone: donorPhone || contactNumber };
       await sendDonationReceipt(donor, {
         amount: numericAmount,
@@ -413,7 +413,7 @@ const createPrasadamOrder = async (req, res) => {
     });
 
     // Send multi-channel notifications (Email & SMS) if devotee info is available
-    if (email && phone) {
+    if (email || phone) {
       const devotee = { name: devoteeName, email, phone };
       await sendPrasadamOrderConfirmation(devotee, {
         item: itemName,

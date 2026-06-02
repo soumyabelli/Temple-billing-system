@@ -218,7 +218,7 @@ const DevoteeDashboard = () => {
   const [donationError, setDonationError] = useState("");
   const [donationSuccess, setDonationSuccess] = useState("");
   const [profileEditMode, setProfileEditMode] = useState(false);
-  const [profileForm, setProfileForm] = useState({ name: "", email: "" });
+  const [profileForm, setProfileForm] = useState({ name: "", email: "", phone: "", address: "", place: "" });
   const [profileMessage, setProfileMessage] = useState("");
   const [profileError, setProfileError] = useState("");
   const [prasadamForm, setPrasadamForm] = useState({
@@ -329,6 +329,9 @@ const DevoteeDashboard = () => {
         setProfileForm({
           name: profileRes?.profile?.name || user?.name || "",
           email: profileRes?.profile?.email || user?.email || "",
+          phone: profileRes?.profile?.phone || "",
+          address: profileRes?.profile?.address || "",
+          place: profileRes?.profile?.place || "",
         });
         setPoojaTypes(getPoojaTypes());
         setBookingService((prevService) => {
@@ -386,6 +389,7 @@ const DevoteeDashboard = () => {
       const payload = {
         devoteeName: profileData.name,
         devoteeEmail: profileData.email,
+        devoteePhone: profileData.phone,
         service: bookingService,
         datetime: bookingDatetime,
         amount: bookingAmount,
@@ -430,6 +434,7 @@ const DevoteeDashboard = () => {
       await createDevoteeDonation({
         donorName: profileData.name,
         donorEmail: profileData.email,
+        donorPhone: profileData.phone,
         amount: donationAmount,
         category: donationCategory,
         paymentMethod: donationMethod,
@@ -574,6 +579,7 @@ const DevoteeDashboard = () => {
       await createPrasadamOrder({
         devoteeName: profileData.name,
         email: profileData.email,
+        phone: profileData.phone,
         ...prasadamForm,
       });
       const ordersRes = await getPrasadamOrders(user?.email);
@@ -610,13 +616,17 @@ const DevoteeDashboard = () => {
         currentEmail: profileData.email,
         name: profileForm.name,
         email: profileForm.email,
+        phone: profileForm.phone,
+        address: profileForm.address,
+        place: profileForm.place,
       });
       setProfileData(res.profile);
       if (updateUser) {
         updateUser({ name: res.profile.name, email: res.profile.email, role: res.profile.role });
       }
       setProfileEditMode(false);
-      setProfileMessage("Profile updated successfully.");
+      setProfileMessage("✅ Profile updated successfully!");
+      setTimeout(() => setProfileMessage(""), 3000);
     } catch (error) {
       setProfileError(error?.response?.data?.error || "Unable to update profile.");
     }
@@ -1502,28 +1512,58 @@ const DevoteeDashboard = () => {
         {profileMessage && <div className="mt-4 rounded-xl bg-[#e8f7ef] p-3 text-sm text-[#1c6f3d]">{profileMessage}</div>}
         {profileError && <div className="mt-4 rounded-xl bg-[#fde8e8] p-3 text-sm text-[#a12525]">{profileError}</div>}
         {profileEditMode && (
-          <div className="mt-4 grid gap-3 rounded-2xl border border-[#f0f0f0] bg-[#fbfaf8] p-4 sm:grid-cols-2">
-            <input className={glassInput} value={profileForm.name} onChange={(e) => setProfileForm((prev) => ({ ...prev, name: e.target.value }))} placeholder="Name" />
-            <input className={glassInput} value={profileForm.email} onChange={(e) => setProfileForm((prev) => ({ ...prev, email: e.target.value }))} placeholder="Email" />
-            <button type="button" onClick={handleProfileSave} className={`${glassButton} sm:col-span-2`}>Save Profile</button>
+          <div className="mt-4 grid gap-3 rounded-2xl border border-[#f0f0f0] bg-[#fbfaf8] p-4">
+            <div>
+              <label className="block text-sm font-medium text-[#5d5d5d] mb-2">Full Name *</label>
+              <input className={glassInput} value={profileForm.name} onChange={(e) => setProfileForm((prev) => ({ ...prev, name: e.target.value }))} placeholder="Enter full name" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-[#5d5d5d] mb-2">Email Address *</label>
+              <input className={glassInput} value={profileForm.email} onChange={(e) => setProfileForm((prev) => ({ ...prev, email: e.target.value }))} placeholder="Enter email" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-[#5d5d5d] mb-2">Phone Number *</label>
+              <input className={glassInput} value={profileForm.phone} onChange={(e) => setProfileForm((prev) => ({ ...prev, phone: e.target.value }))} placeholder="Enter 10-digit phone number" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-[#5d5d5d] mb-2">Place/City *</label>
+              <input className={glassInput} value={profileForm.place} onChange={(e) => setProfileForm((prev) => ({ ...prev, place: e.target.value }))} placeholder="Enter place or city" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-[#5d5d5d] mb-2">Address *</label>
+              <textarea rows="3" className={glassInput} value={profileForm.address} onChange={(e) => setProfileForm((prev) => ({ ...prev, address: e.target.value }))} placeholder="Enter complete address" />
+            </div>
+            <button type="button" onClick={handleProfileSave} className={`${glassButton} col-span-full mt-4`}>💾 Save Changes</button>
           </div>
         )}
-        <div className="mt-6 grid gap-4 sm:grid-cols-2">
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <div className={glassItem}>
-            <p className="text-sm text-[#7a6f5d]">Name</p>
-            <p className="mt-2 text-xl font-semibold">{devoteeName}</p>
+            <p className="text-sm text-[#7a6f5d]">Full Name</p>
+            <p className="mt-2 text-lg font-semibold text-[#1f1f1f]">{profileData.name || devoteeName}</p>
           </div>
           <div className={glassItem}>
-            <p className="text-sm text-[#7a6f5d]">Email</p>
-            <p className="mt-2 text-xl font-semibold">{profileData.email}</p>
+            <p className="text-sm text-[#7a6f5d]">Email Address</p>
+            <p className="mt-2 text-lg font-semibold text-[#1f1f1f]">{profileData.email}</p>
           </div>
           <div className={glassItem}>
+            <p className="text-sm text-[#7a6f5d]">Phone Number</p>
+            <p className="mt-2 text-lg font-semibold text-[#1f1f1f]">{profileData.phone || "Not provided"}</p>
+          </div>
+          <div className={glassItem}>
+            <p className="text-sm text-[#7a6f5d]">Place/City</p>
+            <p className="mt-2 text-lg font-semibold text-[#1f1f1f]">{profileData.place || "Not provided"}</p>
+          </div>
+          <div className={`${glassItem} sm:col-span-2 lg:col-span-1`}>
             <p className="text-sm text-[#7a6f5d]">Role</p>
-            <p className="mt-2 text-xl font-semibold">{profileData.role}</p>
+            <p className="mt-2 text-lg font-semibold text-[#1f1f1f]">{profileData.role || "devotee"}</p>
           </div>
           <div className={glassItem}>
             <p className="text-sm text-[#7a6f5d]">Member Since</p>
-            <p className="mt-2 text-xl font-semibold">{profileData.memberSince}</p>
+            <p className="mt-2 text-lg font-semibold text-[#1f1f1f]">{profileData.memberSince || "2026"}</p>
+          </div>
+          <div className={`${glassItem} lg:col-span-2`}>
+            <p className="text-sm text-[#7a6f5d]">Address</p>
+            <p className="mt-2 text-sm text-[#1f1f1f] leading-relaxed">{profileData.address || "Not provided"}</p>
           </div>
         </div>
       </div>
