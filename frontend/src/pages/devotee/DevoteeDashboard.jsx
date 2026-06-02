@@ -19,6 +19,7 @@ import {
   getPrasadamOrders,
   createPrasadamOrder,
   cancelPrasadamOrder,
+  markNotificationAsRead,
 } from "../../services/devoteeService";
 
 const menuItems = [
@@ -39,6 +40,19 @@ const formatCurrency = (value) => {
   if (typeof value === "number") return `₹ ${value.toLocaleString()}`;
   if (typeof value === "string" && value.trim()) return value;
   return "₹ 0";
+};
+
+// Helper function to check if a booking is upcoming (datetime in future)
+const isUpcomingBooking = (booking) => {
+  if (!booking.datetime) return false;
+  const bookingTime = new Date(booking.datetime).getTime();
+  const now = new Date().getTime();
+  return bookingTime > now;
+};
+
+// Helper function to count unread notifications
+const countUnreadNotifications = (notifications = []) => {
+  return notifications.filter((n) => !n.read).length;
 };
 
 const glassCard =
@@ -230,6 +244,10 @@ const DevoteeDashboard = () => {
 
   const devoteeName = useMemo(() => profileData.name || user?.name || "Devotee User", [profileData.name, user?.name]);
 
+  const upcomingBookings = useMemo(() => bookingsData.filter(isUpcomingBooking), [bookingsData]);
+
+  const unreadNotificationsCount = useMemo(() => countUnreadNotifications(notificationsData), [notificationsData]);
+
   const formatNotifications = (notifications = []) =>
     (notifications || []).map((notification) => ({
       ...notification,
@@ -252,7 +270,7 @@ const DevoteeDashboard = () => {
     () => [
       {
         title: "Upcoming Bookings",
-        value: `${bookingsData.length}`,
+        value: `${upcomingBookings.length}`,
         action: "View Details",
         tone: "bg-[#f2ecff] text-[#6b3df0]",
         icon: "calendar",
@@ -272,7 +290,7 @@ const DevoteeDashboard = () => {
         icon: "bag",
       },
     ],
-    [bookingsData.length, totalDonations, prasadamOrdersCount]
+    [upcomingBookings.length, totalDonations, prasadamOrdersCount]
   );
 
   useEffect(() => {
@@ -643,8 +661,8 @@ const DevoteeDashboard = () => {
             </button>
           </div>
           <div className="space-y-3">
-            {bookingsData.length > 0 ? (
-              bookingsData.slice(0, 3).map((item) => (
+            {upcomingBookings.length > 0 ? (
+              upcomingBookings.slice(0, 3).map((item) => (
                 <div key={`${item.service}-${item.datetime}-${item._id || Math.random()}`} className={glassItem}>
                   <div className="flex items-center justify-between gap-3">
                     <p className="text-xl font-bold">{item.service}</p>
@@ -656,7 +674,7 @@ const DevoteeDashboard = () => {
                 </div>
               ))
             ) : (
-              <div className={`${glassItem} text-[#5d5d5d]`}>No bookings found yet.</div>
+              <div className={`${glassItem} text-[#5d5d5d]`}>No upcoming bookings found yet.</div>
             )}
           </div>
           <div className="pt-4 text-right">
@@ -753,8 +771,8 @@ const DevoteeDashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {bookingsData.length > 0 ? (
-                  bookingsData.map((row) => (
+                {upcomingBookings.length > 0 ? (
+                  upcomingBookings.map((row) => (
                     <tr key={`${row.service}-${row.datetime || row._id}`} className="border-t border-[#f0f0f0]">
                       <td className="px-5 py-3 text-base font-semibold">{row.service}</td>
                       <td className="px-5 py-3 text-sm text-[#3f3f3f]">{row.datetime ? new Date(row.datetime).toLocaleString() : "-"}</td>
@@ -769,7 +787,7 @@ const DevoteeDashboard = () => {
                 ) : (
                   <tr>
                     <td colSpan="4" className="px-5 py-6 text-center text-[#5d5d5d]">
-                      No bookings available.
+                      No upcoming bookings available.
                     </td>
                   </tr>
                 )}
@@ -1421,12 +1439,44 @@ const DevoteeDashboard = () => {
         <div className="mt-6 space-y-4">
           {notificationsData.length > 0 ? (
             notificationsData.map((item) => (
-              <div key={`${item.title}-${item.date}-${item._id || Math.random()}`} className={glassItem}>
-                <p className="text-xl font-semibold">{item.title}</p>
-                <p className="mt-1 text-sm text-[#5d5d5d]">{item.date}</p>
-                {item.message ? (
-                  <p className="mt-2 text-sm text-[#6b6b6b]">{item.message}</p>
-                ) : null}
+              <div 
+                key={`${item.title}-${item.date}-${item._id || Math.random()}`} 
+                className={`${glassItem} cursor-pointer transition hover:bg-white/70 ${!item.read ? 'border-l-4 border-l-[#e4262c] bg-white/65' : 'bg-white/55'}`}
+                onClick={() => {
+                  // Mark as read when clicked
+                  if (!item.read && item._id) {
+                    markNotificationAsRead(item._id)
+                      .then(() => {
+                        // Update local state
+                        setNotificationsData((prev) =>
+                          prev.map((n) =>
+                            n._id === item._id ? { ...n, read: true, readAt: new Date() } : n
+                          )
+                        );
+                      })
+                      .catch((err) => console.error("Failed to mark notification as read:", err));
+                  }
+                }}
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <p className={`text-xl font-semibold ${!item.read ? 'text-[#e4262c]' : 'text-[#1f1f1f]'}`}>
+                      {item.title}
+                      {!item.read && <span className="ml-2 inline-block h-2 w-2 rounded-full bg-[#e4262c]"></span>}
+                    </p>
+                    <p className="mt-1 text-sm text-[#5d5d5d]">{item.date}</p>
+                    {item.message ? (
+                      <p className="mt-2 text-sm text-[#6b6b6b]">{item.message}</p>
+                    ) : null}
+                  </div>
+                  {!item.read && (
+                    <div className="flex-shrink-0 rounded-full bg-[#e4262c] p-1">
+                      <svg className="h-4 w-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.707-10.707a1 1 0 00-1.414-1.414L9 9.586 7.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
               </div>
             ))
           ) : (
@@ -1634,9 +1684,11 @@ const DevoteeDashboard = () => {
               <div className="flex items-center gap-4">
                 <button type="button" onClick={() => setActivePage("Notifications")} className="relative mr-1 hidden rounded-xl bg-white/80 p-2 shadow-sm transition hover:scale-105 lg:block">
                   <AppIcon name="bell" className="h-7 w-7 text-[#302d2b]" />
-                  <span className="absolute -right-1 -top-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-[#e4262c] text-[10px] font-bold text-white">
-                    {notificationsData.length}
-                  </span>
+                  {unreadNotificationsCount > 0 && (
+                    <span className="absolute -right-1 -top-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-[#e4262c] text-[10px] font-bold text-white">
+                      {unreadNotificationsCount}
+                    </span>
+                  )}
                 </button>
                 <div className="rounded-xl border border-[#ead6c0] bg-white/70 px-4 py-2 text-sm font-bold text-[#7e4310]">
                   {currentDateTime.toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "short", day: "numeric" })} {currentDateTime.toLocaleTimeString()}

@@ -17,6 +17,7 @@ const {
   createPrasadamOrder,
   cancelPrasadamOrder,
   updateBookingStatus,
+  markNotificationAsRead,
 } = require("../controllers/devoteeController");
 
 const router = express.Router();
@@ -27,6 +28,7 @@ router.patch("/bookings/:id/status", updateBookingStatus);
 router.get("/donations", getDonations);
 router.post("/donations", createDonation);
 router.get("/notifications", getNotifications);
+router.patch("/notifications/:id/read", markNotificationAsRead);
 router.get("/profile", getProfile);
 router.put("/profile", updateProfile);
 router.get("/events", getEvents);

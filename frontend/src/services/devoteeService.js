@@ -79,3 +79,8 @@ export const updateBookingStatus = async (id, status) => {
   const response = await axios.patch(`${API_BASE}/bookings/${id}/status`, { status });
   return response.data;
 };
+
+export const markNotificationAsRead = async (notificationId) => {
+  const response = await axios.patch(`${API_BASE}/notifications/${notificationId}/read`);
+  return response.data;
+};
