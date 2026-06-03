@@ -6,11 +6,13 @@ const donationRoutes = require("./routes/donationRoutes");
 const devoteeRoutes = require("./routes/devoteeRoutes");
 const staffRoutes = require("./routes/staffRoutes");
 const leaveRoutes = require("./routes/leaveRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use("/api/notifications", notificationRoutes);
 
 app.get("/api/health", (req, res) => {
   res.status(200).json({ status: "ok", service: "temple-billing-backend" });

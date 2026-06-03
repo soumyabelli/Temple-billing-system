@@ -71,8 +71,10 @@ const Sidebar = ({ activeItem, activePath, onSelect, onNavigate, collapsed, setC
                       }
                     } else {
                       if (item.subItems) {
-                        setOpenGroup(item.title);
-                      }
+  setOpenGroup(
+    openGroup === item.title ? null : item.title
+  );
+}
                       if (item.path) {
                         onNavigate(item.path);
                       }

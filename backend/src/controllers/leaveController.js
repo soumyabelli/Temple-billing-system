@@ -1,6 +1,6 @@
 const Leave = require("../models/Leave");
 const { createStaffNotification } = require("../utils/notificationService");
-
+const Notification = require("../models/Notification");
 const LEAVE_STATUSES = ["Pending", "Approved", "Rejected"];
 
 const parseISODate = (value) => {
@@ -87,6 +87,13 @@ exports.applyLeave = async (req, res) => {
       message: "Your leave request has been submitted to Admin.",
       audienceId: staffId,
       category: "leave",
+    });
+
+    await Notification.create({
+      title: "Leave Request",
+      message: `${leave.staffName} submitted a leave request`,
+      audienceRole: "admin",
+      category: "leave"
     });
 
     return res.json({
