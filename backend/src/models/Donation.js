@@ -45,6 +45,18 @@ const donationSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    razorpayOrderId: {
+      type: String,
+      trim: true,
+    },
+    razorpayPaymentId: {
+      type: String,
+      trim: true,
+    },
+    razorpaySignature: {
+      type: String,
+      trim: true,
+    },
 
     eventId: {
       type: mongoose.Schema.Types.ObjectId,

@@ -59,3 +59,39 @@ Date & Time: 2026-06-04T22:59
 Amount: ₹2201
 Thank you!
 
+[2026-06-03T06:56:36.315Z] EMAIL
+To: sonakshi@gmail.com
+Subject: Donation Receipt
+Donation Receipt
+Amount: ₹501
+Category: Annadanam
+Transaction ID: N/A
+Thank you for your donation!
+
+[2026-06-03T07:21:22.521Z] EMAIL
+To: sonakshi@gmail.com
+Subject: Donation Receipt
+Donation Receipt
+Amount: ₹501
+Category: General
+Transaction ID: N/A
+Thank you for your donation!
+
+[2026-06-03T07:21:33.180Z] EMAIL
+To: sonakshi@gmail.com
+Subject: Prasadam Order Confirmation
+Prasadam Order Confirmed
+Item: Laddu Prasadam
+Quantity: 1
+Amount: ₹151
+Thank you!
+
+[2026-06-03T07:21:47.106Z] EMAIL
+To: sonakshi@gmail.com
+Subject: Donation Receipt
+Donation Receipt
+Amount: ₹501
+Category: Pooja
+Transaction ID: N/A
+Thank you for your donation!
+
