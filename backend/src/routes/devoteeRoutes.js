@@ -8,6 +8,9 @@ const {
   getProfile,
   getEvents,
   createEvent,
+  getFestivalOverview,
+  updateEventStatus,
+  updateEvent,
   submitSupportRequest,
   updateProfile,
   getSupportRequests,
@@ -33,6 +36,9 @@ router.get("/profile", getProfile);
 router.put("/profile", updateProfile);
 router.get("/events", getEvents);
 router.post("/events", createEvent);
+router.get("/events/overview", getFestivalOverview);
+router.patch("/events/:id/status", updateEventStatus);
+router.patch("/events/:id", updateEvent);
 router.post("/support", submitSupportRequest);
 router.get("/support", getSupportRequests);
 router.patch("/support/:id", replySupportRequest);

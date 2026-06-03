@@ -7,6 +7,11 @@ const bookingSchema = new mongoose.Schema(
       ref: "User",
       sparse: true,
     },
+    eventId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Event",
+      sparse: true,
+    },
     devoteeName: { type: String, trim: true, required: true },
     devoteeEmail: { type: String, trim: true, lowercase: true },
     devoteePhone: { type: String, trim: true },
@@ -20,6 +25,8 @@ const bookingSchema = new mongoose.Schema(
     },
     contactNumber: { type: String, trim: true },
     notes: { type: String, trim: true },
+    // whether this booking has been counted towards an event's registrations/collection
+    counted: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

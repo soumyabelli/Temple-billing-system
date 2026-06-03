@@ -5,7 +5,7 @@ const Event = require("../models/Event");
 const SupportRequest = require("../models/SupportRequest");
 const User = require("../models/User");
 const PrasadamOrder = require("../models/PrasadamOrder");
-const { createStaffBroadcastNotifications } = require("../utils/notificationService");
+const { createStaffBroadcastNotifications, createBroadcastNotifications } = require("../utils/notificationService");
 const { sendBookingConfirmation, sendDonationReceipt, sendPrasadamOrderConfirmation } = require("../utils/communicationService");
 const PRASADAM_MENU = {
   "Laddu Prasadam": 151,
@@ -29,7 +29,7 @@ const getBookings = async (req, res) => {
 
 const createBooking = async (req, res) => {
   try {
-    const { devoteeName, devoteeEmail, devoteePhone, service, datetime, amount, status, contactNumber, notes, devoteeId } = req.body;
+    const { devoteeName, devoteeEmail, devoteePhone, service, datetime, amount, status, contactNumber, notes, devoteeId, eventId } = req.body;
 
     if (!devoteeName || !service || !datetime || amount == null) {
       return res.status(400).json({ error: "Missing required booking fields." });
@@ -37,6 +37,7 @@ const createBooking = async (req, res) => {
 
     const booking = await Booking.create({
       devoteeId: devoteeId || undefined,
+      eventId: eventId || undefined,
       devoteeName,
       devoteeEmail: devoteeEmail ? String(devoteeEmail).toLowerCase() : undefined,
       devoteePhone: devoteePhone || contactNumber,
@@ -64,6 +65,19 @@ const createBooking = async (req, res) => {
         amount,
         status: status || "Pending",
       });
+    }
+
+    // If this booking is linked to an event and already confirmed, update event aggregates
+    if (eventId && (booking.status === "Confirmed" || (status && status === "Confirmed"))) {
+      try {
+        await Event.findByIdAndUpdate(String(eventId), {
+          $inc: { registrations: 1, collection: Number(amount) || 0 },
+        });
+        booking.counted = true;
+        await booking.save();
+      } catch (err) {
+        console.error("Failed to update event aggregates for booking:", err);
+      }
     }
 
     return res.status(201).json({ booking });
@@ -97,6 +111,7 @@ const createDonation = async (req, res) => {
       transactionId,
       notes,
       donatedBy,
+      eventId,
     } = req.body;
 
     if (!donorName || amount == null) {
@@ -123,6 +138,7 @@ const createDonation = async (req, res) => {
       transactionId,
       notes,
       status: "Completed",
+      eventId: eventId || undefined,
       donatedBy: donatedBy || undefined,
     });
 
@@ -142,6 +158,15 @@ const createDonation = async (req, res) => {
       });
     }
 
+    // If donation is linked to an event, increment the event's collection
+    if (eventId) {
+      try {
+        await Event.findByIdAndUpdate(String(eventId), { $inc: { collection: numericAmount } });
+      } catch (err) {
+        console.error("Failed to update event collection for donation:", err);
+      }
+    }
+
     return res.status(201).json({ donation });
   } catch (error) {
     return res.status(500).json({ error: "Unable to create donation." });
@@ -151,16 +176,20 @@ const createDonation = async (req, res) => {
 const getNotifications = async (req, res) => {
   try {
     const email = String(req.query.email || "").trim().toLowerCase();
-    
-    // Devotees should ONLY see their own notifications, not broadcasts
-    if (!email) {
-      return res.status(400).json({ error: "Email is required to fetch your notifications." });
+    // If email provided, return user-specific notifications and broadcasts
+    if (email) {
+      const user = await User.findOne({ email }).select("role");
+      const role = user?.role || null;
+
+      const orFilters = [{ audienceEmail: email }, { audienceEmail: { $exists: false } }];
+      if (role) orFilters.push({ audienceRole: role });
+
+      const notifications = await Notification.find({ $or: orFilters }).sort({ createdAt: -1 });
+      return res.status(200).json({ notifications });
     }
-    
-    const notifications = await Notification.find({
-      audienceEmail: email,
-    }).sort({ createdAt: -1 });
-    
+
+    // No email: return all notifications for admin/staff views
+    const notifications = await Notification.find().sort({ createdAt: -1 });
     return res.status(200).json({ notifications });
   } catch (error) {
     return res.status(500).json({ error: "Failed to load notifications." });
@@ -214,18 +243,26 @@ const getEvents = async (req, res) => {
 
 const createEvent = async (req, res) => {
   try {
-    const { title, date, location, description } = req.body;
+    const { title, date, location, description, imageUrl, slots, registrations, collection, status } = req.body;
 
     if (!title || !date || !location) {
       return res.status(400).json({ error: "title, date and location are required." });
     }
 
-    const event = await Event.create({
+    const eventData = {
       title,
       date,
       location,
       description,
-    });
+      image: imageUrl || undefined,
+    };
+
+    if (slots != null) eventData.slots = Number(slots) || 0;
+    if (registrations != null) eventData.registrations = Number(registrations) || 0;
+    if (collection != null) eventData.collection = Number(collection) || 0;
+    if (status) eventData.status = status;
+
+    const event = await Event.create(eventData);
 
     await createStaffBroadcastNotifications({
       title: "Festival Announcement",
@@ -235,7 +272,130 @@ const createEvent = async (req, res) => {
 
     return res.status(201).json({ event });
   } catch (error) {
+    console.error("createEvent error:", error);
     return res.status(500).json({ error: "Failed to create event." });
+  }
+};
+
+const getFestivalOverview = async (req, res) => {
+  try {
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const tomorrowStart = new Date(todayStart);
+    tomorrowStart.setDate(tomorrowStart.getDate() + 1);
+    const upcomingFestivals = await Event.countDocuments({ date: { $gte: todayStart }, status: { $in: ["Upcoming", "Active"] } });
+    const todaysEvents = await Event.countDocuments({ date: { $gte: todayStart, $lt: tomorrowStart } });
+
+    // Current month range
+    const monthStart = new Date(todayStart.getFullYear(), todayStart.getMonth(), 1);
+    const nextMonthStart = new Date(todayStart.getFullYear(), todayStart.getMonth() + 1, 1);
+
+    const currentMonthFestivals = await Event.countDocuments({ date: { $gte: monthStart, $lt: nextMonthStart } });
+
+    // Aggregate totals overall
+    const agg = await Event.aggregate([
+      { $group: { _id: null, totalRegistrations: { $sum: "$registrations" }, totalCollection: { $sum: "$collection" } } },
+    ]);
+
+    let totalRegistrations = (agg[0] && agg[0].totalRegistrations) || 0;
+    // Only use Event.collection for festival revenue — do not fall back to global bookings
+    let festivalRevenue = (agg[0] && agg[0].totalCollection) || 0;
+
+    // Monthly aggregates (prefer event collection/registrations if present)
+    const monthAgg = await Event.aggregate([
+      { $match: { date: { $gte: monthStart, $lt: nextMonthStart } } },
+      { $group: { _id: null, monthRegistrations: { $sum: "$registrations" }, monthCollection: { $sum: "$collection" } } },
+    ]);
+
+    const monthlyRegistrations = (monthAgg[0] && monthAgg[0].monthRegistrations) || 0;
+    const monthlyRevenue = (monthAgg[0] && monthAgg[0].monthCollection) || 0;
+
+    // Fallback only for registrations (keep overall booking counts if events don't record registrations)
+    if (!totalRegistrations) {
+      totalRegistrations = await Booking.countDocuments();
+    }
+
+    return res.status(200).json({
+      upcomingFestivals,
+      todaysEvents,
+      currentMonthFestivals,
+      totalRegistrations,
+      festivalRevenue,
+      monthlyRegistrations,
+      monthlyRevenue,
+    });
+  } catch (error) {
+    console.error("getFestivalOverview error:", error);
+    return res.status(500).json({ error: "Failed to load festival overview." });
+  }
+};
+
+const updateEventStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const allowed = ["Upcoming", "Active", "Completed", "Cancelled"];
+    if (!status || !allowed.includes(status)) {
+      return res.status(400).json({ error: "Invalid status provided." });
+    }
+
+    const event = await Event.findById(id);
+    if (!event) return res.status(404).json({ error: "Event not found." });
+
+    event.status = status;
+    await event.save();
+
+    await Notification.create({
+      title: "Event Status Updated",
+      message: `${event.title} status changed to ${status}.`,
+    });
+
+    return res.status(200).json({ event });
+  } catch (error) {
+    console.error("updateEventStatus error:", error);
+    return res.status(500).json({ error: "Failed to update event status." });
+  }
+};
+
+const updateEvent = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      title,
+      date,
+      location,
+      description,
+      imageUrl,
+      slots,
+      registrations,
+      collection,
+      status,
+    } = req.body;
+
+    const event = await Event.findById(id);
+    if (!event) return res.status(404).json({ error: "Event not found." });
+
+    if (title && String(title).trim()) event.title = String(title).trim();
+    if (date) event.date = new Date(date);
+    if (location && String(location).trim()) event.location = String(location).trim();
+    if (description != null) event.description = String(description || "").trim();
+    if (imageUrl != null) event.image = imageUrl || undefined;
+    if (slots != null) event.slots = Number(slots) || 0;
+    if (registrations != null) event.registrations = Number(registrations) || 0;
+    if (collection != null) event.collection = Number(collection) || 0;
+    if (status && ["Upcoming", "Active", "Completed", "Cancelled"].includes(status)) event.status = status;
+
+    await event.save();
+
+    await Notification.create({
+      title: "Event Updated",
+      message: `${event.title} has been updated.`,
+    });
+
+    return res.status(200).json({ event });
+  } catch (error) {
+    console.error("updateEvent error:", error);
+    return res.status(500).json({ error: "Failed to update event." });
   }
 };
 
@@ -355,8 +515,26 @@ const replySupportRequest = async (req, res) => {
 
 const createNotification = async (req, res) => {
   try {
-    const { title, message } = req.body;
+    const { title, message, audienceRole, broadcast, category } = req.body;
     if (!title || !message) return res.status(400).json({ error: "title and message are required." });
+
+    // If admin wants to broadcast to a role or all, create per-user notifications
+    if (broadcast || audienceRole) {
+      try {
+        if (String(audienceRole || "").toLowerCase() === "staff") {
+          const docs = await createStaffBroadcastNotifications({ title, message, category });
+          return res.status(201).json({ notifications: docs });
+        }
+
+        // default: broadcast to devotees or to specified role
+        const docs = await createBroadcastNotifications({ title, message, category, role: audienceRole });
+        return res.status(201).json({ notifications: docs });
+      } catch (err) {
+        console.error("broadcast create error:", err);
+        return res.status(500).json({ error: "Failed to broadcast notification." });
+      }
+    }
+
     const notification = await Notification.create({ title, message });
     return res.status(201).json({ notification });
   } catch (error) {
@@ -457,14 +635,31 @@ const updateBookingStatus = async (req, res) => {
     }
     const booking = await Booking.findById(id);
     if (!booking) return res.status(404).json({ error: "Booking not found." });
+
+    const previousStatus = booking.status;
     booking.status = status;
+
+    // If changing to Confirmed and linked to an event, increment event aggregates once
+    if (booking.eventId && status === "Confirmed" && !booking.counted) {
+      try {
+        await Event.findByIdAndUpdate(String(booking.eventId), {
+          $inc: { registrations: 1, collection: Number(booking.amount) || 0 },
+        });
+        booking.counted = true;
+      } catch (err) {
+        console.error("Failed to update event aggregates on booking confirm:", err);
+      }
+    }
+
     await booking.save();
+
     await Notification.create({
       title: "Booking Status Updated",
       message: `Your ${booking.service} booking is now ${status}.`,
       audienceEmail: booking.devoteeEmail || undefined,
     });
-    return res.status(200).json({ booking });
+
+    return res.status(200).json({ booking, previousStatus });
   } catch (error) {
     return res.status(500).json({ error: "Failed to update booking status." });
   }
@@ -505,6 +700,9 @@ module.exports = {
   getProfile,
   getEvents,
   createEvent,
+  getFestivalOverview,
+  updateEventStatus,
+  updateEvent,
   submitSupportRequest,
   updateProfile,
   getSupportRequests,

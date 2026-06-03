@@ -46,6 +46,12 @@ const donationSchema = new mongoose.Schema(
       trim: true,
     },
 
+    eventId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Event",
+      sparse: true,
+    },
+
     notes: {
       type: String,
       trim: true,

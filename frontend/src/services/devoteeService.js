@@ -8,13 +8,23 @@ export const getDevoteeBookings = async (email) => {
 };
 
 export const getDevoteeDonations = async (email) => {
-  const response = await axios.get(`${API_BASE}/donations`, { params: email ? { email } : {} });
-  return response.data;
+  try {
+    const response = await axios.get(`${API_BASE}/donations`, { params: email ? { email } : {} });
+    return response.data;
+  } catch (error) {
+    console.error("getDevoteeDonations error:", error?.response || error.message || error);
+    return { donations: [] };
+  }
 };
 
 export const getDevoteeNotifications = async (email) => {
-  const response = await axios.get(`${API_BASE}/notifications`, { params: email ? { email } : {} });
-  return response.data;
+  try {
+    const response = await axios.get(`${API_BASE}/notifications`, { params: email ? { email } : {} });
+    return response.data;
+  } catch (error) {
+    console.error("getDevoteeNotifications error:", error?.response || error.message || error);
+    return { notifications: [] };
+  }
 };
 
 export const getDevoteeProfile = async (email) => {
@@ -31,8 +41,14 @@ export const getDevoteeEvents = async () => {
   return response.data;
 };
 export const createDevoteeDonation = async (payload) => {
-  const response = await axios.post(`${API_BASE}/donations`, payload);
-  return response.data;
+  try {
+    const response = await axios.post(`${API_BASE}/donations`, payload);
+    return response.data;
+  } catch (error) {
+    console.error("createDevoteeDonation error:", error?.response || error.message || error);
+    // rethrow so callers can handle errors consistently
+    throw error;
+  }
 };
 export const createDevoteeBooking = async (payload) => {
   const response = await axios.post(`${API_BASE}/bookings`, payload);

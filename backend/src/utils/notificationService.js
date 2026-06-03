@@ -81,8 +81,47 @@ const createStaffBroadcastNotifications = async ({ title, message, category }) =
   return Notification.insertMany(docs);
 };
 
+const createBroadcastNotifications = async ({ title, message, category, role }) => {
+  if (!title || !message) return [];
+
+  // target users by role or all users if no role provided
+  const filter = role ? { role: String(role).trim().toLowerCase() } : {};
+  const users = await User.find(filter).select("_id email name");
+
+  const recipients = new Map();
+  users.forEach((user) => {
+    const key = normalizeEmail(user.email) || user._id.toString();
+    recipients.set(key, {
+      audienceId: user._id.toString(),
+      audienceEmail: normalizeEmail(user.email),
+    });
+  });
+
+  const docs = [...recipients.values()].map((recipient) => ({
+    title: String(title).trim(),
+    message: String(message).trim(),
+    audienceId: recipient.audienceId,
+    audienceEmail: recipient.audienceEmail || undefined,
+    category: category ? String(category).trim() : undefined,
+    read: false,
+  }));
+
+  if (!docs.length) {
+    return Notification.create({
+      title: String(title).trim(),
+      message: String(message).trim(),
+      audienceRole: role ? String(role).trim().toLowerCase() : undefined,
+      category: category ? String(category).trim() : undefined,
+      read: false,
+    });
+  }
+
+  return Notification.insertMany(docs);
+};
+
 module.exports = {
   createNotification,
   createStaffNotification,
   createStaffBroadcastNotifications,
+  createBroadcastNotifications,
 };
