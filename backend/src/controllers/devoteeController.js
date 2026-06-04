@@ -5,6 +5,9 @@ const Event = require("../models/Event");
 const SupportRequest = require("../models/SupportRequest");
 const User = require("../models/User");
 const PrasadamOrder = require("../models/PrasadamOrder");
+const { isDbConnected } = require("../config/db");
+const crypto = require("crypto");
+const Razorpay = require("razorpay");
 const { createStaffBroadcastNotifications, createBroadcastNotifications } = require("../utils/notificationService");
 const { sendBookingConfirmation, sendDonationReceipt, sendPrasadamOrderConfirmation } = require("../utils/communicationService");
 const PRASADAM_MENU = {
@@ -234,10 +237,16 @@ const getProfile = async (req, res) => {
 
 const getEvents = async (req, res) => {
   try {
+    if (!isDbConnected()) {
+      console.warn("getEvents: DB not connected, returning empty list");
+      return res.status(200).json({ events: [] });
+    }
     const events = await Event.find().sort({ date: 1 });
     return res.status(200).json({ events });
   } catch (error) {
-    return res.status(500).json({ error: "Failed to load events." });
+    console.error("getEvents error:", error);
+    // fallback to empty list so frontend doesn't break
+    return res.status(200).json({ events: [] });
   }
 };
 
@@ -279,6 +288,19 @@ const createEvent = async (req, res) => {
 
 const getFestivalOverview = async (req, res) => {
   try {
+    if (!isDbConnected()) {
+      console.warn("getFestivalOverview: DB not connected, returning defaults");
+      return res.status(200).json({
+        upcomingFestivals: 0,
+        todaysEvents: 0,
+        currentMonthFestivals: 0,
+        totalRegistrations: 0,
+        festivalRevenue: 0,
+        monthlyRegistrations: 0,
+        monthlyRevenue: 0,
+        dbConnected: false,
+      });
+    }
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
     const tomorrowStart = new Date(todayStart);
@@ -326,7 +348,17 @@ const getFestivalOverview = async (req, res) => {
     });
   } catch (error) {
     console.error("getFestivalOverview error:", error);
-    return res.status(500).json({ error: "Failed to load festival overview." });
+    return res.status(200).json({
+      upcomingFestivals: 0,
+      todaysEvents: 0,
+      currentMonthFestivals: 0,
+      totalRegistrations: 0,
+      festivalRevenue: 0,
+      monthlyRegistrations: 0,
+      monthlyRevenue: 0,
+      dbConnected: false,
+      error: "Failed to load festival overview",
+    });
   }
 };
 
@@ -626,6 +658,158 @@ const cancelPrasadamOrder = async (req, res) => {
   }
 };
 
+// Create a Razorpay order and a pending Donation record
+const createRazorpayOrder = async (req, res) => {
+  try {
+    if (!isDbConnected()) return res.status(500).json({ error: "Database not connected." });
+
+    const { amount, donorName, donorEmail, donorPhone, category = "General", paymentMethod = "UPI", notes, eventId } = req.body;
+    const numericAmount = Number(amount);
+    if (!numericAmount || Number.isNaN(numericAmount) || numericAmount <= 0) {
+      return res.status(400).json({ error: "Invalid amount provided." });
+    }
+
+    const razorpayClient = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID || "",
+      key_secret: process.env.RAZORPAY_KEY_SECRET || "",
+    });
+
+    if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+      console.warn("Razorpay keys missing in environment variables.");
+      return res.status(500).json({ error: "Razorpay credentials not configured on server." });
+    }
+
+    const orderOptions = {
+      amount: Math.round(numericAmount * 100),
+      currency: "INR",
+      receipt: `donation_${Date.now()}`,
+      payment_capture: 1,
+    };
+
+    const order = await razorpayClient.orders.create(orderOptions);
+
+    const donation = await Donation.create({
+      donorName: donorName || "Anonymous",
+      donorEmail: donorEmail ? String(donorEmail).toLowerCase() : undefined,
+      donorPhone: donorPhone || undefined,
+      amount: numericAmount,
+      category,
+      paymentMethod,
+      notes,
+      status: "Pending",
+      eventId: eventId || undefined,
+      razorpayOrderId: order.id,
+    });
+
+    return res.status(201).json({ order, donation, key: process.env.RAZORPAY_KEY_ID || "" });
+  } catch (error) {
+    console.error("createRazorpayOrder error:", error);
+    const message = error?.message || (error?.error && JSON.stringify(error.error)) || "Failed to create Razorpay order.";
+    return res.status(500).json({ error: message });
+  }
+};
+
+// Verify Razorpay payment signature (called by frontend after checkout)
+const verifyRazorpayPayment = async (req, res) => {
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, donationId } = req.body;
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      return res.status(400).json({ error: "Missing Razorpay verification fields." });
+    }
+
+    const expected = crypto.createHmac("sha256", process.env.RAZORPAY_KEY_SECRET || "").update(`${razorpay_order_id}|${razorpay_payment_id}`).digest("hex");
+    if (expected !== razorpay_signature) {
+      return res.status(400).json({ error: "Invalid signature." });
+    }
+
+    let donation = null;
+    if (donationId) donation = await Donation.findById(donationId);
+    if (!donation) donation = await Donation.findOne({ razorpayOrderId: razorpay_order_id });
+    if (!donation) return res.status(404).json({ error: "Donation not found for this order." });
+
+    donation.status = "Completed";
+    donation.transactionId = razorpay_payment_id;
+    donation.razorpayPaymentId = razorpay_payment_id;
+    donation.razorpaySignature = razorpay_signature;
+    await donation.save();
+
+    // If donation linked to an event, increment its collection
+    if (donation.eventId) {
+      try {
+        await Event.findByIdAndUpdate(String(donation.eventId), { $inc: { collection: Number(donation.amount) || 0 } });
+      } catch (err) {
+        console.error("Failed to update event collection from verifyRazorpayPayment:", err);
+      }
+    }
+
+    // Send receipt / notification
+    try {
+      await Notification.create({
+        title: "Donation Received",
+        message: `${donation.donorName || "A donor"} donated INR ${donation.amount}.`,
+        audienceEmail: donation.donorEmail || undefined,
+      });
+      if (donation.donorEmail || donation.donorPhone) {
+        const donor = { name: donation.donorName, email: donation.donorEmail, phone: donation.donorPhone };
+        await sendDonationReceipt(donor, { amount: donation.amount, category: donation.category, transactionId: donation.transactionId });
+      }
+    } catch (notifErr) {
+      console.warn("Notification after verify failed:", notifErr);
+    }
+
+    return res.status(200).json({ success: true, donation });
+  } catch (error) {
+    console.error("verifyRazorpayPayment error:", error);
+    return res.status(500).json({ error: "Failed to verify Razorpay payment." });
+  }
+};
+
+// Webhook handler for Razorpay events (use express.raw middleware on route)
+const handleRazorpayWebhook = async (req, res) => {
+  try {
+    const secret = process.env.RAZORPAY_WEBHOOK_SECRET || process.env.RAZORPAY_KEY_SECRET || "";
+    const signature = req.headers["x-razorpay-signature"];
+    const bodyBuffer = req.body;
+    const expected = crypto.createHmac("sha256", secret).update(bodyBuffer).digest("hex");
+    if (expected !== signature) {
+      console.warn("Razorpay webhook signature mismatch");
+      return res.status(400).json({ error: "Invalid webhook signature." });
+    }
+
+    const payload = JSON.parse(bodyBuffer.toString());
+    const evt = payload.event;
+
+    if (evt === "payment.captured" || evt === "payment.authorized") {
+      const entity = payload.payload.payment.entity;
+      const orderId = entity.order_id;
+      const paymentId = entity.id;
+      const amount = (entity.amount || 0) / 100;
+
+      const donation = await Donation.findOne({ razorpayOrderId: orderId });
+      if (donation) {
+        donation.status = "Completed";
+        donation.transactionId = paymentId;
+        donation.razorpayPaymentId = paymentId;
+        donation.razorpaySignature = signature;
+        await donation.save();
+
+        if (donation.eventId) {
+          try {
+            await Event.findByIdAndUpdate(String(donation.eventId), { $inc: { collection: Number(donation.amount) || amount } });
+          } catch (err) {
+            console.error("Failed to update event collection from webhook:", err);
+          }
+        }
+      }
+    }
+
+    return res.status(200).json({ status: "ok" });
+  } catch (error) {
+    console.error("handleRazorpayWebhook error:", error);
+    return res.status(500).json({ error: "Webhook processing failed." });
+  }
+};
+
 const updateBookingStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -708,6 +892,9 @@ module.exports = {
   getSupportRequests,
   replySupportRequest,
   createNotification,
+  createRazorpayOrder,
+  verifyRazorpayPayment,
+  handleRazorpayWebhook,
   getPrasadamOrders,
   createPrasadamOrder,
   cancelPrasadamOrder,

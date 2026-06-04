@@ -106,26 +106,30 @@ exports.createEmployee = async (req, res) => {
       return res.status(400).json({ message: "Date of birth is required and must be a valid past date." });
     }
 
-    if (!joiningDate || !isValidDate(joiningDate) || !isPastOrToday(joiningDate)) {
-      return res.status(400).json({ message: "Joining date is required and must be today or earlier." });
+    // joiningDate is optional and may be a future date (planned join).
+    // If provided, ensure it's a valid date and consistent with DOB.
+    if (joiningDate && !isValidDate(joiningDate)) {
+      return res.status(400).json({ message: "Please enter a valid joining date." });
     }
 
     const dobDate = new Date(dob);
-    const joinDate = new Date(joiningDate);
-    if (joinDate < dobDate) {
-      return res.status(400).json({ message: "Joining date cannot be earlier than date of birth." });
-    }
+    if (joiningDate) {
+      const joinDate = new Date(joiningDate);
+      if (joinDate < dobDate) {
+        return res.status(400).json({ message: "Joining date cannot be earlier than date of birth." });
+      }
 
-    const ageAtJoining =
-      joinDate.getFullYear() -
-      dobDate.getFullYear() -
-      (joinDate.getMonth() < dobDate.getMonth() ||
-      (joinDate.getMonth() === dobDate.getMonth() && joinDate.getDate() < dobDate.getDate())
-        ? 1
-        : 0);
+      const ageAtJoining =
+        joinDate.getFullYear() -
+        dobDate.getFullYear() -
+        (joinDate.getMonth() < dobDate.getMonth() ||
+        (joinDate.getMonth() === dobDate.getMonth() && joinDate.getDate() < dobDate.getDate())
+          ? 1
+          : 0);
 
-    if (ageAtJoining < 14) {
-      return res.status(400).json({ message: "Employee must be at least 14 years old at joining." });
+      if (ageAtJoining < 14) {
+        return res.status(400).json({ message: "Employee must be at least 14 years old at joining." });
+      }
     }
 
     const existingEmployee = await Employee.findOne({ email: normalizedEmail });
@@ -359,8 +363,8 @@ exports.updateEmployeeProfileByUserId = async (req, res) => {
     }
 
     if (Object.prototype.hasOwnProperty.call(updateData, "joiningDate")) {
-      if (updateData.joiningDate && (!isValidDate(updateData.joiningDate) || !isPastOrToday(updateData.joiningDate))) {
-        return res.status(400).json({ message: "Joining date must be today or earlier." });
+      if (updateData.joiningDate && !isValidDate(updateData.joiningDate)) {
+        return res.status(400).json({ message: "Please enter a valid joining date." });
       }
     }
 

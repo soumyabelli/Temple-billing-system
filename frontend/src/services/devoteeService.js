@@ -50,6 +50,14 @@ export const createDevoteeDonation = async (payload) => {
     throw error;
   }
 };
+export const createRazorpayOrder = async (payload) => {
+  const response = await axios.post(`${API_BASE}/razorpay/order`, payload);
+  return response.data;
+};
+export const verifyRazorpayPayment = async (payload) => {
+  const response = await axios.post(`${API_BASE}/razorpay/verify`, payload);
+  return response.data;
+};
 export const createDevoteeBooking = async (payload) => {
   const response = await axios.post(`${API_BASE}/bookings`, payload);
   return response.data;
