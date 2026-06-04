@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
   FiBell,
@@ -16,6 +16,7 @@ import {
   FiSettings,
   FiUser,
 } from "react-icons/fi";
+import { FaCalendarCheck } from "react-icons/fa";
 import { MdTempleHindu } from "react-icons/md";
 import { TbChecklist, TbHourglassLow, TbProgressCheck } from "react-icons/tb";
 import { useAuth } from "../../context/AuthContext";
@@ -141,6 +142,7 @@ const toProfileForm = (profile = {}) => ({
 
 const StaffDashboard = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, logoutUser } = useAuth();
   const storedUser = JSON.parse(localStorage.getItem("user") || "null");
   const staff = user || storedUser;
@@ -177,6 +179,7 @@ const StaffDashboard = () => {
 
   const staffId = staff?.id || staff?._id || "";
   const displayName = profileForm.name || staff?.name || "Staff";
+  const sectionFromQuery = new URLSearchParams(location.search).get("section");
 
   const fetchUnreadCount = useCallback(async () => {
     if (!staffId) return;
@@ -239,6 +242,15 @@ const StaffDashboard = () => {
     const timer = setInterval(fetchUnreadCount, POLL_INTERVAL_MS);
     return () => clearInterval(timer);
   }, [fetchUnreadCount]);
+
+  useEffect(() => {
+    const validSections = new Set(["dashboard", "duties", "leaveRequests", "applyLeave", "notifications", "profile"]);
+    if (sectionFromQuery && validSections.has(sectionFromQuery)) {
+      setActiveSection(sectionFromQuery);
+    } else if (location.pathname === "/staff" && !sectionFromQuery) {
+      setActiveSection("dashboard");
+    }
+  }, [location.pathname, sectionFromQuery]);
 
   const taskSummary = useMemo(() => {
     return tasks.reduce(
@@ -453,6 +465,13 @@ const StaffDashboard = () => {
             onClick={() => setActiveSection("duties")}
           >
             <TbChecklist /> My Duties
+          </button>
+          <button
+            type="button"
+            className={activeSection === "attendance" ? "nav-item active" : "nav-item"}
+            onClick={() => navigate("/staff/attendance")}
+          >
+            <FaCalendarCheck /> Attendance
           </button>
           <button
             type="button"

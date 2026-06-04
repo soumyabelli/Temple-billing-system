@@ -23,7 +23,7 @@ import DonationSettings from "./pages/admin/donations/DonationSettings";
 import MemberManagement from "./pages/admin/MemberManagement";
 import AllEmployees from "./pages/admin/employee/AllEmployees";
 import AddEmployee from "./pages/admin/employee/AddEmployee";
-import Attendance from "./pages/admin/employee/Attendance";
+import Attendances from "./pages/admin/employee/Attendances";
 import Payroll from "./pages/admin/employee/Payroll";
 import LeaveManagement from "./pages/admin/employee/LeaveManagement";
 import Performance from "./pages/admin/employee/Performance";
@@ -49,6 +49,8 @@ import AuthLoginPage from "./pages/auth/AuthLoginPage";
 import RegisterPage from "./pages/auth/RegisterPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import LandingPage from "./pages/LandingPage";
+
+import Attendance from "./pages/staff/Attendance";
 
 function App() {
   return (
@@ -362,11 +364,11 @@ function App() {
         }
       />
       <Route
-        path="/admin/employees/attendance"
+        path="/admin/employees/attendances"
         element={
           <ProtectedRoute allowedRoles={["admin"]}>
             <AdminLayout>
-              <Attendance />
+              <Attendances />
             </AdminLayout>
           </ProtectedRoute>
         }
@@ -469,6 +471,14 @@ function App() {
         element={
           <ProtectedRoute allowedRoles={["staff"]}>
             <StaffDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/staff/attendance"
+        element={
+          <ProtectedRoute allowedRoles={["staff"]}>
+            <Attendance />
           </ProtectedRoute>
         }
       />

@@ -5,6 +5,7 @@ const employeeRoutes = require("./routes/employeeRoutes");
 const donationRoutes = require("./routes/donationRoutes");
 const devoteeRoutes = require("./routes/devoteeRoutes");
 const staffRoutes = require("./routes/staffRoutes");
+const attendanceRoutes = require("./routes/attendanceRoutes");
 const leaveRoutes = require("./routes/leaveRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 
@@ -23,6 +24,7 @@ app.use("/api/employees", employeeRoutes);
 app.use("/api/donations", donationRoutes);
 app.use("/api/devotee", devoteeRoutes);
 app.use("/api/staff", staffRoutes);
+app.use("/api/staff/attendance", attendanceRoutes);
 app.use("/api/leaves", leaveRoutes);
 
 module.exports = app;

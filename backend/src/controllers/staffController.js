@@ -131,12 +131,26 @@ exports.updateTaskStatus = async (req, res) => {
       });
     }
 
-    const updated = await Task.findByIdAndUpdate(id, { status }, { new: true });
+    const updated = await Task.findByIdAndUpdate(
+      id,
+      { status },
+      { new: true }
+    );
 
     if (!updated) {
       return res.status(404).json({
         success: false,
         message: "Task not found",
+      });
+    }
+
+    // SEND ADMIN NOTIFICATION WHEN TASK COMPLETED
+    if (status === "Completed") {
+      await Notification.create({
+        title: "Task Completed",
+        message: `${updated.staffName} completed assigned task`,
+        audienceRole: "admin",
+        category: "task",
       });
     }
 

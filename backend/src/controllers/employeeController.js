@@ -2,6 +2,7 @@ const Employee = require("../models/Employee");
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const Notification = require("../models/Notification");
 
 const ALLOWED_AUTH_ROLES = ["admin", "accountant", "cashier", "priest", "staff"];
 const PROFILE_EDITABLE_FIELDS = [
@@ -170,6 +171,13 @@ exports.createEmployee = async (req, res) => {
       mustChangePassword: false,
     });
 
+    await Notification.create({
+  title: "New Employee Added",
+  message: `${name} has been added as ${normalizedRole}`,
+  audienceRole: "admin",
+  category: "employee",
+});
+
     res.status(201).json({ message: "Employee created successfully", employee: sanitizeEmployee(employee) });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -280,6 +288,19 @@ exports.getEmployeeProfileByUserId = async (req, res) => {
     if (!user || !employee) {
       return res.status(404).json({ message: "Employee profile not found" });
     }
+    await Notification.create({
+  title: "Profile Updated",
+  message: `${updatedEmployee.name} updated profile information`,
+  audienceRole: "admin",
+  category: "employee",
+});
+
+  await Notification.create({
+  title: "Password Changed",
+  message: `${employee.name} changed account password`,
+  audienceRole: "admin",
+  category: "security",
+});
 
     return res.json({
       message: "Profile loaded",
