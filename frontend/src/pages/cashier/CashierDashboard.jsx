@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import QuickBillingPage from "./QuickBillingPage";
 import "./CashierDashboard.css";
 import {
   AreaChart,
@@ -74,7 +76,7 @@ const TempleWatermark = () => (
 
 const CashierDashboard = () => {
   const [activeMenu, setActiveMenu] = useState("Dashboard");
-
+  const navigate = useNavigate();
   // Chart data
   const revenueData = [
     { name: "14 May", amount: 18000 },
@@ -93,18 +95,53 @@ const CashierDashboard = () => {
     { name: "Net Banking", value: 10, color: "#F59E0B" },
   ];
 
-  const sidebarItems = [
-    { name: "Dashboard", icon: <FaHome /> },
-    { name: "Quick Billing", icon: <FaFileInvoice /> },
-    { name: "Payment Processing", icon: <FaCreditCard /> },
-    { name: "Receipt Generation", icon: <FaHeart /> },
-    { name: "Today's Transactions", icon: <FaCalendarAlt /> },
-    { name: "Booking Payments", icon: <FaBox /> },
-    { name: "Prasadam Sales", icon: <FaReceipt /> },
-    { name: "Notifications", icon: <FaHistory /> },
-  
-    { name: "Logout", icon: <FaSignOutAlt /> },
-  ];
+ const sidebarItems = [
+  {
+    name: "Dashboard",
+    icon: <FaHome />,
+    path: "/cashier",
+  },
+  {
+    name: "Quick Billing",
+    icon: <FaFileInvoice />,
+    path: "/cashier/quick-billing",
+  },
+  {
+    name: "Payment Processing",
+    icon: <FaCreditCard />,
+    path: "/cashier/payment-processing",
+  },
+  {
+    name: "Receipt Generation",
+    icon: <FaHeart />,
+    path: "/cashier/receipt-generation",
+  },
+  {
+    name: "Today's Transactions",
+    icon: <FaCalendarAlt />,
+    path: "/cashier/transactions",
+  },
+  {
+    name: "Booking Payments",
+    icon: <FaBox />,
+    path: "/cashier/booking-payments",
+  },
+  {
+    name: "Prasadam Sales",
+    icon: <FaReceipt />,
+    path: "/cashier/prasadam-sales",
+  },
+  {
+    name: "Notifications",
+    icon: <FaHistory />,
+    path: "/cashier/notifications",
+  },
+  {
+    name: "Logout",
+    icon: <FaSignOutAlt />,
+    path: "/login",
+  },
+];
 
   const statCards = [
     {
@@ -173,8 +210,10 @@ const CashierDashboard = () => {
             <li
               key={item.name}
               className={`menu-item ${activeMenu === item.name ? "active" : ""}`}
-              onClick={() => setActiveMenu(item.name)}
-            >
+onClick={() => {
+  setActiveMenu(item.name);
+  navigate(item.path);
+}}            >
               <span className="menu-icon">{item.icon}</span>
               <span className="menu-text">{item.name}</span>
               {item.badge && <span className="menu-badge">{item.badge}</span>}
@@ -232,23 +271,28 @@ const CashierDashboard = () => {
         </header>
 
         {/* MAIN BODY SCROLL CONTAINER */}
-        <div className="main-body-content">
-          {/* STATS ROW */}
-          <div className="stats-grid">
-            {statCards.map((card, i) => (
-              <div key={i} className={`stat-card card-style-${card.color}`}>
-                <div className="stat-header">
-                  <span className="stat-title">{card.title}</span>
-                  {card.icon}
-                </div>
-                <div className="stat-value">{card.value}</div>
-                <div className="stat-footer">
-                  {card.trend === "up" && <span className="trend-arrow-up"><FaArrowUp /></span>}
-                  <span className="stat-change">{card.change}</span>
-                </div>
-              </div>
-            ))}
-          </div>
+        {/* MAIN BODY SCROLL CONTAINER */}
+<div className="main-body-content">
+  {/* STATS ROW */}
+  <div className="stats-grid">
+    {statCards.map((card, i) => (
+      <div key={i} className={`stat-card card-style-${card.color}`}>
+        <div className="stat-header">
+          <span className="stat-title">{card.title}</span>
+          {card.icon}
+        </div>
+        <div className="stat-value">{card.value}</div>
+        <div className="stat-footer">
+          {card.trend === "up" && (
+            <span className="trend-arrow-up">
+              <FaArrowUp />
+            </span>
+          )}
+          <span className="stat-change">{card.change}</span>
+        </div>
+      </div>
+    ))}
+  </div>
 
           {/* MIDDLE CHARTS AND WIDGETS ROW */}
           <div className="charts-widgets-row">
