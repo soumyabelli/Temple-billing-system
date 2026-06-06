@@ -82,13 +82,6 @@ exports.applyLeave = async (req, res) => {
       reviewedAt: null,
     });
 
-    await createStaffNotification({
-      title: "Leave Request Submitted",
-      message: "Your leave request has been submitted to Admin.",
-      audienceId: staffId,
-      category: "leave",
-    });
-
     await Notification.create({
       title: "Leave Request",
       message: `${leave.staffName} submitted a leave request`,

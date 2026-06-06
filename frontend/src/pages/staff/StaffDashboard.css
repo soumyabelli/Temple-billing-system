@@ -715,6 +715,129 @@
   margin-bottom: 16px;
 }
 
+.inventory-page .leave-head,
+.profile-settings-page .leave-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.inventory-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.inventory-top-cards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.inventory-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.inventory-form-card,
+.inventory-status-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 18px;
+}
+
+.inventory-form-card .card-heading,
+.inventory-status-card .card-heading {
+  margin-bottom: 14px;
+}
+
+.inventory-form-card form > div {
+  margin-bottom: 14px;
+}
+
+.inventory-form-card label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+
+.inventory-form-card input,
+.inventory-form-card select,
+.inventory-form-card textarea {
+  width: 100%;
+  border: 1px solid #d8d2c8;
+  border-radius: 10px;
+  padding: 11px 12px;
+  background: #fff;
+  font: inherit;
+}
+
+.inventory-form-card button {
+  width: 100%;
+}
+
+.inventory-status-list {
+  display: grid;
+  gap: 12px;
+}
+
+.inventory-status-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid #ece3d8;
+  border-radius: 14px;
+  padding: 14px;
+  background: #fff;
+}
+
+.inventory-status-item h3 {
+  margin: 0 0 4px;
+  font-size: 16px;
+}
+
+.inventory-status-item p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.inventory-history-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+}
+
+.inventory-history-grid .quick-actions-card {
+  padding: 20px;
+}
+
+.inventory-history-grid .quick-actions {
+  display: grid;
+  gap: 12px;
+}
+
+.inventory-page .card-heading h2,
+.inventory-page .card-heading p {
+  margin: 0;
+}
+
+.inventory-page .status-chip {
+  min-width: auto;
+  padding: 6px 12px;
+}
+
+.inventory-page button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
 .leave-stat-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

@@ -4,8 +4,12 @@ const router = express.Router();
 
 const {
   assignTask,
+  createInventoryRequest,
   createInventoryRequestNotification,
   deleteTask,
+  getInventoryCatalog,
+  getInventoryRequests,
+  getInventorySummary,
   getAllTasks,
   getStaffNotifications,
   getStaffUnreadCount,
@@ -13,8 +17,16 @@ const {
   markStaffNotificationRead,
   markStaffNotificationsRead,
   markStaffNotificationsViewed,
+  updateInventoryRequestStatus,
   updateTaskStatus,
 } = require("../controllers/staffController");
+const {
+  createInventoryRequest: createInventoryRequestRecord,
+  getInventoryCatalog: getInventoryCatalogData,
+  getInventoryRequests: getInventoryRequestsData,
+  getInventorySummary: getInventorySummaryData,
+  updateInventoryRequestStatus: updateInventoryRequestStatusData,
+} = require("../controllers/inventoryRequestController");
 
 
 
@@ -72,6 +84,36 @@ router.patch(
 router.post(
   "/notifications/inventory-request-status",
   createInventoryRequestNotification
+);
+
+router.get(
+  "/inventory/catalog",
+  getInventoryCatalogData
+);
+
+router.post(
+  "/inventory-requests",
+  createInventoryRequestRecord
+);
+
+router.get(
+  "/inventory-requests",
+  getInventoryRequestsData
+);
+
+router.get(
+  "/inventory-requests/:staffId",
+  getInventoryRequestsData
+);
+
+router.get(
+  "/inventory-requests/:staffId/summary",
+  getInventorySummaryData
+);
+
+router.put(
+  "/inventory-requests/:id/status",
+  updateInventoryRequestStatusData
 );
 
 

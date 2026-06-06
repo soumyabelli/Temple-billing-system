@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
   FiBell,
+  FiBox,
   FiCalendar,
   FiCheckCircle,
   FiClipboard,
@@ -36,6 +37,7 @@ const BLOOD_GROUPS = ["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"];
 const GENDER_OPTIONS = ["Male", "Female", "Other"];
 const SHIFT_OPTIONS = ["Morning", "Day", "Afternoon", "Evening", "Night"];
 const EMPLOYMENT_TYPES = ["Full-time", "Part-time", "Contract", "Temporary"];
+const INVENTORY_UNITS = ["Kg", "Liter", "Pack", "Pieces"];
 
 const formatHeaderDate = () =>
   new Date().toLocaleDateString("en-IN", {
@@ -176,6 +178,15 @@ const StaffDashboard = () => {
     newPassword: "",
     confirmPassword: "",
   });
+  const [inventoryCatalog, setInventoryCatalog] = useState([]);
+  const [inventoryRequests, setInventoryRequests] = useState([]);
+  const [inventorySummary, setInventorySummary] = useState({ total: 0, pending: 0, approved: 0, rejected: 0 });
+  const [inventoryForm, setInventoryForm] = useState({ itemName: "", quantity: "", unit: "", reason: "" });
+  const [inventoryFilter, setInventoryFilter] = useState("all");
+  const [inventorySearch, setInventorySearch] = useState("");
+  const [inventoryLoading, setInventoryLoading] = useState(false);
+  const [inventoryError, setInventoryError] = useState("");
+  const [submittingInventory, setSubmittingInventory] = useState(false);
 
   const staffId = staff?.id || staff?._id || "";
   const displayName = profileForm.name || staff?.name || "Staff";
@@ -237,6 +248,65 @@ const StaffDashboard = () => {
     fetchProfileData();
   }, [fetchProfileData]);
 
+  const fetchInventoryCatalog = useCallback(async () => {
+    if (!staffId) return;
+    try {
+      const response = await axios.get(`${API_BASE}/staff/inventory/catalog`);
+      setInventoryCatalog(Array.isArray(response.data?.items) ? response.data.items : []);
+    } catch (apiError) {
+      console.warn("Failed to load inventory catalog", apiError);
+    }
+  }, [staffId]);
+
+  const fetchInventoryRequests = useCallback(async () => {
+    if (!staffId) return;
+    try {
+      const response = await axios.get(`${API_BASE}/staff/inventory-requests/${staffId}`);
+      setInventoryRequests(Array.isArray(response.data?.requests) ? response.data.requests : []);
+    } catch (apiError) {
+      setInventoryError(apiError.response?.data?.message || "Failed to load inventory requests");
+    }
+  }, [staffId]);
+
+  const fetchInventorySummary = useCallback(async () => {
+    if (!staffId) return;
+    try {
+      const response = await axios.get(`${API_BASE}/staff/inventory-requests/${staffId}/summary`);
+      setInventorySummary(response.data?.summary || { total: 0, pending: 0, approved: 0, rejected: 0 });
+    } catch (apiError) {
+      console.warn("Failed to load inventory summary", apiError);
+    }
+  }, [staffId]);
+
+  const filteredInventoryRequests = useMemo(() => {
+    return inventoryRequests
+      .filter((request) => {
+        const matchesStatus = inventoryFilter === "all" || request.status === inventoryFilter;
+        const query = inventorySearch.trim().toLowerCase();
+        const matchesSearch = !query
+          || request.itemName.toLowerCase().includes(query)
+          || request.staffName.toLowerCase().includes(query);
+        return matchesStatus && matchesSearch;
+      })
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  }, [inventoryRequests, inventoryFilter, inventorySearch]);
+
+  const loadInventoryData = useCallback(async () => {
+    setInventoryError("");
+    setInventoryLoading(true);
+    try {
+      await Promise.all([fetchInventoryCatalog(), fetchInventoryRequests(), fetchInventorySummary()]);
+    } finally {
+      setInventoryLoading(false);
+    }
+  }, [fetchInventoryCatalog, fetchInventoryRequests, fetchInventorySummary]);
+
+  useEffect(() => {
+    if (activeSection === "inventory") {
+      loadInventoryData();
+    }
+  }, [activeSection, loadInventoryData]);
+
   useEffect(() => {
     fetchUnreadCount();
     const timer = setInterval(fetchUnreadCount, POLL_INTERVAL_MS);
@@ -244,7 +314,7 @@ const StaffDashboard = () => {
   }, [fetchUnreadCount]);
 
   useEffect(() => {
-    const validSections = new Set(["dashboard", "duties", "leaveRequests", "applyLeave", "notifications", "profile"]);
+    const validSections = new Set(["dashboard", "duties", "leaveRequests", "applyLeave", "notifications", "profile", "inventory"]);
     if (sectionFromQuery && validSections.has(sectionFromQuery)) {
       setActiveSection(sectionFromQuery);
     } else if (location.pathname === "/staff" && !sectionFromQuery) {
@@ -317,6 +387,72 @@ const StaffDashboard = () => {
   const latestLeaveDecision = useMemo(() => {
     return leaves.find((leave) => leave.status === "Approved" || leave.status === "Rejected");
   }, [leaves]);
+
+  const formatDateTime = (value) => {
+    if (!value) return "-";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+    return date.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  const handleInventoryInputChange = (field, value) => {
+    setInventoryForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleInventorySubmit = async (event) => {
+    event.preventDefault();
+    const { itemName, quantity, unit, reason } = inventoryForm;
+    if (!itemName || !quantity || !unit || !reason.trim()) {
+      setInventoryError("Please choose an item, quantity, unit, and reason.");
+      return;
+    }
+
+    try {
+      setSubmittingInventory(true);
+      setInventoryError("");
+      await axios.post(`${API_BASE}/staff/inventory-requests`, {
+        staffId,
+        staffName: displayName,
+        itemName,
+        quantity,
+        unit,
+        reason: reason.trim(),
+      });
+      setInventoryForm({ itemName: "", quantity: "", reason: "" });
+      await Promise.all([fetchInventoryRequests(), fetchInventorySummary()]);
+      alert("Inventory request submitted successfully.");
+    } catch (apiError) {
+      setInventoryError(apiError.response?.data?.message || "Could not submit inventory request.");
+    } finally {
+      setSubmittingInventory(false);
+    }
+  };
+
+  const downloadInventoryReport = () => {
+    const rows = [
+      ["Item Name", "Quantity", "Unit", "Request Date", "Status", "Admin Remarks"],
+      ...inventoryRequests.map((request) => [
+        request.itemName,
+        request.quantity,
+        request.unit || "",
+        formatDateTime(request.createdAt),
+        request.status,
+        request.adminReason || "-",
+      ]),
+    ];
+    const csv = rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")).join("\r\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "inventory-requests-report.csv";
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   const handleTaskStatusChange = async (taskId, status) => {
     try {
@@ -479,6 +615,13 @@ const StaffDashboard = () => {
             onClick={() => setActiveSection("leaveRequests")}
           >
             <FiFileText /> Leave Requests
+          </button>
+          <button
+            type="button"
+            className={activeSection === "inventory" ? "nav-item active" : "nav-item"}
+            onClick={() => setActiveSection("inventory")}
+          >
+            <FiBox /> Inventory Requests
           </button>
           <button
             type="button"
@@ -942,6 +1085,222 @@ const StaffDashboard = () => {
                     )}
                   </tbody>
                 </table>
+              </div>
+            </div>
+          </section>
+        ) : null}
+
+        {!loading && activeSection === "inventory" ? (
+          <section className="inventory-page">
+            <div className="leave-head">
+              <div>
+                <h2>Inventory Requests</h2>
+                <p>Submit inventory needs and track your request statuses.</p>
+              </div>
+              <div className="inventory-actions">
+                <button type="button" onClick={() => setActiveSection("dashboard")}>Back to Overview</button>
+                <button type="button" onClick={downloadInventoryReport} disabled={inventoryRequests.length === 0}>
+                  <FiSave /> Download Report
+                </button>
+              </div>
+            </div>
+
+            {inventoryError ? <div className="staff-error">{inventoryError}</div> : null}
+
+            <div className="inventory-top-cards">
+              <article className="info-card">
+                <div className="icon-bg orange">
+                  <FiBox />
+                </div>
+                <div>
+                  <h3>Total Requests</h3>
+                  <strong>{inventorySummary.total}</strong>
+                  <p>All requests submitted</p>
+                </div>
+              </article>
+              <article className="info-card">
+                <div className="icon-bg blue">
+                  <FiClock />
+                </div>
+                <div>
+                  <h3>Pending Requests</h3>
+                  <strong>{inventorySummary.pending}</strong>
+                  <p>Awaiting approval</p>
+                </div>
+              </article>
+              <article className="info-card">
+                <div className="icon-bg green">
+                  <FiCheckCircle />
+                </div>
+                <div>
+                  <h3>Approved Requests</h3>
+                  <strong>{inventorySummary.approved}</strong>
+                  <p>Ready for processing</p>
+                </div>
+              </article>
+              <article className="info-card">
+                <div className="icon-bg red">
+                  <FiLock />
+                </div>
+                <div>
+                  <h3>Rejected Requests</h3>
+                  <strong>{inventorySummary.rejected}</strong>
+                  <p>Action required</p>
+                </div>
+              </article>
+            </div>
+
+            <div className="inventory-grid">
+              <div className="inventory-form-card">
+                <div className="card-heading">
+                  <h2>New Inventory Request</h2>
+                </div>
+                <form className="leave-form" onSubmit={handleInventorySubmit}>
+                  <div>
+                    <label htmlFor="itemName">Item Name</label>
+                    <select
+                      id="itemName"
+                      value={inventoryForm.itemName}
+                      onChange={(e) => handleInventoryInputChange("itemName", e.target.value)}
+                    >
+                      <option value="">Select Item</option>
+                      {inventoryCatalog.map((item) => (
+                        <option key={item.name} value={item.name}>
+                          {item.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="quantity">Quantity Required</label>
+                    <input
+                      id="quantity"
+                      type="text"
+                      placeholder="Enter quantity"
+                      value={inventoryForm.quantity}
+                      onChange={(e) => handleInventoryInputChange("quantity", e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="reason">Reason</label>
+                    <textarea
+                      id="reason"
+                      rows="4"
+                      placeholder="Enter reason for requesting..."
+                      value={inventoryForm.reason}
+                      onChange={(e) => handleInventoryInputChange("reason", e.target.value)}
+                    />
+                  </div>
+                  <button type="submit" disabled={submittingInventory}>
+                    {submittingInventory ? "Submitting..." : "Submit Request"}
+                  </button>
+                </form>
+              </div>
+
+              <div className="inventory-status-card">
+                <div className="card-heading">
+                  <h2>Recent Inventory Status</h2>
+                </div>
+                <div className="inventory-status-list">
+                  {inventoryCatalog.length === 0 ? (
+                    <div className="empty-cell">No inventory status available</div>
+                  ) : (
+                    inventoryCatalog.map((item) => (
+                      <div key={item.name} className="inventory-status-item">
+                        <div>
+                          <h3>{item.name}</h3>
+                          <p>{item.stock} in stock</p>
+                        </div>
+                        <span className={item.status === "Available" ? "status-chip approved" : "status-chip rejected"}>
+                          {item.status}
+                        </span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="inventory-history-grid">
+              <div className="table-card">
+                <div className="card-heading inventory-history-header">
+                  <div>
+                    <h2>Request History</h2>
+                    <p>Filter and search your inventory requests.</p>
+                  </div>
+                  <div className="inventory-history-filters">
+                    <div>
+                      <label htmlFor="inventoryFilter">Status</label>
+                      <select
+                        id="inventoryFilter"
+                        value={inventoryFilter}
+                        onChange={(e) => setInventoryFilter(e.target.value)}
+                      >
+                        <option value="all">All</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Approved">Approved</option>
+                        <option value="Rejected">Rejected</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label htmlFor="inventorySearch">Search Item</label>
+                      <input
+                        id="inventorySearch"
+                        type="text"
+                        placeholder="Search item or staff"
+                        value={inventorySearch}
+                        onChange={(e) => setInventorySearch(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="table-wrap">
+                  <table className="task-table">
+                    <thead>
+                      <tr>
+                        <th>Item Name</th>
+                        <th>Quantity</th>
+                        <th>Request Date</th>
+                        <th>Status</th>
+                        <th>Admin Remarks</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredInventoryRequests.length === 0 ? (
+                        <tr>
+                          <td colSpan="5" className="empty-cell">
+                            No inventory requests match your search.
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredInventoryRequests.map((request) => (
+                          <tr key={request._id}>
+                            <td>{request.itemName}</td>
+                            <td>{`${request.quantity} ${request.unit || ""}`.trim()}</td>
+                            <td>{formatDateTime(request.createdAt)}</td>
+                            <td>
+                              <span className={`status-chip ${statusClassMap[request.status] || ""}`}>
+                                {request.status}
+                              </span>
+                            </td>
+                            <td>{request.adminReason || "-"}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div className="quick-actions-card">
+                <h2>Quick Actions</h2>
+                <div className="quick-actions">
+                  <button type="button" onClick={() => setActiveSection("inventory")}>New Request</button>
+                  <button type="button" onClick={() => loadInventoryData()}>Refresh History</button>
+                  <button type="button" onClick={downloadInventoryReport} disabled={inventoryRequests.length === 0}>
+                    Download Report
+                  </button>
+                </div>
               </div>
             </div>
           </section>

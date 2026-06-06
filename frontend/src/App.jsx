@@ -34,6 +34,7 @@ import SettingsManagement from "./pages/admin/SettingsManagement";
 import FestivalsEventsManagement from "./pages/admin/FestivalsEventsManagement";
 import BillingManagement from "./pages/admin/BillingManagement";
 import InventoryManagement from "./pages/admin/InventoryManagement";
+import NotificationsCenter from "./pages/admin/NotificationsCenter";
 import AdminLayout from "./layouts/AdminLayout";
 
 import AccountantDashboard from "./pages/accountant/AccountantDashboard";
@@ -106,7 +107,9 @@ function App() {
         path="/admin/notifications"
         element={
           <ProtectedRoute allowedRoles={["admin"]}>
-            <AdminDashboard />
+            <AdminLayout>
+              <NotificationsCenter />
+            </AdminLayout>
           </ProtectedRoute>
         }
       />

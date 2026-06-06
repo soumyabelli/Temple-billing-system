@@ -4,7 +4,7 @@ import { sidebarItems } from "../../data/sidebarData";
 import { MdMenu, MdTempleBuddhist, MdKeyboardArrowDown } from "react-icons/md";
 
 const Sidebar = ({ activeItem, activePath, onSelect, onNavigate, collapsed, setCollapsed, mobileOpen, setMobileOpen, darkMode, onLogoutClick }) => {
-  const [openGroup, setOpenGroup] = useState("Employee Management");
+  const [openGroup, setOpenGroup] = useState(null);
   const baseItem = "relative w-full flex items-center gap-3 rounded-lg transition-all duration-300 text-left";
 
   useEffect(() => {
