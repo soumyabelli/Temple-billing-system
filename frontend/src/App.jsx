@@ -53,6 +53,10 @@ import LandingPage from "./pages/LandingPage";
 
 import Attendance from "./pages/staff/Attendance";
 
+import QuickBillingPage from "./pages/cashier/QuickBillingPage";
+
+
+
 function App() {
   return (
     <Routes>
@@ -66,6 +70,8 @@ function App() {
         path="/forgot-password"
         element={<ForgotPasswordPage />}
       />
+
+      <Route path="/cashier/quick-billing" element={<QuickBillingPage />} />
 
       {/* ADMIN */}
       <Route
@@ -495,6 +501,8 @@ function App() {
           </ProtectedRoute>
         }
       />
+
+      
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
