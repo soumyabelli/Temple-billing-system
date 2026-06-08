@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import QuickBillingPage from "./QuickBillingPage";
 import "./CashierDashboard.css";
 import {
   AreaChart,
@@ -16,28 +15,29 @@ import {
 } from "recharts";
 
 import {
-  FaHome,
+  FaChartBar,
+  FaBell,
+  FaChevronDown,
+  FaSearch,
+  FaQrcode,
+  FaArrowUp,
+  FaEye,
+  FaCheck,
+  FaClock,
   FaFileInvoice,
-  FaCreditCard,
   FaHeart,
+  FaPrint,
+  FaDownload,
+  FaCreditCard,
   FaCalendarAlt,
   FaBox,
   FaReceipt,
   FaHistory,
-  FaChartBar,
-  FaBell,
-  FaCog,
+  FaHome,
   FaSignOutAlt,
-  FaSearch,
-  FaQrcode,
-  FaChevronDown,
-  FaArrowUp,
-  FaEye,
-  FaPrint,
-  FaDownload,
-  FaCheck,
-  FaClock,
 } from "react-icons/fa";
+
+import { cashierSidebarItems } from "../../data/cashierSidebarData";
 
 // SVG Logos
 const TempleLogo = () => (
@@ -95,53 +95,7 @@ const CashierDashboard = () => {
     { name: "Net Banking", value: 10, color: "#F59E0B" },
   ];
 
- const sidebarItems = [
-  {
-    name: "Dashboard",
-    icon: <FaHome />,
-    path: "/cashier",
-  },
-  {
-    name: "Quick Billing",
-    icon: <FaFileInvoice />,
-    path: "/cashier/quick-billing",
-  },
-  {
-    name: "Payment Processing",
-    icon: <FaCreditCard />,
-    path: "/cashier/payment-processing",
-  },
-  {
-    name: "Receipt Generation",
-    icon: <FaHeart />,
-    path: "/cashier/receipt-generation",
-  },
-  {
-    name: "Today's Transactions",
-    icon: <FaCalendarAlt />,
-    path: "/cashier/transactions",
-  },
-  {
-    name: "Booking Payments",
-    icon: <FaBox />,
-    path: "/cashier/booking-payments",
-  },
-  {
-    name: "Prasadam Sales",
-    icon: <FaReceipt />,
-    path: "/cashier/prasadam-sales",
-  },
-  {
-    name: "Notifications",
-    icon: <FaHistory />,
-    path: "/cashier/notifications",
-  },
-  {
-    name: "Logout",
-    icon: <FaSignOutAlt />,
-    path: "/login",
-  },
-];
+
 
   const statCards = [
     {
@@ -206,19 +160,25 @@ const CashierDashboard = () => {
         </div>
 
         <ul className="sidebar-menu">
-          {sidebarItems.map((item) => (
-            <li
-              key={item.name}
-              className={`menu-item ${activeMenu === item.name ? "active" : ""}`}
-onClick={() => {
-  setActiveMenu(item.name);
-  navigate(item.path);
-}}            >
-              <span className="menu-icon">{item.icon}</span>
-              <span className="menu-text">{item.name}</span>
-              {item.badge && <span className="menu-badge">{item.badge}</span>}
-            </li>
-          ))}
+          {cashierSidebarItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeMenu === item.title;
+            return (
+              <li
+                key={item.title}
+                className={`menu-item ${isActive ? "active" : ""}`}
+                onClick={() => {
+                  setActiveMenu(item.title);
+                  navigate(item.path);
+                }}
+              >
+                <span className="menu-icon">
+                  <Icon size={18} />
+                </span>
+                <span className="menu-text">{item.title}</span>
+              </li>
+            );
+          })}
         </ul>
 
         <div className="sidebar-footer-drawing">
