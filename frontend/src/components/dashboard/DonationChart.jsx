@@ -1,11 +1,13 @@
-const donationSources = [
+const defaultDonationSources = [
   { label: "Online", value: 45, color: "bg-emerald-500" },
   { label: "Cash", value: 30, color: "bg-orange-400" },
   { label: "Cheque", value: 15, color: "bg-sky-500" },
   { label: "UPI", value: 10, color: "bg-violet-500" },
 ];
 
-const DonationChart = () => {
+const DonationChart = ({ sources = [] }) => {
+  const donationSources = sources.length ? sources : defaultDonationSources;
+
   return (
     <div className="space-y-4 mt-6">
       {donationSources.map((source) => (

@@ -1,4 +1,4 @@
-const monthlyRevenue = [
+const defaultRevenue = [
   { month: "Jan", value: 35 },
   { month: "Feb", value: 42 },
   { month: "Mar", value: 50 },
@@ -7,8 +7,9 @@ const monthlyRevenue = [
   { month: "Jun", value: 63 },
 ];
 
-const RevenueChart = () => {
-  const maxValue = Math.max(...monthlyRevenue.map((entry) => entry.value));
+const RevenueChart = ({ data = [] }) => {
+  const monthlyRevenue = data.length ? data : defaultRevenue;
+  const maxValue = Math.max(1, ...monthlyRevenue.map((entry) => entry.value));
 
   return (
     <div className="h-[250px] flex items-end justify-between gap-3 pt-6">

@@ -163,6 +163,7 @@ const StaffDashboard = () => {
   const [profileMessage, setProfileMessage] = useState("");
   const [passwordMessage, setPasswordMessage] = useState("");
   const [selectedTask, setSelectedTask] = useState(null);
+  const [selectedSupportTask, setSelectedSupportTask] = useState(null);
   const [filteredStatus, setFilteredStatus] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [detailStatus, setDetailStatus] = useState("Pending");
@@ -314,7 +315,7 @@ const StaffDashboard = () => {
   }, [fetchUnreadCount]);
 
   useEffect(() => {
-    const validSections = new Set(["dashboard", "duties", "leaveRequests", "applyLeave", "notifications", "profile", "inventory"]);
+    const validSections = new Set(["dashboard", "duties", "leaveRequests", "applyLeave", "notifications", "profile", "inventory", "poojaSupport"]);
     if (sectionFromQuery && validSections.has(sectionFromQuery)) {
       setActiveSection(sectionFromQuery);
     } else if (location.pathname === "/staff" && !sectionFromQuery) {
@@ -354,6 +355,32 @@ const StaffDashboard = () => {
       });
   }, [tasks, filteredStatus, searchQuery]);
 
+  const poojaSupportTasks = useMemo(() => {
+    return tasks.filter((task) => {
+      const text = `${task.title || task.duty || task.area || task.description || ""}`.toLowerCase();
+      return text.includes("pooja");
+    });
+  }, [tasks]);
+
+  const poojaSupportSummary = useMemo(() => {
+    return poojaSupportTasks.reduce(
+      (acc, task) => {
+        acc.assigned += 1;
+        if (task.status === "Completed") acc.completed += 1;
+        if (task.status === "Pending") acc.pending += 1;
+        if (task.status === "In Progress") acc.inProgress += 1;
+        return acc;
+      },
+      { assigned: 0, completed: 0, pending: 0, inProgress: 0 }
+    );
+  }, [poojaSupportTasks]);
+
+  const todaySupports = useMemo(() => {
+    const today = new Date().toISOString().split("T")[0];
+    const currentDaySupports = poojaSupportTasks.filter((task) => task.dueDate?.startsWith(today));
+    return currentDaySupports.length ? currentDaySupports : poojaSupportTasks.slice(0, 3);
+  }, [poojaSupportTasks]);
+
   const timelineItems = useMemo(() => filteredDuties, [filteredDuties]);
 
   useEffect(() => {
@@ -363,13 +390,26 @@ const StaffDashboard = () => {
         return updated || tasks[0] || null;
       });
     }
-  }, [activeSection, tasks]);
+
+    if (activeSection === "poojaSupport" && poojaSupportTasks.length > 0) {
+      setSelectedSupportTask((current) => {
+        const updated = current ? poojaSupportTasks.find((task) => task._id === current._id) : null;
+        return updated || poojaSupportTasks[0] || null;
+      });
+    }
+  }, [activeSection, tasks, poojaSupportTasks]);
 
   useEffect(() => {
     if (selectedTask) {
       setDetailStatus(selectedTask.status || "Pending");
     }
   }, [selectedTask]);
+
+  useEffect(() => {
+    if (selectedSupportTask) {
+      setDetailStatus(selectedSupportTask.status || "Pending");
+    }
+  }, [selectedSupportTask]);
 
   const leaveSummary = useMemo(() => {
     return leaves.reduce(
@@ -460,7 +500,11 @@ const StaffDashboard = () => {
       await axios.put(`${API_BASE}/staff/task-status/${taskId}`, { status });
       setTasks((prev) => prev.map((task) => (task._id === taskId ? { ...task, status } : task)));
       setSelectedTask((prev) => (prev && prev._id === taskId ? { ...prev, status } : prev));
+      setSelectedSupportTask((prev) => (prev && prev._id === taskId ? { ...prev, status } : prev));
       if (selectedTask && selectedTask._id === taskId) {
+        setDetailStatus(status);
+      }
+      if (selectedSupportTask && selectedSupportTask._id === taskId) {
         setDetailStatus(status);
       }
     } catch (apiError) {
@@ -601,6 +645,13 @@ const StaffDashboard = () => {
             onClick={() => setActiveSection("duties")}
           >
             <TbChecklist /> My Duties
+          </button>
+          <button
+            type="button"
+            className={activeSection === "poojaSupport" ? "nav-item active" : "nav-item"}
+            onClick={() => setActiveSection("poojaSupport")}
+          >
+            <MdTempleHindu /> Pooja Support
           </button>
           <button
             type="button"
@@ -1013,6 +1064,160 @@ const StaffDashboard = () => {
                   </div>
                 ) : (
                   <div className="empty-cell">Select a duty to view details.</div>
+                )}
+              </aside>
+            </div>
+          </section>
+        ) : null}
+
+        {!loading && activeSection === "poojaSupport" ? (
+          <section className="pooja-support-page">
+            <div className="top-cards">
+              <article className="info-card">
+                <div className="icon-bg orange">
+                  <MdTempleHindu />
+                </div>
+                <div>
+                  <h3>Assigned Supports</h3>
+                  <strong>{poojaSupportSummary.assigned.toString().padStart(2, "0")}</strong>
+                  <p>Total Assigned</p>
+                </div>
+              </article>
+              <article className="info-card">
+                <div className="icon-bg green">
+                  <FiCheckCircle />
+                </div>
+                <div>
+                  <h3>Completed</h3>
+                  <strong>{poojaSupportSummary.completed.toString().padStart(2, "0")}</strong>
+                  <p>Tasks Completed</p>
+                </div>
+              </article>
+              <article className="info-card">
+                <div className="icon-bg red">
+                  <TbHourglassLow />
+                </div>
+                <div>
+                  <h3>Pending Supports</h3>
+                  <strong>{poojaSupportSummary.pending.toString().padStart(2, "0")}</strong>
+                  <p>Need attention</p>
+                </div>
+              </article>
+              <article className="info-card">
+                <div className="icon-bg violet">
+                  <FiCalendar />
+                </div>
+                <div>
+                  <h3>Today's Supports</h3>
+                  <strong>{todaySupports.length.toString().padStart(2, "0")}</strong>
+                  <p>Today to complete</p>
+                </div>
+              </article>
+            </div>
+
+            <div className="dashboard-grid">
+              <div className="recent-duties-card">
+                <div className="card-heading">
+                  <div>
+                    <h2>Support Task List</h2>
+                    <p>Manage your assigned pooja support duties.</p>
+                  </div>
+                  <button type="button" className="secondary-btn" onClick={() => setSelectedSupportTask(todaySupports[0] || poojaSupportTasks[0])}>
+                    Today's Schedule →
+                  </button>
+                </div>
+
+                <div className="table-wrap duties-table">
+                  <table className="task-table">
+                    <thead>
+                      <tr>
+                        <th>Booking ID</th>
+                        <th>Pooja</th>
+                        <th>Support Work</th>
+                        <th>Assigned By</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {poojaSupportTasks.length === 0 ? (
+                        <tr>
+                          <td colSpan="5" className="empty-cell">
+                            No pooja support assignments available.
+                          </td>
+                        </tr>
+                      ) : (
+                        poojaSupportTasks.map((task) => (
+                          <tr
+                            key={task._id}
+                            className={selectedSupportTask?._id === task._id ? "selected-row" : ""}
+                            onClick={() => setSelectedSupportTask(task)}
+                          >
+                            <td>{task._id ? task._id.slice(-6).toUpperCase() : "N/A"}</td>
+                            <td>{task.title || task.duty}</td>
+                            <td>{task.duty || task.description || "—"}</td>
+                            <td>{task.assignedBy}</td>
+                            <td>
+                              <span className={`status-chip ${statusClassMap[task.status] || ""}`}>
+                                {task.status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <aside className="details-panel">
+                <div className="card-heading">
+                  <h2>Today's Support Duty</h2>
+                </div>
+                {selectedSupportTask ? (
+                  <div className="details-content">
+                    <div className="detail-row">
+                      <span>Pooja</span>
+                      <strong>{selectedSupportTask.title || selectedSupportTask.duty}</strong>
+                    </div>
+                    <div className="detail-row">
+                      <span>Work</span>
+                      <strong>{selectedSupportTask.duty || selectedSupportTask.description || "General support"}</strong>
+                    </div>
+                    <div className="detail-row">
+                      <span>Time</span>
+                      <strong>{selectedSupportTask.time || "7:00 AM"}</strong>
+                    </div>
+                    <div className="detail-row">
+                      <span>Location</span>
+                      <strong>{selectedSupportTask.area || "Pooja Hall"}</strong>
+                    </div>
+                    <div className="detail-row status-update-row">
+                      <label htmlFor="supportDetailStatus">Status</label>
+                      <select
+                        id="supportDetailStatus"
+                        value={detailStatus}
+                        onChange={(e) => setDetailStatus(e.target.value)}
+                        disabled={updatingTaskId === selectedSupportTask._id}
+                      >
+                        {TASK_STATUSES.map((status) => (
+                          <option key={status} value={status}>{status}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="quick-actions">
+                      <button type="button" onClick={() => setSelectedSupportTask(selectedSupportTask)}>
+                        <FiFileText /> View Details
+                      </button>
+                      <button type="button" onClick={() => handleTaskStatusChange(selectedSupportTask._id, detailStatus)} disabled={updatingTaskId === selectedSupportTask._id}>
+                        <FiSave /> Update Status
+                      </button>
+                      <button type="button" onClick={() => setSelectedSupportTask(todaySupports[0] || poojaSupportTasks[0])}>
+                        <FiCalendar /> Today's Schedule
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="empty-cell">Select a support duty to view details.</div>
                 )}
               </aside>
             </div>

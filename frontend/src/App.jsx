@@ -20,6 +20,7 @@ import QRUPIDonations from "./pages/admin/donations/QRUPIDonations";
 import RefundRequests from "./pages/admin/donations/RefundRequests";
 import DonorNotifications from "./pages/admin/donations/DonorNotifications";
 import DonationSettings from "./pages/admin/donations/DonationSettings";
+import ReportsAnalytics from "./pages/admin/ReportsAnalytics";
 import MemberManagement from "./pages/admin/MemberManagement";
 import AllEmployees from "./pages/admin/employee/AllEmployees";
 import AddEmployee from "./pages/admin/employee/AddEmployee";
@@ -125,6 +126,16 @@ function App() {
           <ProtectedRoute allowedRoles={["admin"]}>
             <AdminLayout>
               <FeedbackManagement />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/reports"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminLayout>
+              <ReportsAnalytics />
             </AdminLayout>
           </ProtectedRoute>
         }

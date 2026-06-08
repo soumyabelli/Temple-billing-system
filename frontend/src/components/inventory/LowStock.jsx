@@ -1,17 +1,16 @@
-const items = [
-  { name: "Ghee Bottles", left: 8 },
-  { name: "Camphor Packs", left: 5 },
-  { name: "Agarbatti Boxes", left: 11 },
-  { name: "Coconut Stock", left: 7 },
-];
+const LowStock = ({ items = [] }) => {
+  const lowStockItems = items.filter((item) => String(item.status || "").toLowerCase().includes("low"));
 
-const LowStock = () => {
+  if (!lowStockItems.length) {
+    return <p className="mt-5 text-sm text-gray-500">No low stock alerts at the moment.</p>;
+  }
+
   return (
     <div className="mt-5 space-y-3">
-      {items.map((item) => (
+      {lowStockItems.map((item) => (
         <div key={item.name} className="flex items-center justify-between rounded-xl bg-rose-50 px-4 py-3">
           <span className="font-medium text-gray-700">{item.name}</span>
-          <span className="font-bold text-rose-600">{item.left} left</span>
+          <span className="font-bold text-rose-600">{item.stock ?? "Low"} left</span>
         </div>
       ))}
     </div>
