@@ -8,6 +8,7 @@ const staffRoutes = require("./routes/staffRoutes");
 const attendanceRoutes = require("./routes/attendanceRoutes");
 const leaveRoutes = require("./routes/leaveRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
+const shiftRoutes = require("./routes/shiftRoutes");
 
 const app = express();
 
@@ -26,5 +27,6 @@ app.use("/api/devotee", devoteeRoutes);
 app.use("/api/staff", staffRoutes);
 app.use("/api/staff/attendance", attendanceRoutes);
 app.use("/api/leaves", leaveRoutes);
+app.use("/api/shifts", shiftRoutes);
 
 module.exports = app;

@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, PieChart, Pie, Cell } from "recharts";
 import { jsPDF } from "jspdf";
 import * as XLSX from "xlsx";
-import AdminLayout from "../../layouts/AdminLayout";
 import { useAuth } from "../../context/AuthContext";
 import {
   getAdminBookings,
@@ -427,7 +426,6 @@ const ReportsAnalytics = () => {
   const revenueChart = useMemo(() => bookingChartData.length ? bookingChartData : [{ month: "No data", revenue: 0 }], [bookingChartData]);
 
   return (
-    <AdminLayout>
       <div className="mt-5 space-y-8">
         <div className="rounded-3xl border border-[#e5e7eb] bg-white p-8 shadow-sm">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -709,7 +707,6 @@ const ReportsAnalytics = () => {
           </>
         )}
       </div>
-    </AdminLayout>
   );
 };
 

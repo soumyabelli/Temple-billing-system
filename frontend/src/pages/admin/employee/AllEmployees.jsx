@@ -251,11 +251,24 @@ const AllEmployees = () => {
         <SectionCard title="Selected Employee" subtitle="Review detailed employee profile." className="bg-white/95 text-slate-950">
           <div className="grid gap-4 lg:grid-cols-3">
             <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
-              <p className="text-sm text-slate-500">Name</p>
-              <h3 className="mt-2 text-xl font-semibold text-slate-900">{selectedEmployee.name}</h3>
-              <p className="mt-1 text-sm text-slate-600">
-                {selectedEmployee.role} | {selectedEmployee.status || "Active"}
-              </p>
+              <div className="flex items-center gap-4">
+                <div className="h-16 w-16 overflow-hidden rounded-2xl bg-slate-200">
+                  {selectedEmployee.photo ? (
+                    <img src={selectedEmployee.photo} alt={selectedEmployee.name} className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="grid h-full w-full place-items-center text-xl font-bold text-slate-600">
+                      {(selectedEmployee.name || "E").charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <p className="text-sm text-slate-500">Name</p>
+                  <h3 className="mt-2 text-xl font-semibold text-slate-900">{selectedEmployee.name}</h3>
+                  <p className="mt-1 text-sm text-slate-600">
+                    {selectedEmployee.role} | {selectedEmployee.status || "Active"}
+                  </p>
+                </div>
+              </div>
             </div>
             <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
               <p className="text-sm text-slate-500">Department</p>

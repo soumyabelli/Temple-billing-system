@@ -292,19 +292,6 @@ exports.getEmployeeProfileByUserId = async (req, res) => {
     if (!user || !employee) {
       return res.status(404).json({ message: "Employee profile not found" });
     }
-    await Notification.create({
-  title: "Profile Updated",
-  message: `${updatedEmployee.name} updated profile information`,
-  audienceRole: "admin",
-  category: "employee",
-});
-
-  await Notification.create({
-  title: "Password Changed",
-  message: `${employee.name} changed account password`,
-  audienceRole: "admin",
-  category: "security",
-});
 
     return res.json({
       message: "Profile loaded",

@@ -140,6 +140,7 @@ const toProfileForm = (profile = {}) => ({
   employmentType: profile.employmentType || "Full-time",
   permissions: profile.permissions || "",
   status: profile.status || "Active",
+  photo: profile.photo || "",
 });
 
 const StaffDashboard = () => {
@@ -552,6 +553,19 @@ const StaffDashboard = () => {
     setProfileForm((prev) => ({ ...prev, [field]: value }));
   };
 
+  const handleProfilePhotoChange = (file) => {
+    if (!file) {
+      setProfileForm((prev) => ({ ...prev, photo: "" }));
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setProfileForm((prev) => ({ ...prev, photo: String(reader.result || "") }));
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleProfileSave = async (event) => {
     event.preventDefault();
     if (!profileForm.name.trim() || !profileForm.email.trim()) {
@@ -812,7 +826,13 @@ const StaffDashboard = () => {
               <div className="profile-card">
                 <h2>Staff Profile</h2>
                 <div className="profile-meta">
-                  <div className="avatar">{displayName.charAt(0).toUpperCase()}</div>
+                  <div className="avatar">
+                    {profileForm.photo ? (
+                      <img src={profileForm.photo} alt={displayName} className="avatar-image" />
+                    ) : (
+                      displayName.charAt(0).toUpperCase()
+                    )}
+                  </div>
                   <div>
                     <h3>{displayName}</h3>
                     <p className="role-badge">Temple Staff</p>
@@ -857,7 +877,7 @@ const StaffDashboard = () => {
               <div className="quick-actions-card">
                 <h2>Quick Actions</h2>
                 <div className="quick-actions">
-                  <button type="button" onClick={() => setActiveSection("dashboard")}>
+                  <button type="button" onClick={() => setActiveSection("duties")}>
                     <FiClipboard />
                     <span>Task List</span>
                   </button>
@@ -1559,6 +1579,26 @@ const StaffDashboard = () => {
                         value={profileForm.status}
                         onChange={(e) => handleProfileInputChange("status", e.target.value)}
                       />
+                    </div>
+                  </div>
+
+                  <div className="profile-photo-upload">
+                    <div className="profile-photo-preview">
+                      {profileForm.photo ? (
+                        <img src={profileForm.photo} alt={profileForm.name || "Profile preview"} />
+                      ) : (
+                        <span>{(profileForm.name || staff?.name || "S").charAt(0).toUpperCase()}</span>
+                      )}
+                    </div>
+                    <div className="profile-photo-upload-content">
+                      <label htmlFor="profile-photo">Profile Picture</label>
+                      <input
+                        id="profile-photo"
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleProfilePhotoChange(e.target.files?.[0])}
+                      />
+                      <p>Optional. Upload a JPG or PNG so admin can see your photo in employee details.</p>
                     </div>
                   </div>
 
