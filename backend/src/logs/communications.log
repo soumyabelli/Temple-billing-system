@@ -95,3 +95,116 @@ Category: Pooja
 Transaction ID: N/A
 Thank you for your donation!
 
+[2026-06-09T08:47:53.261Z] EMAIL
+To: soumya2880@gmail.com
+Subject: Pooja Booking Confirmation
+Pooja Booking Confirmation
+Service: pushpa pooje
+Date & Time: 2026-06-09T05:19
+Amount: ₹230
+Thank you!
+
+[2026-06-09T08:47:53.297Z] SMS
+To: 9945650664
+Message: Pooja booking confirmed! Service: pushpa pooje on 2026-06-09T05:19. Amount: ₹230. -Temple
+
+[2026-06-09T08:48:03.655Z] EMAIL
+To: soumya2880@gmail.com
+Subject: Pooja Booking Confirmation
+Pooja Booking Confirmation
+Service: Abhisheka
+Date & Time: 2026-06-08T14:17
+Amount: ₹2000
+Thank you!
+
+[2026-06-09T08:48:03.678Z] SMS
+To: 9945650664
+Message: Pooja booking confirmed! Service: Abhisheka on 2026-06-08T14:17. Amount: ₹2000. -Temple
+
+[2026-06-09T08:50:26.484Z] EMAIL
+To: soumya2880@gmail.com
+Subject: Donation Receipt
+Donation Receipt
+Amount: ₹3344
+Category: Sponsorship
+Transaction ID: N/A
+Thank you for your donation!
+
+[2026-06-09T08:50:26.512Z] SMS
+To: 9945650664
+Message: Donation received! Amount: ₹3344. Transaction ID: N/A. Thank you! -Temple
+
+[2026-06-09T08:51:48.300Z] EMAIL
+To: soumya2880@gmail.com
+Subject: Prasadam Order Confirmation
+Prasadam Order Confirmed
+Item: Pulihora Prasadam
+Quantity: 3
+Amount: ₹363
+Thank you!
+
+[2026-06-09T08:51:48.302Z] SMS
+To: 9945650664
+Message: Prasadam order confirmed! Item: Pulihora Prasadam. Qty: 3. Ready soon! -Temple
+
+[2026-06-09T09:54:53.945Z] EMAIL
+To: soumya2880@gmail.com
+Subject: Donation Receipt
+Donation Receipt
+Amount: ₹501
+Category: Annadanam
+Transaction ID: N/A
+Thank you for your donation!
+
+[2026-06-09T09:54:53.951Z] SMS
+To: 9945650664
+Message: Donation received! Amount: ₹501. Transaction ID: N/A. Thank you! -Temple
+
+[2026-06-09T10:02:19.331Z] EMAIL
+To: localtest@example.com
+Subject: Donation Receipt
+Donation Receipt
+Amount: ₹100
+Category: General
+Transaction ID: SIM_TXN_1780999338919
+Thank you for your donation!
+
+[2026-06-09T10:07:16.426Z] EMAIL
+To: soumya2880@gmail.com
+Subject: Donation Receipt
+Donation Receipt
+Amount: ₹501
+Category: Annadanam
+Transaction ID: SIM_TXN_1780999636048
+Thank you for your donation!
+
+[2026-06-09T10:07:16.481Z] SMS
+To: 9945650664
+Message: Donation received! Amount: ₹501. Transaction ID: SIM_TXN_1780999636048. Thank you! -Temple
+
+[2026-06-09T10:07:37.305Z] EMAIL
+To: soumya2880@gmail.com
+Subject: Donation Receipt
+Donation Receipt
+Amount: ₹57654
+Category: General
+Transaction ID: SIM_TXN_1780999657159
+Thank you for your donation!
+
+[2026-06-09T10:07:37.307Z] SMS
+To: 9945650664
+Message: Donation received! Amount: ₹57654. Transaction ID: SIM_TXN_1780999657159. Thank you! -Temple
+
+[2026-06-09T10:07:56.114Z] EMAIL
+To: soumya2880@gmail.com
+Subject: Donation Receipt
+Donation Receipt
+Amount: ₹55
+Category: General
+Transaction ID: SIM_TXN_1780999675999
+Thank you for your donation!
+
+[2026-06-09T10:07:56.117Z] SMS
+To: 9945650664
+Message: Donation received! Amount: ₹55. Transaction ID: SIM_TXN_1780999675999. Thank you! -Temple
+

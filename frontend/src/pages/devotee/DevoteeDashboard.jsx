@@ -210,6 +210,7 @@ const DevoteeDashboard = () => {
   const [bookingContact, setBookingContact] = useState("");
   const [bookingNotes, setBookingNotes] = useState("");
   const [bookingLoading, setBookingLoading] = useState(false);
+  const [bookingPaymentMethod, setBookingPaymentMethod] = useState("UPI");
   const [donationCategories, setDonationCategories] = useState(getDonationTypes());
   const [donationCategory, setDonationCategory] = useState(getDonationTypes()[0] || "General");
   const [supportRequests, setSupportRequests] = useState([]);
@@ -220,6 +221,7 @@ const DevoteeDashboard = () => {
   const [donationLoading, setDonationLoading] = useState(false);
   const [donationError, setDonationError] = useState("");
   const [donationSuccess, setDonationSuccess] = useState("");
+  const [donationView, setDonationView] = useState("All");
   const [profileEditMode, setProfileEditMode] = useState(false);
   const [profileForm, setProfileForm] = useState({ name: "", email: "", phone: "", address: "", place: "" });
   const [profileMessage, setProfileMessage] = useState("");
@@ -244,6 +246,16 @@ const DevoteeDashboard = () => {
   );
 
   const paymentMethods = ["UPI", "Cash", "Card", "Bank Transfer", "Net Banking"];
+
+  const minBookingDatetime = useMemo(() => {
+    const d = new Date(currentDateTime || new Date());
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const hours = String(d.getHours()).padStart(2, "0");
+    const minutes = String(d.getMinutes()).padStart(2, "0");
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  }, [currentDateTime]);
 
   const devoteeName = useMemo(() => profileData.name || user?.name || "Devotee User", [profileData.name, user?.name]);
 
@@ -409,11 +421,12 @@ const DevoteeDashboard = () => {
       }
 
       setDonationError("");
-      setDonationSuccess("");
-      setDonationLoading(true);
-
+      // switch to donations page and preselect event
+      setSelectedEventId(eventItem._id);
+      setDonationView("Festival");
+      setActivePage("Donations");
       // Create Razorpay order on backend and a pending donation record
-      const { order, donation, key } = await createRazorpayOrder({
+      const { order, donation, key, simulated } = await createRazorpayOrder({
         amount: amt,
         donorName: profileData.name,
         donorEmail: profileData.email,
@@ -423,6 +436,40 @@ const DevoteeDashboard = () => {
         notes: donationNotes,
         eventId: eventItem._id,
       });
+
+      // If server returned a simulated donation (no Razorpay keys), treat as completed and refresh UI
+      if (simulated || (donation && donation.status === "Completed")) {
+        const [updatedDonations, eventsRes, notificationsRes] = await Promise.all([
+          getDevoteeDonations(user?.email),
+          getDevoteeEvents(),
+          getDevoteeNotifications(user?.email),
+        ]);
+
+        setDonationsData(
+          (updatedDonations.donations || []).map((donation) => {
+            const eventMatch = (eventsRes.events || []).find((ev) => ev._id === donation.eventId || ev._id === String(donation.eventId));
+            return {
+              ...donation,
+              eventTitle: eventMatch ? eventMatch.title : undefined,
+              date: donation.createdAt ? new Date(donation.createdAt).toLocaleDateString() : donation.date || "",
+              amount: donation.amount,
+            };
+          })
+        );
+
+        setEventsData((eventsRes.events || []).map((event) => ({ ...event, formattedDate: event.date ? new Date(event.date).toLocaleDateString() : event.date || "" })));
+        setNotificationsData(formatNotifications(notificationsRes.notifications || []));
+
+        setDonationSuccess("Donation recorded successfully. Your receipt is available in Receipts.");
+        setDonationCategory("General");
+        setDonationAmount(501);
+        setDonationMethod("UPI");
+        setDonationContact("");
+        setDonationNotes("");
+        setSelectedEventId(null);
+        setActivePage("Payment History");
+        return;
+      }
 
       const loaded = await loadRazorpayScript();
       if (!loaded) {
@@ -508,6 +555,18 @@ const DevoteeDashboard = () => {
   const handleBookingSubmit = async () => {
     if (!bookingService || !bookingDatetime || !bookingAmount) return;
 
+    // Validate selected datetime is in the future
+    const selected = new Date(bookingDatetime);
+    if (Number.isNaN(selected.getTime()) || selected.getTime() <= Date.now()) {
+      window.alert("Please select a future date and time for the booking.");
+      return;
+    }
+
+    if (!bookingPaymentMethod) {
+      window.alert("Please select a payment method for the booking.");
+      return;
+    }
+
     setBookingLoading(true);
     try {
       const payload = {
@@ -517,6 +576,7 @@ const DevoteeDashboard = () => {
         service: bookingService,
         datetime: bookingDatetime,
         amount: bookingAmount,
+        paymentMethod: bookingPaymentMethod,
         status: "Pending",
         contactNumber: bookingContact,
         notes: bookingNotes,
@@ -530,6 +590,7 @@ const DevoteeDashboard = () => {
       setBookingAmount(501);
       setBookingContact("");
       setBookingNotes("");
+      setBookingPaymentMethod("UPI");
       setActivePage("My Bookings");
     } catch (error) {
       console.warn("Unable to create booking", error);
@@ -555,46 +616,179 @@ const DevoteeDashboard = () => {
     setDonationLoading(true);
 
     try {
-      await createDevoteeDonation({
+      // If user chooses Cash, record donation immediately as completed
+      if (!donationMethod || donationMethod === "Cash") {
+        await createDevoteeDonation({
+          donorName: profileData.name,
+          donorEmail: profileData.email,
+          donorPhone: profileData.phone,
+          amount: donationAmount,
+          category: donationCategory,
+          paymentMethod: donationMethod || "Cash",
+          contactNumber: donationContact,
+          notes: donationNotes,
+          eventId: selectedEventId || undefined,
+        });
+
+        const [updatedDonations, eventsRes, notificationsRes] = await Promise.all([
+          getDevoteeDonations(user?.email),
+          getDevoteeEvents(),
+          getDevoteeNotifications(user?.email),
+        ]);
+
+        setDonationsData(
+          (updatedDonations.donations || []).map((donation) => {
+            const eventMatch = (eventsRes.events || []).find((ev) => ev._id === donation.eventId || ev._id === String(donation.eventId));
+            return {
+              ...donation,
+              eventTitle: eventMatch ? eventMatch.title : undefined,
+              date: donation.createdAt ? new Date(donation.createdAt).toLocaleDateString() : donation.date || "",
+              amount: donation.amount,
+            };
+          })
+        );
+        setEventsData((eventsRes.events || []).map((event) => ({ ...event, formattedDate: event.date ? new Date(event.date).toLocaleDateString() : event.date || "" })));
+        setNotificationsData(formatNotifications(notificationsRes.notifications || []));
+        setDonationSuccess("Donation recorded successfully. Your receipt is available in Receipts.");
+        setDonationCategory("General");
+        setDonationAmount(501);
+        setDonationMethod("UPI");
+        setDonationContact("");
+        setDonationNotes("");
+        setSelectedEventId(null);
+        setActivePage("Payment History");
+        return;
+      }
+
+      // Otherwise, treat as online payment and create a Razorpay order
+      const loadRazorpayScript = () =>
+        new Promise((resolve) => {
+          if (window.Razorpay) return resolve(true);
+          const script = document.createElement("script");
+          script.src = "https://checkout.razorpay.com/v1/checkout.js";
+          script.onload = () => resolve(true);
+          script.onerror = () => resolve(false);
+          document.body.appendChild(script);
+        });
+
+      const { order, donation, key, simulated } = await createRazorpayOrder({
+        amount: donationAmount,
         donorName: profileData.name,
         donorEmail: profileData.email,
         donorPhone: profileData.phone,
-        amount: donationAmount,
         category: donationCategory,
         paymentMethod: donationMethod,
-        contactNumber: donationContact,
         notes: donationNotes,
         eventId: selectedEventId || undefined,
       });
 
-      // Refresh donations, events and notifications so gallery and history reflect changes
-      const [updatedDonations, eventsRes, notificationsRes] = await Promise.all([
-        getDevoteeDonations(user?.email),
-        getDevoteeEvents(),
-        getDevoteeNotifications(user?.email),
-      ]);
+      // If server returned a simulated donation (no Razorpay keys), treat as completed and refresh UI
+      if (simulated || (donation && donation.status === "Completed")) {
+        const [updatedDonations, eventsRes, notificationsRes] = await Promise.all([
+          getDevoteeDonations(user?.email),
+          getDevoteeEvents(),
+          getDevoteeNotifications(user?.email),
+        ]);
 
-      setDonationsData(
-        (updatedDonations.donations || []).map((donation) => {
-          const eventMatch = (eventsRes.events || []).find((ev) => ev._id === donation.eventId || ev._id === String(donation.eventId));
-          return {
-            ...donation,
-            eventTitle: eventMatch ? eventMatch.title : undefined,
-            date: donation.createdAt ? new Date(donation.createdAt).toLocaleDateString() : donation.date || "",
-            amount: donation.amount,
-          };
-        })
-      );
-      setEventsData((eventsRes.events || []).map((event) => ({ ...event, formattedDate: event.date ? new Date(event.date).toLocaleDateString() : event.date || "" })));
-      setNotificationsData(formatNotifications(notificationsRes.notifications || []));
-      setDonationSuccess("Donation recorded successfully. Your receipt is available in Receipts.");
-      setDonationCategory("General");
-      setDonationAmount(501);
-      setDonationMethod("UPI");
-      setDonationContact("");
-      setDonationNotes("");
-      setSelectedEventId(null);
-      setActivePage("Payment History");
+        setDonationsData(
+          (updatedDonations.donations || []).map((donation) => {
+            const eventMatch = (eventsRes.events || []).find((ev) => ev._id === donation.eventId || ev._id === String(donation.eventId));
+            return {
+              ...donation,
+              eventTitle: eventMatch ? eventMatch.title : undefined,
+              date: donation.createdAt ? new Date(donation.createdAt).toLocaleDateString() : donation.date || "",
+              amount: donation.amount,
+            };
+          })
+        );
+
+        setEventsData((eventsRes.events || []).map((event) => ({ ...event, formattedDate: event.date ? new Date(event.date).toLocaleDateString() : event.date || "" })));
+        setNotificationsData(formatNotifications(notificationsRes.notifications || []));
+
+        setDonationSuccess("Donation recorded successfully. Your receipt is available in Receipts.");
+        setDonationCategory("General");
+        setDonationAmount(501);
+        setDonationMethod("UPI");
+        setDonationContact("");
+        setDonationNotes("");
+        setSelectedEventId(null);
+        setActivePage("Payment History");
+        return;
+      }
+
+      const loaded = await loadRazorpayScript();
+      if (!loaded) {
+        setDonationError("Unable to load payment gateway. Try again later.");
+        return;
+      }
+
+      const options = {
+        key: key || process.env.REACT_APP_RAZORPAY_KEY_ID || "",
+        amount: order.amount,
+        currency: order.currency,
+        name: "Temple Donations",
+        description: (eventsData.find((e) => e._id === selectedEventId) || {}).title || donationCategory,
+        order_id: order.id,
+        prefill: {
+          name: profileData.name,
+          email: profileData.email,
+          contact: profileData.phone,
+        },
+        handler: async function (resp) {
+          try {
+            setDonationLoading(true);
+            await verifyRazorpayPayment({
+              razorpay_order_id: resp.razorpay_order_id,
+              razorpay_payment_id: resp.razorpay_payment_id,
+              razorpay_signature: resp.razorpay_signature,
+              donationId: donation._id,
+            });
+
+            const [updatedDonations, eventsRes, notificationsRes] = await Promise.all([
+              getDevoteeDonations(user?.email),
+              getDevoteeEvents(),
+              getDevoteeNotifications(user?.email),
+            ]);
+
+            setDonationsData(
+              (updatedDonations.donations || []).map((donation) => {
+                const eventMatch = (eventsRes.events || []).find((ev) => ev._id === donation.eventId || ev._id === String(donation.eventId));
+                return {
+                  ...donation,
+                  eventTitle: eventMatch ? eventMatch.title : undefined,
+                  date: donation.createdAt ? new Date(donation.createdAt).toLocaleDateString() : donation.date || "",
+                  amount: donation.amount,
+                };
+              })
+            );
+
+            setEventsData((eventsRes.events || []).map((event) => ({ ...event, formattedDate: event.date ? new Date(event.date).toLocaleDateString() : event.date || "" })));
+            setNotificationsData(formatNotifications(notificationsRes.notifications || []));
+
+            setDonationSuccess("Donation recorded successfully. Your receipt is available in Receipts.");
+            setDonationCategory("General");
+            setDonationAmount(501);
+            setDonationMethod("UPI");
+            setDonationContact("");
+            setDonationNotes("");
+            setSelectedEventId(null);
+            setActivePage("Payment History");
+          } catch (err) {
+            setDonationError(err?.response?.data?.error || "Payment verification failed.");
+            console.warn("verify handler error", err);
+          } finally {
+            setDonationLoading(false);
+          }
+        },
+        modal: {
+          ondismiss: function () {
+            // user closed checkout
+          },
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
     } catch (error) {
       setDonationError(error?.response?.data?.error || "Unable to process donation.");
       console.warn("Unable to submit donation", error);
@@ -681,17 +875,19 @@ const DevoteeDashboard = () => {
       ]);
       return;
     }
-
-    downloadPdfFile(`donation-receipt-${receiptId}.pdf`, [
+    const donationLines = [
       "Donation Receipt",
       "----------------",
       ...baseLines,
+      item.eventTitle ? `Event: ${item.eventTitle}` : null,
       `Donation Type: ${item.category || item.type || "Donation"}`,
       `Amount: ${formatCurrency(item.amount)}`,
       `Payment Method: ${item.paymentMethod || "UPI"}`,
       `Status: ${item.status || "Completed"}`,
-      item.notes ? `Notes: ${item.notes}` : "",
-    ].filter(Boolean));
+      item.notes ? `Notes: ${item.notes}` : null,
+    ].filter(Boolean);
+
+    downloadPdfFile(`donation-receipt-${receiptId}.pdf`, donationLines);
   };
 
   const handlePaymentHistoryDownload = () => {
@@ -1033,6 +1229,7 @@ const DevoteeDashboard = () => {
                 type="datetime-local"
                 value={bookingDatetime}
                 onChange={(e) => setBookingDatetime(e.target.value)}
+                min={minBookingDatetime}
                 className={glassInput}
               />
             </div>
@@ -1046,6 +1243,17 @@ const DevoteeDashboard = () => {
                 readOnly
                 className={glassInput}
               />
+            </div>
+
+            <div>
+              <p className="text-sm uppercase tracking-[0.08em] text-[#8d6925]">Payment Method</p>
+              <select value={bookingPaymentMethod} onChange={(e) => setBookingPaymentMethod(e.target.value)} className={glassInput}>
+                {paymentMethods.map((m) => (
+                  <option key={m} value={m}>
+                    {m}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div>
@@ -1108,6 +1316,7 @@ const DevoteeDashboard = () => {
               <p className="mt-3">Service: {bookingService}</p>
               <p>Date: {bookingDatetime ? new Date(bookingDatetime).toLocaleString() : "Not selected"}</p>
               <p>Amount: {formatCurrency(bookingAmount)}</p>
+              <p>Payment: {bookingPaymentMethod}</p>
             </div>
           </div>
         </div>
@@ -1168,8 +1377,26 @@ const DevoteeDashboard = () => {
             <h2 className="text-[2rem] font-bold">Donate</h2>
             <p className="mt-2 text-[#4f4f4f]">Give any amount and see your donation reflected in history, payment records, and receipts.</p>
           </div>
-          <div className="rounded-2xl bg-[#f4f7f3] px-4 py-3 text-sm font-semibold text-[#1b7f77]">
-            Total Donations: {formatCurrency(totalDonations)}
+          <div className="flex items-center gap-3">
+            <div className="rounded-2xl bg-[#f4f7f3] px-4 py-3 text-sm font-semibold text-[#1b7f77]">
+              Total Donations: {formatCurrency(totalDonations)}
+            </div>
+            <div className="rounded-xl border border-[#ececec] bg-white px-3 py-1 text-sm">
+              <button
+                type="button"
+                onClick={() => setDonationView("All")}
+                className={`px-3 py-1 text-sm font-semibold ${donationView === "All" ? "bg-[#1b7f77] text-white rounded-lg" : "text-[#4f5866] rounded"}`}
+              >
+                All
+              </button>
+              <button
+                type="button"
+                onClick={() => setDonationView("Festival")}
+                className={`ml-2 px-3 py-1 text-sm font-semibold ${donationView === "Festival" ? "bg-[#ff8b00] text-white rounded-lg" : "text-[#4f5866] rounded"}`}
+              >
+                Festival
+              </button>
+            </div>
           </div>
         </div>
 
@@ -1210,6 +1437,7 @@ const DevoteeDashboard = () => {
                 <input
                   type="number"
                   min="1"
+                  id="donation-amount-input"
                   value={donationAmount}
                   onChange={(e) => setDonationAmount(Number(e.target.value))}
                   className={glassInput}
@@ -1271,22 +1499,26 @@ const DevoteeDashboard = () => {
             <h3 className="text-xl font-semibold">Donation History</h3>
             <p className="mt-2 text-sm text-[#5d5d5d]">Your latest donations are stored here and used in payment history and receipts.</p>
             <div className="mt-6 space-y-3">
-              {donationsData.length > 0 ? (
-                donationsData.map((item) => (
+              {(() => {
+                const filtered = donationView === "Festival"
+                  ? (selectedEventId ? donationsData.filter((d) => String(d.eventId) === String(selectedEventId)) : donationsData.filter((d) => d.eventId))
+                  : donationsData;
+
+                if (!filtered || filtered.length === 0) return <div className={glassItem}>No donations have been recorded yet.</div>;
+
+                return filtered.map((item) => (
                   <div key={`${item._id || Math.random()}`} className="rounded-[26px] border border-white/40 bg-white/55 p-4 shadow-sm backdrop-blur-sm">
                     <div className="flex flex-wrap items-center justify-between gap-4">
                       <div>
-                        <p className="font-semibold text-[#1f1f1f]">{item.category || item.type || "Donation"}</p>
-                        <p className="text-sm text-[#5d5d5d]">{item.date || new Date(item.createdAt).toLocaleDateString()}</p>
+                        <p className="font-semibold text-[#1f1f1f]">{item.category || item.type || (item.eventTitle ? `Donation - ${item.eventTitle}` : "Donation")}</p>
+                        <p className="text-sm text-[#5d5d5d]">{item.eventTitle ? `${item.eventTitle} • ${item.date || new Date(item.createdAt).toLocaleDateString()}` : item.date || new Date(item.createdAt).toLocaleDateString()}</p>
                       </div>
                       <p className="text-lg font-bold text-[#1b7f77]">{formatCurrency(item.amount)}</p>
                     </div>
                     <p className="mt-2 text-sm text-[#6b6b6b]">{item.paymentMethod || "UPI"} • {item.status || "Completed"}</p>
                   </div>
-                ))
-              ) : (
-                <div className={glassItem}>No donations have been recorded yet.</div>
-              )}
+                ));
+              })()}
             </div>
           </div>
         </div>
@@ -1597,9 +1829,18 @@ const DevoteeDashboard = () => {
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
+                          // switch to donations page and preselect this event
                           setSelectedEventId(item._id);
-                          document.getElementById('donation-form')?.scrollIntoView({ behavior: 'smooth' });
-                          quickDonate(item);
+                          setActivePage("Donations");
+                          // after navigation/render, scroll to form and focus amount
+                          setTimeout(() => {
+                            const form = document.getElementById('donation-form');
+                            if (form) {
+                              form.scrollIntoView({ behavior: 'smooth' });
+                              const amt = document.getElementById('donation-amount-input');
+                              if (amt) amt.focus();
+                            }
+                          }, 250);
                         }}
                         className="mt-2 rounded-xl bg-[#ff8b00] px-3 py-1 text-sm font-semibold text-white"
                       >

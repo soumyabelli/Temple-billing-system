@@ -18,6 +18,11 @@ const bookingSchema = new mongoose.Schema(
     service: { type: String, trim: true, required: true },
     datetime: { type: String, trim: true, required: true },
     amount: { type: Number, required: true, min: 0 },
+    paymentMethod: {
+      type: String,
+      enum: ["UPI", "Cash", "Card", "Bank Transfer", "Net Banking"],
+      default: "UPI",
+    },
     status: {
       type: String,
       enum: ["Pending", "Confirmed", "Rejected", "Cancelled"],

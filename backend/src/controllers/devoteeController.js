@@ -32,10 +32,28 @@ const getBookings = async (req, res) => {
 
 const createBooking = async (req, res) => {
   try {
-    const { devoteeName, devoteeEmail, devoteePhone, service, datetime, amount, status, contactNumber, notes, devoteeId, eventId } = req.body;
+    const { devoteeName, devoteeEmail, devoteePhone, service, datetime, amount, status, contactNumber, notes, devoteeId, eventId, paymentMethod } = req.body;
 
     if (!devoteeName || !service || !datetime || amount == null) {
       return res.status(400).json({ error: "Missing required booking fields." });
+    }
+
+    // Validate amount
+    const numericAmount = Number(amount);
+    if (Number.isNaN(numericAmount) || numericAmount <= 0) {
+      return res.status(400).json({ error: "Booking amount must be a positive number." });
+    }
+
+    // Validate datetime is a future time
+    const parsed = new Date(datetime);
+    if (Number.isNaN(parsed.getTime()) || parsed.getTime() <= Date.now()) {
+      return res.status(400).json({ error: "Booking datetime must be a future date/time." });
+    }
+
+    const allowedPaymentMethods = ["UPI", "Cash", "Card", "Bank Transfer", "Net Banking"];
+    const pm = paymentMethod && String(paymentMethod).trim() ? String(paymentMethod).trim() : undefined;
+    if (pm && !allowedPaymentMethods.includes(pm)) {
+      return res.status(400).json({ error: "Invalid payment method." });
     }
 
     const booking = await Booking.create({
@@ -46,7 +64,8 @@ const createBooking = async (req, res) => {
       devoteePhone: devoteePhone || contactNumber,
       service,
       datetime,
-      amount,
+      amount: numericAmount,
+      paymentMethod: pm || undefined,
       status: status || "Pending",
       contactNumber,
       notes,
@@ -669,15 +688,61 @@ const createRazorpayOrder = async (req, res) => {
       return res.status(400).json({ error: "Invalid amount provided." });
     }
 
-    const razorpayClient = new Razorpay({
-      key_id: process.env.RAZORPAY_KEY_ID || "",
-      key_secret: process.env.RAZORPAY_KEY_SECRET || "",
-    });
-
+    // If Razorpay keys are not present, simulate an order for local/dev testing
     if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
-      console.warn("Razorpay keys missing in environment variables.");
-      return res.status(500).json({ error: "Razorpay credentials not configured on server." });
+      console.warn("Razorpay keys missing — creating simulated order for development.", { body: req.body });
+      const order = {
+        id: `sim_order_${Date.now()}`,
+        amount: Math.round(numericAmount * 100),
+        currency: "INR",
+        receipt: `donation_${Date.now()}`,
+      };
+
+      const donation = await Donation.create({
+        donorName: donorName || "Anonymous",
+        donorEmail: donorEmail ? String(donorEmail).toLowerCase() : undefined,
+        donorPhone: donorPhone || undefined,
+        amount: numericAmount,
+        category,
+        paymentMethod,
+        notes,
+        status: "Completed",
+        eventId: eventId || undefined,
+        razorpayOrderId: order.id,
+        transactionId: `SIM_TXN_${Date.now()}`,
+      });
+
+      // Update event collection immediately for simulated donations
+      if (eventId) {
+        try {
+          await Event.findByIdAndUpdate(String(eventId), { $inc: { collection: numericAmount } });
+        } catch (err) {
+          console.error("Failed to update event collection for simulated donation:", err);
+        }
+      }
+
+      // Create notification and send receipt where possible
+      try {
+        await Notification.create({
+          title: "Donation Received",
+          message: `${donorName || "Anonymous"} donated INR ${numericAmount} (simulated).`,
+          audienceEmail: donorEmail ? String(donorEmail).toLowerCase() : undefined,
+        });
+        if (donorEmail || donorPhone) {
+          const donor = { name: donorName, email: donorEmail, phone: donorPhone };
+          await sendDonationReceipt(donor, { amount: numericAmount, category, transactionId: donation.transactionId });
+        }
+      } catch (notifErr) {
+        console.warn("Notification for simulated donation failed:", notifErr);
+      }
+
+      return res.status(201).json({ order, donation, key: "", simulated: true });
     }
+
+    const razorpayClient = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_KEY_SECRET,
+    });
 
     const orderOptions = {
       amount: Math.round(numericAmount * 100),
