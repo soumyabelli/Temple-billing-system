@@ -4,6 +4,7 @@ const Employee = require("../models/Employee");
 const Leave = require("../models/Leave");
 const Task = require("../models/Task");
 const User = require("../models/User");
+const { createStaffNotification } = require("../utils/notificationService");
 
 const ATTENDANCE_STATUSES = ["Present", "Absent", "Late", "Half Day", "Leave"];
 const CHECK_IN_LATE_TIME = { hour: 9, minute: 30 };
@@ -888,6 +889,16 @@ exports.markAttendance = async (req, res) => {
       attendance = attendance
         ? await Attendance.findByIdAndUpdate(attendance._id, payload, { new: true, upsert: true })
         : await Attendance.create(payload);
+
+      if (isLate) {
+        await createStaffNotification({
+          title: "Late Check-in Warning",
+          message: `${staff.staffName} checked in late at ${payload.checkIn} on ${dateKey}.`,
+          audienceId: staff.staffId,
+          audienceEmail: staff.staffEmail,
+          category: "attendance",
+        });
+      }
 
       return res.status(201).json({
         success: true,

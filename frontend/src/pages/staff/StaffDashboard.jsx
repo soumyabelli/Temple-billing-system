@@ -1773,7 +1773,11 @@ const StaffDashboard = () => {
         ) : null}
 
         {!loading && activeSection === "notifications" ? (
-          <Notifications staffId={staffId} onUnreadCountChange={setNotificationUnreadCount} />
+          <Notifications
+            staffId={staffId}
+            onUnreadCountChange={setNotificationUnreadCount}
+            onQuickAction={(section) => setActiveSection(section)}
+          />
         ) : null}
 
         {!loading && activeSection === "applyLeave" ? (

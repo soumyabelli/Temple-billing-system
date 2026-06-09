@@ -144,6 +144,19 @@ exports.updateTaskStatus = async (req, res) => {
       });
     }
 
+    if (status === "In Progress" || status === "Completed") {
+      await createStaffNotification({
+        title: status === "Completed" ? "Duty Completed Confirmation" : "Duty Updated",
+        message:
+          status === "Completed"
+            ? `${updated.title || updated.duty || "Assigned duty"} has been marked as completed.`
+            : `${updated.title || updated.duty || "Assigned duty"} status changed to ${status}.`,
+        audienceId: updated.staffId,
+        audienceEmail: updated.staffEmail,
+        category: "task",
+      });
+    }
+
     // SEND ADMIN NOTIFICATION WHEN TASK COMPLETED
     if (status === "Completed") {
       await Notification.create({
