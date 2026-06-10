@@ -1,18 +1,19 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { sidebarItems } from "../../data/sidebarData";
+import { sidebarItems as defaultSidebarItems } from "../../data/sidebarData";
 import { MdMenu, MdTempleBuddhist, MdKeyboardArrowDown } from "react-icons/md";
 
-const Sidebar = ({ activeItem, activePath, onSelect, onNavigate, collapsed, setCollapsed, mobileOpen, setMobileOpen, darkMode, onLogoutClick }) => {
+const Sidebar = ({ items, activeItem, activePath, onSelect, onNavigate, collapsed, setCollapsed, mobileOpen, setMobileOpen, darkMode, onLogoutClick }) => {
+  const itemsToUse = items || defaultSidebarItems;
   const [openGroup, setOpenGroup] = useState(null);
   const baseItem = "relative w-full flex items-center gap-3 rounded-lg transition-all duration-300 text-left";
 
   useEffect(() => {
-    const activeGroup = sidebarItems.find((item) => item.subItems?.some((sub) => activePath === sub.path || activePath.startsWith(sub.path)));
+    const activeGroup = itemsToUse.find((item) => item.subItems?.some((sub) => activePath === sub.path || activePath.startsWith(sub.path)));
     if (activeGroup) {
       setOpenGroup(activeGroup.title);
     }
-  }, [activePath]);
+  }, [activePath, itemsToUse]);
 
   return (
     <>
@@ -55,7 +56,7 @@ const Sidebar = ({ activeItem, activePath, onSelect, onNavigate, collapsed, setC
         </div>
 
         <div className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-2 space-y-1">
-          {sidebarItems.map((item) => {
+          {itemsToUse.map((item) => {
             const Icon = item.icon;
             const isActive = item.title === activeItem || (item.subItems && item.subItems.some((sub) => sub.path === activePath));
             const showSubItems = item.subItems && openGroup === item.title;

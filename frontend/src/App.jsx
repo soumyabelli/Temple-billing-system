@@ -37,6 +37,7 @@ import BillingManagement from "./pages/admin/BillingManagement";
 import InventoryManagement from "./pages/admin/InventoryManagement";
 import NotificationsCenter from "./pages/admin/NotificationsCenter";
 import AdminLayout from "./layouts/AdminLayout";
+import CashierLayout from "./layouts/CashierLayout";
 
 import AccountantDashboard from "./pages/accountant/AccountantDashboard";
 import CashierDashboard from "./pages/cashier/CashierDashboard";
@@ -72,7 +73,16 @@ function App() {
         element={<ForgotPasswordPage />}
       />
 
-      <Route path="/cashier/quick-billing" element={<QuickBillingPage />} />
+      <Route
+        path="/cashier/quick-billing"
+        element={
+          <ProtectedRoute allowedRoles={["cashier"]}>
+            <CashierLayout>
+              <QuickBillingPage />
+            </CashierLayout>
+          </ProtectedRoute>
+        }
+      />
 
       {/* ADMIN */}
       <Route
@@ -512,9 +522,6 @@ function App() {
           </ProtectedRoute>
         }
       />
-
-      
-
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
