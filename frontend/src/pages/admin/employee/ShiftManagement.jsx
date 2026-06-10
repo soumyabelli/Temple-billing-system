@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { 
   FiCalendar, 
   FiClock, 
@@ -75,6 +75,13 @@ const getCurrentWeekStartKey = () => {
 };
 
 const ShiftManagement = () => {
+  const loggedInUser = useMemo(() => JSON.parse(localStorage.getItem("user") || "null"), []);
+  const assignedByDefault = useMemo(() => {
+    const role = String(loggedInUser?.role || "admin").trim();
+    const roleLabel = role.charAt(0).toUpperCase() + role.slice(1);
+    return loggedInUser?.name ? `${roleLabel} (${loggedInUser.name})` : roleLabel;
+  }, [loggedInUser]);
+
   // Database state
   const [shifts, setShifts] = useState([]);
   const [assignments, setAssignments] = useState([]);
@@ -118,7 +125,10 @@ const ShiftManagement = () => {
     employeeId: "",
     shiftId: "",
     date: "",
+    dutyName: "",
+    dutyArea: "",
     notes: "",
+    assignedBy: assignedByDefault,
   });
   const [assignError, setAssignError] = useState("");
   const [shiftTypeError, setShiftTypeError] = useState("");
@@ -269,7 +279,10 @@ const ShiftManagement = () => {
       employeeId: "",
       shiftId: "",
       date: "",
+      dutyName: "",
+      dutyArea: "",
       notes: "",
+      assignedBy: assignedByDefault,
     });
     setAssignError("");
     setShowAssignModal(true);
@@ -288,18 +301,42 @@ const ShiftManagement = () => {
       setAssignError("Please select a shift type");
       return;
     }
+    if (!assignForm.dutyName.trim()) {
+      setAssignError("Please enter a duty name");
+      return;
+    }
+    if (!assignForm.dutyArea.trim()) {
+      setAssignError("Please enter a duty area or location");
+      return;
+    }
     if (!assignForm.date) {
       setAssignError("Please select a date");
       return;
     }
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const selectedDate = new Date(assignForm.date);
+    selectedDate.setHours(0, 0, 0, 0);
+
+    if (selectedDate < today) {
+      setAssignError(
+        "Cannot assign shifts for previous dates."
+    );
+    return;
+  }
 
     try {
+      const selectedShift = shifts.find((shift) => shift.id === assignForm.shiftId);
       await assignShift({
         shiftId: assignForm.shiftId,
         employeeId: assignForm.employeeId,
         date: assignForm.date,
+        dutyName: assignForm.dutyName.trim(),
+        dutyArea: assignForm.dutyArea.trim(),
         notes: assignForm.notes,
-        assignedBy: "Admin",
+        assignedBy: assignForm.assignedBy.trim() || assignedByDefault,
+        reportingTime: selectedShift?.startTime || "",
       });
       setShowAssignModal(false);
       loadData(weekStart);
@@ -329,7 +366,7 @@ const ShiftManagement = () => {
       <div className="flex h-64 items-center justify-center rounded-3xl border border-slate-200 bg-white shadow-sm">
         <div className="text-center">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-violet-600 border-t-transparent mx-auto"></div>
-          <p className="mt-4 text-sm text-slate-500">Loading Shift Management data...</p>
+          <p className="mt-4 text-sm text-slate-500">Loading Duty & Shift Management data...</p>
         </div>
       </div>
     );
@@ -339,15 +376,15 @@ const ShiftManagement = () => {
     <div className="space-y-8">
       {/* 1. Header Banner */}
       <SectionCard 
-        title="Shift Management" 
-        subtitle="Schedule priest duty, temple operations, and manage rosters with automated leaves & conflict checks." 
+        title="Duty & Shift Management" 
+        subtitle="Schedule temple shifts and duties together, with automated leaves, overlap checks, and staff assignment controls." 
         className="bg-gradient-to-r from-[#1e1b4b] via-[#312e81] to-[#4f46e5] text-white border-transparent shadow-2xl shadow-violet-600/10"
         topRight={
           <button 
             onClick={handleAssignClick}
             className="flex items-center gap-2 rounded-2xl bg-amber-500 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-amber-500/20 transition hover:bg-amber-600 active:scale-95"
           >
-            <FiPlus size={16} /> Assign Shift
+            <FiPlus size={16} /> Assign Duty & Shift
           </button>
         }
       >
@@ -435,7 +472,7 @@ const ShiftManagement = () => {
                       }`}
                     >
                       <div className="flex justify-between items-start gap-2">
-                        <span className="text-xs font-bold leading-snug">{item.shiftName}</span>
+                        <span className="text-xs font-bold leading-snug">{item.employeeName}</span>
                         <button 
                           onClick={() => handleUnassignClick(item.id)}
                           className="text-slate-400 hover:text-rose-600 p-0.5 rounded transition self-start"
@@ -447,18 +484,28 @@ const ShiftManagement = () => {
                       
                       <div className="flex items-center gap-1.5 text-xs text-slate-700">
                         <FiUser size={12} className="text-slate-400 flex-shrink-0" />
-                        <span className="font-semibold truncate">{item.employeeName}</span>
+                        <span className="font-semibold truncate">{item.shiftName}</span>
                       </div>
                       
                       <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
                         <FiClock size={11} className="text-slate-400 flex-shrink-0" />
-                        <span>{item.startTime} - {item.endTime}</span>
+                        <span>{item.shiftName}</span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
+                        <FiInfo size={11} className="text-slate-400 flex-shrink-0" />
+                        <span>{item.dutyName}</span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
+                        <FiClock size={11} className="text-slate-400 flex-shrink-0" />
+                        <span>{item.reportingTime || item.startTime} • {item.dutyArea}</span>
                       </div>
                       
                       {item.conflict && (
                         <div className="flex items-center gap-1 text-[10px] text-rose-600 font-semibold mt-1">
                           <FiAlertTriangle size={11} className="flex-shrink-0" />
-                          <span>Shift Overlap</span>
+                          <span>Duty/Shift Overlap</span>
                         </div>
                       )}
                       
@@ -471,7 +518,7 @@ const ShiftManagement = () => {
                   {day.items.length === 0 && (
                     <div className="h-full flex flex-col items-center justify-center text-slate-400 py-12">
                       <FiCalendar size={20} className="stroke-[1.5] text-slate-300" />
-                      <p className="text-[11px] mt-1.5 italic">No duties scheduled</p>
+                      <p className="text-[11px] mt-1.5 italic">No duty assignments scheduled</p>
                     </div>
                   )}
                 </div>
@@ -485,7 +532,7 @@ const ShiftManagement = () => {
       <div className="grid gap-5 xl:grid-cols-[1.3fr_0.7fr]">
         {/* Shift Types Catalog */}
         <SectionCard 
-          title="Active Shift Types" 
+          title="Shift Types" 
           subtitle="Configure default roster periods and staff requirements."
           topRight={
             <button 
@@ -552,7 +599,7 @@ const ShiftManagement = () => {
         {/* Alerts & Upcoming Duties */}
         <div className="space-y-5">
           {/* Shift Alerts Panel */}
-          <SectionCard title="Shift Alerts" subtitle="Conflicts, leaves, and staff capacity warnings.">
+          <SectionCard title="Assignment Alerts" subtitle="Conflicts, leaves, and staff capacity warnings.">
             <div className="space-y-3">
               {alerts.length === 0 ? (
                 <div className="rounded-[22px] border border-slate-100 bg-slate-50/50 p-4 text-center text-xs text-slate-500">
@@ -581,7 +628,7 @@ const ShiftManagement = () => {
           </SectionCard>
 
           {/* Upcoming Shifts Panel */}
-          <SectionCard title="Upcoming Roster" subtitle="Next scheduled duties.">
+          <SectionCard title="Upcoming Roster" subtitle="Next scheduled duties and shifts.">
             <div className="space-y-2.5">
               {upcomingAssignments.length === 0 ? (
                 <div className="rounded-[22px] border border-slate-100 bg-slate-50/50 p-4 text-center text-xs text-slate-500">
@@ -593,7 +640,8 @@ const ShiftManagement = () => {
                     <div>
                       <p className="font-bold text-slate-800">{a.employeeName}</p>
                       <p className="text-slate-500 font-medium mt-0.5">{a.shiftName}</p>
-                      <p className="text-[10px] text-slate-400 mt-1">{new Date(`${a.dateKey}T00:00:00`).toLocaleDateString("en-IN", { weekday: "short", day: "2-digit", month: "short" })} • {a.startTime}</p>
+                      <p className="text-slate-500 font-medium mt-0.5">{a.dutyName}</p>
+                      <p className="text-[10px] text-slate-400 mt-1">{new Date(`${a.dateKey}T00:00:00`).toLocaleDateString("en-IN", { weekday: "short", day: "2-digit", month: "short" })} • {a.reportingTime || a.startTime} • {a.dutyArea}</p>
                     </div>
                     <span className={`text-[9px] font-bold tracking-wider rounded-full px-2 py-0.5 border ${getBadgeClass(a.attendanceStatus)}`}>
                       {a.attendanceStatus}
@@ -756,7 +804,7 @@ const ShiftManagement = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
           <div className="w-full max-w-md rounded-[32px] border border-slate-200 bg-white p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-lg font-bold text-slate-900">Assign Shift to Staff</h3>
+              <h3 className="text-lg font-bold text-slate-900">Assign Duty & Shift</h3>
               <button 
                 onClick={() => setShowAssignModal(false)}
                 className="rounded-xl border border-slate-100 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition"
@@ -806,12 +854,48 @@ const ShiftManagement = () => {
               </div>
 
               <div>
+                <label className="block text-slate-600 font-semibold mb-1.5">Duty Name</label>
+                <input
+                  type="text"
+                  value={assignForm.dutyName}
+                  onChange={(e) => setAssignForm({ ...assignForm, dutyName: e.target.value })}
+                  placeholder="e.g. Arrange Flowers"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 outline-none font-semibold text-slate-800 transition"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-600 font-semibold mb-1.5">Duty Area / Location</label>
+                <input
+                  type="text"
+                  value={assignForm.dutyArea}
+                  onChange={(e) => setAssignForm({ ...assignForm, dutyArea: e.target.value })}
+                  placeholder="e.g. Temple Hall"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 outline-none font-semibold text-slate-800 transition"
+                />
+              </div>
+
+              <div>
                 <label className="block text-slate-600 font-semibold mb-1.5">Date</label>
-                <input 
+                <input
                   type="date"
                   value={assignForm.date}
-                  onChange={(e) => setAssignForm({ ...assignForm, date: e.target.value })}
+                  min={new Date().toISOString().split("T")[0]}
+                  onChange={(e) =>
+                    setAssignForm({ ...assignForm, date: e.target.value })
+                  }
                   className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 outline-none font-semibold text-slate-850 transition"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-600 font-semibold mb-1.5">Assigned By</label>
+                <input
+                  type="text"
+                  value={assignForm.assignedBy}
+                  onChange={(e) => setAssignForm({ ...assignForm, assignedBy: e.target.value })}
+                  placeholder="Admin"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 outline-none font-semibold text-slate-800 transition"
                 />
               </div>
 
@@ -838,7 +922,7 @@ const ShiftManagement = () => {
                   type="submit"
                   className="rounded-xl bg-amber-500 hover:bg-amber-600 px-5 py-2.5 font-semibold text-white transition active:scale-95 shadow-md shadow-amber-500/10"
                 >
-                  Save Assignment
+                  Save Duty & Shift
                 </button>
               </div>
             </form>

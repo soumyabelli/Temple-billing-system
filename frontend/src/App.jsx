@@ -45,7 +45,6 @@ import PriestDashboard from "./pages/priest/PriestDashboard";
 import StaffDashboard from "./pages/staff/StaffDashboard";
 import LeaveHistory from "./pages/staff/LeaveHistory";
 import DevoteeDashboard from "./pages/devotee/DevoteeDashboard";
-import AssignTask from "./pages/admin/AssignTask";
 
 import LoginPage from "./pages/auth/LoginPage";
 import AuthLoginPage from "./pages/auth/AuthLoginPage";
@@ -115,7 +114,7 @@ function App() {
         path="/assign-task"
         element={
           <ProtectedRoute allowedRoles={["admin", "priest"]}>
-            <AssignTask />
+            <Navigate to="/admin/employees/shifts" replace />
           </ProtectedRoute>
         }
       />
@@ -447,9 +446,7 @@ function App() {
         path="/admin/employees/tasks"
         element={
           <ProtectedRoute allowedRoles={["admin"]}>
-            <AdminLayout>
-              <AssignTask />
-            </AdminLayout>
+            <Navigate to="/admin/employees/shifts" replace />
           </ProtectedRoute>
         }
       />
