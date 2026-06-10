@@ -12,7 +12,7 @@ import {
   FaBell,
 } from "react-icons/fa";
 
-const CashierDashboard = () => {
+const CashierDashboard = ({ children }) => {
   return (
     <div className="dashboard">
 
