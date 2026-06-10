@@ -4,7 +4,6 @@ const Leave = require("../models/Leave");
 const Attendance = require("../models/Attendance");
 const Task = require("../models/Task");
 const Shift = require("../models/Shift");
-const ShiftAssignment = require("../models/ShiftAssignment");
 const { createStaffNotification } = require("../utils/notificationService");
 
 const clean = (value) => String(value || "").trim();
@@ -120,18 +119,23 @@ const serializeShift = (shift) => ({
 
 const serializeAssignment = (assignment, attendance = null, leave = null) => ({
   id: assignment._id.toString(),
-  shiftId: assignment.shiftId,
-  shiftName: assignment.shiftName,
+  shiftId: assignment.shiftId || "",
+  shiftName: assignment.shiftName || "",
+  shiftStartTime: assignment.shiftStartTime || assignment.startTime || "",
+  shiftEndTime: assignment.shiftEndTime || assignment.endTime || "",
   employeeId: assignment.employeeId,
   staffId: assignment.staffId,
-  employeeName: assignment.employeeName,
-  employeeEmail: assignment.employeeEmail,
-  dateKey: assignment.dateKey,
-  date: assignment.dateKey,
-  startTime: assignment.startTime,
-  endTime: assignment.endTime,
-  category: assignment.category,
-  requiredStaff: assignment.requiredStaff,
+  employeeName: assignment.employeeName || assignment.staffName || "",
+  employeeEmail: assignment.employeeEmail || assignment.staffEmail || "",
+  dateKey: assignment.dateKey || assignment.dueDate || "",
+  date: assignment.dateKey || assignment.dueDate || "",
+  startTime: assignment.startTime || assignment.reportingTime || assignment.shiftStartTime || "",
+  endTime: assignment.endTime || assignment.shiftEndTime || "",
+  dutyName: assignment.dutyName || assignment.duty || assignment.title || assignment.shiftName || "",
+  dutyArea: assignment.dutyArea || assignment.area || assignment.description || assignment.category || "",
+  reportingTime: assignment.reportingTime || assignment.time || assignment.startTime || "",
+  category: assignment.category || "",
+  requiredStaff: assignment.requiredStaff || 1,
   attendanceStatus: attendance
     ? attendance.checkIn && attendance.checkIn !== "--"
       ? attendance.checkOut && attendance.checkOut !== "--"
@@ -140,11 +144,12 @@ const serializeAssignment = (assignment, attendance = null, leave = null) => ({
       : attendance.status || "Absent"
     : leave
       ? "Employee unavailable"
-      : assignment.attendanceStatus || "Pending",
-  conflict: assignment.conflict,
-  notes: assignment.notes,
+      : assignment.attendanceStatus || assignment.status || "Pending",
+  status: assignment.status || assignment.attendanceStatus || "Pending",
+  conflict: assignment.conflict || false,
+  notes: assignment.notes || "",
   assignedBy: assignment.assignedBy,
-  durationMinutes: assignment.durationMinutes,
+  durationMinutes: assignment.durationMinutes || 0,
   createdAt: assignment.createdAt,
 });
 
@@ -210,7 +215,7 @@ exports.getShiftDashboard = async (req, res) => {
 
     const [shifts, assignments, employees] = await Promise.all([
       Shift.find().sort({ createdAt: -1 }),
-      ShiftAssignment.find({ dateKey: { $gte: toDateKey(weekStart), $lte: toDateKey(weekEnd) } }).sort({ dateKey: 1, startTime: 1 }),
+      Task.find({ dateKey: { $gte: toDateKey(weekStart), $lte: toDateKey(weekEnd) } }).sort({ dateKey: 1, startTime: 1 }),
       Employee.find().sort({ name: 1 }),
     ]);
 
@@ -341,7 +346,7 @@ exports.deleteShift = async (req, res) => {
       return res.status(404).json({ success: false, message: "Shift not found" });
     }
 
-    await ShiftAssignment.deleteMany({ shiftId: shift._id.toString() });
+    await Task.deleteMany({ shiftId: shift._id.toString() });
     return res.json({ success: true, message: "Shift deleted successfully" });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
@@ -353,6 +358,9 @@ exports.assignShift = async (req, res) => {
     const shift = await Shift.findById(req.body.shiftId);
     const employeeTargets = await findEmployeeTargets(req.body.employeeId);
     const dateKey = clean(req.body.date);
+    const dutyName = clean(req.body.dutyName || req.body.title || shift?.shiftName);
+    const dutyArea = clean(req.body.dutyArea || req.body.area || shift?.category);
+    const reportingTime = clean(req.body.reportingTime || shift?.startTime);
 
     if (!shift) {
       return res.status(404).json({ success: false, message: "Shift not found" });
@@ -360,9 +368,22 @@ exports.assignShift = async (req, res) => {
     if (!employeeTargets.employee) {
       return res.status(404).json({ success: false, message: "Employee not found" });
     }
-    if (!dateKey) {
-      return res.status(400).json({ success: false, message: "date is required" });
+    if (!dateKey || !dutyName || !dutyArea) {
+      return res.status(400).json({ success: false, message: "date, dutyName and dutyArea are required" });
     }
+
+    const selectedDate = new Date(dateKey);
+    selectedDate.setHours(0, 0, 0, 0);
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (selectedDate < today) {
+      return res.status(400).json({
+      success: false,
+      message: "Cannot assign shifts for previous dates",
+    });
+  }
 
     const leave = await getLeaveBlock(employeeTargets, dateKey);
     if (leave) {
@@ -370,7 +391,7 @@ exports.assignShift = async (req, res) => {
     }
 
     const { start, end, durationMinutes } = normalizeRange(shift.startTime, shift.endTime);
-    const conflictingAssignments = await ShiftAssignment.find({
+    const conflictingAssignments = await Task.find({
       employeeId: employeeTargets.employee._id.toString(),
       dateKey,
     });
@@ -383,16 +404,29 @@ exports.assignShift = async (req, res) => {
       return res.status(409).json({ success: false, message: "Shift conflict detected" });
     }
 
-    const assignment = await ShiftAssignment.create({
+    const assignment = await Task.create({
+      assignmentType: "Duty & Shift",
       shiftId: shift._id.toString(),
       shiftName: shift.shiftName,
+      shiftStartTime: shift.startTime,
+      shiftEndTime: shift.endTime,
       employeeId: employeeTargets.employee._id.toString(),
       staffId: employeeTargets.user?._id?.toString() || employeeTargets.employee._id.toString(),
+      staffName: employeeTargets.employee.name,
       employeeName: employeeTargets.employee.name,
       employeeEmail: employeeTargets.employee.email,
       dateKey,
       startTime: shift.startTime,
       endTime: shift.endTime,
+      dutyName,
+      dutyArea,
+      reportingTime: reportingTime || shift.startTime,
+      title: dutyName,
+      description: `${dutyArea}${clean(req.body.notes) ? ` • ${clean(req.body.notes)}` : ""}`,
+      dueDate: dateKey,
+      duty: dutyName,
+      area: dutyArea,
+      time: reportingTime || shift.startTime,
       category: shift.category,
       requiredStaff: shift.requiredStaff,
       attendanceStatus: "Pending",
@@ -400,26 +434,12 @@ exports.assignShift = async (req, res) => {
       notes: clean(req.body.notes),
       assignedBy: clean(req.body.assignedBy) || "Admin",
       durationMinutes,
-    });
-
-    await Task.create({
-      staffId: employeeTargets.user?._id?.toString() || employeeTargets.employee._id.toString(),
-      staffName: employeeTargets.employee.name,
-      employeeId: employeeTargets.employee._id.toString(),
-      staffEmail: employeeTargets.employee.email,
-      title: shift.shiftName,
-      description: `${shift.startTime} - ${shift.endTime}${clean(req.body.notes) ? ` • ${clean(req.body.notes)}` : ""}`,
-      dueDate: dateKey,
-      duty: shift.shiftName,
-      area: shift.category,
-      time: shift.startTime,
-      assignedBy: clean(req.body.assignedBy) || "Admin",
       status: "Pending",
     });
 
     await createStaffNotification({
       title: "New Duty Assigned",
-      message: `${shift.shiftName} on ${dateKey} at ${shift.startTime}.`,
+      message: `${dutyName} under ${shift.shiftName} on ${dateKey} at ${reportingTime || shift.startTime}.`,
       audienceId: employeeTargets.user?._id?.toString() || employeeTargets.employee._id.toString(),
       audienceEmail: employeeTargets.employee.email,
       category: "task",
@@ -433,17 +453,10 @@ exports.assignShift = async (req, res) => {
 
 exports.deleteAssignment = async (req, res) => {
   try {
-    const assignment = await ShiftAssignment.findByIdAndDelete(req.params.id);
+    const assignment = await Task.findByIdAndDelete(req.params.id);
     if (!assignment) {
       return res.status(404).json({ success: false, message: "Assignment not found" });
     }
-
-    // Delete matching staff tasks to keep staff dashboard synchronized
-    await Task.deleteMany({
-      employeeId: assignment.employeeId,
-      dueDate: assignment.dateKey,
-      duty: assignment.shiftName,
-    });
 
     return res.json({ success: true, message: "Assignment deleted successfully" });
   } catch (error) {

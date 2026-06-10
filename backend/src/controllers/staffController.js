@@ -369,25 +369,35 @@ exports.assignTask = async (req, res) => {
       employeeId,
       staffEmail,
       staffName,
-      duty,
-      area,
-      time,
+      shiftId,
+      shiftName,
+      shiftStartTime,
+      shiftEndTime,
+      dateKey,
+      dutyName,
+      dutyArea,
+      reportingTime,
       assignedBy,
       title,
       description,
       dueDate,
+      notes,
     } = req.body;
 
-    const taskTitle = clean(title || duty);
-    const taskDescription = clean(description || area);
-    const taskDueDate = clean(dueDate || time);
+    const taskTitle = clean(title || dutyName);
+    const taskDescription = clean(description || dutyArea);
+    const taskDueDate = clean(dueDate || dateKey);
+    const taskShiftName = clean(shiftName);
+    const taskDutyName = clean(dutyName || title || shiftName);
+    const taskDutyArea = clean(dutyArea || description || taskDescription);
+    const taskReportingTime = clean(reportingTime || shiftStartTime);
     const taskAssignedBy = clean(assignedBy);
     const resolvedStaff = await resolveStaffForTask({ staffId, employeeId, staffEmail, staffName });
 
-    if (!resolvedStaff.staffId || !resolvedStaff.staffName || !taskTitle || !taskDescription || !taskDueDate || !taskAssignedBy) {
+    if (!resolvedStaff.staffId || !resolvedStaff.staffName || !taskTitle || !taskDescription || !taskDueDate || !taskAssignedBy || !taskDutyName || !taskDutyArea) {
       return res.status(400).json({
         success: false,
-        message: "Employee, task title, task description, due date and assigned by are required",
+        message: "Employee, shift, duty, date and assigned by are required",
       });
     }
 
@@ -403,18 +413,33 @@ exports.assignTask = async (req, res) => {
     }
      
     const task = await Task.create({
+      assignmentType: "Duty & Shift",
       staffId: resolvedStaff.staffId,
       staffName: resolvedStaff.staffName,
       employeeId: resolvedStaff.employeeId,
       staffEmail: resolvedStaff.staffEmail,
-      title: taskTitle,
+      shiftId: clean(shiftId),
+      shiftName: taskShiftName || taskDutyName,
+      shiftStartTime: clean(shiftStartTime),
+      shiftEndTime: clean(shiftEndTime),
+      dateKey: taskDueDate,
+      startTime: taskReportingTime,
+      endTime: clean(shiftEndTime),
+      title: taskTitle || taskDutyName,
       description: taskDescription,
       dueDate: taskDueDate,
-      duty: taskTitle,
-      area: taskDescription,
-      time: taskDueDate,
+      dutyName: taskDutyName,
+      duty: taskDutyName,
+      area: taskDutyArea,
+      dutyArea: taskDutyArea,
+      time: taskReportingTime || taskDueDate,
+      reportingTime: taskReportingTime || taskDueDate,
       assignedBy: taskAssignedBy,
       status: "Pending",
+      attendanceStatus: "Pending",
+      conflict: false,
+      notes: clean(notes),
+      requiredStaff: 1,
     });
 
     await createStaffNotification({

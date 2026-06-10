@@ -384,6 +384,11 @@ const StaffDashboard = () => {
 
   const timelineItems = useMemo(() => filteredDuties, [filteredDuties]);
 
+  const todayDuty = useMemo(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    return tasks.find((task) => (task.dateKey || task.dueDate || "").startsWith(today)) || tasks[0] || null;
+  }, [tasks]);
+
   useEffect(() => {
     if (activeSection === "duties" && tasks.length > 0) {
       setSelectedTask((current) => {
@@ -784,9 +789,19 @@ const StaffDashboard = () => {
                   <TbHourglassLow />
                 </div>
                 <div>
-                  <h3>Pending Tasks</h3>
-                  <strong>{taskSummary.pending.toString().padStart(2, "0")}</strong>
-                  <p>Need Attention</p>
+                  <h3>Today's Duty</h3>
+                  <strong>{todayDuty ? todayDuty.dutyName || todayDuty.title || todayDuty.duty || "--" : "--"}</strong>
+                  <p>{todayDuty ? todayDuty.dutyArea || todayDuty.area || "" : "No duty assigned yet"}</p>
+                </div>
+              </article>
+              <article className="info-card">
+                <div className="icon-bg red">
+                  <TbHourglassLow />
+                </div>
+                <div>
+                  <h3>Today's Shift</h3>
+                  <strong>{todayDuty ? todayDuty.shiftName || "--" : "--"}</strong>
+                  <p>{todayDuty ? todayDuty.reportingTime || todayDuty.time || "--" : "No shift assigned yet"}</p>
                 </div>
               </article>
             </section>
@@ -808,11 +823,11 @@ const StaffDashboard = () => {
                     latestDuties.map((task) => (
                       <div key={task._id} className="duty-item">
                         <div>
-                          <p className="duty-title">{task.title || task.duty || "Untitled Duty"}</p>
-                          <p className="duty-meta">{task.area || task.description || "General duty"}</p>
+                          <p className="duty-title">{task.shiftName || task.title || task.duty || "Untitled Duty"}</p>
+                          <p className="duty-meta">{task.dutyName || task.title || task.duty || "General duty"}</p>
                         </div>
                         <div className="duty-right">
-                          <span className="duty-time">{task.time || "-"}</span>
+                          <span className="duty-time">{task.reportingTime || task.time || "-"}</span>
                           <span className={`status-chip ${statusClassMap[task.status] || ""}`}>
                             {task.status}
                           </span>
@@ -879,7 +894,7 @@ const StaffDashboard = () => {
                 <div className="quick-actions">
                   <button type="button" onClick={() => setActiveSection("duties")}>
                     <FiClipboard />
-                    <span>Task List</span>
+                    <span>Duty List</span>
                   </button>
                   <button type="button" onClick={() => setActiveSection("applyLeave")}>
                     <FiCalendar />
@@ -940,11 +955,12 @@ const StaffDashboard = () => {
               </div>
               <button type="button" className="export-btn" onClick={() => {
                 const rows = [
-                  ["Duty Name", "Area", "Time", "Assigned By", "Status", "Description"],
+                  ["Shift", "Duty Name", "Area", "Time", "Assigned By", "Status", "Description"],
                   ...filteredDuties.map((task) => [
-                    task.title || task.duty || "",
-                    task.area || task.description || "",
-                    task.time || "",
+                    task.shiftName || "",
+                    task.dutyName || task.title || task.duty || "",
+                    task.dutyArea || task.area || task.description || "",
+                    task.reportingTime || task.time || "",
                     task.assignedBy || "",
                     task.status || "",
                     task.description || task.area || "",
@@ -973,6 +989,7 @@ const StaffDashboard = () => {
                   <table className="task-table">
                     <thead>
                       <tr>
+                        <th>Shift</th>
                         <th>Duty</th>
                         <th>Area</th>
                         <th>Time</th>
@@ -983,7 +1000,7 @@ const StaffDashboard = () => {
                     <tbody>
                       {filteredDuties.length === 0 ? (
                         <tr>
-                          <td colSpan="5" className="empty-cell">
+                          <td colSpan="6" className="empty-cell">
                             No duties match the filter.
                           </td>
                         </tr>
@@ -994,9 +1011,10 @@ const StaffDashboard = () => {
                             className={selectedTask?._id === task._id ? "selected-row" : ""}
                             onClick={() => setSelectedTask(task)}
                           >
-                            <td>{task.title || task.duty}</td>
-                            <td>{task.area || task.description}</td>
-                            <td>{task.time || "-"}</td>
+                            <td>{task.shiftName || "-"}</td>
+                            <td>{task.dutyName || task.title || task.duty}</td>
+                            <td>{task.dutyArea || task.area || task.description}</td>
+                            <td>{task.reportingTime || task.time || "-"}</td>
                             <td>
                               <span className={`status-chip ${statusClassMap[task.status] || ""}`}>
                                 {task.status}
@@ -1021,8 +1039,9 @@ const StaffDashboard = () => {
                       timelineItems.map((task) => (
                         <div key={task._id} className="timeline-item">
                           <div>
-                            <p className="duty-time">{task.time || "-"}</p>
-                            <p className="duty-title">{task.title || task.duty}</p>
+                            <p className="duty-time">{task.reportingTime || task.time || "-"}</p>
+                            <p className="duty-title">{task.shiftName || task.title || task.duty}</p>
+                            <p className="duty-meta">{task.dutyName || task.area || task.description || "General duty"}</p>
                           </div>
                           <span className={`status-chip ${statusClassMap[task.status] || ""}`}>{task.status}</span>
                         </div>
@@ -1039,20 +1058,28 @@ const StaffDashboard = () => {
                 {selectedTask ? (
                   <div className="details-content">
                     <div className="detail-row">
-                      <span>Duty Name</span>
-                      <strong>{selectedTask.title || selectedTask.duty}</strong>
+                      <span>Today's Shift</span>
+                      <strong>{selectedTask.shiftName || selectedTask.title || "--"}</strong>
                     </div>
                     <div className="detail-row">
-                      <span>Area</span>
-                      <strong>{selectedTask.area || selectedTask.description || "General duty"}</strong>
+                      <span>Duty Name</span>
+                      <strong>{selectedTask.dutyName || selectedTask.title || selectedTask.duty}</strong>
+                    </div>
+                    <div className="detail-row">
+                      <span>Duty Area</span>
+                      <strong>{selectedTask.dutyArea || selectedTask.area || selectedTask.description || "General duty"}</strong>
+                    </div>
+                    <div className="detail-row">
+                      <span>Reporting Time</span>
+                      <strong>{selectedTask.reportingTime || selectedTask.time || "-"}</strong>
+                    </div>
+                    <div className="detail-row">
+                      <span>Assignment Status</span>
+                      <strong>{selectedTask.attendanceStatus || selectedTask.status || "Pending"}</strong>
                     </div>
                     <div className="detail-row">
                       <span>Assigned By</span>
                       <strong>{selectedTask.assignedBy || "Admin"}</strong>
-                    </div>
-                    <div className="detail-row">
-                      <span>Time</span>
-                      <strong>{selectedTask.time || "-"}</strong>
                     </div>
                     <div className="detail-row">
                       <span>Description</span>
