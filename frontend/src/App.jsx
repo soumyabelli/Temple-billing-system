@@ -392,7 +392,7 @@ function App() {
         }
       />
       <Route
-        path="/admin/employees/attendances"
+        path="/admin/employees/attendance"
         element={
           <ProtectedRoute allowedRoles={["admin"]}>
             <AdminLayout>
@@ -400,6 +400,10 @@ function App() {
             </AdminLayout>
           </ProtectedRoute>
         }
+      />
+      <Route
+        path="/admin/employees/attendances"
+        element={<Navigate to="/admin/employees/attendance" replace />}
       />
       <Route
         path="/admin/employees/payroll"

@@ -1,5 +1,5 @@
 const Leave = require("../models/Leave");
-const { createStaffNotification } = require("../utils/notificationService");
+const { createNotification, createStaffNotification } = require("../utils/notificationService");
 const Notification = require("../models/Notification");
 const LEAVE_STATUSES = ["Pending", "Approved", "Rejected"];
 
@@ -189,6 +189,13 @@ exports.updateLeaveStatus = async (req, res) => {
     }
 
     if (status === "Approved") {
+      await createNotification({
+        title: "Leave Approved",
+        message: `${updatedLeave.staffName} has approved leave from ${updatedLeave.fromDate} to ${updatedLeave.toDate}.`,
+        audienceRole: "admin",
+        category: "leave",
+      });
+
       await createStaffNotification({
         title: "Leave Approved",
         message: "Your leave request has been approved.",

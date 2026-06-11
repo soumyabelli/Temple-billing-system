@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import { jsPDF } from "jspdf";
+import * as XLSX from "xlsx";
 import {
   ResponsiveContainer,
   LineChart,
@@ -10,11 +12,12 @@ import {
   BarChart,
   Bar,
 } from "recharts";
-import { FiCalendar, FiChevronLeft, FiChevronRight, FiClock, FiUsers } from "react-icons/fi";
+import { FiCalendar, FiChevronLeft, FiChevronRight, FiClock, FiDownload, FiEdit2, FiSave, FiUsers } from "react-icons/fi";
 import { FaCalendarCheck, FaRegTimesCircle, FaUserClock } from "react-icons/fa";
 
 import SectionCard from "../../../components/admin/employee/SectionCard";
-import { getAdminAttendanceDashboard } from "../../../services/attendanceService";
+import { getAdminAttendanceDashboard, updateAttendance } from "../../../services/attendanceService";
+import { getAdminEmployees } from "../../../services/adminService";
 
 const formatMonthKey = (date) => {
   const year = date.getFullYear();
@@ -46,17 +49,121 @@ const summaryIconMap = {
   Attendance: FiClock,
 };
 
+const monthNames = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
+const calendarToneMap = {
+  Present: "bg-emerald-100 text-emerald-700 border-emerald-200",
+  Late: "bg-amber-100 text-amber-700 border-amber-200",
+  Leave: "bg-sky-100 text-sky-700 border-sky-200",
+  Absent: "bg-rose-100 text-rose-700 border-rose-200",
+};
+
+const formatDisplayDate = (dateKey) => {
+  const date = new Date(`${dateKey}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return dateKey || "--";
+  return date.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+};
+
+const getMonthRange = (monthKey) => {
+  const [yearPart, monthPart] = monthKey.split("-");
+  const year = Number(yearPart);
+  const monthIndex = Number(monthPart) - 1;
+  const startDate = new Date(year, monthIndex, 1);
+  const endDate = new Date(year, monthIndex + 1, 0);
+  return { year, monthIndex, startDate, endDate };
+};
+
+const buildCalendarDays = (monthKey, records = [], employeeId = "") => {
+  const { year, monthIndex, startDate, endDate } = getMonthRange(monthKey);
+  const todayKey = new Date().toISOString().slice(0, 10);
+  const visibleRecordByDate = new Map();
+
+  records.forEach((record) => {
+    if (employeeId && record.employeeId && String(record.employeeId) !== String(employeeId)) return;
+    if (employeeId && record.employeeEmail && !record.employeeId) return;
+    visibleRecordByDate.set(record.dateKey, record);
+  });
+
+  const firstVisible = new Date(startDate);
+  firstVisible.setDate(firstVisible.getDate() - ((firstVisible.getDay() + 6) % 7));
+
+  const days = [];
+  for (let index = 0; index < 42; index += 1) {
+    const cursor = new Date(firstVisible);
+    cursor.setDate(firstVisible.getDate() + index);
+    const dateKey = cursor.toISOString().slice(0, 10);
+    const record = visibleRecordByDate.get(dateKey);
+    let status = record?.status || null;
+
+    if (!status && cursor >= startDate && cursor <= endDate && dateKey <= todayKey) {
+      status = "Absent";
+    }
+
+    days.push({
+      dateKey,
+      day: cursor.getDate(),
+      muted: cursor.getMonth() !== monthIndex,
+      today: dateKey === todayKey,
+      status,
+    });
+  }
+
+  return days;
+};
+
 const Attendance = () => {
   const [monthKey, setMonthKey] = useState(formatMonthKey(new Date()));
+  const [employees, setEmployees] = useState([]);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [savingId, setSavingId] = useState("");
+  const [editingRecord, setEditingRecord] = useState(null);
+  const [correctionForm, setCorrectionForm] = useState({
+    checkIn: "",
+    checkOut: "",
+    status: "Present",
+    shift: "Morning",
+    note: "",
+  });
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    const loadEmployees = async () => {
+      try {
+        const response = await getAdminEmployees();
+        const list = Array.isArray(response) ? response : response?.employees || [];
+        setEmployees(list);
+        if (!selectedEmployeeId && list.length > 0) {
+          setSelectedEmployeeId(list[0]._id || list[0].id || "");
+        }
+      } catch (requestError) {
+        setEmployees([]);
+      }
+    };
+
+    loadEmployees();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const loadDashboard = async () => {
     try {
       setLoading(true);
       setError("");
-      const response = await getAdminAttendanceDashboard(monthKey);
+      const response = await getAdminAttendanceDashboard(monthKey, selectedEmployeeId || undefined);
       setDashboard(response);
     } catch (requestError) {
       setError(requestError.response?.data?.message || "Failed to load attendance dashboard");
@@ -69,7 +176,12 @@ const Attendance = () => {
   useEffect(() => {
     loadDashboard();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [monthKey]);
+  }, [monthKey, selectedEmployeeId]);
+
+  const selectedEmployee = useMemo(
+    () => employees.find((employee) => String(employee._id || employee.id) === String(selectedEmployeeId)) || null,
+    [employees, selectedEmployeeId]
+  );
 
   const summaryCards = dashboard?.overview?.length
     ? dashboard.overview
@@ -83,12 +195,85 @@ const Attendance = () => {
       ];
 
   const records = dashboard?.records || [];
+  const todayRecords = dashboard?.todayRecords || [];
   const timeline = dashboard?.timeline || [];
   const todayDuty = dashboard?.todayDuty || [];
   const shiftSummary = dashboard?.shiftSummary || {};
   const summary = dashboard?.summary || {};
   const monthLabel = dashboard?.monthLabel || monthKey;
   const headerDate = dashboard?.headerDate || "";
+
+  const selectedEmployeeRecords = useMemo(() => {
+    if (!selectedEmployee) {
+      return records;
+    }
+
+    const employeeEmail = String(selectedEmployee.email || "").toLowerCase();
+    return records.filter((record) => {
+      const recordEmployeeId = String(record.employeeId || record.staffId || "");
+      const recordEmployeeEmail = String(record.employeeEmail || "").toLowerCase();
+      return recordEmployeeId === String(selectedEmployee._id || selectedEmployee.id) || (employeeEmail && recordEmployeeEmail === employeeEmail);
+    });
+  }, [records, selectedEmployee]);
+
+  const calendarDays = useMemo(
+    () => buildCalendarDays(monthKey, records, selectedEmployee?._id || selectedEmployee?.id || ""),
+    [monthKey, records, selectedEmployee]
+  );
+
+  const monthlyEmployeeSummary = useMemo(() => {
+    const { startDate, endDate } = getMonthRange(monthKey);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayKey = today.toISOString().slice(0, 10);
+
+    const recordsByDate = new Map();
+    selectedEmployeeRecords.forEach((record) => {
+      recordsByDate.set(record.dateKey, record);
+    });
+
+    let present = 0;
+    let absent = 0;
+    let leave = 0;
+    let late = 0;
+
+    for (let cursor = new Date(startDate); cursor <= endDate; cursor.setDate(cursor.getDate() + 1)) {
+      const currentKey = cursor.toISOString().slice(0, 10);
+      const record = recordsByDate.get(currentKey);
+
+      if (record?.status === "Leave") {
+        leave += 1;
+        continue;
+      }
+
+      if (record?.status === "Late") {
+        present += 1;
+        late += 1;
+        continue;
+      }
+
+      if (record?.status === "Present") {
+        present += 1;
+        continue;
+      }
+
+      if (record?.status === "Half Day") {
+        present += 1;
+        continue;
+      }
+
+      if (cursor <= today && currentKey <= todayKey) {
+        absent += 1;
+      }
+    }
+
+    const workingDays = present + absent + leave;
+    const attendancePercent = workingDays > 0 ? Math.round((present / workingDays) * 100) : 0;
+
+    return { present, absent, leave, late, workingDays, attendancePercent };
+  }, [monthKey, selectedEmployeeRecords]);
+
+  const correctionTargetName = editingRecord?.employeeName || selectedEmployee?.name || "Record";
 
   const chartData = useMemo(() => {
     return timeline.map((entry) => ({
@@ -103,13 +288,176 @@ const Attendance = () => {
 
   const shiftEntries = useMemo(() => Object.entries(shiftSummary), [shiftSummary]);
 
+  const openCorrection = (record) => {
+    setEditingRecord(record);
+    setCorrectionForm({
+      checkIn: record.checkIn && record.checkIn !== "--" ? record.checkIn : "",
+      checkOut: record.checkOut && record.checkOut !== "--" ? record.checkOut : "",
+      status: record.status || "Present",
+      shift: record.shift || "Morning",
+      note: record.note || "",
+    });
+  };
+
+  const closeCorrection = () => {
+    setEditingRecord(null);
+  };
+
+  const saveCorrection = async () => {
+    if (!editingRecord) return;
+
+    try {
+      setSavingId(editingRecord.id);
+      await updateAttendance(editingRecord.id, correctionForm);
+      await loadDashboard();
+      setEditingRecord(null);
+    } catch (requestError) {
+      setError(requestError.response?.data?.message || "Unable to update attendance record");
+    } finally {
+      setSavingId("");
+    }
+  };
+
+  const exportPdf = () => {
+    const doc = new jsPDF({ unit: "pt", format: "a4" });
+    let y = 42;
+
+    doc.setFontSize(18);
+    doc.text("Attendance Report", 40, y);
+    y += 22;
+    doc.setFontSize(10);
+    doc.text(`Month: ${monthLabel}`, 40, y);
+    y += 18;
+    doc.text(`Employee: ${selectedEmployee?.name || "All Employees"}`, 40, y);
+    y += 22;
+
+    const summaryLines = [
+      `Present: ${monthlyEmployeeSummary.present}`,
+      `Absent: ${monthlyEmployeeSummary.absent}`,
+      `Leave: ${monthlyEmployeeSummary.leave}`,
+      `Late: ${monthlyEmployeeSummary.late}`,
+      `Attendance %: ${monthlyEmployeeSummary.attendancePercent}%`,
+    ];
+
+    summaryLines.forEach((line) => {
+      doc.text(line, 40, y);
+      y += 16;
+    });
+
+    y += 12;
+    doc.setFontSize(12);
+    doc.text("Latest Records", 40, y);
+    y += 16;
+    doc.setFontSize(9);
+
+    selectedEmployeeRecords.slice(0, 20).forEach((record) => {
+      const row = `${record.date || formatDisplayDate(record.dateKey)} | ${record.employeeName || "-"} | ${record.shift || "-"} | ${record.checkIn || "--"} | ${record.checkOut || "--"} | ${record.status || "-"}`;
+      doc.text(row, 40, y);
+      y += 14;
+      if (y > 760) {
+        doc.addPage();
+        y = 40;
+      }
+    });
+
+    doc.save(`attendance-report-${monthKey}.pdf`);
+  };
+
+  const exportExcel = () => {
+    const workbook = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      XLSX.utils.aoa_to_sheet([
+        ["Metric", "Value"],
+        ["Month", monthLabel],
+        ["Employee", selectedEmployee?.name || "All Employees"],
+        ["Present", monthlyEmployeeSummary.present],
+        ["Absent", monthlyEmployeeSummary.absent],
+        ["Leave", monthlyEmployeeSummary.leave],
+        ["Late", monthlyEmployeeSummary.late],
+        ["Attendance %", `${monthlyEmployeeSummary.attendancePercent}%`],
+      ]),
+      "Summary"
+    );
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      XLSX.utils.json_to_sheet(
+        todayRecords.map((record) => ({
+          Employee: record.employeeName,
+          Shift: record.shift,
+          "Check In": record.checkIn,
+          "Check Out": record.checkOut,
+          Status: record.status,
+          "Working Hours": record.workingHours,
+        }))
+      ),
+      "Today"
+    );
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      XLSX.utils.json_to_sheet(
+        selectedEmployeeRecords.map((record) => ({
+          Date: record.date || formatDisplayDate(record.dateKey),
+          Employee: record.employeeName,
+          Shift: record.shift,
+          "Check In": record.checkIn,
+          "Check Out": record.checkOut,
+          Status: record.status,
+          "Working Hours": record.workingHours,
+        }))
+      ),
+      "Monthly Records"
+    );
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      XLSX.utils.json_to_sheet(
+        calendarDays.map((day) => ({
+          Date: day.dateKey,
+          Day: day.day,
+          Status: day.status || "",
+        }))
+      ),
+      "Calendar"
+    );
+
+    XLSX.writeFile(workbook, `attendance-report-${monthKey}.xlsx`);
+  };
+
+  const printReport = () => {
+    window.print();
+  };
+
   return (
     <div className="space-y-6">
       <SectionCard
         title="Attendance Dashboard"
         subtitle="Live attendance tracking for staff and employees."
         topRight={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              value={selectedEmployeeId}
+              onChange={(event) => setSelectedEmployeeId(event.target.value)}
+              className="min-w-[180px] rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 outline-none"
+            >
+              <option value="">All Employees</option>
+              {employees.map((employee) => (
+                <option key={employee._id || employee.id} value={employee._id || employee.id}>
+                  {employee.name}
+                </option>
+              ))}
+            </select>
+            <input
+              type="number"
+              min="2020"
+              max="2100"
+              value={Number(monthKey.slice(0, 4))}
+              onChange={(event) => setMonthKey(`${event.target.value}-${monthKey.slice(5, 7)}`)}
+              className="w-24 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 outline-none"
+            />
             <button
               type="button"
               className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50"
@@ -132,6 +480,27 @@ const Attendance = () => {
               aria-label="Next month"
             >
               <FiChevronRight />
+            </button>
+            <button
+              type="button"
+              onClick={exportPdf}
+              className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-700"
+            >
+              <FiDownload /> PDF
+            </button>
+            <button
+              type="button"
+              onClick={exportExcel}
+              className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700"
+            >
+              <FiDownload /> Excel
+            </button>
+            <button
+              type="button"
+              onClick={printReport}
+              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700"
+            >
+              Print
             </button>
           </div>
         }
@@ -184,12 +553,70 @@ const Attendance = () => {
         )}
       </SectionCard>
 
+      <SectionCard
+        title="Today's Attendance Table"
+        subtitle="All employees, their assigned shift times, and the current status in one place."
+      >
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-left text-sm">
+            <thead className="border-b border-slate-200 text-slate-500">
+              <tr>
+                <th className="px-4 py-3">Employee</th>
+                <th className="px-4 py-3">Shift</th>
+                <th className="px-4 py-3">Shift Time</th>
+                <th className="px-4 py-3">Check In</th>
+                <th className="px-4 py-3">Check Out</th>
+                <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {todayRecords.length === 0 ? (
+                <tr>
+                  <td className="px-4 py-6 text-slate-500" colSpan="7">
+                    No attendance data is available for today.
+                  </td>
+                </tr>
+              ) : (
+                todayRecords.map((record) => (
+                  <tr key={record.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
+                    <td className="px-4 py-4 font-medium text-slate-900">{record.employeeName}</td>
+                    <td className="px-4 py-4 text-slate-600">{record.shift || "-"}</td>
+                    <td className="px-4 py-4 text-slate-600">
+                      {record.shiftStartTime && record.shiftEndTime ? `${record.shiftStartTime} - ${record.shiftEndTime}` : "--"}
+                    </td>
+                    <td className="px-4 py-4 text-slate-600">{record.checkIn || "--"}</td>
+                    <td className="px-4 py-4 text-slate-600">{record.checkOut || "--"}</td>
+                    <td className="px-4 py-4">
+                      <span
+                        className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${calendarToneMap[record.status] || "border-slate-200 bg-slate-100 text-slate-700"}`}
+                      >
+                        {record.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4">
+                      <button
+                        type="button"
+                        onClick={() => openCorrection(record)}
+                        className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+                      >
+                        <FiEdit2 /> Correct
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </SectionCard>
+
       <div className="grid gap-5 xl:grid-cols-[1.65fr_0.95fr]">
         <div className="space-y-5">
           <SectionCard
-            title="Attendance Records"
-            subtitle="Latest check-ins, check-outs, leave entries, and working hours."
-            topRight={<span className="text-sm font-semibold text-slate-500">{headerDate}</span>}
+            title="Monthly Attendance Records"
+            subtitle={selectedEmployee ? `Monthly attendance for ${selectedEmployee.name}.` : "Monthly attendance for the selected employee."}
+            topRight={<span className="text-sm font-semibold text-slate-500">{selectedEmployee?.shift || headerDate}</span>}
             className="overflow-hidden"
           >
             <div className="overflow-x-auto">
@@ -200,26 +627,31 @@ const Attendance = () => {
                     <th className="px-4 py-3">Employee</th>
                     <th className="px-4 py-3">Department</th>
                     <th className="px-4 py-3">Shift</th>
+                    <th className="px-4 py-3">Shift Time</th>
                     <th className="px-4 py-3">Check In</th>
                     <th className="px-4 py-3">Check Out</th>
                     <th className="px-4 py-3">Status</th>
                     <th className="px-4 py-3">Hours</th>
+                    <th className="px-4 py-3">Action</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {records.length === 0 ? (
+                  {selectedEmployeeRecords.length === 0 ? (
                     <tr>
-                      <td className="px-4 py-6 text-slate-500" colSpan="8">
-                        No attendance records found for this month.
+                      <td className="px-4 py-6 text-slate-500" colSpan="10">
+                        No attendance records found for the selected employee.
                       </td>
                     </tr>
                   ) : (
-                    records.map((record) => (
+                    selectedEmployeeRecords.map((record) => (
                       <tr key={record.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
                         <td className="px-4 py-4 font-medium text-slate-900">{record.date}</td>
                         <td className="px-4 py-4 text-slate-700">{record.employeeName || "Unknown"}</td>
                         <td className="px-4 py-4 text-slate-600">{record.department || "-"}</td>
                         <td className="px-4 py-4 text-slate-600">{record.shift || "-"}</td>
+                        <td className="px-4 py-4 text-slate-600">
+                          {record.shiftStartTime && record.shiftEndTime ? `${record.shiftStartTime} - ${record.shiftEndTime}` : "--"}
+                        </td>
                         <td className="px-4 py-4 text-slate-600">{record.checkIn || "--"}</td>
                         <td className="px-4 py-4 text-slate-600">{record.checkOut || "--"}</td>
                         <td className="px-4 py-4">
@@ -232,6 +664,15 @@ const Attendance = () => {
                           </span>
                         </td>
                         <td className="px-4 py-4 text-slate-700">{record.workingHours || "--"}</td>
+                        <td className="px-4 py-4">
+                          <button
+                            type="button"
+                            onClick={() => openCorrection(record)}
+                            className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+                          >
+                            <FiEdit2 /> Correct
+                          </button>
+                        </td>
                       </tr>
                     ))
                   )}
@@ -296,29 +737,133 @@ const Attendance = () => {
             </div>
           </SectionCard>
 
-          <SectionCard title="Shift Breakdown" subtitle="Employees grouped by shift assignments.">
-            <div className="space-y-3">
-              {shiftEntries.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-5 text-sm text-slate-500">
-                  No shift data available.
+          <SectionCard title="Attendance Calendar" subtitle="Day-wise status for the selected employee or month view.">
+            <div className="grid grid-cols-7 gap-2 text-center text-xs font-semibold text-slate-500">
+              {calendarDays.slice(0, 7).map((day, index) => (
+                <div key={`${day.dateKey}-${index}`} className="rounded-xl bg-slate-100 px-2 py-2">
+                  {new Date(`${day.dateKey}T00:00:00`).toLocaleDateString("en-IN", { weekday: "short" })}
                 </div>
-              ) : (
-                shiftEntries.map(([shiftName, count]) => (
-                  <div key={shiftName} className="rounded-[22px] border border-slate-200 bg-white p-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
-                        <p className="font-semibold text-slate-900">{shiftName}</p>
-                        <p className="text-sm text-slate-500">{count} employee(s)</p>
-                      </div>
-                      <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
-                        Shift
-                      </span>
-                    </div>
+              ))}
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+              {calendarDays.map((day) => (
+                <div
+                  key={day.dateKey}
+                  className={`rounded-[22px] border p-4 ${day.muted ? "bg-slate-50" : "bg-white"} ${day.today ? "ring-2 ring-amber-300" : "border-slate-200"}`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-lg font-semibold text-slate-900">{day.day}</p>
+                    <span className={`rounded-full border px-2 py-1 text-[10px] font-semibold ${calendarToneMap[day.status] || "border-slate-200 bg-slate-100 text-slate-700"}`}>
+                      {day.status || "-"}
+                    </span>
                   </div>
-                ))
-              )}
+                  <p className="mt-2 text-xs text-slate-500">{formatDisplayDate(day.dateKey)}</p>
+                </div>
+              ))}
             </div>
           </SectionCard>
+
+          <SectionCard title="Selected Employee Summary" subtitle={selectedEmployee ? selectedEmployee.name : "Choose an employee to review their monthly summary."}>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-2xl bg-emerald-50 p-4 text-center">
+                <p className="text-sm font-medium text-emerald-700">Present</p>
+                <p className="mt-2 text-3xl font-semibold text-emerald-700">{monthlyEmployeeSummary.present}</p>
+              </div>
+              <div className="rounded-2xl bg-rose-50 p-4 text-center">
+                <p className="text-sm font-medium text-rose-700">Absent</p>
+                <p className="mt-2 text-3xl font-semibold text-rose-700">{monthlyEmployeeSummary.absent}</p>
+              </div>
+              <div className="rounded-2xl bg-sky-50 p-4 text-center">
+                <p className="text-sm font-medium text-sky-700">Leave</p>
+                <p className="mt-2 text-3xl font-semibold text-sky-700">{monthlyEmployeeSummary.leave}</p>
+              </div>
+              <div className="rounded-2xl bg-amber-50 p-4 text-center">
+                <p className="text-sm font-medium text-amber-700">Late</p>
+                <p className="mt-2 text-3xl font-semibold text-amber-700">{monthlyEmployeeSummary.late}</p>
+              </div>
+            </div>
+            <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-600">
+              <p><span className="font-semibold text-slate-900">Shift:</span> {selectedEmployee?.shift || "Morning"}</p>
+              <p className="mt-1"><span className="font-semibold text-slate-900">Attendance:</span> {monthlyEmployeeSummary.attendancePercent}%</p>
+            </div>
+          </SectionCard>
+
+          {editingRecord ? (
+            <SectionCard title={`Manual Correction - ${correctionTargetName}`} subtitle="Update check-in, check-out, shift, or status." className="overflow-hidden">
+              <div className="grid gap-3 md:grid-cols-2">
+                <label className="flex flex-col gap-2 text-sm text-slate-600">
+                  Check In
+                  <input
+                    type="text"
+                    value={correctionForm.checkIn}
+                    onChange={(event) => setCorrectionForm((current) => ({ ...current, checkIn: event.target.value }))}
+                    className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none"
+                    placeholder="06:05 AM"
+                  />
+                </label>
+                <label className="flex flex-col gap-2 text-sm text-slate-600">
+                  Check Out
+                  <input
+                    type="text"
+                    value={correctionForm.checkOut}
+                    onChange={(event) => setCorrectionForm((current) => ({ ...current, checkOut: event.target.value }))}
+                    className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none"
+                    placeholder="02:00 PM"
+                  />
+                </label>
+                <label className="flex flex-col gap-2 text-sm text-slate-600">
+                  Status
+                  <select
+                    value={correctionForm.status}
+                    onChange={(event) => setCorrectionForm((current) => ({ ...current, status: event.target.value }))}
+                    className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none"
+                  >
+                    <option value="Present">Present</option>
+                    <option value="Late">Late</option>
+                    <option value="Absent">Absent</option>
+                    <option value="Leave">Leave</option>
+                    <option value="Half Day">Half Day</option>
+                  </select>
+                </label>
+                <label className="flex flex-col gap-2 text-sm text-slate-600">
+                  Shift
+                  <input
+                    type="text"
+                    value={correctionForm.shift}
+                    onChange={(event) => setCorrectionForm((current) => ({ ...current, shift: event.target.value }))}
+                    className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none"
+                    placeholder="Morning"
+                  />
+                </label>
+                <label className="flex flex-col gap-2 text-sm text-slate-600 md:col-span-2">
+                  Note
+                  <textarea
+                    value={correctionForm.note}
+                    onChange={(event) => setCorrectionForm((current) => ({ ...current, note: event.target.value }))}
+                    className="min-h-[96px] rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none"
+                    placeholder="Reason for correction"
+                  />
+                </label>
+              </div>
+              <div className="mt-4 flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={saveCorrection}
+                  disabled={savingId === editingRecord.id}
+                  className="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  <FiSave /> {savingId === editingRecord.id ? "Saving..." : "Save Correction"}
+                </button>
+                <button
+                  type="button"
+                  onClick={closeCorrection}
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </SectionCard>
+          ) : null}
 
           <SectionCard title="Today's Duties" subtitle="Assigned duties for today from the tasks module.">
             <div className="space-y-3">

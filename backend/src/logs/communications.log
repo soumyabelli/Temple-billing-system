@@ -208,3 +208,39 @@ Thank you for your donation!
 To: 9945650664
 Message: Donation received! Amount: ₹55. Transaction ID: SIM_TXN_1780999675999. Thank you! -Temple
 
+[2026-06-10T14:21:21.616Z] EMAIL
+To: mayur@gmail.com
+Subject: Donation Receipt
+Donation Receipt
+Amount: ₹2000
+Category: Festival Donation
+Transaction ID: SIM_TXN_1781101281119
+Thank you for your donation!
+
+[2026-06-10T14:30:34.553Z] EMAIL
+To: mayur@gmail.com
+Subject: Prasadam Order Confirmation
+Prasadam Order Confirmed
+Item: Laddu Prasadam
+Quantity: 1
+Amount: ₹151
+Thank you!
+
+[2026-06-10T14:30:35.141Z] EMAIL
+To: mayur@gmail.com
+Subject: Prasadam Order Confirmation
+Prasadam Order Confirmed
+Item: Laddu Prasadam
+Quantity: 1
+Amount: ₹151
+Thank you!
+
+[2026-06-10T14:45:40.572Z] EMAIL
+To: dskulal04@gmail.com
+Subject: Prasadam Order Confirmation
+Prasadam Order Confirmed
+Item: Panchamrit Prasadam
+Quantity: 1
+Amount: ₹101
+Thank you!
+

@@ -4,7 +4,7 @@ const Employee = require("../models/Employee");
 const Leave = require("../models/Leave");
 const Task = require("../models/Task");
 const User = require("../models/User");
-const { createStaffNotification } = require("../utils/notificationService");
+const { createNotification, createStaffNotification } = require("../utils/notificationService");
 
 const ATTENDANCE_STATUSES = ["Present", "Absent", "Late", "Half Day", "Leave"];
 const CHECK_IN_LATE_TIME = { hour: 9, minute: 30 };
@@ -47,6 +47,50 @@ const formatWorkingHours = (minutes) => {
   return `${hours}h ${remainder}m`;
 };
 
+const escapeRegex = (value) => String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const parseClockTimeToDate = (dateKey, timeValue) => {
+  const date = parseDateKey(dateKey);
+  const value = clean(timeValue).toUpperCase();
+  const match = value.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/);
+  if (!date || !match) return null;
+
+  let hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  const meridiem = match[3];
+
+  if (meridiem === "PM" && hours !== 12) hours += 12;
+  if (meridiem === "AM" && hours === 12) hours = 0;
+
+  const result = new Date(date);
+  result.setHours(hours, minutes, 0, 0);
+  return result;
+};
+
+const resolveShiftDefinition = async (shiftName) => {
+  const value = clean(shiftName);
+  if (!value) return null;
+
+  return Shift.findOne({
+    shiftName: new RegExp(`^${escapeRegex(value)}$`, "i"),
+    active: true,
+  }).sort({ updatedAt: -1, createdAt: -1 });
+};
+
+const resolveShiftStartMinutes = async (staff) => {
+  const shift = await resolveShiftDefinition(staff?.shift);
+  return shift?.startTime ? parseTimeToMinutes(shift.startTime) : parseTimeToMinutes("09:30 AM");
+};
+
+const matchesEmployeeRecord = (entry, employee) => {
+  if (!entry || !employee) return false;
+  const employeeId = employee.id?.toString();
+  const employeeEmail = clean(employee.email).toLowerCase();
+  const entryIds = [entry.staffId, entry.employeeId].map((value) => clean(value)).filter(Boolean);
+  const entryEmail = clean(entry.staffEmail).toLowerCase();
+
+  return entryIds.includes(employeeId) || (employeeEmail && entryEmail === employeeEmail);
+};
 const getMonthRange = (monthValue, referenceDate = new Date()) => {
   const monthKey = /^\d{4}-\d{2}$/.test(monthValue) ? monthValue : toDateKey(referenceDate).slice(0, 7);
   const [yearPart, monthPart] = monthKey.split("-");
@@ -242,6 +286,9 @@ const createRecordPayload = (attendance, fallbackShift) => {
   const date = parseDateKey(attendance.dateKey);
   return {
     id: attendance._id.toString(),
+    employeeId: attendance.employeeId || attendance.staffId || "",
+    employeeName: attendance.staffName || "",
+    employeeEmail: attendance.staffEmail || "",
     dateKey: attendance.dateKey,
     date: date ? formatDateLabel(date) : attendance.dateKey,
     checkIn: attendance.checkIn || "--",
@@ -256,6 +303,9 @@ const createLeavePayload = (leave, fallbackShift) => {
   const date = parseDateKey(leave.fromDate);
   return {
     id: leave._id.toString(),
+    employeeId: leave.staffId || "",
+    employeeName: leave.staffName || "",
+    employeeEmail: leave.staffEmail || "",
     dateKey: leave.fromDate,
     date: date ? formatDateLabel(date) : leave.fromDate,
     checkIn: "--",
@@ -512,7 +562,7 @@ const buildAdminAttendanceDashboard = async (monthValue) => {
   today.setHours(0, 0, 0, 0);
   const todayKey = toDateKey(today);
 
-  const [employees, attendanceDocs, leaveDocs, dutyDocs] = await Promise.all([
+  const [employees, attendanceDocs, leaveDocs, dutyDocs, shiftDocs] = await Promise.all([
     Employee.find({ role: { $ne: "admin" } }).sort({ name: 1 }),
     Attendance.find({ dateKey: { $gte: startKey, $lte: endKey } }).sort({ dateKey: -1, createdAt: -1 }),
     Leave.find({
@@ -521,17 +571,27 @@ const buildAdminAttendanceDashboard = async (monthValue) => {
       toDate: { $gte: startKey },
     }).sort({ fromDate: -1, createdAt: -1 }),
     Task.find({ dueDate: todayKey }).sort({ createdAt: -1 }),
+    Shift.find({ active: true }).sort({ shiftName: 1 }),
   ]);
 
-  const employeeList = employees.map((employee) => ({
-    id: employee._id.toString(),
-    name: employee.name,
-    email: employee.email,
-    shift: employee.shift || "Morning",
-    department: employee.department || "General",
-    role: employee.role || "staff",
-    status: employee.status || "Active",
-  }));
+  const shiftByName = new Map(
+    shiftDocs.map((shift) => [clean(shift.shiftName).toLowerCase(), shift])
+  );
+
+  const employeeList = employees.map((employee) => {
+    const shiftDefinition = shiftByName.get(clean(employee.shift).toLowerCase()) || null;
+    return {
+      id: employee._id.toString(),
+      name: employee.name,
+      email: employee.email,
+      shift: employee.shift || "Morning",
+      shiftStartTime: shiftDefinition?.startTime || "",
+      shiftEndTime: shiftDefinition?.endTime || "",
+      department: employee.department || "General",
+      role: employee.role || "staff",
+      status: employee.status || "Active",
+    };
+  });
 
   const employeeById = new Map();
   const employeeByEmail = new Map();
@@ -666,11 +726,15 @@ const buildAdminAttendanceDashboard = async (monthValue) => {
       const employee = buildEmployeeLookup(attendance);
       return {
         id: attendance._id.toString(),
+        employeeId: attendance.employeeId || attendance.staffId || employee?.id || "",
+        employeeEmail: attendance.staffEmail || employee?.email || "",
         dateKey: attendance.dateKey,
         date: parseDateKey(attendance.dateKey) ? formatDateLabel(parseDateKey(attendance.dateKey)) : attendance.dateKey,
         employeeName: attendance.staffName || employee?.name || "Unknown",
         department: employee?.department || "General",
         shift: attendance.shift || employee?.shift || "Morning",
+        shiftStartTime: employee?.shiftStartTime || "",
+        shiftEndTime: employee?.shiftEndTime || "",
         checkIn: attendance.checkIn || "--",
         checkOut: attendance.checkOut || "--",
         workingHours: attendance.workingHours || "--",
@@ -681,11 +745,15 @@ const buildAdminAttendanceDashboard = async (monthValue) => {
       .filter((leave) => !attendanceDocs.some((attendance) => attendance.staffId === leave.staffId && attendance.dateKey >= leave.fromDate && attendance.dateKey <= leave.toDate))
       .map((leave) => ({
         id: leave._id.toString(),
+        employeeId: leave.staffId || "",
+        employeeEmail: leave.staffEmail || "",
         dateKey: leave.fromDate,
         date: parseDateKey(leave.fromDate) ? formatDateLabel(parseDateKey(leave.fromDate)) : leave.fromDate,
         employeeName: leave.staffName || "Unknown",
         department: "Leave",
         shift: "Morning",
+        shiftStartTime: "",
+        shiftEndTime: "",
         checkIn: "--",
         checkOut: "--",
         workingHours: "--",
@@ -693,7 +761,33 @@ const buildAdminAttendanceDashboard = async (monthValue) => {
       })),
   ]
     .sort((a, b) => b.dateKey.localeCompare(a.dateKey))
-    .slice(0, 20);
+    .slice(0, 250);
+
+  const todayRecords = employeeList.map((employee) => {
+    const attendance = attendanceMap.get(`${employee.id}:${todayKey}`);
+    const leave = leaveMap.get(`${employee.id}:${todayKey}`);
+    const status = leave
+      ? "Leave"
+      : attendance
+        ? normalizeAttendanceStatus(attendance.status)
+        : "Absent";
+
+    return {
+      id: attendance?._id?.toString() || `${employee.id}:${todayKey}`,
+      employeeId: employee.id,
+      employeeName: employee.name,
+      employeeEmail: employee.email,
+      shift: employee.shift || "Morning",
+      shiftStartTime: employee.shiftStartTime || "",
+      shiftEndTime: employee.shiftEndTime || "",
+      checkIn: attendance?.checkIn || "--",
+      checkOut: attendance?.checkOut || "--",
+      status,
+      late: status === "Late",
+      workingHours: attendance?.workingHours || "--",
+      note: attendance?.note || "",
+    };
+  });
 
   const shiftSummary = employeeList.reduce((accumulator, employee) => {
     const label = employee.shift || "Morning";
@@ -718,14 +812,15 @@ const buildAdminAttendanceDashboard = async (monthValue) => {
       totalRecords: attendanceDocs.length,
     },
     overview: [
-      { label: "Employees", value: String(employeeList.length), tone: "info" },
-      { label: "Present", value: String(todayPresentCount), tone: "success" },
-      { label: "Absent", value: String(todayAbsentCount), tone: "danger" },
-      { label: "Leave", value: String(todayLeaveCount), tone: "warning" },
-      { label: "Working Days", value: String(timeline.length) },
-      { label: "Attendance", value: `${attendancePercent}%`, tone: "accent" },
+      { label: "Total Employees", value: String(employeeList.length), tone: "info" },
+      { label: "Present Today", value: String(todayPresentCount), tone: "success" },
+      { label: "Absent Today", value: String(todayAbsentCount), tone: "danger" },
+      { label: "On Leave", value: String(todayLeaveCount), tone: "warning" },
+      { label: "Late Arrivals", value: String(todayLateCount), tone: "accent" },
+      { label: "Attendance", value: `${attendancePercent}%`, tone: "info" },
     ],
     records,
+    todayRecords,
     timeline,
     shiftSummary,
     todayDuty: dutyDocs.map((task) => createTaskPayload(task)),
@@ -880,9 +975,9 @@ exports.markAttendance = async (req, res) => {
         });
       }
 
-      const isLate =
-        now.getHours() > CHECK_IN_LATE_TIME.hour ||
-        (now.getHours() === CHECK_IN_LATE_TIME.hour && now.getMinutes() > CHECK_IN_LATE_TIME.minute);
+      const shiftStartMinutes = await resolveShiftStartMinutes(staff);
+      const checkInMinutes = now.getHours() * 60 + now.getMinutes();
+      const isLate = checkInMinutes > shiftStartMinutes;
 
       const payload = {
         staffId: staff.staffId,
@@ -904,6 +999,13 @@ exports.markAttendance = async (req, res) => {
       attendance = attendance
         ? await Attendance.findByIdAndUpdate(attendance._id, payload, { new: true, upsert: true })
         : await Attendance.create(payload);
+
+      await createNotification({
+        title: isLate ? "Late Check-in Alert" : "Attendance Marked",
+        message: `${staff.staffName} checked in for ${payload.shift} shift at ${payload.checkIn} on ${dateKey}.`,
+        audienceRole: "admin",
+        category: "attendance",
+      });
 
       if (isLate) {
         await createStaffNotification({
@@ -950,10 +1052,84 @@ exports.markAttendance = async (req, res) => {
     }
 
     await attendance.save();
+    await createNotification({
+      title: "Attendance Marked",
+      message: `${staff.staffName} checked out from ${attendance.shift || staff.shift || "Morning"} shift at ${attendance.checkOut} on ${dateKey}.`,
+      audienceRole: "admin",
+      category: "attendance",
+    });
 
     return res.json({
       success: true,
       message: "Attendance check-out saved",
+      attendance,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+exports.updateAttendance = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { checkIn, checkOut, status, note, workingMinutes, shift } = req.body;
+
+    if (!clean(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Attendance id is required",
+      });
+    }
+
+    const attendance = await Attendance.findById(id);
+    if (!attendance) {
+      return res.status(404).json({
+        success: false,
+        message: "Attendance record not found",
+      });
+    }
+
+    if (checkIn !== undefined) {
+      attendance.checkIn = clean(checkIn) || "--";
+      attendance.checkInAt = parseClockTimeToDate(attendance.dateKey, attendance.checkIn);
+    }
+
+    if (checkOut !== undefined) {
+      attendance.checkOut = clean(checkOut) || "--";
+      attendance.checkOutAt = parseClockTimeToDate(attendance.dateKey, attendance.checkOut);
+    }
+
+    if (shift !== undefined) {
+      attendance.shift = clean(shift) || attendance.shift || "Morning";
+    }
+
+    if (note !== undefined) {
+      attendance.note = clean(note);
+    }
+
+    if (workingMinutes !== undefined && workingMinutes !== null && workingMinutes !== "") {
+      const numericMinutes = Math.max(0, Math.round(Number(workingMinutes) || 0));
+      attendance.workingMinutes = numericMinutes;
+      attendance.workingHours = formatWorkingHours(numericMinutes);
+    } else if (attendance.checkInAt && attendance.checkOutAt) {
+      const computedMinutes = Math.max(0, Math.round((attendance.checkOutAt.getTime() - attendance.checkInAt.getTime()) / 60000));
+      attendance.workingMinutes = computedMinutes;
+      attendance.workingHours = formatWorkingHours(computedMinutes);
+    }
+
+    if (status !== undefined) {
+      attendance.status = clean(status) || attendance.status;
+    }
+
+    attendance.source = "admin-correction";
+    await attendance.save();
+
+    return res.json({
+      success: true,
+      message: "Attendance updated successfully",
       attendance,
     });
   } catch (error) {

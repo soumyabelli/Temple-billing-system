@@ -1,8 +1,37 @@
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import { FaBell } from "react-icons/fa";
 import { FiSearch } from "react-icons/fi";
 import { MdKeyboardArrowDown, MdLightMode, MdDarkMode, MdMenu } from "react-icons/md";
+import { useAuth } from "../../context/AuthContext";
 
 const Topbar = ({ darkMode, toggleDarkMode, onOpenMobileSidebar }) => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [notificationCount, setNotificationCount] = useState(0);
+
+  useEffect(() => {
+    const loadNotifications = async () => {
+      const storedUser = JSON.parse(localStorage.getItem("user") || "null");
+      const adminId = user?._id || user?.id || storedUser?._id || storedUser?.id;
+      if (!adminId) {
+        setNotificationCount(0);
+        return;
+      }
+
+      try {
+        const response = await axios.get(`http://localhost:5000/api/notifications/admin/${adminId}`);
+        const notifications = Array.isArray(response.data) ? response.data : [];
+        setNotificationCount(notifications.filter((item) => !item.read && !item.viewed).length);
+      } catch (error) {
+        setNotificationCount(0);
+      }
+    };
+
+    loadNotifications();
+  }, [user]);
+
   return (
     <div className={`h-[78px] rounded-2xl flex items-center justify-between px-4 md:px-6 sticky top-4 z-20 backdrop-blur-md border
       ${darkMode ? "bg-[#1f2937]/70 border-white/10" : "bg-white/30 border-white/40 shadow-[0_10px_30px_rgba(0,0,0,0.08)]"}`}>
@@ -26,10 +55,19 @@ const Topbar = ({ darkMode, toggleDarkMode, onOpenMobileSidebar }) => {
           {darkMode ? <MdLightMode size={20} /> : <MdDarkMode size={20} />}
         </button>
 
-        <div className={`relative ${darkMode ? "text-slate-200" : "text-[#6b4c2e]"}`}>
+        <button
+          type="button"
+          onClick={() => navigate("/admin/notifications")}
+          className={`relative rounded-xl p-2 transition ${darkMode ? "text-slate-200 hover:bg-white/10" : "text-[#6b4c2e] hover:bg-white/70"}`}
+          aria-label="Open admin notifications"
+        >
           <FaBell size={17} />
-          <span className="absolute -top-2 -right-2 h-4 w-4 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center">5</span>
-        </div>
+          {notificationCount > 0 ? (
+            <span className="absolute -top-1 -right-1 min-w-5 rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white">
+              {notificationCount > 99 ? "99+" : notificationCount}
+            </span>
+          ) : null}
+        </button>
 
         <div className="hidden sm:flex items-center gap-3">
           <img src="https://i.pravatar.cc/100" alt="Admin" className="w-10 h-10 rounded-full border border-white/30" />
