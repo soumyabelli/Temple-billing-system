@@ -76,7 +76,7 @@ const DonationManagement = () => {
             <p className="text-sm uppercase tracking-[0.32em] text-amber-200/80">Donation Command Center</p>
             <h1 className="mt-3 text-4xl font-semibold tracking-tight">Admin Donation Overview</h1>
             <p className="mt-4 text-slate-200/85 text-lg">
-              High-level donation intelligence for administrators: reports, category performance, donor health,
+              High-level donation intelligence for admins: Reports, Category Performance, Donor health,
               verification workflows and donation-type governance.
             </p>
           </div>
