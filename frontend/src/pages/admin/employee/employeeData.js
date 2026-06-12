@@ -72,15 +72,135 @@ export const growthTrend = [
   { month: "May", employees: 48 },
 ];
 
+// Role → Department mapping
+export const roleDepartmentMap = {
+  priest: ["Priest Services", "Festival Services", "Special Pooja Services"],
+  accountant: ["Accounts", "Finance", "Billing"],
+  cashier: ["Donation Counter", "Billing Counter", "Prasadam Counter"],
+  staff: [
+    "Pooja Services",
+    "Prasadam",
+    "Maintenance",
+    "Security",
+    "Inventory",
+    "Devotee Services",
+    "Festival Support",
+  ],
+  admin: ["Administration", "Operations", "Temple Management"],
+};
+
+// Department → Default Duty mapping
+export const departmentDutyMap = {
+  // Priest
+  "Priest Services": ["Morning Pooja", "Evening Aarti", "Abhishekam", "Daily Rituals"],
+  "Festival Services": ["Festival Pooja", "Special Aarti", "Homa Ceremony", "Procession Coordination"],
+  "Special Pooja Services": ["Satyanarayan Pooja", "Griha Pravesh", "Navagraha Pooja", "Special Rituals"],
+  // Accountant
+  "Accounts": ["Daily Accounts Entry", "Monthly Reconciliation", "Audit Support", "Ledger Maintenance"],
+  "Finance": ["Budget Planning", "Expense Tracking", "Financial Reporting", "Fund Management"],
+  "Billing": ["Invoice Generation", "Payment Collection", "Receipt Management", "Billing Support"],
+  // Cashier
+  "Donation Counter": ["Cash Collection", "Receipt Issuing", "Donation Recording", "Counter Management"],
+  "Billing Counter": ["Bill Generation", "Cash Handling", "Counter Support", "Payment Processing"],
+  "Prasadam Counter": ["Prasadam Sales", "Cash Handling", "Stock Monitoring", "Counter Management"],
+  // Staff - Prasadam
+  "Prasadam": [
+    "Prasadam Preparation",
+    "Prasadam Packing",
+    "Prasadam Distribution",
+    "Prasadam Stock Management",
+    "Counter Support",
+  ],
+  // Staff - Security
+  "Security": [
+    "Temple Security",
+    "Night Security",
+    "Crowd Control",
+    "Festival Security",
+    "Parking Supervision",
+  ],
+  // Staff - Pooja Services
+  "Pooja Services": [
+    "Arrange Flowers",
+    "Prepare Pooja Materials",
+    "Assist Priest",
+    "Lighting Lamps",
+    "Mandap Setup",
+  ],
+  // Staff - Maintenance
+  "Maintenance": [
+    "Temple Cleaning",
+    "Electrical Maintenance",
+    "Plumbing Work",
+    "Garden Upkeep",
+    "Infrastructure Repair",
+  ],
+  // Staff - Inventory
+  "Inventory": [
+    "Stock Verification",
+    "Inventory Recording",
+    "Purchase Order Management",
+    "Storage Management",
+    "Surplus Disposal",
+  ],
+  // Staff - Devotee Services
+  "Devotee Services": [
+    "Devotee Assistance",
+    "Queue Management",
+    "Information Desk",
+    "Special Darshan Support",
+    "Enquiry Handling",
+  ],
+  // Staff - Festival Support
+  "Festival Support": [
+    "Decoration Setup",
+    "Stage Management",
+    "Crowd Guidance",
+    "Festival Logistics",
+    "Volunteer Coordination",
+  ],
+  // Admin
+  "Administration": [
+    "Staff Coordination",
+    "Record Management",
+    "Correspondence Handling",
+    "Policy Implementation",
+  ],
+  "Operations": [
+    "Daily Operations Oversight",
+    "Resource Allocation",
+    "Vendor Management",
+    "Operations Reporting",
+  ],
+  "Temple Management": [
+    "Temple Administration",
+    "Event Planning",
+    "Stakeholder Management",
+    "Strategic Planning",
+  ],
+};
+
+// Duty Location options
+export const dutyLocations = [
+  "Main Temple Hall",
+  "Pooja Hall",
+  "Donation Counter",
+  "Prasadam Store",
+  "Accounts Office",
+  "Festival Ground",
+  "Parking Area",
+  "Temple Entrance",
+];
+
 export const departments = ["Priest Services", "Pooja Services", "Accounts", "Billing", "Prasadam", "Maintenance", "Security", "Devotee Services"];
 export const employeeRoles = [
-  { value: "admin", label: "Admin" },
   { value: "priest", label: "Priest" },
   { value: "accountant", label: "Accountant" },
   { value: "cashier", label: "Cashier" },
   { value: "staff", label: "Staff" },
+  { value: "admin", label: "Admin" },
 ];
-export const shifts = ["Morning", "Afternoon", "Evening", "Night"];
+export const shiftOptions = ["Early Morning", "Morning", "Day", "Evening", "Night"];
 export const empTypes = ["Full-time", "Part-time", "Contract", "Temporary"];
 
 export const leaveRequests = [

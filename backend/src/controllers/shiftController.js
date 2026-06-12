@@ -119,6 +119,7 @@ const serializeShift = (shift) => ({
 
 const serializeAssignment = (assignment, attendance = null, leave = null) => ({
   id: assignment._id.toString(),
+  assignmentType: assignment.assignmentType || "Special Duty",
   shiftId: assignment.shiftId || "",
   shiftName: assignment.shiftName || "",
   shiftStartTime: assignment.shiftStartTime || assignment.startTime || "",
@@ -358,8 +359,10 @@ exports.assignShift = async (req, res) => {
     const shift = await Shift.findById(req.body.shiftId);
     const employeeTargets = await findEmployeeTargets(req.body.employeeId);
     const dateKey = clean(req.body.date);
-    const dutyName = clean(req.body.dutyName || req.body.title || shift?.shiftName);
-    const dutyArea = clean(req.body.dutyArea || req.body.area || shift?.category);
+    const assignmentType = clean(req.body.assignmentType) || "Special Duty";
+    const isTemporaryShiftChange = /temporary/i.test(assignmentType) || /shift change/i.test(assignmentType);
+    const dutyName = clean(req.body.dutyName || req.body.title || shift?.shiftName || (isTemporaryShiftChange ? "Temporary Shift Change" : ""));
+    const dutyArea = clean(req.body.dutyArea || req.body.area || (isTemporaryShiftChange ? "Temporary Shift" : shift?.category));
     const reportingTime = clean(req.body.reportingTime || shift?.startTime);
 
     if (!shift) {
@@ -368,8 +371,12 @@ exports.assignShift = async (req, res) => {
     if (!employeeTargets.employee) {
       return res.status(404).json({ success: false, message: "Employee not found" });
     }
-    if (!dateKey || !dutyName || !dutyArea) {
-      return res.status(400).json({ success: false, message: "date, dutyName and dutyArea are required" });
+    if (!dateKey) {
+      return res.status(400).json({ success: false, message: "date is required" });
+    }
+
+    if (!isTemporaryShiftChange && (!dutyName || !dutyArea)) {
+      return res.status(400).json({ success: false, message: "dutyName and dutyArea are required" });
     }
 
     const selectedDate = new Date(dateKey);
@@ -380,10 +387,10 @@ exports.assignShift = async (req, res) => {
 
     if (selectedDate < today) {
       return res.status(400).json({
-      success: false,
-      message: "Cannot assign shifts for previous dates",
-    });
-  }
+        success: false,
+        message: "Cannot assign shifts for previous dates",
+      });
+    }
 
     const leave = await getLeaveBlock(employeeTargets, dateKey);
     if (leave) {
@@ -405,7 +412,7 @@ exports.assignShift = async (req, res) => {
     }
 
     const assignment = await Task.create({
-      assignmentType: "Duty & Shift",
+      assignmentType,
       shiftId: shift._id.toString(),
       shiftName: shift.shiftName,
       shiftStartTime: shift.startTime,
@@ -438,8 +445,10 @@ exports.assignShift = async (req, res) => {
     });
 
     await createStaffNotification({
-      title: "New Duty Assigned",
-      message: `${dutyName} under ${shift.shiftName} on ${dateKey} at ${reportingTime || shift.startTime}.`,
+      title: isTemporaryShiftChange ? "Shift Changed" : "New Duty Assigned",
+      message: isTemporaryShiftChange
+        ? `${employeeTargets.employee.name} has a temporary shift change to ${shift.shiftName} on ${dateKey} (${shift.startTime} - ${shift.endTime}).`
+        : `${dutyName} under ${shift.shiftName} on ${dateKey} at ${reportingTime || shift.startTime}.`,
       audienceId: employeeTargets.user?._id?.toString() || employeeTargets.employee._id.toString(),
       audienceEmail: employeeTargets.employee.email,
       category: "task",

@@ -54,6 +54,31 @@ const attendanceSchema = new mongoose.Schema(
       default: "Morning",
       trim: true,
     },
+    shiftStartTime: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    shiftEndTime: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    assignmentType: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    dutyName: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    dutyArea: {
+      type: String,
+      default: "",
+      trim: true,
+    },
     status: {
       type: String,
       enum: ATTENDANCE_STATUSES,
@@ -67,6 +92,19 @@ const attendanceSchema = new mongoose.Schema(
       type: String,
       default: "--",
       trim: true,
+    },
+    overtimeMinutes: {
+      type: Number,
+      default: 0,
+    },
+    overtimeHours: {
+      type: String,
+      default: "--",
+      trim: true,
+    },
+    isOvertime: {
+      type: Boolean,
+      default: false,
     },
     note: {
       type: String,

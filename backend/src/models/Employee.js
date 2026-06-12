@@ -77,6 +77,18 @@ const employeeSchema = new mongoose.Schema({
     type: String,
   },
 
+  defaultShift: {
+    type: String,
+  },
+
+  defaultDuty: {
+    type: String,
+  },
+
+  dutyLocation: {
+    type: String,
+  },
+
   permissions: {
     type: String,
   },

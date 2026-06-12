@@ -35,6 +35,13 @@ const CATEGORIES = [
   "General"
 ];
 
+const ASSIGNMENT_TYPES = [
+  "Special Duty",
+  "Festival Duty",
+  "Overtime Duty",
+  "Temporary Shift Change",
+];
+
 const parseTime = (timeStr) => {
   if (!timeStr) return { hour: "09", minute: "00", meridiem: "AM" };
   const match = timeStr.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
@@ -124,6 +131,7 @@ const ShiftManagement = () => {
   const [assignForm, setAssignForm] = useState({
     employeeId: "",
     shiftId: "",
+    assignmentType: "Special Duty",
     date: "",
     dutyName: "",
     dutyArea: "",
@@ -278,6 +286,7 @@ const ShiftManagement = () => {
     setAssignForm({
       employeeId: "",
       shiftId: "",
+      assignmentType: "Special Duty",
       date: "",
       dutyName: "",
       dutyArea: "",
@@ -301,16 +310,21 @@ const ShiftManagement = () => {
       setAssignError("Please select a shift type");
       return;
     }
-    if (!assignForm.dutyName.trim()) {
+    if (!assignForm.date) {
+      setAssignError("Please select a date");
+      return;
+    }
+
+    const selectedShift = shifts.find((shift) => shift.id === assignForm.shiftId);
+    const assignmentType = assignForm.assignmentType || "Special Duty";
+    const isTemporaryShiftChange = assignmentType === "Temporary Shift Change";
+
+    if (!isTemporaryShiftChange && !assignForm.dutyName.trim()) {
       setAssignError("Please enter a duty name");
       return;
     }
-    if (!assignForm.dutyArea.trim()) {
+    if (!isTemporaryShiftChange && !assignForm.dutyArea.trim()) {
       setAssignError("Please enter a duty area or location");
-      return;
-    }
-    if (!assignForm.date) {
-      setAssignError("Please select a date");
       return;
     }
     const today = new Date();
@@ -320,20 +334,25 @@ const ShiftManagement = () => {
     selectedDate.setHours(0, 0, 0, 0);
 
     if (selectedDate < today) {
-      setAssignError(
-        "Cannot assign shifts for previous dates."
-    );
-    return;
-  }
+      setAssignError("Cannot assign shifts for previous dates.");
+      return;
+    }
 
     try {
-      const selectedShift = shifts.find((shift) => shift.id === assignForm.shiftId);
+      const dutyName = isTemporaryShiftChange
+        ? assignForm.dutyName.trim() || selectedShift?.shiftName || "Temporary Shift Change"
+        : assignForm.dutyName.trim();
+      const dutyArea = isTemporaryShiftChange
+        ? assignForm.dutyArea.trim() || "Temporary Shift"
+        : assignForm.dutyArea.trim();
+
       await assignShift({
         shiftId: assignForm.shiftId,
         employeeId: assignForm.employeeId,
+        assignmentType,
         date: assignForm.date,
-        dutyName: assignForm.dutyName.trim(),
-        dutyArea: assignForm.dutyArea.trim(),
+        dutyName,
+        dutyArea,
         notes: assignForm.notes,
         assignedBy: assignForm.assignedBy.trim() || assignedByDefault,
         reportingTime: selectedShift?.startTime || "",
@@ -360,6 +379,7 @@ const ShiftManagement = () => {
   const hoursOptions = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0"));
   const minutesOptions = ["00", "15", "30", "45"];
   const activeEmployees = employees.filter(emp => emp.status === "Active");
+  const isTemporaryShiftChange = assignForm.assignmentType === "Temporary Shift Change";
 
   if (loading && !shifts.length) {
     return (
@@ -375,12 +395,12 @@ const ShiftManagement = () => {
   return (
     <div className="space-y-8">
       {/* 1. Header Banner */}
-      <SectionCard 
-        title="Duty & Shift Management" 
-        subtitle="Schedule temple shifts and duties together, with automated leaves, overlap checks, and staff assignment controls." 
+      <SectionCard
+        title="Duty & Shift Management"
+        subtitle="Schedule temporary shifts and duties for festivals, emergencies, and special events. Default duties are assigned in Employee Management."
         className="bg-gradient-to-r from-[#1e1b4b] via-[#312e81] to-[#4f46e5] text-white border-transparent shadow-2xl shadow-violet-600/10"
         topRight={
-          <button 
+          <button
             onClick={handleAssignClick}
             className="flex items-center gap-2 rounded-2xl bg-amber-500 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-amber-500/20 transition hover:bg-amber-600 active:scale-95"
           >
@@ -486,6 +506,10 @@ const ShiftManagement = () => {
                         <FiUser size={12} className="text-slate-400 flex-shrink-0" />
                         <span className="font-semibold truncate">{item.shiftName}</span>
                       </div>
+
+                      <span className="inline-flex self-start rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-semibold text-slate-600">
+                        {item.assignmentType || "Special Duty"}
+                      </span>
                       
                       <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
                         <FiClock size={11} className="text-slate-400 flex-shrink-0" />
@@ -639,6 +663,9 @@ const ShiftManagement = () => {
                   <div key={a.id} className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm hover:border-slate-300 transition flex items-center justify-between gap-3 text-xs">
                     <div>
                       <p className="font-bold text-slate-800">{a.employeeName}</p>
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mt-0.5">
+                        {a.assignmentType || "Special Duty"}
+                      </p>
                       <p className="text-slate-500 font-medium mt-0.5">{a.shiftName}</p>
                       <p className="text-slate-500 font-medium mt-0.5">{a.dutyName}</p>
                       <p className="text-[10px] text-slate-400 mt-1">{new Date(`${a.dateKey}T00:00:00`).toLocaleDateString("en-IN", { weekday: "short", day: "2-digit", month: "short" })} • {a.reportingTime || a.startTime} • {a.dutyArea}</p>
@@ -838,6 +865,21 @@ const ShiftManagement = () => {
               </div>
 
               <div>
+                <label className="block text-slate-600 font-semibold mb-1.5">Assignment Type</label>
+                <select
+                  value={assignForm.assignmentType}
+                  onChange={(e) => setAssignForm({ ...assignForm, assignmentType: e.target.value })}
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 outline-none font-semibold text-slate-800 transition"
+                >
+                  {ASSIGNMENT_TYPES.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
                 <label className="block text-slate-600 font-semibold mb-1.5">Select Shift Type</label>
                 <select 
                   value={assignForm.shiftId}
@@ -854,23 +896,27 @@ const ShiftManagement = () => {
               </div>
 
               <div>
-                <label className="block text-slate-600 font-semibold mb-1.5">Duty Name</label>
+                <label className="block text-slate-600 font-semibold mb-1.5">
+                  {isTemporaryShiftChange ? "Shift Note" : "Duty Name"}
+                </label>
                 <input
                   type="text"
                   value={assignForm.dutyName}
                   onChange={(e) => setAssignForm({ ...assignForm, dutyName: e.target.value })}
-                  placeholder="e.g. Arrange Flowers"
+                  placeholder={isTemporaryShiftChange ? "Optional note for the shift change" : "e.g. Arrange Flowers"}
                   className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 outline-none font-semibold text-slate-800 transition"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-600 font-semibold mb-1.5">Duty Area / Location</label>
+                <label className="block text-slate-600 font-semibold mb-1.5">
+                  {isTemporaryShiftChange ? "Shift Location" : "Duty Area / Location"}
+                </label>
                 <input
                   type="text"
                   value={assignForm.dutyArea}
                   onChange={(e) => setAssignForm({ ...assignForm, dutyArea: e.target.value })}
-                  placeholder="e.g. Temple Hall"
+                  placeholder={isTemporaryShiftChange ? "Optional shift location" : "e.g. Temple Hall"}
                   className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 outline-none font-semibold text-slate-800 transition"
                 />
               </div>

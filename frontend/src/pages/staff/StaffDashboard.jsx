@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
@@ -34,10 +34,31 @@ const POLL_INTERVAL_MS = 10000;
 const TASK_STATUSES = ["Pending", "In Progress", "Completed"];
 const LEAVE_TYPES = ["Sick Leave", "Casual Leave", "Festival Leave", "Emergency Leave", "General"];
 const BLOOD_GROUPS = ["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"];
-const GENDER_OPTIONS = ["Male", "Female", "Other"];
-const SHIFT_OPTIONS = ["Morning", "Day", "Afternoon", "Evening", "Night"];
-const EMPLOYMENT_TYPES = ["Full-time", "Part-time", "Contract", "Temporary"];
 const INVENTORY_UNITS = ["Kg", "Liter", "Pack", "Pieces"];
+const STAFF_PROFILE_EDITABLE_FIELDS = ["name", "email", "bloodGroup", "dob", "phone", "emergencyContact", "address", "photo"];
+
+const buildEditableProfilePayload = (profile = {}) =>
+  STAFF_PROFILE_EDITABLE_FIELDS.reduce((payload, field) => {
+    payload[field] = profile[field] ?? "";
+    return payload;
+  }, {});
+
+const getStaffProfileDetails = (profile = {}) => [
+  { label: "Role", value: profile.role || "-" },
+  { label: "Status", value: profile.status || "-" },
+  { label: "Gender", value: profile.gender || "-" },
+  { label: "Aadhaar", value: profile.aadhaar || "-" },
+  { label: "Joining Date", value: profile.joiningDate || "-" },
+  { label: "Shift", value: profile.shift || "-" },
+  { label: "Department", value: profile.department || "-" },
+  { label: "Employment Type", value: profile.employmentType || "-" },
+  { label: "Salary", value: profile.salary || "-" },
+  { label: "Permissions", value: profile.permissions || "-" },
+  { label: "Default Shift", value: profile.defaultShift || "-" },
+  { label: "Default Duty", value: profile.defaultDuty || "-" },
+  { label: "Duty Location", value: profile.dutyLocation || "-" },
+  { label: "Document URL", value: profile.documentUrl || "-" },
+];
 
 const formatHeaderDate = () =>
   new Date().toLocaleDateString("en-IN", {
@@ -138,6 +159,9 @@ const toProfileForm = (profile = {}) => ({
   salary: profile.salary || "",
   joiningDate: profile.joiningDate || "",
   employmentType: profile.employmentType || "Full-time",
+  defaultShift: profile.defaultShift || "",
+  defaultDuty: profile.defaultDuty || "",
+  dutyLocation: profile.dutyLocation || "",
   permissions: profile.permissions || "",
   status: profile.status || "Active",
   photo: profile.photo || "",
@@ -146,9 +170,10 @@ const toProfileForm = (profile = {}) => ({
 const StaffDashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logoutUser } = useAuth();
+  const { user, logoutUser, updateUser } = useAuth();
   const storedUser = JSON.parse(localStorage.getItem("user") || "null");
   const staff = user || storedUser;
+  const updateUserRef = useRef(updateUser);
 
   const [activeSection, setActiveSection] = useState("dashboard");
   const [tasks, setTasks] = useState([]);
@@ -189,6 +214,10 @@ const StaffDashboard = () => {
   const [inventoryLoading, setInventoryLoading] = useState(false);
   const [inventoryError, setInventoryError] = useState("");
   const [submittingInventory, setSubmittingInventory] = useState(false);
+
+  useEffect(() => {
+    updateUserRef.current = updateUser;
+  }, [updateUser]);
 
   const staffId = staff?.id || staff?._id || "";
   const displayName = profileForm.name || staff?.name || "Staff";
@@ -233,6 +262,9 @@ const StaffDashboard = () => {
       setProfileMessage("");
       const response = await getEmployeeProfile(staffId);
       setProfileForm(toProfileForm(response.profile));
+      if (response.authUser) {
+        updateUserRef.current?.(response.authUser);
+      }
     } catch (apiError) {
       setProfileMessage(apiError.response?.data?.message || "Failed to load profile details");
     } finally {
@@ -249,6 +281,12 @@ const StaffDashboard = () => {
   useEffect(() => {
     fetchProfileData();
   }, [fetchProfileData]);
+
+  useEffect(() => {
+    if (activeSection === "profile") {
+      fetchProfileData();
+    }
+  }, [activeSection, fetchProfileData]);
 
   const fetchInventoryCatalog = useCallback(async () => {
     if (!staffId) return;
@@ -581,13 +619,10 @@ const StaffDashboard = () => {
     try {
       setProfileSaving(true);
       setProfileMessage("");
-      const response = await updateEmployeeProfile(staffId, profileForm);
+      const response = await updateEmployeeProfile(staffId, buildEditableProfilePayload(profileForm));
       setProfileForm(toProfileForm(response.profile));
       if (response.authUser) {
-        const token = localStorage.getItem("token");
-        if (token) {
-          localStorage.setItem("user", JSON.stringify(response.authUser));
-        }
+        updateUser(response.authUser);
       }
       setProfileMessage("Profile updated successfully");
     } catch (apiError) {
@@ -790,8 +825,8 @@ const StaffDashboard = () => {
                 </div>
                 <div>
                   <h3>Today's Duty</h3>
-                  <strong>{todayDuty ? todayDuty.dutyName || todayDuty.title || todayDuty.duty || "--" : "--"}</strong>
-                  <p>{todayDuty ? todayDuty.dutyArea || todayDuty.area || "" : "No duty assigned yet"}</p>
+                  <strong>{todayDuty ? todayDuty.dutyName || todayDuty.title || todayDuty.duty || "--" : (profileForm.defaultDuty || "--")}</strong>
+                  <p>{todayDuty ? todayDuty.dutyArea || todayDuty.area || "" : (profileForm.dutyLocation || "Default duty location")}</p>
                 </div>
               </article>
               <article className="info-card">
@@ -800,8 +835,8 @@ const StaffDashboard = () => {
                 </div>
                 <div>
                   <h3>Today's Shift</h3>
-                  <strong>{todayDuty ? todayDuty.shiftName || "--" : "--"}</strong>
-                  <p>{todayDuty ? todayDuty.reportingTime || todayDuty.time || "--" : "No shift assigned yet"}</p>
+                  <strong>{todayDuty ? todayDuty.shiftName || "--" : (profileForm.defaultShift || profileForm.shift || "--")}</strong>
+                  <p>{todayDuty ? todayDuty.reportingTime || todayDuty.time || "--" : "Default shift"}</p>
                 </div>
               </article>
             </section>
@@ -983,12 +1018,35 @@ const StaffDashboard = () => {
               <div>
                 <div className="card-heading">
                   <h2>All Duties Assigned for Today</h2>
-                  <p>{filteredDuties.length} duties found</p>
+                  <p>{filteredDuties.length} temporary duties found</p>
                 </div>
+
+                {/* Default Duty Section */}
+                {(profileForm.defaultDuty || profileForm.defaultShift) && (
+                  <div className="mb-4 p-4 bg-amber-50 rounded-xl border border-amber-200">
+                    <h3 className="font-bold text-amber-800 mb-2">Default Duty (Permanent)</h3>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <span className="text-slate-600">Default Shift:</span>
+                        <span className="ml-2 font-semibold">{profileForm.defaultShift || profileForm.shift || "Not assigned"}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-600">Default Duty:</span>
+                        <span className="ml-2 font-semibold">{profileForm.defaultDuty || "Not assigned"}</span>
+                      </div>
+                      <div className="col-span-2">
+                        <span className="text-slate-600">Duty Location:</span>
+                        <span className="ml-2 font-semibold">{profileForm.dutyLocation || "Not assigned"}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <div className="table-wrap duties-table">
                   <table className="task-table">
                     <thead>
                       <tr>
+                        <th>Type</th>
                         <th>Shift</th>
                         <th>Duty</th>
                         <th>Area</th>
@@ -998,10 +1056,16 @@ const StaffDashboard = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredDuties.length === 0 ? (
+                      {filteredDuties.length === 0 && !(profileForm.defaultDuty || profileForm.defaultShift) ? (
                         <tr>
-                          <td colSpan="6" className="empty-cell">
-                            No duties match the filter.
+                          <td colSpan="7" className="empty-cell">
+                            No duties assigned for today.
+                          </td>
+                        </tr>
+                      ) : filteredDuties.length === 0 ? (
+                        <tr>
+                          <td colSpan="7" className="empty-cell">
+                            No temporary duties assigned today. Only default duty is active.
                           </td>
                         </tr>
                       ) : (
@@ -1011,6 +1075,11 @@ const StaffDashboard = () => {
                             className={selectedTask?._id === task._id ? "selected-row" : ""}
                             onClick={() => setSelectedTask(task)}
                           >
+                            <td>
+                              <span className="bg-violet-100 text-violet-700 px-2 py-1 rounded text-xs font-semibold">
+                                Temporary
+                              </span>
+                            </td>
                             <td>{task.shiftName || "-"}</td>
                             <td>{task.dutyName || task.title || task.duty}</td>
                             <td>{task.dutyArea || task.area || task.description}</td>
@@ -1561,7 +1630,12 @@ const StaffDashboard = () => {
         {!loading && activeSection === "profile" ? (
           <section className="profile-settings-page">
             <div className="leave-head">
-              <h2>Profile Settings</h2>
+              <div>
+                <h2>Profile Settings</h2>
+                <p className="profile-section-intro">
+                  Update your personal details here. Employment details below stay synced with admin changes.
+                </p>
+              </div>
               <button type="button" onClick={fetchProfileData} disabled={profileLoading}>
                 {profileLoading ? "Refreshing..." : "Refresh"}
               </button>
@@ -1569,8 +1643,8 @@ const StaffDashboard = () => {
 
             <div className="profile-settings-grid">
               <div className="table-card">
-                <h3 className="section-title">My Details</h3>
-                <p className="section-subtitle">Update your employee details added by admin.</p>
+                <h3 className="section-title">My Personal Details</h3>
+                <p className="section-subtitle">You can update your own contact details, photo, and login email here.</p>
                 <form onSubmit={handleProfileSave} className="leave-form">
                   <div className="date-grid">
                     <div>
@@ -1589,22 +1663,6 @@ const StaffDashboard = () => {
                         type="email"
                         value={profileForm.email}
                         onChange={(e) => handleProfileInputChange("email", e.target.value)}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="date-grid">
-                    <div>
-                      <label htmlFor="profile-role">Role</label>
-                      <input id="profile-role" type="text" value={profileForm.role} disabled />
-                    </div>
-                    <div>
-                      <label htmlFor="profile-status">Status</label>
-                      <input
-                        id="profile-status"
-                        type="text"
-                        value={profileForm.status}
-                        onChange={(e) => handleProfileInputChange("status", e.target.value)}
                       />
                     </div>
                   </div>
@@ -1631,20 +1689,6 @@ const StaffDashboard = () => {
 
                   <div className="date-grid">
                     <div>
-                      <label htmlFor="profile-gender">Gender</label>
-                      <select
-                        id="profile-gender"
-                        value={profileForm.gender}
-                        onChange={(e) => handleProfileInputChange("gender", e.target.value)}
-                      >
-                        {GENDER_OPTIONS.map((gender) => (
-                          <option key={gender} value={gender}>
-                            {gender}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
                       <label htmlFor="profile-blood">Blood Group</label>
                       <select
                         id="profile-blood"
@@ -1658,9 +1702,6 @@ const StaffDashboard = () => {
                         ))}
                       </select>
                     </div>
-                  </div>
-
-                  <div className="date-grid">
                     <div>
                       <label htmlFor="profile-dob">Date of Birth</label>
                       <input
@@ -1670,27 +1711,9 @@ const StaffDashboard = () => {
                         onChange={(e) => handleProfileInputChange("dob", e.target.value)}
                       />
                     </div>
-                    <div>
-                      <label htmlFor="profile-joining">Joining Date</label>
-                      <input
-                        id="profile-joining"
-                        type="date"
-                        value={profileForm.joiningDate}
-                        onChange={(e) => handleProfileInputChange("joiningDate", e.target.value)}
-                      />
-                    </div>
                   </div>
 
                   <div className="date-grid">
-                    <div>
-                      <label htmlFor="profile-aadhaar">Aadhaar</label>
-                      <input
-                        id="profile-aadhaar"
-                        type="text"
-                        value={profileForm.aadhaar}
-                        onChange={(e) => handleProfileInputChange("aadhaar", e.target.value)}
-                      />
-                    </div>
                     <div>
                       <label htmlFor="profile-phone">Phone</label>
                       <input
@@ -1700,9 +1723,6 @@ const StaffDashboard = () => {
                         onChange={(e) => handleProfileInputChange("phone", e.target.value)}
                       />
                     </div>
-                  </div>
-
-                  <div className="date-grid">
                     <div>
                       <label htmlFor="profile-emergency">Emergency Contact</label>
                       <input
@@ -1710,67 +1730,6 @@ const StaffDashboard = () => {
                         type="text"
                         value={profileForm.emergencyContact}
                         onChange={(e) => handleProfileInputChange("emergencyContact", e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="profile-shift">Shift</label>
-                      <select
-                        id="profile-shift"
-                        value={profileForm.shift}
-                        onChange={(e) => handleProfileInputChange("shift", e.target.value)}
-                      >
-                        {SHIFT_OPTIONS.map((shift) => (
-                          <option key={shift} value={shift}>
-                            {shift}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="date-grid">
-                    <div>
-                      <label htmlFor="profile-department">Department</label>
-                      <input
-                        id="profile-department"
-                        type="text"
-                        value={profileForm.department}
-                        onChange={(e) => handleProfileInputChange("department", e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="profile-employment">Employment Type</label>
-                      <select
-                        id="profile-employment"
-                        value={profileForm.employmentType}
-                        onChange={(e) => handleProfileInputChange("employmentType", e.target.value)}
-                      >
-                        {EMPLOYMENT_TYPES.map((employmentType) => (
-                          <option key={employmentType} value={employmentType}>
-                            {employmentType}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="date-grid">
-                    <div>
-                      <label htmlFor="profile-salary">Salary</label>
-                      <input
-                        id="profile-salary"
-                        type="text"
-                        value={profileForm.salary}
-                        onChange={(e) => handleProfileInputChange("salary", e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="profile-permissions">Permissions</label>
-                      <input
-                        id="profile-permissions"
-                        type="text"
-                        value={profileForm.permissions}
-                        onChange={(e) => handleProfileInputChange("permissions", e.target.value)}
                       />
                     </div>
                   </div>
@@ -1795,6 +1754,24 @@ const StaffDashboard = () => {
                     </button>
                   </div>
                 </form>
+
+                <div className="profile-admin-details">
+                  <div className="profile-admin-details-head">
+                    <div>
+                      <h4>Admin Managed Details</h4>
+                      <p>These values are read-only here and stay in sync with the employee record.</p>
+                    </div>
+                  </div>
+
+                  <div className="profile-info-grid">
+                    {getStaffProfileDetails(profileForm).map((item) => (
+                      <div key={item.label} className="profile-info-card">
+                        <span>{item.label}</span>
+                        <strong>{item.value}</strong>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               <div className="table-card">

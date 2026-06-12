@@ -5,25 +5,15 @@ const jwt = require("jsonwebtoken");
 const Notification = require("../models/Notification");
 
 const ALLOWED_AUTH_ROLES = ["admin", "accountant", "cashier", "priest", "staff"];
-const PROFILE_EDITABLE_FIELDS = [
+const STAFF_PROFILE_EDITABLE_FIELDS = [
   "name",
   "email",
-  "gender",
-  "dob",
   "bloodGroup",
-  "aadhaar",
+  "dob",
   "phone",
-  "address",
   "emergencyContact",
-  "shift",
-  "department",
-  "salary",
-  "joiningDate",
-  "employmentType",
-  "permissions",
+  "address",
   "photo",
-  "documentUrl",
-  "status",
 ];
 
 const isValidEmail = (email) => /^\S+@\S+\.\S+$/.test(String(email || "").trim());
@@ -52,8 +42,15 @@ const sanitizeEmployee = (employeeDoc) => {
 const findUserAndEmployeeByUserId = async (userId) => {
   const user = await User.findById(userId);
   if (!user) {
-    return {};
+    const employee = await Employee.findById(userId);
+    if (!employee) {
+      return {};
+    }
+
+    const linkedUser = await User.findOne({ email: employee.email });
+    return { user: linkedUser, employee };
   }
+
   const employee = await Employee.findOne({ email: user.email });
   return { user, employee };
 };
@@ -67,6 +64,9 @@ exports.createEmployee = async (req, res) => {
       password,
       role,
       shift,
+      defaultShift,
+      defaultDuty,
+      dutyLocation,
       department,
       gender,
       dob,
@@ -85,6 +85,10 @@ exports.createEmployee = async (req, res) => {
 
     const normalizedEmail = String(email || "").toLowerCase().trim();
     const normalizedRole = String(role || "").toLowerCase().trim();
+    const normalizedShift = String(shift || defaultShift || "").trim();
+    const normalizedDefaultShift = String(defaultShift || shift || "").trim();
+    const normalizedDefaultDuty = String(defaultDuty || "").trim();
+    const normalizedDutyLocation = String(dutyLocation || "").trim();
 
     if (!name || !normalizedEmail || !password || !normalizedRole) {
       return res.status(400).json({ message: "Name, email, password and role are required." });
@@ -149,7 +153,8 @@ exports.createEmployee = async (req, res) => {
       email: normalizedEmail,
       password: hashedPassword,
       role: normalizedRole,
-      shift,
+      shift: normalizedShift,
+      defaultShift: normalizedDefaultShift,
       department,
       gender,
       dob,
@@ -161,6 +166,8 @@ exports.createEmployee = async (req, res) => {
       salary,
       joiningDate,
       employmentType,
+      defaultDuty: normalizedDefaultDuty,
+      dutyLocation: normalizedDutyLocation,
       permissions,
       photo,
       documentUrl,
@@ -319,11 +326,23 @@ exports.updateEmployeeProfileByUserId = async (req, res) => {
     }
 
     const updateData = {};
-    PROFILE_EDITABLE_FIELDS.forEach((field) => {
+    STAFF_PROFILE_EDITABLE_FIELDS.forEach((field) => {
       if (Object.prototype.hasOwnProperty.call(req.body, field)) {
         updateData[field] = req.body[field];
       }
     });
+
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ message: "No editable profile fields provided." });
+    }
+
+    if (Object.prototype.hasOwnProperty.call(updateData, "name")) {
+      const normalizedName = String(updateData.name || "").trim();
+      if (!normalizedName) {
+        return res.status(400).json({ message: "Name is required." });
+      }
+      updateData.name = normalizedName;
+    }
 
     if (Object.prototype.hasOwnProperty.call(updateData, "email")) {
       const normalizedEmail = String(updateData.email || "").toLowerCase().trim();
@@ -343,24 +362,31 @@ exports.updateEmployeeProfileByUserId = async (req, res) => {
       updateData.email = normalizedEmail;
     }
 
+    if (Object.prototype.hasOwnProperty.call(updateData, "bloodGroup")) {
+      updateData.bloodGroup = String(updateData.bloodGroup || "").trim();
+    }
+
     if (Object.prototype.hasOwnProperty.call(updateData, "dob")) {
       if (updateData.dob && (!isValidDate(updateData.dob) || !isPastOrToday(updateData.dob))) {
         return res.status(400).json({ message: "Date of birth must be a valid past date." });
       }
+      updateData.dob = String(updateData.dob || "").trim();
     }
 
-    if (Object.prototype.hasOwnProperty.call(updateData, "joiningDate")) {
-      if (updateData.joiningDate && !isValidDate(updateData.joiningDate)) {
-        return res.status(400).json({ message: "Please enter a valid joining date." });
-      }
+    if (Object.prototype.hasOwnProperty.call(updateData, "phone")) {
+      updateData.phone = String(updateData.phone || "").trim();
     }
 
-    if ((updateData.dob || employee.dob) && (updateData.joiningDate || employee.joiningDate)) {
-      const dobDate = new Date(updateData.dob || employee.dob);
-      const joinDate = new Date(updateData.joiningDate || employee.joiningDate);
-      if (joinDate < dobDate) {
-        return res.status(400).json({ message: "Joining date cannot be earlier than date of birth." });
-      }
+    if (Object.prototype.hasOwnProperty.call(updateData, "emergencyContact")) {
+      updateData.emergencyContact = String(updateData.emergencyContact || "").trim();
+    }
+
+    if (Object.prototype.hasOwnProperty.call(updateData, "address")) {
+      updateData.address = String(updateData.address || "").trim();
+    }
+
+    if (Object.prototype.hasOwnProperty.call(updateData, "photo")) {
+      updateData.photo = String(updateData.photo || "").trim();
     }
 
     const updatedEmployee = await Employee.findByIdAndUpdate(employee._id, updateData, { new: true });

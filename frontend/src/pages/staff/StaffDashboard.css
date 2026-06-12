@@ -1096,6 +1096,12 @@
   margin-bottom: 16px;
 }
 
+.profile-section-intro {
+  margin: 8px 0 0;
+  color: #63584d;
+  font-weight: 600;
+}
+
 .notifications-head {
   display: flex;
   justify-content: space-between;
@@ -1354,6 +1360,61 @@
   font-weight: 600;
 }
 
+.profile-admin-details {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px dashed #e7d7c4;
+}
+
+.profile-admin-details-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.profile-admin-details-head h4 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.profile-admin-details-head p {
+  margin: 6px 0 0;
+  color: #63584d;
+  font-weight: 600;
+}
+
+.profile-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.profile-info-card {
+  border: 1px solid #ede5da;
+  border-radius: 14px;
+  background: #fffaf4;
+  padding: 14px;
+}
+
+.profile-info-card span {
+  display: block;
+  font-size: 12px;
+  color: #8b7f72;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.profile-info-card strong {
+  display: block;
+  margin-top: 6px;
+  color: #241f1a;
+  font-size: 15px;
+  word-break: break-word;
+}
+
 .date-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1432,6 +1493,7 @@
   .top-cards,
   .leave-stat-grid,
   .date-grid,
+  .profile-info-grid,
   .quick-actions {
     grid-template-columns: 1fr;
   }

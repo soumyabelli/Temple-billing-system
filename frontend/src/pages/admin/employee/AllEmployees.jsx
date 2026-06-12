@@ -319,6 +319,22 @@ const AllEmployees = () => {
               <p className="text-sm text-slate-500">Permissions</p>
               <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.permissions || "-"}</p>
             </div>
+            <div className="rounded-3xl border border-slate-200 bg-white p-4">
+              <p className="text-sm text-slate-500">Default Shift</p>
+              <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.defaultShift || "-"}</p>
+            </div>
+            <div className="rounded-3xl border border-slate-200 bg-white p-4">
+              <p className="text-sm text-slate-500">Default Duty</p>
+              <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.defaultDuty || "-"}</p>
+            </div>
+            <div className="rounded-3xl border border-slate-200 bg-white p-4">
+              <p className="text-sm text-slate-500">Duty Location</p>
+              <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.dutyLocation || "-"}</p>
+            </div>
+            <div className="rounded-3xl border border-slate-200 bg-white p-4">
+              <p className="text-sm text-slate-500">Document URL</p>
+              <p className="mt-1 break-words font-semibold text-slate-900">{selectedEmployee.documentUrl || "-"}</p>
+            </div>
           </div>
 
           <div className="mt-4 rounded-3xl border border-slate-200 bg-white p-4">

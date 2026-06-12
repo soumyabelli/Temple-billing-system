@@ -562,8 +562,25 @@ const Attendance = () => {
           ? "Checked in"
           : "Not started"
       : "Not started";
-  const todayDutyLabel = todaySnapshot.duty?.duty || todaySnapshot.duty?.title || "No duty assigned";
-  const todayDutyArea = todaySnapshot.duty?.area || todaySnapshot.duty?.description || "Awaiting assignment";
+  const todayShiftLabel = todaySnapshot.shiftName || todaySnapshot.shift || dashboard?.staff?.shift || user?.shift || "Morning";
+  const todayShiftTiming =
+    todaySnapshot.shiftStartTime && todaySnapshot.shiftEndTime
+      ? `${todaySnapshot.shiftStartTime} - ${todaySnapshot.shiftEndTime}`
+      : dashboard?.staff?.shiftStartTime && dashboard?.staff?.shiftEndTime
+        ? `${dashboard.staff.shiftStartTime} - ${dashboard.staff.shiftEndTime}`
+        : "Timing not set";
+  const todayDutyLabel =
+    todaySnapshot.duty?.dutyName ||
+    todaySnapshot.duty?.duty ||
+    todaySnapshot.duty?.title ||
+    todaySnapshot.defaultDuty ||
+    "No duty assigned";
+  const todayDutyArea =
+    todaySnapshot.duty?.dutyArea ||
+    todaySnapshot.duty?.area ||
+    todaySnapshot.duty?.description ||
+    todaySnapshot.dutyLocation ||
+    "Awaiting assignment";
 
   return (
     <div className="staff-dashboard-page staff-attendance-page">
@@ -655,7 +672,8 @@ const Attendance = () => {
             <section className="attendance-today-card">
               <div className="attendance-today-item">
                 <span>Current Shift</span>
-                <strong>{todaySnapshot.shift || dashboard?.staff?.shift || user?.shift || "Morning"}</strong>
+                <strong>{todayShiftLabel}</strong>
+                <p>{todayShiftTiming}</p>
               </div>
               <div className="attendance-today-item">
                 <span>Today&apos;s Duty</span>
@@ -900,11 +918,13 @@ const Attendance = () => {
                 </div>
                 <div>
                   <span>Shift</span>
-                  <strong>{dashboard?.staff?.shift || user?.shift || "Morning"}</strong>
+                  <strong>{todayShiftLabel}</strong>
+                  <p>{todayShiftTiming}</p>
                 </div>
                 <div>
                   <span>Duty</span>
                   <strong>{todayDutyLabel}</strong>
+                  <p>{todayDutyArea}</p>
                 </div>
               </div>
 

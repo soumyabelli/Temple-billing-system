@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const Attendance = require("../models/Attendance");
 const Employee = require("../models/Employee");
 const Leave = require("../models/Leave");
+const Shift = require("../models/Shift");
 const Task = require("../models/Task");
 const User = require("../models/User");
 const { createNotification, createStaffNotification } = require("../utils/notificationService");
@@ -77,9 +78,82 @@ const resolveShiftDefinition = async (shiftName) => {
   }).sort({ updatedAt: -1, createdAt: -1 });
 };
 
+// Resolves the effective shift start time using defaultShift (falls back to 09:00 AM)
 const resolveShiftStartMinutes = async (staff) => {
-  const shift = await resolveShiftDefinition(staff?.shift);
-  return shift?.startTime ? parseTimeToMinutes(shift.startTime) : parseTimeToMinutes("09:30 AM");
+  const shiftName = staff?.defaultShift || staff?.shift;
+  const shift = await resolveShiftDefinition(shiftName);
+  return shift?.startTime ? parseTimeToMinutes(shift.startTime) : parseTimeToMinutes("09:00 AM");
+};
+
+// Resolves the full shift definition for an employee (defaultShift → Shift document)
+const resolveEmployeeShift = async (employee) => {
+  if (!employee) return null;
+  const shiftName = clean(employee.defaultShift || employee.shift);
+  return resolveShiftDefinition(shiftName);
+};
+
+const normalizeAssignmentType = (value) => clean(value).toLowerCase();
+
+const isTemporaryShiftAssignment = (task) => {
+  const assignmentType = normalizeAssignmentType(task?.assignmentType);
+  return assignmentType.includes("temporary") || assignmentType.includes("shift change");
+};
+
+const resolveShiftDefinitionFromLookup = (shiftName, shiftLookup) => {
+  if (!shiftLookup) return null;
+  return shiftLookup.get(clean(shiftName).toLowerCase()) || null;
+};
+
+const buildDailyAssignmentContext = async (staff, tasks = [], shiftLookup = null) => {
+  const defaultShiftName = clean(staff?.defaultShift || staff?.shift || "Morning") || "Morning";
+  const temporaryShiftTask = tasks.find((task) => isTemporaryShiftAssignment(task)) || null;
+  const dutyTasks = tasks.filter((task) => !isTemporaryShiftAssignment(task));
+  const primaryDutyTask = dutyTasks[0] || null;
+  const defaultDuty = clean(staff?.defaultDuty || "");
+  const dutyLocation = clean(staff?.dutyLocation || "");
+
+  let shiftDefinition = null;
+  let shiftName = defaultShiftName;
+  let shiftStartTime = "";
+  let shiftEndTime = "";
+
+  if (temporaryShiftTask) {
+    shiftName = clean(temporaryShiftTask.shiftName || temporaryShiftTask.dutyName || defaultShiftName) || defaultShiftName;
+    shiftStartTime = clean(temporaryShiftTask.shiftStartTime || temporaryShiftTask.reportingTime || temporaryShiftTask.startTime);
+    shiftEndTime = clean(temporaryShiftTask.shiftEndTime || temporaryShiftTask.endTime);
+    shiftDefinition =
+      resolveShiftDefinitionFromLookup(shiftName, shiftLookup) ||
+      (shiftStartTime && shiftEndTime
+        ? { shiftName, startTime: shiftStartTime, endTime: shiftEndTime }
+        : await resolveShiftDefinition(shiftName)) ||
+      (shiftName !== defaultShiftName ? await resolveShiftDefinition(defaultShiftName) : null);
+  } else {
+    shiftDefinition = resolveShiftDefinitionFromLookup(defaultShiftName, shiftLookup) || (await resolveShiftDefinition(defaultShiftName));
+  }
+
+  if (shiftDefinition) {
+    shiftName = shiftDefinition.shiftName || shiftName;
+    shiftStartTime = shiftDefinition.startTime || shiftStartTime;
+    shiftEndTime = shiftDefinition.endTime || shiftEndTime;
+  }
+
+  const dutyName = clean(primaryDutyTask?.dutyName || primaryDutyTask?.duty || primaryDutyTask?.title || defaultDuty);
+  const dutyArea = clean(primaryDutyTask?.dutyArea || primaryDutyTask?.area || primaryDutyTask?.description || dutyLocation);
+
+  return {
+    defaultShiftName,
+    shiftDefinition,
+    shiftName,
+    shiftStartTime,
+    shiftEndTime,
+    temporaryShiftTask,
+    dutyTasks,
+    primaryDutyTask,
+    dutyName,
+    dutyArea,
+    defaultDuty,
+    dutyLocation,
+  };
 };
 
 const matchesEmployeeRecord = (entry, employee) => {
@@ -137,7 +211,11 @@ const resolveStaffContext = async ({ staffId, staffName, staffEmail }) => {
     staffName: employee?.name || user?.name || clean(staffName),
     staffEmail: employee?.email || user?.email || normalizedEmail,
     employeeId: employee?._id?.toString() || "",
-    shift: employee?.shift || "Morning",
+    // Use defaultShift (new) with fallback to old shift field for backwards compat
+    shift: employee?.defaultShift || employee?.shift || "Morning",
+    defaultShift: employee?.defaultShift || employee?.shift || "Morning",
+    defaultDuty: employee?.defaultDuty || "",
+    dutyLocation: employee?.dutyLocation || "",
     department: employee?.department || "",
     role: user?.role || employee?.role || "staff",
   };
@@ -282,7 +360,8 @@ const buildCalendar = ({ monthIndex, startDate, endDate, statusByDate, todayKey,
   };
 };
 
-const createRecordPayload = (attendance, fallbackShift) => {
+const createRecordPayload = (attendance, fallbackShift = {}) => {
+  const fallback = typeof fallbackShift === "string" ? { shift: fallbackShift } : fallbackShift || {};
   const date = parseDateKey(attendance.dateKey);
   return {
     id: attendance._id.toString(),
@@ -293,13 +372,21 @@ const createRecordPayload = (attendance, fallbackShift) => {
     date: date ? formatDateLabel(date) : attendance.dateKey,
     checkIn: attendance.checkIn || "--",
     checkOut: attendance.checkOut || "--",
-    shift: attendance.shift || fallbackShift || "Morning",
+    shift: attendance.shift || fallback.shiftName || fallback.shift || "Morning",
+    shiftStartTime: attendance.shiftStartTime || fallback.shiftStartTime || "",
+    shiftEndTime: attendance.shiftEndTime || fallback.shiftEndTime || "",
+    assignmentType: attendance.assignmentType || fallback.assignmentType || "",
+    dutyName: attendance.dutyName || fallback.dutyName || "",
+    dutyArea: attendance.dutyArea || fallback.dutyArea || "",
+    defaultDuty: fallback.defaultDuty || "",
+    dutyLocation: fallback.dutyLocation || "",
     status: normalizeAttendanceStatus(attendance.status),
     workingHours: attendance.workingHours || "--",
   };
 };
 
-const createLeavePayload = (leave, fallbackShift) => {
+const createLeavePayload = (leave, fallbackShift = {}) => {
+  const fallback = typeof fallbackShift === "string" ? { shift: fallbackShift } : fallbackShift || {};
   const date = parseDateKey(leave.fromDate);
   return {
     id: leave._id.toString(),
@@ -310,7 +397,7 @@ const createLeavePayload = (leave, fallbackShift) => {
     date: date ? formatDateLabel(date) : leave.fromDate,
     checkIn: "--",
     checkOut: "--",
-    shift: fallbackShift || "Morning",
+    shift: fallback.shiftName || fallback.shift || "Morning",
     status: "Leave",
     workingHours: "--",
   };
@@ -322,7 +409,7 @@ const createTaskPayload = (task) => ({
   employeeId: task.employeeId || "",
   staffEmail: task.staffEmail || "",
   staffName: task.staffName || "",
-  assignmentType: task.assignmentType || "Duty & Shift",
+  assignmentType: task.assignmentType || "Special Duty",
   shiftId: task.shiftId || "",
   shiftName: task.shiftName || "",
   shiftStartTime: task.shiftStartTime || "",
@@ -355,12 +442,23 @@ const buildDashboardResponse = async (staffId, monthValue) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const todayKey = toDateKey(today);
+  const baseShiftDefinition = await resolveShiftDefinition(staff.defaultShift || staff.shift);
+  const baseShiftContext = {
+    shift: baseShiftDefinition?.shiftName || staff.defaultShift || staff.shift || "Morning",
+    shiftName: baseShiftDefinition?.shiftName || staff.defaultShift || staff.shift || "Morning",
+    shiftStartTime: baseShiftDefinition?.startTime || "",
+    shiftEndTime: baseShiftDefinition?.endTime || "",
+    defaultDuty: staff.defaultDuty || "",
+    dutyLocation: staff.dutyLocation || "",
+  };
 
   const [attendanceDocs, leaveDocs] = await Promise.all([
     Attendance.find(await buildAttendanceQuery(staffId, { startKey, endKey })).sort({ dateKey: -1, createdAt: -1 }),
     Leave.find(await buildLeaveQuery(staffId, startKey, endKey)).sort({ fromDate: -1, createdAt: -1 }),
   ]);
+  // Also load today's special assignments (for extra duty / temporary shifts)
   const todayTasks = await Task.find(await buildTaskQuery(staffId, todayKey)).sort({ dueDate: 1, time: 1, createdAt: -1 });
+  const dailyContext = await buildDailyAssignmentContext(staff, todayTasks);
 
   const attendanceByDate = new Map();
   attendanceDocs.forEach((doc) => {
@@ -399,7 +497,9 @@ const buildDashboardResponse = async (staffId, monthValue) => {
     let status = null;
     let checkIn = "--";
     let checkOut = "--";
-    let shift = staff.shift || "Morning";
+    let shift = baseShiftContext.shiftName || staff.shift || "Morning";
+    let shiftStartTime = baseShiftContext.shiftStartTime || "";
+    let shiftEndTime = baseShiftContext.shiftEndTime || "";
     let workingHours = "--";
 
     if (leave) {
@@ -410,6 +510,8 @@ const buildDashboardResponse = async (staffId, monthValue) => {
       checkIn = attendance.checkIn || "--";
       checkOut = attendance.checkOut || "--";
       shift = attendance.shift || shift;
+      shiftStartTime = attendance.shiftStartTime || shiftStartTime;
+      shiftEndTime = attendance.shiftEndTime || shiftEndTime;
       workingHours = attendance.workingHours || "--";
 
       if (status === "Late") {
@@ -440,6 +542,8 @@ const buildDashboardResponse = async (staffId, monthValue) => {
         checkIn,
         checkOut,
         shift,
+        shiftStartTime,
+        shiftEndTime,
         status,
         workingHours,
       });
@@ -451,11 +555,11 @@ const buildDashboardResponse = async (staffId, monthValue) => {
   const latestStatusEntry = [...timeline].sort((a, b) => b.dateKey.localeCompare(a.dateKey))[0];
   const recentRecordsMap = new Map();
   attendanceDocs.forEach((doc) => {
-    recentRecordsMap.set(doc.dateKey, createRecordPayload(doc, staff.shift));
+    recentRecordsMap.set(doc.dateKey, createRecordPayload(doc, baseShiftContext));
   });
   leaveDocs.forEach((leave) => {
     if (!recentRecordsMap.has(leave.fromDate)) {
-      recentRecordsMap.set(leave.fromDate, createLeavePayload(leave, staff.shift));
+      recentRecordsMap.set(leave.fromDate, createLeavePayload(leave, baseShiftContext));
     }
   });
   const recentRecords = [...recentRecordsMap.values()].sort((a, b) => b.dateKey.localeCompare(a.dateKey));
@@ -463,6 +567,17 @@ const buildDashboardResponse = async (staffId, monthValue) => {
   const todayAttendance = attendanceByDate.get(todayKey) || null;
   const todayLeave = leaveByDate.get(todayKey) || null;
   const todayTaskList = todayTasks.map((task) => createTaskPayload(task));
+  const todayDutyTask = dailyContext.primaryDutyTask ? createTaskPayload(dailyContext.primaryDutyTask) : null;
+  const todayDutySummary = todayDutyTask || (dailyContext.defaultDuty
+    ? {
+        id: `default-duty-${todayKey}`,
+        dutyName: dailyContext.defaultDuty,
+        duty: dailyContext.defaultDuty,
+        dutyArea: dailyContext.dutyLocation || "",
+        area: dailyContext.dutyLocation || "",
+        assignmentType: "Default Duty",
+      }
+    : null);
   const todayStatus = todayLeave && !todayAttendance
     ? "Leave"
     : todayAttendance
@@ -492,19 +607,29 @@ const buildDashboardResponse = async (staffId, monthValue) => {
       name: staff.staffName,
       email: staff.staffEmail,
       role: staff.role,
-      shift: staff.shift,
+      shift: dailyContext.shiftName,
+      defaultShift: dailyContext.defaultShiftName,
+      defaultDuty: dailyContext.defaultDuty,
+      dutyLocation: dailyContext.dutyLocation,
+      shiftStartTime: dailyContext.shiftStartTime || "",
+      shiftEndTime: dailyContext.shiftEndTime || "",
       department: staff.department,
     },
     today: {
       dateKey: todayKey,
       dateLabel: formatLongDateLabel(today),
       status: todayStatus,
-      shift: staff.shift,
+      shift: dailyContext.shiftName,
+      shiftName: dailyContext.shiftName,
+      shiftStartTime: dailyContext.shiftStartTime || "",
+      shiftEndTime: dailyContext.shiftEndTime || "",
+      defaultDuty: dailyContext.defaultDuty,
+      dutyLocation: dailyContext.dutyLocation,
       checkIn: todayAttendance?.checkIn || "--",
       checkOut: todayAttendance?.checkOut || "--",
       workingHours: todayAttendance?.workingHours || "--",
-      duty: todayTaskList[0] || null,
-      duties: todayTaskList.slice(0, 3),
+      duty: todayDutySummary,
+      duties: todayTaskList,
       leaveReason: todayLeave?.reason || "",
       leaveType: todayLeave?.leaveType || "",
       isOnLeave: Boolean(todayLeave && !todayAttendance),
@@ -578,26 +703,50 @@ const buildAdminAttendanceDashboard = async (monthValue) => {
     shiftDocs.map((shift) => [clean(shift.shiftName).toLowerCase(), shift])
   );
 
-  const employeeList = employees.map((employee) => {
-    const shiftDefinition = shiftByName.get(clean(employee.shift).toLowerCase()) || null;
-    return {
-      id: employee._id.toString(),
-      name: employee.name,
-      email: employee.email,
-      shift: employee.shift || "Morning",
-      shiftStartTime: shiftDefinition?.startTime || "",
-      shiftEndTime: shiftDefinition?.endTime || "",
-      department: employee.department || "General",
-      role: employee.role || "staff",
-      status: employee.status || "Active",
-    };
-  });
+  const employeeContexts = await Promise.all(
+    employees.map(async (employee) => {
+      const shiftKey = clean(employee.defaultShift || employee.shift).toLowerCase();
+      const shiftDefinition = shiftByName.get(shiftKey) || null;
+      const employeeTodayTasks = dutyDocs.filter((task) => matchesEmployeeRecord(task, employee));
+      const todayContext = await buildDailyAssignmentContext(
+        {
+          defaultShift: employee.defaultShift || employee.shift,
+          shift: employee.defaultShift || employee.shift,
+          defaultDuty: employee.defaultDuty,
+          dutyLocation: employee.dutyLocation,
+        },
+        employeeTodayTasks,
+        shiftByName
+      );
+
+      return {
+        id: employee._id.toString(),
+        name: employee.name,
+        email: employee.email,
+        shift: employee.defaultShift || employee.shift || "Morning",
+        shiftStartTime: shiftDefinition?.startTime || "",
+        shiftEndTime: shiftDefinition?.endTime || "",
+        defaultDuty: employee.defaultDuty || "",
+        dutyLocation: employee.dutyLocation || "",
+        department: employee.department || "General",
+        role: employee.role || "staff",
+        status: employee.status || "Active",
+        todayContext,
+      };
+    })
+  );
+
+  const employeeList = employeeContexts.map(({ todayContext, ...employee }) => employee);
 
   const employeeById = new Map();
   const employeeByEmail = new Map();
-  employeeList.forEach((employee) => {
+  const employeeContextById = new Map();
+  const employeeContextByEmail = new Map();
+  employeeContexts.forEach((employee) => {
     employeeById.set(employee.id, employee);
     employeeByEmail.set(normalizeEmail(employee.email), employee);
+    employeeContextById.set(employee.id, employee.todayContext);
+    employeeContextByEmail.set(normalizeEmail(employee.email), employee.todayContext);
   });
 
   const attendanceMap = new Map();
@@ -626,6 +775,9 @@ const buildAdminAttendanceDashboard = async (monthValue) => {
     const byEmail = attendance.staffEmail ? employeeByEmail.get(normalizeEmail(attendance.staffEmail)) : null;
     return byId || byEmail || null;
   };
+
+  const getEmployeeContext = (employee) =>
+    employeeContextById.get(employee.id) || employeeContextByEmail.get(normalizeEmail(employee.email)) || null;
 
   const timeline = [];
   let presentDays = 0;
@@ -724,6 +876,7 @@ const buildAdminAttendanceDashboard = async (monthValue) => {
   const records = [
     ...attendanceDocs.map((attendance) => {
       const employee = buildEmployeeLookup(attendance);
+      const employeeContext = employee ? getEmployeeContext(employee) : null;
       return {
         id: attendance._id.toString(),
         employeeId: attendance.employeeId || attendance.staffId || employee?.id || "",
@@ -732,9 +885,14 @@ const buildAdminAttendanceDashboard = async (monthValue) => {
         date: parseDateKey(attendance.dateKey) ? formatDateLabel(parseDateKey(attendance.dateKey)) : attendance.dateKey,
         employeeName: attendance.staffName || employee?.name || "Unknown",
         department: employee?.department || "General",
-        shift: attendance.shift || employee?.shift || "Morning",
-        shiftStartTime: employee?.shiftStartTime || "",
-        shiftEndTime: employee?.shiftEndTime || "",
+        shift: attendance.shift || employeeContext?.shiftName || employee?.shift || "Morning",
+        shiftStartTime: attendance.shiftStartTime || employeeContext?.shiftStartTime || employee?.shiftStartTime || "",
+        shiftEndTime: attendance.shiftEndTime || employeeContext?.shiftEndTime || employee?.shiftEndTime || "",
+        assignmentType: attendance.assignmentType || employeeContext?.temporaryShiftTask?.assignmentType || "",
+        dutyName: attendance.dutyName || employeeContext?.dutyName || employee?.defaultDuty || "",
+        dutyArea: attendance.dutyArea || employeeContext?.dutyArea || employee?.dutyLocation || "",
+        defaultDuty: employee?.defaultDuty || "",
+        dutyLocation: employee?.dutyLocation || "",
         checkIn: attendance.checkIn || "--",
         checkOut: attendance.checkOut || "--",
         workingHours: attendance.workingHours || "--",
@@ -754,6 +912,11 @@ const buildAdminAttendanceDashboard = async (monthValue) => {
         shift: "Morning",
         shiftStartTime: "",
         shiftEndTime: "",
+        assignmentType: "",
+        dutyName: "",
+        dutyArea: "",
+        defaultDuty: "",
+        dutyLocation: "",
         checkIn: "--",
         checkOut: "--",
         workingHours: "--",
@@ -766,6 +929,7 @@ const buildAdminAttendanceDashboard = async (monthValue) => {
   const todayRecords = employeeList.map((employee) => {
     const attendance = attendanceMap.get(`${employee.id}:${todayKey}`);
     const leave = leaveMap.get(`${employee.id}:${todayKey}`);
+    const employeeContext = getEmployeeContext(employee);
     const status = leave
       ? "Leave"
       : attendance
@@ -777,9 +941,14 @@ const buildAdminAttendanceDashboard = async (monthValue) => {
       employeeId: employee.id,
       employeeName: employee.name,
       employeeEmail: employee.email,
-      shift: employee.shift || "Morning",
-      shiftStartTime: employee.shiftStartTime || "",
-      shiftEndTime: employee.shiftEndTime || "",
+      shift: attendance?.shift || employeeContext?.shiftName || employee.shift || "Morning",
+      shiftStartTime: attendance?.shiftStartTime || employeeContext?.shiftStartTime || employee.shiftStartTime || "",
+      shiftEndTime: attendance?.shiftEndTime || employeeContext?.shiftEndTime || employee.shiftEndTime || "",
+      assignmentType: attendance?.assignmentType || employeeContext?.temporaryShiftTask?.assignmentType || "Default Shift",
+      dutyName: attendance?.dutyName || employeeContext?.dutyName || employee.defaultDuty || "",
+      dutyArea: attendance?.dutyArea || employeeContext?.dutyArea || employee.dutyLocation || "",
+      defaultDuty: employee.defaultDuty || "",
+      dutyLocation: employee.dutyLocation || "",
       checkIn: attendance?.checkIn || "--",
       checkOut: attendance?.checkOut || "--",
       status,
@@ -789,8 +958,8 @@ const buildAdminAttendanceDashboard = async (monthValue) => {
     };
   });
 
-  const shiftSummary = employeeList.reduce((accumulator, employee) => {
-    const label = employee.shift || "Morning";
+  const shiftSummary = employeeContexts.reduce((accumulator, employee) => {
+    const label = employee.todayContext?.shiftName || employee.shift || "Morning";
     accumulator[label] = (accumulator[label] || 0) + 1;
     return accumulator;
   }, {});
@@ -963,6 +1132,31 @@ exports.markAttendance = async (req, res) => {
       });
     }
 
+    const employee = await Employee.findOne({ email: staff.staffEmail }) || await Employee.findById(staff.employeeId);
+    const todayTasks = await Task.find(await buildTaskQuery(staffId, dateKey));
+    const dailyContext = await buildDailyAssignmentContext(
+      {
+        defaultShift: employee?.defaultShift || employee?.shift || staff.defaultShift || staff.shift,
+        shift: employee?.defaultShift || employee?.shift || staff.defaultShift || staff.shift,
+        defaultDuty: employee?.defaultDuty || staff.defaultDuty,
+        dutyLocation: employee?.dutyLocation || staff.dutyLocation,
+      },
+      todayTasks
+    );
+    const hasDefaultShift = Boolean(employee?.defaultShift || employee?.shift || staff.defaultShift || staff.shift);
+    const hasDutyAssignment = Boolean(dailyContext.primaryDutyTask || dailyContext.defaultDuty);
+    const hasTemporaryAssignment = Boolean(dailyContext.temporaryShiftTask);
+
+    if (!hasDefaultShift && !hasDutyAssignment && !hasTemporaryAssignment) {
+      return res.status(403).json({
+        success: false,
+        message: "No duty assigned for today. Please contact admin for duty assignment.",
+      });
+    }
+
+    const hasOvertimeAssignment = todayTasks.some((task) => normalizeAssignmentType(task.assignmentType).includes("overtime"));
+    const isOvertime = hasOvertimeAssignment;
+
     const attendanceQuery = await buildAttendanceQuery(staffId, { dateKey });
     let attendance = await Attendance.findOne(attendanceQuery);
 
@@ -975,7 +1169,12 @@ exports.markAttendance = async (req, res) => {
         });
       }
 
-      const shiftStartMinutes = await resolveShiftStartMinutes(staff);
+      const shiftStartMinutes = dailyContext.shiftStartTime
+        ? parseTimeToMinutes(dailyContext.shiftStartTime)
+        : await resolveShiftStartMinutes({
+            defaultShift: dailyContext.shiftName,
+            shift: dailyContext.shiftName,
+          });
       const checkInMinutes = now.getHours() * 60 + now.getMinutes();
       const isLate = checkInMinutes > shiftStartMinutes;
 
@@ -989,10 +1188,18 @@ exports.markAttendance = async (req, res) => {
         checkInAt: now,
         checkOut: "--",
         checkOutAt: null,
-        shift: staff.shift || "Morning",
+        shift: dailyContext.shiftName || staff.shift || "Morning",
+        shiftStartTime: dailyContext.shiftStartTime || "",
+        shiftEndTime: dailyContext.shiftEndTime || "",
+        assignmentType: dailyContext.temporaryShiftTask?.assignmentType || dailyContext.primaryDutyTask?.assignmentType || "Default Shift",
+        dutyName: dailyContext.dutyName || dailyContext.defaultDuty || "",
+        dutyArea: dailyContext.dutyArea || dailyContext.dutyLocation || "",
         status: isLate ? "Late" : "Present",
         workingMinutes: 0,
         workingHours: "--",
+        isOvertime: isOvertime,
+        overtimeMinutes: 0,
+        overtimeHours: "--",
         source: "manual",
       };
 
@@ -1047,6 +1254,15 @@ exports.markAttendance = async (req, res) => {
     attendance.workingMinutes = workingMinutes;
     attendance.workingHours = formatWorkingHours(workingMinutes);
 
+    // Calculate overtime if employee has both default shift and temporary assignment
+    if (attendance.isOvertime) {
+      // Standard working hours (e.g., 8 hours = 480 minutes)
+      const standardWorkingMinutes = 480;
+      const overtimeMinutes = Math.max(0, workingMinutes - standardWorkingMinutes);
+      attendance.overtimeMinutes = overtimeMinutes;
+      attendance.overtimeHours = formatWorkingHours(overtimeMinutes);
+    }
+
     if (attendance.status === "Absent") {
       attendance.status = "Present";
     }
@@ -1054,7 +1270,7 @@ exports.markAttendance = async (req, res) => {
     await attendance.save();
     await createNotification({
       title: "Attendance Marked",
-      message: `${staff.staffName} checked out from ${attendance.shift || staff.shift || "Morning"} shift at ${attendance.checkOut} on ${dateKey}.`,
+      message: `${staff.staffName} checked out from ${attendance.shift || dailyContext.shiftName || staff.shift || "Morning"} shift at ${attendance.checkOut} on ${dateKey}.`,
       audienceRole: "admin",
       category: "attendance",
     });

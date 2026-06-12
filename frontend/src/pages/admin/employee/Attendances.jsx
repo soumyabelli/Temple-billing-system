@@ -216,6 +216,22 @@ const Attendance = () => {
     });
   }, [records, selectedEmployee]);
 
+  const selectedEmployeeTodayRecord = useMemo(() => {
+    if (!selectedEmployee) {
+      return null;
+    }
+
+    const employeeId = String(selectedEmployee._id || selectedEmployee.id || "");
+    const employeeEmail = String(selectedEmployee.email || "").toLowerCase();
+    return (
+      todayRecords.find((record) => {
+        const recordEmployeeId = String(record.employeeId || "");
+        const recordEmployeeEmail = String(record.employeeEmail || "").toLowerCase();
+        return recordEmployeeId === employeeId || (employeeEmail && recordEmployeeEmail === employeeEmail);
+      }) || null
+    );
+  }, [selectedEmployee, todayRecords]);
+
   const calendarDays = useMemo(
     () => buildCalendarDays(monthKey, records, selectedEmployee?._id || selectedEmployee?.id || ""),
     [monthKey, records, selectedEmployee]
@@ -287,6 +303,13 @@ const Attendance = () => {
   }, [timeline]);
 
   const shiftEntries = useMemo(() => Object.entries(shiftSummary), [shiftSummary]);
+  const selectedEmployeeShiftLabel = selectedEmployee
+    ? selectedEmployeeTodayRecord?.shift || selectedEmployee?.shift || "Morning"
+    : "All Employees";
+  const selectedEmployeeShiftTiming =
+    selectedEmployee && selectedEmployeeTodayRecord?.shiftStartTime && selectedEmployeeTodayRecord?.shiftEndTime
+      ? `${selectedEmployeeTodayRecord.shiftStartTime} - ${selectedEmployeeTodayRecord.shiftEndTime}`
+      : "--";
 
   const openCorrection = (record) => {
     setEditingRecord(record);
@@ -613,12 +636,12 @@ const Attendance = () => {
 
       <div className="grid gap-5 xl:grid-cols-[1.65fr_0.95fr]">
         <div className="space-y-5">
-          <SectionCard
-            title="Monthly Attendance Records"
-            subtitle={selectedEmployee ? `Monthly attendance for ${selectedEmployee.name}.` : "Monthly attendance for the selected employee."}
-            topRight={<span className="text-sm font-semibold text-slate-500">{selectedEmployee?.shift || headerDate}</span>}
-            className="overflow-hidden"
-          >
+        <SectionCard
+          title="Monthly Attendance Records"
+          subtitle={selectedEmployee ? `Monthly attendance for ${selectedEmployee.name}.` : "Monthly attendance for the selected employee."}
+          topRight={<span className="text-sm font-semibold text-slate-500">{selectedEmployeeShiftLabel}</span>}
+          className="overflow-hidden"
+        >
             <div className="overflow-x-auto">
               <table className="min-w-full text-left text-sm">
                 <thead className="border-b border-slate-200 text-slate-500">
@@ -783,7 +806,10 @@ const Attendance = () => {
               </div>
             </div>
             <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-600">
-              <p><span className="font-semibold text-slate-900">Shift:</span> {selectedEmployee?.shift || "Morning"}</p>
+              <p><span className="font-semibold text-slate-900">Shift:</span> {selectedEmployeeShiftLabel}</p>
+              <p className="mt-1"><span className="font-semibold text-slate-900">Shift Time:</span> {selectedEmployeeShiftTiming}</p>
+              <p className="mt-1"><span className="font-semibold text-slate-900">Default Duty:</span> {selectedEmployee?.defaultDuty || "-"}</p>
+              <p className="mt-1"><span className="font-semibold text-slate-900">Duty Location:</span> {selectedEmployee?.dutyLocation || "-"}</p>
               <p className="mt-1"><span className="font-semibold text-slate-900">Attendance:</span> {monthlyEmployeeSummary.attendancePercent}%</p>
             </div>
           </SectionCard>
@@ -875,10 +901,15 @@ const Attendance = () => {
                 todayDuty.slice(0, 5).map((task) => (
                   <div key={task.id} className="rounded-[22px] border border-slate-200 bg-white p-4">
                     <p className="font-semibold text-slate-900">{task.duty || "Duty"}</p>
+                    <p className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                      {task.assignmentType || "Special Duty"}
+                    </p>
                     <p className="mt-1 text-sm text-slate-500">{task.area || "General area"}</p>
                     <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold text-slate-600">
                       <span className="rounded-full bg-slate-100 px-3 py-1">{task.staffName || "Staff"}</span>
-                      <span className="rounded-full bg-slate-100 px-3 py-1">{task.time || task.dueDate || "-"}</span>
+                      <span className="rounded-full bg-slate-100 px-3 py-1">
+                        {task.shiftStartTime && task.shiftEndTime ? `${task.shiftStartTime} - ${task.shiftEndTime}` : task.time || task.dueDate || "-"}
+                      </span>
                       <span className="rounded-full bg-slate-100 px-3 py-1">By {task.assignedBy || "Admin"}</span>
                     </div>
                   </div>

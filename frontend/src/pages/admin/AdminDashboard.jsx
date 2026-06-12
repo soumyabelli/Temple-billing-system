@@ -25,6 +25,10 @@ const statCards = [
   { title: "Pending Payments", amount: "Rs 12,560", trend: "2.2%", trendUp: false, icon: <MdOutlinePayments />, accent: "bg-rose-100 text-rose-600" },
   { title: "Total Devotees", amount: "2,350", trend: "4.3%", trendUp: true, icon: <FaUsers />, accent: "bg-blue-100 text-blue-600" },
   { title: "Low Stock Items", amount: "8", trend: "Requires attention", trendUp: false, icon: <FaBoxes />, accent: "bg-red-100 text-red-600" },
+  { title: "Active Duty Assignments", amount: "24", trend: "Today", trendUp: true, icon: <FaUsers />, accent: "bg-emerald-100 text-emerald-600" },
+  { title: "Extra Shift Assignments", amount: "5", trend: "Today", trendUp: true, icon: <FaUsers />, accent: "bg-purple-100 text-purple-600" },
+  { title: "Overtime Hours", amount: "12 hrs", trend: "This Week", trendUp: true, icon: <FaRupeeSign />, accent: "bg-orange-100 text-orange-600" },
+  { title: "Festival Assignments", amount: "8", trend: "Upcoming", trendUp: true, icon: <MdTempleBuddhist />, accent: "bg-pink-100 text-pink-600" },
 ];
 
 const PlaceholderView = ({ title, darkMode }) => (
