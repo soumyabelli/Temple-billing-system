@@ -316,3 +316,43 @@ Category: Annadanam
 Transaction ID: SIM_TXN_1781237045585
 Thank you for your donation!
 
+[2026-06-12T05:48:00.878Z] EMAIL
+To: reena@gmail.com
+Subject: Pooja Booking Confirmation
+Pooja Booking Confirmation
+Service: Maha Lakshmi Pooja
+Date & Time: 2026-06-13T11:17
+Amount: ₹2201
+Thank you!
+
+[2026-06-12T05:48:00.898Z] SMS
+To: 9945650664
+Message: Pooja booking confirmed! Service: Maha Lakshmi Pooja on 2026-06-13T11:17. Amount: ₹2201. -Temple
+
+[2026-06-12T05:48:51.016Z] EMAIL
+To: reena@gmail.com
+Subject: Donation Receipt
+Donation Receipt
+Amount: ₹10000
+Category: Goshala
+Transaction ID: SIM_TXN_1781243330834
+Thank you for your donation!
+
+[2026-06-12T05:50:05.556Z] EMAIL
+To: reena@gmail.com
+Subject: Prasadam Order Confirmation
+Prasadam Order Confirmed
+Item: Laddu Prasadam
+Quantity: 4
+Amount: ₹604
+Thank you!
+
+[2026-06-12T05:51:16.238Z] EMAIL
+To: reena@gmail.com
+Subject: Donation Receipt
+Donation Receipt
+Amount: ₹501
+Category: Temple Fund
+Transaction ID: SIM_TXN_1781243476017
+Thank you for your donation!
+
