@@ -244,3 +244,16 @@ Quantity: 1
 Amount: ₹101
 Thank you!
 
+[2026-06-12T04:00:41.598Z] EMAIL
+To: mayur@gmail.com
+Subject: Pooja Booking Confirmation
+Pooja Booking Confirmation
+Service: Satyanarayana Puja
+Date & Time: 2026-06-19T09:30
+Amount: ₹1201
+Thank you!
+
+[2026-06-12T04:00:41.602Z] SMS
+To: 6362210340
+Message: Pooja booking confirmed! Service: Satyanarayana Puja on 2026-06-19T09:30. Amount: ₹1201. -Temple
+

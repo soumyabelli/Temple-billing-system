@@ -213,6 +213,7 @@ const StaffDashboard = () => {
   const [inventorySearch, setInventorySearch] = useState("");
   const [inventoryLoading, setInventoryLoading] = useState(false);
   const [inventoryError, setInventoryError] = useState("");
+  const [inventorySuccessMessage, setInventorySuccessMessage] = useState("");
   const [submittingInventory, setSubmittingInventory] = useState(false);
 
   useEffect(() => {
@@ -490,25 +491,56 @@ const StaffDashboard = () => {
   const handleInventorySubmit = async (event) => {
     event.preventDefault();
     const { itemName, quantity, unit, reason } = inventoryForm;
-    if (!itemName || !quantity || !unit || !reason.trim()) {
-      setInventoryError("Please choose an item, quantity, unit, and reason.");
+
+    // Validation
+    if (!itemName) {
+      setInventoryError("Please select an item.");
+      return;
+    }
+    const parsedQty = parseFloat(quantity);
+    if (!quantity || isNaN(parsedQty) || parsedQty <= 0) {
+      setInventoryError("Quantity must be a positive number.");
+      return;
+    }
+    if (!unit) {
+      setInventoryError("Please select a unit.");
+      return;
+    }
+    if (!reason.trim()) {
+      setInventoryError("Please enter a reason for the request.");
+      return;
+    }
+
+    // Duplicate check: same item, Pending, today
+    const todayStr = new Date().toISOString().split("T")[0];
+    const duplicate = inventoryRequests.find(
+      (r) =>
+        r.itemName === itemName &&
+        r.status === "Pending" &&
+        r.createdAt &&
+        r.createdAt.startsWith(todayStr)
+    );
+    if (duplicate) {
+      setInventoryError(`Request already submitted for ${itemName} today. Please wait for admin review.`);
       return;
     }
 
     try {
       setSubmittingInventory(true);
       setInventoryError("");
+      setInventorySuccessMessage("");
       await axios.post(`${API_BASE}/staff/inventory-requests`, {
         staffId,
         staffName: displayName,
         itemName,
-        quantity,
+        quantity: String(parsedQty),
         unit,
         reason: reason.trim(),
       });
-      setInventoryForm({ itemName: "", quantity: "", reason: "" });
-      await Promise.all([fetchInventoryRequests(), fetchInventorySummary()]);
-      alert("Inventory request submitted successfully.");
+      setInventoryForm({ itemName: "", quantity: "", unit: "", reason: "" });
+      await Promise.all([fetchInventoryRequests(), fetchInventorySummary(), fetchInventoryCatalog()]);
+      setInventorySuccessMessage("✅ Inventory request submitted successfully! Admin has been notified.");
+      setTimeout(() => setInventorySuccessMessage(""), 5000);
     } catch (apiError) {
       setInventoryError(apiError.response?.data?.message || "Could not submit inventory request.");
     } finally {
@@ -1420,6 +1452,9 @@ const StaffDashboard = () => {
               </div>
               <div className="inventory-actions">
                 <button type="button" onClick={() => setActiveSection("dashboard")}>Back to Overview</button>
+                <button type="button" onClick={loadInventoryData} disabled={inventoryLoading}>
+                  {inventoryLoading ? "Refreshing..." : "🔄 Refresh"}
+                </button>
                 <button type="button" onClick={downloadInventoryReport} disabled={inventoryRequests.length === 0}>
                   <FiSave /> Download Report
                 </button>
@@ -1427,12 +1462,15 @@ const StaffDashboard = () => {
             </div>
 
             {inventoryError ? <div className="staff-error">{inventoryError}</div> : null}
+            {inventorySuccessMessage ? (
+              <div style={{ background: "#d1fae5", border: "1px solid #6ee7b7", borderRadius: "12px", padding: "12px 16px", color: "#065f46", fontWeight: 600, marginBottom: "16px" }}>
+                {inventorySuccessMessage}
+              </div>
+            ) : null}
 
             <div className="inventory-top-cards">
               <article className="info-card">
-                <div className="icon-bg orange">
-                  <FiBox />
-                </div>
+                <div className="icon-bg orange"><FiBox /></div>
                 <div>
                   <h3>Total Requests</h3>
                   <strong>{inventorySummary.total}</strong>
@@ -1440,76 +1478,93 @@ const StaffDashboard = () => {
                 </div>
               </article>
               <article className="info-card">
-                <div className="icon-bg blue">
-                  <FiClock />
-                </div>
+                <div className="icon-bg blue"><FiClock /></div>
                 <div>
-                  <h3>Pending Requests</h3>
+                  <h3>Pending</h3>
                   <strong>{inventorySummary.pending}</strong>
                   <p>Awaiting approval</p>
                 </div>
               </article>
               <article className="info-card">
-                <div className="icon-bg green">
-                  <FiCheckCircle />
-                </div>
+                <div className="icon-bg green"><FiCheckCircle /></div>
                 <div>
-                  <h3>Approved Requests</h3>
+                  <h3>Approved</h3>
                   <strong>{inventorySummary.approved}</strong>
                   <p>Ready for processing</p>
                 </div>
               </article>
               <article className="info-card">
-                <div className="icon-bg red">
-                  <FiLock />
-                </div>
+                <div className="icon-bg red"><FiLock /></div>
                 <div>
-                  <h3>Rejected Requests</h3>
+                  <h3>Rejected</h3>
                   <strong>{inventorySummary.rejected}</strong>
-                  <p>Action required</p>
+                  <p>Not approved</p>
                 </div>
               </article>
             </div>
 
             <div className="inventory-grid">
+              {/* New Request Form */}
               <div className="inventory-form-card">
                 <div className="card-heading">
                   <h2>New Inventory Request</h2>
                 </div>
                 <form className="leave-form" onSubmit={handleInventorySubmit}>
                   <div>
-                    <label htmlFor="itemName">Item Name</label>
+                    <label htmlFor="inv-itemName">Item Name <span style={{color:"#ef4444"}}>*</span></label>
                     <select
-                      id="itemName"
+                      id="inv-itemName"
                       value={inventoryForm.itemName}
-                      onChange={(e) => handleInventoryInputChange("itemName", e.target.value)}
+                      onChange={(e) => {
+                        const selected = inventoryCatalog.find(i => i.name === e.target.value);
+                        handleInventoryInputChange("itemName", e.target.value);
+                        if (selected) handleInventoryInputChange("unit", selected.unit);
+                        setInventoryError("");
+                      }}
                     >
                       <option value="">Select Item</option>
                       {inventoryCatalog.map((item) => (
                         <option key={item.name} value={item.name}>
-                          {item.name}
+                          {item.name} ({item.stock} {item.unit} available)
                         </option>
                       ))}
                     </select>
                   </div>
-                  <div>
-                    <label htmlFor="quantity">Quantity Required</label>
-                    <input
-                      id="quantity"
-                      type="text"
-                      placeholder="Enter quantity"
-                      value={inventoryForm.quantity}
-                      onChange={(e) => handleInventoryInputChange("quantity", e.target.value)}
-                    />
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                    <div>
+                      <label htmlFor="inv-quantity">Quantity <span style={{color:"#ef4444"}}>*</span></label>
+                      <input
+                        id="inv-quantity"
+                        type="number"
+                        min="1"
+                        step="0.01"
+                        placeholder="Enter quantity"
+                        value={inventoryForm.quantity}
+                        onChange={(e) => { handleInventoryInputChange("quantity", e.target.value); setInventoryError(""); }}
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="inv-unit">Unit <span style={{color:"#ef4444"}}>*</span></label>
+                      <select
+                        id="inv-unit"
+                        value={inventoryForm.unit}
+                        onChange={(e) => { handleInventoryInputChange("unit", e.target.value); setInventoryError(""); }}
+                      >
+                        <option value="">Select Unit</option>
+                        {INVENTORY_UNITS.map((u) => (
+                          <option key={u} value={u}>{u}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                   <div>
-                    <label htmlFor="reason">Reason</label>
+                    <label htmlFor="inv-reason">Reason <span style={{color:"#ef4444"}}>*</span></label>
                     <textarea
-                      id="reason"
+                      id="inv-reason"
                       rows="4"
-                      placeholder="Enter reason for requesting..."
+                      placeholder="e.g. Required for tomorrow's Satyanarayana Pooja"
                       value={inventoryForm.reason}
-                      onChange={(e) => handleInventoryInputChange("reason", e.target.value)}
+                      onChange={(e) => { handleInventoryInputChange("reason", e.target.value); setInventoryError(""); }}
                     />
                   </div>
                   <button type="submit" disabled={submittingInventory}>
@@ -1518,22 +1573,28 @@ const StaffDashboard = () => {
                 </form>
               </div>
 
+              {/* Live Inventory Status — read-only */}
               <div className="inventory-status-card">
                 <div className="card-heading">
-                  <h2>Recent Inventory Status</h2>
+                  <h2>📦 Live Inventory Status</h2>
+                  <p style={{ fontSize: "12px", color: "#64748b", margin: 0 }}>Read-only — managed by admin</p>
                 </div>
                 <div className="inventory-status-list">
-                  {inventoryCatalog.length === 0 ? (
-                    <div className="empty-cell">No inventory status available</div>
+                  {inventoryLoading ? (
+                    <div className="empty-cell">Loading inventory...</div>
+                  ) : inventoryCatalog.length === 0 ? (
+                    <div className="empty-cell">No inventory data available</div>
                   ) : (
                     inventoryCatalog.map((item) => (
                       <div key={item.name} className="inventory-status-item">
                         <div>
                           <h3>{item.name}</h3>
-                          <p>{item.stock} in stock</p>
+                          <p style={{ fontSize: "12px", color: "#64748b", margin: "2px 0 0" }}>
+                            Stock: <strong>{item.stock} {item.unit}</strong> | Min: {item.minimumStock} {item.unit}
+                          </p>
                         </div>
                         <span className={item.status === "Available" ? "status-chip approved" : "status-chip rejected"}>
-                          {item.status}
+                          {item.status === "Low Stock" ? "🔴 Low Stock" : "🟢 Available"}
                         </span>
                       </div>
                     ))
@@ -1542,12 +1603,13 @@ const StaffDashboard = () => {
               </div>
             </div>
 
+            {/* Request History */}
             <div className="inventory-history-grid">
               <div className="table-card">
                 <div className="card-heading inventory-history-header">
                   <div>
                     <h2>Request History</h2>
-                    <p>Filter and search your inventory requests.</p>
+                    <p>All your inventory requests with status updates.</p>
                   </div>
                   <div className="inventory-history-filters">
                     <div>
@@ -1568,7 +1630,7 @@ const StaffDashboard = () => {
                       <input
                         id="inventorySearch"
                         type="text"
-                        placeholder="Search item or staff"
+                        placeholder="Search item name"
                         value={inventorySearch}
                         onChange={(e) => setInventorySearch(e.target.value)}
                       />
@@ -1579,9 +1641,11 @@ const StaffDashboard = () => {
                   <table className="task-table">
                     <thead>
                       <tr>
+                        <th>Request ID</th>
                         <th>Item Name</th>
                         <th>Quantity</th>
-                        <th>Request Date</th>
+                        <th>Reason</th>
+                        <th>Date</th>
                         <th>Status</th>
                         <th>Admin Remarks</th>
                       </tr>
@@ -1589,15 +1653,21 @@ const StaffDashboard = () => {
                     <tbody>
                       {filteredInventoryRequests.length === 0 ? (
                         <tr>
-                          <td colSpan="5" className="empty-cell">
+                          <td colSpan="7" className="empty-cell">
                             No inventory requests match your search.
                           </td>
                         </tr>
                       ) : (
                         filteredInventoryRequests.map((request) => (
                           <tr key={request._id}>
+                            <td style={{ fontFamily: "monospace", fontWeight: 700, color: "#6366f1" }}>
+                              INV-{request._id ? request._id.slice(-4).toUpperCase() : "----"}
+                            </td>
                             <td>{request.itemName}</td>
                             <td>{`${request.quantity} ${request.unit || ""}`.trim()}</td>
+                            <td style={{ maxWidth: "160px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={request.reason}>
+                              {request.reason || "-"}
+                            </td>
                             <td>{formatDateTime(request.createdAt)}</td>
                             <td>
                               <span className={`status-chip ${statusClassMap[request.status] || ""}`}>
@@ -1613,13 +1683,37 @@ const StaffDashboard = () => {
                 </div>
               </div>
 
+              {/* Quick Actions */}
               <div className="quick-actions-card">
                 <h2>Quick Actions</h2>
                 <div className="quick-actions">
-                  <button type="button" onClick={() => setActiveSection("inventory")}>New Request</button>
-                  <button type="button" onClick={() => loadInventoryData()}>Refresh History</button>
-                  <button type="button" onClick={downloadInventoryReport} disabled={inventoryRequests.length === 0}>
-                    Download Report
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setInventoryForm({ itemName: "", quantity: "", unit: "", reason: "" });
+                      setInventoryError("");
+                      setInventorySuccessMessage("");
+                      document.getElementById("inv-itemName")?.focus();
+                    }}
+                  >
+                    <FiBox />
+                    <span>New Request</span>
+                  </button>
+                  <button type="button" onClick={loadInventoryData}>
+                    <FiClock />
+                    <span>Refresh All</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={downloadInventoryReport}
+                    disabled={inventoryRequests.length === 0}
+                  >
+                    <FiSave />
+                    <span>Download CSV</span>
+                  </button>
+                  <button type="button" onClick={() => setActiveSection("notifications")}>
+                    <FiBell />
+                    <span>Notifications</span>
                   </button>
                 </div>
               </div>
