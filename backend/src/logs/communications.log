@@ -244,6 +244,118 @@ Quantity: 1
 Amount: ₹101
 Thank you!
 
+[2026-06-12T03:38:21.044Z] EMAIL
+To: prathap@gmail.com
+Subject: Donation Receipt
+Donation Receipt
+Amount: ₹527
+Category: Annadanam
+Transaction ID: SIM_TXN_1781235500847
+Thank you for your donation!
+
+[2026-06-12T03:39:16.549Z] EMAIL
+To: prathap@gmail.com
+Subject: Pooja Booking Confirmation
+Pooja Booking Confirmation
+Service: Special Homa
+Date & Time: 2026-06-12T23:11
+Amount: ₹1501
+Thank you!
+
+[2026-06-12T03:40:57.632Z] EMAIL
+To: prathap@gmail.com
+Subject: Donation Receipt
+Donation Receipt
+Amount: ₹5086
+Category: Pooja
+Transaction ID: SIM_TXN_1781235657563
+Thank you for your donation!
+
+[2026-06-12T03:42:08.532Z] EMAIL
+To: prathap@gmail.com
+Subject: Prasadam Order Confirmation
+Prasadam Order Confirmed
+Item: Sweet Pongal Prasadam
+Quantity: 2
+Amount: ₹262
+Thank you!
+
+[2026-06-12T03:47:19.293Z] EMAIL
+To: prathap@gmail.com
+Subject: Prasadam Order Confirmation
+Prasadam Order Confirmed
+Item: Curd Rice Prasadam
+Quantity: 2
+Amount: ₹222
+Thank you!
+
+[2026-06-12T03:52:54.479Z] EMAIL
+To: prathap@gmail.com
+Subject: Donation Receipt
+Donation Receipt
+Amount: ₹501
+Category: Annadanam
+Transaction ID: SIM_TXN_1781236374353
+Thank you for your donation!
+
+[2026-06-12T03:54:43.982Z] EMAIL
+To: prathap@gmail.com
+Subject: Pooja Booking Confirmation
+Pooja Booking Confirmation
+Service: pushpa pooje
+Date & Time: 2026-06-12T21:25
+Amount: ₹230
+Thank you!
+
+[2026-06-12T04:04:05.793Z] EMAIL
+To: prathap@gmail.com
+Subject: Donation Receipt
+Donation Receipt
+Amount: ₹50165
+Category: Annadanam
+Transaction ID: SIM_TXN_1781237045585
+Thank you for your donation!
+
+[2026-06-12T05:48:00.878Z] EMAIL
+To: reena@gmail.com
+Subject: Pooja Booking Confirmation
+Pooja Booking Confirmation
+Service: Maha Lakshmi Pooja
+Date & Time: 2026-06-13T11:17
+Amount: ₹2201
+Thank you!
+
+[2026-06-12T05:48:00.898Z] SMS
+To: 9945650664
+Message: Pooja booking confirmed! Service: Maha Lakshmi Pooja on 2026-06-13T11:17. Amount: ₹2201. -Temple
+
+[2026-06-12T05:48:51.016Z] EMAIL
+To: reena@gmail.com
+Subject: Donation Receipt
+Donation Receipt
+Amount: ₹10000
+Category: Goshala
+Transaction ID: SIM_TXN_1781243330834
+Thank you for your donation!
+
+[2026-06-12T05:50:05.556Z] EMAIL
+To: reena@gmail.com
+Subject: Prasadam Order Confirmation
+Prasadam Order Confirmed
+Item: Laddu Prasadam
+Quantity: 4
+Amount: ₹604
+Thank you!
+
+[2026-06-12T05:51:16.238Z] EMAIL
+To: reena@gmail.com
+Subject: Donation Receipt
+Donation Receipt
+Amount: ₹501
+Category: Temple Fund
+Transaction ID: SIM_TXN_1781243476017
+Thank you for your donation!
+
 [2026-06-12T04:00:41.598Z] EMAIL
 To: mayur@gmail.com
 Subject: Pooja Booking Confirmation
