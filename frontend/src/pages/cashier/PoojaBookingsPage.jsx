@@ -4,3 +4,6 @@ export default function PoojaBookingsPage() {
   return <BookingPayments />;
 }
 
+
+
+
