@@ -533,7 +533,7 @@ const StaffDashboard = () => {
         staffId,
         staffName: displayName,
         itemName,
-        quantity: String(parsedQty),
+        quantity: parsedQty,
         unit,
         reason: reason.trim(),
       });

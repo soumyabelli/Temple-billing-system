@@ -2,7 +2,7 @@
   {
     "id": "26764e61-1807-4c28-9475-b924e63abd68",
     "name": "admin",
-    "email": "admin@gamail.com",
+    "email": "admin@gmail.com",
     "password": "$2b$10$gbTgS4yqowYDNjG86osN4eGVBCCWW1dN4C5v1dDUaW/eCIOZMP0He",
     "role": "admin",
     "createdAt": "2026-05-19T09:01:47.438Z",

@@ -15,21 +15,26 @@ const inventoryRequestSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    requestedBy: {
+      type: String,
+      required: true,
+      trim: true,
+    },
     itemName: {
       type: String,
       required: true,
       trim: true,
     },
     quantity: {
-      type: String,
+      type: Number,
       required: true,
-      trim: true,
+      min: 0,
     },
     unit: {
       type: String,
       required: true,
       trim: true,
-      enum: ["Kg", "Liter", "Pack", "Pieces"],
+      enum: ["Kg", "Liter", "Pack", "Pieces", "Box"],
     },
     reason: {
       type: String,

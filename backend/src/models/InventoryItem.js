@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const INVENTORY_UNITS = ["Kg", "Liter", "Pack", "Pieces"];
+const INVENTORY_UNITS = ["Kg", "Liter", "Pack", "Pieces","Box"];
 
 const inventoryItemSchema = new mongoose.Schema(
   {
@@ -39,7 +39,7 @@ const inventoryItemSchema = new mongoose.Schema(
 
 // Virtual: compute stock status
 inventoryItemSchema.virtual("status").get(function () {
-  return this.currentStock < this.minimumStock ? "Low Stock" : "Available";
+  return this.currentStock <= this.minimumStock ? "Low Stock" : "Available";
 });
 
 inventoryItemSchema.set("toJSON", { virtuals: true });
