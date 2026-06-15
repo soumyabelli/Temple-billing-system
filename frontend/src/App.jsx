@@ -2,7 +2,9 @@ import { Navigate, Route, Routes } from "react-router-dom";
 
 import ProtectedRoute from "./components/common/ProtectedRoute";
 
-import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
+
+
 import DonationManagement from "./pages/admin/DonationManagement";
 import AllDonations from "./pages/admin/donations/AllDonations";
 import AddDonation from "./pages/admin/donations/AddDonation";
@@ -42,8 +44,10 @@ import AccountantDashboard from "./pages/accountant/AccountantDashboard";
 import CashierDashboard from "./pages/cashier/CashierDashboard";
 import PriestDashboard from "./pages/priest/PriestDashboard";
 import StaffDashboard from "./pages/staff/StaffDashboard";
-import LeaveHistory from "./pages/staff/LeaveHistory";
+import CashierLayout from "./layouts/CashierLayout";
+
 import DevoteeDashboard from "./pages/devotee/DevoteeDashboard";
+
 
 import LoginPage from "./pages/auth/LoginPage";
 import AuthLoginPage from "./pages/auth/AuthLoginPage";
@@ -116,10 +120,11 @@ function App() {
         path="/leave-history"
         element={
           <ProtectedRoute allowedRoles={["staff"]}>
-            <LeaveHistory />
+            <LeaveManagement />
           </ProtectedRoute>
         }
       />
+
 
       <Route
         path="/assign-task"
