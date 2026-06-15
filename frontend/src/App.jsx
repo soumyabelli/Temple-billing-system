@@ -54,8 +54,20 @@ import LandingPage from "./pages/LandingPage";
 import Attendance from "./pages/staff/Attendance";
 
 import QuickBillingPage from "./pages/cashier/QuickBillingPage";
+import BillingPage from "./pages/cashier/BillingPage";
+import BookingPayments from "./pages/cashier/BookingPayments";
+import DonationsPage from "./pages/cashier/DonationsPage";
+import PrasadamSales from "./pages/cashier/PrasadamSales";
+import ReceiptsPage from "./pages/cashier/ReceiptsPage";
+import ReceiptGenerationPage from "./pages/cashier/ReceiptGeneration";
 
 
+import DevoteesPage from "./pages/cashier/PoojaBookingsPage";
+import PaymentProcessing from "./pages/cashier/PaymentProcessing";
+import ReportsPage from "./pages/cashier/ReportsPage";
+import InventoryPage from "./pages/cashier/InventoryPage";
+import NotificationsPage from "./pages/cashier/NotificationsPage";
+import ProfilePage from "./pages/cashier/ProfilePage";
 
 function App() {
   return (
@@ -480,12 +492,29 @@ function App() {
         path="/cashier"
         element={
           <ProtectedRoute allowedRoles={["cashier"]}>
-            <CashierDashboard />
+            <CashierLayout />
           </ProtectedRoute>
         }
-      />
+      >
+        <Route index element={<CashierDashboard />} />
+        <Route path="quick-billing" element={<QuickBillingPage />} />
+        <Route path="billing" element={<BillingPage />} />
+        <Route path="bookings" element={<BookingPayments />} />
+        <Route path="donations" element={<DonationsPage />} />
+        <Route path="prasadam" element={<PrasadamSales />} />
+        <Route path="receipts" element={<ReceiptsPage />} />
+        <Route path="receipt-generation" element={<ReceiptGenerationPage />} />
+
+        <Route path="devotees" element={<DevoteesPage />} />
+        <Route path="payments" element={<PaymentProcessing />} />
+        <Route path="reports" element={<ReportsPage />} />
+        <Route path="inventory" element={<InventoryPage />} />
+        <Route path="notifications" element={<NotificationsPage />} />
+        <Route path="profile" element={<ProfilePage />} />
+      </Route>
 
       {/* PRIEST */}
+
       <Route
         path="/priest"
         element={

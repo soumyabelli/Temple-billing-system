@@ -35,6 +35,18 @@ const LoginForm = () => {
       return;
     }
 
+    // Ensure role is always sent (backend expects role to match selected account)
+    const roleToSend = selectedRole || undefined;
+
+    // Debug payload to quickly find why backend returns 400
+    // eslint-disable-next-line no-console
+    console.log("[Auth/Login] payload sent:", {
+      email: formData.email,
+      passwordPresent: Boolean(formData.password),
+      role: roleToSend,
+    });
+
+
     try {
       setIsLoading(true);
       const res = await login({ ...formData, role: selectedRole });
