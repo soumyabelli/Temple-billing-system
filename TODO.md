@@ -1,6 +1,4 @@
-- [ ] Read/update DevoteeDashboard.jsx to add segmented Donation History vs Prasadam Booking History UI
-- [ ] Add separate download handlers for both histories (if missing/need reuse)
-- [ ] Replace Payment History view with segmented layout
-- [ ] Verify tables render correctly for empty states
-- [ ] Run frontend build/lint (if available) and ensure no runtime errors
-
+- [ ] Verify/patch `ToastContainer` setup for `react-toastify` (add `<ToastContainer />` and required CSS import)
+- [ ] Re-run frontend dev server and confirm no missing package/import errors
+- [ ] Thorough UI smoke test: navigate through cashier routes incl. `/cashier/my-bookings`, verify search/filter/pagination + cancel toast + eye button toast
+- [ ] Confirm no other runtime errors from other routes accessible in cashier layout

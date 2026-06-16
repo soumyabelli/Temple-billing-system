@@ -1,4 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 import ProtectedRoute from "./components/common/ProtectedRoute";
 
@@ -38,8 +40,11 @@ import InventoryManagement from "./pages/admin/InventoryManagement";
 import NotificationsCenter from "./pages/admin/NotificationsCenter";
 import AdminLayout from "./layouts/AdminLayout";
 
+import CashierLayout from "./layouts/CashierLayout";
 import AccountantDashboard from "./pages/accountant/AccountantDashboard";
 import CashierDashboard from "./pages/cashier/CashierDashboard";
+import PoojaBookingPage from "./pages/cashier/PoojaBookingPage";
+import MyBookingsPage from "./pages/cashier/MyBookingsPage";
 import PriestDashboard from "./pages/priest/PriestDashboard";
 import StaffDashboard from "./pages/staff/StaffDashboard";
 import LeaveHistory from "./pages/staff/LeaveHistory";
@@ -59,7 +64,9 @@ import QuickBillingPage from "./pages/cashier/QuickBillingPage";
 
 function App() {
   return (
-    <Routes>
+    <>
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick pauseOnHover draggable pauseCloseTheme="light" />
+      <Routes>
 
       {/* AUTH */}
       <Route path="/" element={<LandingPage />} />
@@ -484,6 +491,26 @@ function App() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/cashier/pooja-bookings"
+        element={
+          <ProtectedRoute allowedRoles={["cashier", "admin"]}>
+            <CashierLayout>
+              <PoojaBookingPage />
+            </CashierLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/cashier/my-bookings"
+        element={
+          <ProtectedRoute allowedRoles={["cashier", "admin"]}>
+            <CashierLayout>
+              <MyBookingsPage />
+            </CashierLayout>
+          </ProtectedRoute>
+        }
+      />
 
       {/* PRIEST */}
       <Route
@@ -523,7 +550,8 @@ function App() {
         }
       />
       <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+      </Routes>
+    </>
   );
 }
 

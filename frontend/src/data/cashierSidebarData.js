@@ -18,7 +18,9 @@ export const cashierSidebarItems = [
 
   { title: "Billing", icon: FaFileInvoice, path: "/cashier/quick-billing" },
 
-  { title: "Pooja Bookings", icon: FaCalendarAlt, path: "/cashier/pooja-bookings" },
+  { title: "🛕 Pooja Booking", icon: FaCalendarAlt, path: "/cashier/pooja-bookings" },
+
+  { title: "📜 My Bookings", icon: FaFileInvoice, path: "/cashier/my-bookings" },
 
   { title: "Donations", icon: FaHeart, path: "/cashier/donations" },
 
