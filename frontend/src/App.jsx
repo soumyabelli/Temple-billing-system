@@ -39,9 +39,8 @@ import BillingManagement from "./pages/admin/BillingManagement";
 import InventoryManagement from "./pages/admin/InventoryManagement";
 import NotificationsCenter from "./pages/admin/NotificationsCenter";
 import AdminLayout from "./layouts/AdminLayout";
-import CashierLayout from "./layouts/CashierLayout";
-
 import AccountantDashboard from "./pages/accountant/AccountantDashboard";
+
 import CashierDashboard from "./pages/cashier/CashierDashboard";
 import PriestDashboard from "./pages/priest/PriestDashboard";
 import StaffDashboard from "./pages/staff/StaffDashboard";
