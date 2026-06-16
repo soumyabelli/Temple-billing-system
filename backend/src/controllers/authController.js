@@ -13,6 +13,7 @@ const {
 
 const ALLOWED_ROLES = ["admin", "accountant", "cashier", "priest", "staff", "devotee"];
 
+<<<<<<< HEAD
 const getEmailCandidates = (email) => {
   const normalizedEmail = String(email || "").toLowerCase().trim();
   if (!normalizedEmail) return [];
@@ -35,6 +36,8 @@ const getEmailCandidates = (email) => {
   return [...candidates];
 };
 
+=======
+>>>>>>> 1a512012f6af945a370c9e9129f3773ce078e50c
 const sanitizeUser = (userDoc) => ({
   id: userDoc._id?.toString?.() || userDoc.id,
   name: userDoc.name,
@@ -48,6 +51,7 @@ const sanitizeUser = (userDoc) => ({
 });
 
 const findUserByEmail = async (email) => {
+<<<<<<< HEAD
   const emailCandidates = getEmailCandidates(email);
 
   if (isDbConnected()) {
@@ -62,6 +66,12 @@ const findUserByEmail = async (email) => {
   }
 
   return null;
+=======
+  if (isDbConnected()) {
+    return User.findOne({ email });
+  }
+  return findFileUserByEmail(email);
+>>>>>>> 1a512012f6af945a370c9e9129f3773ce078e50c
 };
 
 const createUserRecord = async ({ name, email, password, role }) => {

@@ -115,7 +115,11 @@ const AddDonation = () => {
         <SectionCard title="Donation Entry Form" subtitle="Fill donor details, donation type and payment information." className="space-y-6">
           <div className="grid gap-4 md:grid-cols-2">
             <label className="block text-sm text-slate-700">
+<<<<<<< HEAD
               Donor Name please
+=======
+              Donor Name
+>>>>>>> 1a512012f6af945a370c9e9129f3773ce078e50c
               <input
                 value={donorName}
                 onChange={(e) => setDonorName(e.target.value)}

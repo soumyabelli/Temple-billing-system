@@ -369,6 +369,7 @@ Thank you!
 To: 6362210340
 Message: Pooja booking confirmed! Service: Satyanarayana Puja on 2026-06-19T09:30. Amount: ₹1201. -Temple
 
+<<<<<<< HEAD
 [2026-06-15T11:36:01.608Z] EMAIL
 To: sonu@gmail.com
 Subject: Donation Receipt
@@ -391,3 +392,5 @@ Thank you!
 To: 9945650664
 Message: Pooja booking confirmed! Service: Special Homa on 2026-06-24T23:53:00.000Z. Amount: ₹1501. -Temple
 
+=======
+>>>>>>> 1a512012f6af945a370c9e9129f3773ce078e50c

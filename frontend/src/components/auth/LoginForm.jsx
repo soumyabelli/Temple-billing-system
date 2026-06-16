@@ -11,7 +11,10 @@ const LoginForm = () => {
 
   const [selectedRole, setSelectedRole] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+<<<<<<< HEAD
   const [errorMessage, setErrorMessage] = useState("");
+=======
+>>>>>>> 1a512012f6af945a370c9e9129f3773ce078e50c
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [passwordResetToken, setPasswordResetToken] = useState(null);
@@ -22,7 +25,10 @@ const LoginForm = () => {
   });
 
   const handleChange = (e) => {
+<<<<<<< HEAD
     setErrorMessage("");
+=======
+>>>>>>> 1a512012f6af945a370c9e9129f3773ce078e50c
     setFormData((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
@@ -33,6 +39,7 @@ const LoginForm = () => {
     e.preventDefault();
 
     if (!formData.email || !formData.password) {
+<<<<<<< HEAD
       setErrorMessage("Please enter email and password.");
       return;
     }
@@ -44,6 +51,30 @@ const LoginForm = () => {
       const userRole = res.user?.role;
       if (!userRole) {
         setErrorMessage("Role not found for this account. Please contact admin.");
+=======
+      alert("Please enter email and password");
+      return;
+    }
+
+    // Ensure role is always sent (backend expects role to match selected account)
+    const roleToSend = selectedRole || undefined;
+
+    // Debug payload to quickly find why backend returns 400
+    // eslint-disable-next-line no-console
+    console.log("[Auth/Login] payload sent:", {
+      email: formData.email,
+      passwordPresent: Boolean(formData.password),
+      role: roleToSend,
+    });
+
+
+    try {
+      setIsLoading(true);
+      const res = await login({ ...formData, role: selectedRole });
+      const userRole = res.user?.role;
+      if (!userRole) {
+        alert("Role not found for this account. Please contact admin.");
+>>>>>>> 1a512012f6af945a370c9e9129f3773ce078e50c
         return;
       }
 
@@ -62,7 +93,11 @@ const LoginForm = () => {
       }
       navigate(`/${userRole}`);
     } catch (error) {
+<<<<<<< HEAD
       setErrorMessage(error.response?.data?.message || "Login failed. Please check server and credentials.");
+=======
+      alert(error.response?.data?.message || "Login failed. Please check server and credentials.");
+>>>>>>> 1a512012f6af945a370c9e9129f3773ce078e50c
     } finally {
       setIsLoading(false);
     }
@@ -124,12 +159,15 @@ const LoginForm = () => {
 
       <RoleSelector selectedRole={selectedRole} setSelectedRole={setSelectedRole} />
 
+<<<<<<< HEAD
       {errorMessage ? (
         <div className="mt-5 rounded-2xl border border-red-300/50 bg-red-950/50 px-4 py-3 text-sm text-red-100">
           {errorMessage}
         </div>
       ) : null}
 
+=======
+>>>>>>> 1a512012f6af945a370c9e9129f3773ce078e50c
       <form className="mt-8 space-y-6" onSubmit={handleLogin}>
         <div>
           <label className="block mb-3 text-lg font-medium">Email</label>
