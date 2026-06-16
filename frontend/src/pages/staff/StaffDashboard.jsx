@@ -533,7 +533,11 @@ const StaffDashboard = () => {
         staffId,
         staffName: displayName,
         itemName,
+<<<<<<< HEAD
         quantity: String(parsedQty),
+=======
+        quantity: parsedQty,
+>>>>>>> 1a512012f6af945a370c9e9129f3773ce078e50c
         unit,
         reason: reason.trim(),
       });
