@@ -1,0 +1,60 @@
+[
+  {
+    "id": "26764e61-1807-4c28-9475-b924e63abd68",
+    "name": "admin",
+    "email": "admin@gmail.com",
+    "password": "$2b$10$gbTgS4yqowYDNjG86osN4eGVBCCWW1dN4C5v1dDUaW/eCIOZMP0He",
+    "role": "admin",
+    "createdAt": "2026-05-19T09:01:47.438Z",
+    "updatedAt": "2026-05-19T09:01:47.438Z"
+  },
+  {
+    "id": "24099a86-afce-4174-a149-5441d2f44835",
+    "name": "devotee",
+    "email": "devotee@gmail.com",
+    "password": "$2b$10$zwJ7cRbo4EJQYOznAmos7eClicOjxO.xDn4rbzUlyt4YnZIOtyRbO",
+    "role": "devotee",
+    "createdAt": "2026-05-19T09:13:42.677Z",
+    "updatedAt": "2026-05-19T09:13:42.677Z"
+  },
+  {
+    "id": "a02f3fc7-9da4-4dc5-b3c7-7fff6d04b124",
+    "name": "accountant",
+    "email": "accountant@gmail.com",
+    "password": "$2b$10$O2CyaUys.vyL8Aat2LevBuFPuZBj1584745yumtUkP9ShbQ67IK8e",
+    "role": "accountant",
+    "createdAt": "2026-05-19T14:00:47.912Z",
+    "updatedAt": "2026-05-19T14:00:47.912Z"
+  },
+  {
+    "id": "c7d5ff75-2f67-48e8-b703-5c6b66dc599f",
+    "name": "cashier",
+    "email": "cashier@gamil.com",
+    "password": "$2b$10$KEu4xecf8G3ac8Bk2X0yEu70ouD9GHlmqPyYkLmpk3j4o6cukpdNK",
+    "role": "cashier",
+    "createdAt": "2026-05-20T04:40:06.721Z",
+    "updatedAt": "2026-05-20T04:40:06.721Z"
+  },
+  {
+    "id": "b97e748e-6393-4db1-804a-9c4d39384e69",
+    "name": "Deepthi",
+    "email": "deepthiskulal@gmail.com",
+    "password": "$2b$10$bUgGDy./LKoev2ZT6dv17O2751xwXoBVrHP1310ikhiC9tVaGa/y6",
+    "role": "devotee",
+    "mustChangePassword": false,
+    "provider": "local",
+    "createdAt": "2026-05-23T06:21:10.008Z",
+    "updatedAt": "2026-05-23T06:21:10.008Z"
+  },
+  {
+    "id": "7000331e-e09f-4471-8be7-b4dd0edf90c0",
+    "name": "sonu",
+    "email": "sonu@gmail.com",
+    "password": "$2b$10$g1F9huJ34Zd8Iw9YEYdIGuWSoQkbWYTsAJ13d04nTlJtneHLwq7z6",
+    "role": "devotee",
+    "mustChangePassword": false,
+    "provider": "local",
+    "createdAt": "2026-06-15T11:23:46.118Z",
+    "updatedAt": "2026-06-15T11:23:46.118Z"
+  }
+]

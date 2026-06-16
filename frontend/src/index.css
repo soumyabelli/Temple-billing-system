@@ -1,0 +1,173 @@
+﻿@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: #f4f4f5;
+}
+
+.container {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.form {
+  display: grid;
+  gap: 0.75rem;
+}
+
+/* Bell Swing Animation */
+@keyframes bellSwing {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  25% {
+    transform: rotate(12deg);
+  }
+
+  50% {
+    transform: rotate(0deg);
+  }
+
+  75% {
+    transform: rotate(-12deg);
+  }
+
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+.animate-bellSwing {
+  animation: bellSwing 2s ease-in-out infinite;
+}
+
+/* Flower Falling Animation */
+@keyframes flowerFall {
+  0% {
+    transform: translateY(-100px) rotate(0deg);
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(110vh) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+.animate-flowerFall {
+  animation-name: flowerFall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  pointer-events: none;
+}
+
+@keyframes bannerPan {
+  0% {
+    transform: scale(1.05) translateX(0);
+  }
+
+  50% {
+    transform: scale(1.08) translateX(-1.5%);
+  }
+
+  100% {
+    transform: scale(1.05) translateX(0);
+  }
+}
+
+.banner-pan {
+  animation: bannerPan 7s ease-in-out infinite;
+}
+
+/* LOGOUT MODAL */
+
+.logout-overlay{
+  position:fixed;
+  top:0;
+  left:0;
+
+  width:100%;
+  height:100vh;
+
+  background:rgba(0,0,0,0.45);
+
+  display:flex;
+  justify-content:center;
+  align-items:center;
+
+  z-index:9999;
+}
+
+.logout-modal{
+  width:400px;
+
+  background:white;
+
+  border-radius:22px;
+
+  padding:30px;
+
+  text-align:center;
+
+  box-shadow:0 10px 30px rgba(0,0,0,0.15);
+}
+
+.logout-modal h2{
+  margin-bottom:14px;
+}
+
+.logout-modal p{
+  color:#666;
+  margin-bottom:25px;
+}
+
+.logout-buttons{
+  display:flex;
+  gap:14px;
+}
+
+.cancel-btn{
+  flex:1;
+
+  padding:14px;
+
+  border:none;
+
+  border-radius:12px;
+
+  background:#e5e5e5;
+
+  cursor:pointer;
+}
+
+.logout-btn{
+  flex:1;
+
+  padding:14px;
+
+  border:none;
+
+  border-radius:12px;
+
+  background:#ef9700;
+
+  color:white;
+
+  cursor:pointer;
+}
