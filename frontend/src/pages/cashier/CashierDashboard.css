@@ -47,14 +47,16 @@ body {
   position: fixed;
   left: 0;
   top: 0;
-  background: linear-gradient(180deg, var(--color-maroon-dark) 0%, var(--color-maroon-deep) 100%);
-  color: #FFF;
+  /* light orange theme */
+  background: linear-gradient(180deg, #FDE7C2 0%, #F4C46A 100%);
+  color: #6B2B00;
   padding: 24px 20px;
   display: flex;
   flex-direction: column;
   z-index: 100;
   box-shadow: 4px 0 25px rgba(0, 0, 0, 0.15);
 }
+
 
 .sidebar::before {
   content: "";
@@ -96,9 +98,10 @@ body {
 
 .brand-subtitle {
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(91, 43, 0, 0.55);
   margin-top: 2px;
 }
+
 
 /* SIDEBAR PROFILE */
 .sidebar-profile {
@@ -175,7 +178,8 @@ body {
   gap: 14px;
   padding: 12px 16px;
   border-radius: 12px;
-  color: rgba(255, 255, 255, 0.7);
+  /* make menu text visible on light orange */
+  color: rgba(91, 43, 0, 0.82);
   cursor: pointer;
   margin-bottom: 6px;
   font-size: 13px;
@@ -184,18 +188,21 @@ body {
   position: relative;
 }
 
+
 .menu-item:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: #FFF;
+  background: rgba(255, 255, 255, 0.35);
+  color: #3B0007;
   transform: translateX(4px);
 }
 
+
 .menu-item.active {
-  background: linear-gradient(90deg, var(--color-gold-bright) 0%, var(--color-gold-dark) 100%);
-  color: #FFF;
+  background: linear-gradient(90deg, #F59E0B 0%, #B45309 100%);
+  color: #ffffff;
   font-weight: 600;
-  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.35);
 }
+
 
 .menu-icon {
   font-size: 16px;

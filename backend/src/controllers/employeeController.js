@@ -106,35 +106,97 @@ exports.createEmployee = async (req, res) => {
       return res.status(400).json({ message: "Invalid role. Please choose a valid employee role." });
     }
 
+    if (aadhaar && !/^[0-9]{12}$/.test(aadhaar)) {
+      return res.status(400).json({
+      message: "Aadhaar number must be exactly 12 digits."
+      });
+    }
+
     if (!dob || !isValidDate(dob) || !isPastOrToday(dob)) {
       return res.status(400).json({ message: "Date of birth is required and must be a valid past date." });
     }
+    
+    if (!salary || Number(salary) <= 0) {
+  return res.status(400).json({
+    message: "Salary must be greater than 0."
+  });
+}
+    if (
+  !emergencyContact ||
+  !/^[0-9]{10}$/.test(emergencyContact)
+) {
+  return res.status(400).json({
+    message: "Valid emergency contact is required."
+  });
+}
 
     // joiningDate is optional and may be a future date (planned join).
     // If provided, ensure it's a valid date and consistent with DOB.
-    if (joiningDate && !isValidDate(joiningDate)) {
-      return res.status(400).json({ message: "Please enter a valid joining date." });
-    }
+    if (!joiningDate || !isValidDate(joiningDate)) {
+  return res.status(400).json({
+    message: "Joining Date is required."
+  });
+}
 
     const dobDate = new Date(dob);
-    if (joiningDate) {
-      const joinDate = new Date(joiningDate);
-      if (joinDate < dobDate) {
-        return res.status(400).json({ message: "Joining date cannot be earlier than date of birth." });
-      }
+const joiningDateObj = new Date(joiningDate);
 
-      const ageAtJoining =
-        joinDate.getFullYear() -
-        dobDate.getFullYear() -
-        (joinDate.getMonth() < dobDate.getMonth() ||
-        (joinDate.getMonth() === dobDate.getMonth() && joinDate.getDate() < dobDate.getDate())
-          ? 1
-          : 0);
+// Employee age validation
+const today = new Date();
 
-      if (ageAtJoining < 14) {
-        return res.status(400).json({ message: "Employee must be at least 14 years old at joining." });
-      }
-    }
+let currentAge =
+  today.getFullYear() -
+  dobDate.getFullYear();
+
+if (
+  today.getMonth() < dobDate.getMonth() ||
+  (today.getMonth() === dobDate.getMonth() &&
+    today.getDate() < dobDate.getDate())
+) {
+  currentAge--;
+}
+
+if (currentAge < 18) {
+  return res.status(400).json({
+    message: "Employee must be at least 18 years old."
+  });
+}
+
+// Employee must complete 18 years before joining
+
+const eighteenthBirthday = new Date(dobDate);
+
+eighteenthBirthday.setFullYear(
+  eighteenthBirthday.getFullYear() + 18
+);
+
+if (joiningDateObj < eighteenthBirthday) {
+  return res.status(400).json({
+    message:
+      "Joining date must be after employee turns 18 years old."
+  });
+}
+
+// Joining date cannot be future
+
+if (joiningDateObj > today) {
+  return res.status(400).json({
+    message:
+      "Joining date cannot be in the future."
+  });
+}
+
+    if (aadhaar) {
+  const existingAadhaar = await Employee.findOne({
+    aadhaar
+  });
+
+  if (existingAadhaar) {
+    return res.status(400).json({
+      message: "Aadhaar number already exists."
+    });
+  }
+}
 
     const existingEmployee = await Employee.findOne({ email: normalizedEmail });
     if (existingEmployee) {

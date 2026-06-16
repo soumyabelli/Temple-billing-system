@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const ATTENDANCE_STATUSES = ["Present", "Absent", "Late", "Half Day", "Leave"];
+const ATTENDANCE_STATUSES = ["Present", "Absent", "Half Day", "Leave", "Pending"];
 
 const attendanceSchema = new mongoose.Schema(
   {
@@ -83,6 +83,10 @@ const attendanceSchema = new mongoose.Schema(
       type: String,
       enum: ATTENDANCE_STATUSES,
       default: "Absent",
+    },
+    isLateCheckIn: {
+      type: Boolean,
+      default: false,
     },
     workingMinutes: {
       type: Number,

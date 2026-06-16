@@ -42,8 +42,10 @@ const employeeSchema = new mongoose.Schema({
   },
 
   aadhaar: {
-    type: String,
-  },
+  type: String,
+  unique: true,
+  sparse: true,
+},
 
   phone: {
     type: String,
@@ -66,16 +68,20 @@ const employeeSchema = new mongoose.Schema({
   },
 
   salary: {
-    type: String,
-  },
+  type: Number,
+  required: true,
+},
 
   joiningDate: {
-    type: String,
-  },
+  type: Date,
+  required: true,
+},
 
   employmentType: {
-    type: String,
-  },
+  type: String,
+  enum: ["Full Time", "Part Time", "Contract"],
+  default: "Full Time",
+},
 
   defaultShift: {
     type: String,

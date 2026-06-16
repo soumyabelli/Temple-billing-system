@@ -2,9 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 
 import ProtectedRoute from "./components/common/ProtectedRoute";
 
-import AdminDashboard from "./pages/AdminDashboard";
-
-
+import AdminDashboard from "./pages/admin/AdminDashboard";
 import DonationManagement from "./pages/admin/DonationManagement";
 import AllDonations from "./pages/admin/donations/AllDonations";
 import AddDonation from "./pages/admin/donations/AddDonation";
@@ -44,10 +42,8 @@ import AccountantDashboard from "./pages/accountant/AccountantDashboard";
 import CashierDashboard from "./pages/cashier/CashierDashboard";
 import PriestDashboard from "./pages/priest/PriestDashboard";
 import StaffDashboard from "./pages/staff/StaffDashboard";
-import CashierLayout from "./layouts/CashierLayout";
-
+import LeaveHistory from "./pages/staff/LeaveHistory";
 import DevoteeDashboard from "./pages/devotee/DevoteeDashboard";
-
 
 import LoginPage from "./pages/auth/LoginPage";
 import AuthLoginPage from "./pages/auth/AuthLoginPage";
@@ -58,20 +54,8 @@ import LandingPage from "./pages/LandingPage";
 import Attendance from "./pages/staff/Attendance";
 
 import QuickBillingPage from "./pages/cashier/QuickBillingPage";
-import BillingPage from "./pages/cashier/BillingPage";
-import BookingPayments from "./pages/cashier/BookingPayments";
-import DonationsPage from "./pages/cashier/DonationsPage";
-import PrasadamSales from "./pages/cashier/PrasadamSales";
-import ReceiptsPage from "./pages/cashier/ReceiptsPage";
-import ReceiptGenerationPage from "./pages/cashier/ReceiptGeneration";
 
 
-import DevoteesPage from "./pages/cashier/PoojaBookingsPage";
-import PaymentProcessing from "./pages/cashier/PaymentProcessing";
-import ReportsPage from "./pages/cashier/ReportsPage";
-import InventoryPage from "./pages/cashier/InventoryPage";
-import NotificationsPage from "./pages/cashier/NotificationsPage";
-import ProfilePage from "./pages/cashier/ProfilePage";
 
 function App() {
   return (
@@ -120,11 +104,10 @@ function App() {
         path="/leave-history"
         element={
           <ProtectedRoute allowedRoles={["staff"]}>
-            <LeaveManagement />
+            <LeaveHistory />
           </ProtectedRoute>
         }
       />
-
 
       <Route
         path="/assign-task"
@@ -497,29 +480,12 @@ function App() {
         path="/cashier"
         element={
           <ProtectedRoute allowedRoles={["cashier"]}>
-            <CashierLayout />
+            <CashierDashboard />
           </ProtectedRoute>
         }
-      >
-        <Route index element={<CashierDashboard />} />
-        <Route path="quick-billing" element={<QuickBillingPage />} />
-        <Route path="billing" element={<BillingPage />} />
-        <Route path="bookings" element={<BookingPayments />} />
-        <Route path="donations" element={<DonationsPage />} />
-        <Route path="prasadam" element={<PrasadamSales />} />
-        <Route path="receipts" element={<ReceiptsPage />} />
-        <Route path="receipt-generation" element={<ReceiptGenerationPage />} />
-
-        <Route path="devotees" element={<DevoteesPage />} />
-        <Route path="payments" element={<PaymentProcessing />} />
-        <Route path="reports" element={<ReportsPage />} />
-        <Route path="inventory" element={<InventoryPage />} />
-        <Route path="notifications" element={<NotificationsPage />} />
-        <Route path="profile" element={<ProfilePage />} />
-      </Route>
+      />
 
       {/* PRIEST */}
-
       <Route
         path="/priest"
         element={

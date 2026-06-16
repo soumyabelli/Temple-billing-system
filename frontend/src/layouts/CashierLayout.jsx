@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Sidebar from "../components/common/Sidebar";
 import Topbar from "../components/common/Topbar";
 import LogoutModal from "../components/LogoutModal";
@@ -11,7 +11,7 @@ const findActiveItem = (path) => {
   return matched ? matched.title : "Dashboard";
 };
 
-const CashierLayout = ({ onLogoutClick }) => {
+const CashierLayout = ({ children, onLogoutClick }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { logoutUser } = useAuth();
@@ -55,18 +55,15 @@ const CashierLayout = ({ onLogoutClick }) => {
         onLogoutClick={handleSidebarLogoutClick}
       />
 
-      <div className={`flex transition-all duration-300 ${collapsed ? "lg:ml-[84px]" : "lg:ml-[254px]"}`}>
-        <div className="flex-1 p-4 md:p-5">
-          <Topbar
-            darkMode={darkMode}
-            toggleDarkMode={() => setDarkMode((prev) => !prev)}
-            onOpenMobileSidebar={() => setMobileOpen(true)}
-          />
+      <div className={`transition-all duration-300 p-4 md:p-5 ${collapsed ? "lg:ml-[84px]" : "lg:ml-[254px]"}`}>
+        <Topbar
+          darkMode={darkMode}
+          toggleDarkMode={() => setDarkMode((prev) => !prev)}
+          onOpenMobileSidebar={() => setMobileOpen(true)}
+        />
 
-          <Outlet />
-        </div>
+        {typeof children === "function" ? children({ activeItem, darkMode }) : children}
       </div>
-
 
       {showLogout && (
         <LogoutModal

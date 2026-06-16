@@ -13,6 +13,28 @@ const {
 
 const ALLOWED_ROLES = ["admin", "accountant", "cashier", "priest", "staff", "devotee"];
 
+const getEmailCandidates = (email) => {
+  const normalizedEmail = String(email || "").toLowerCase().trim();
+  if (!normalizedEmail) return [];
+
+  const candidates = new Set([normalizedEmail]);
+
+  if (normalizedEmail.endsWith("@gmail.com")) {
+    candidates.add(normalizedEmail.replace(/@gmail\.com$/, "@gamail.com"));
+    candidates.add(normalizedEmail.replace(/@gmail\.com$/, "@gamil.com"));
+  }
+
+  if (normalizedEmail.endsWith("@gamail.com")) {
+    candidates.add(normalizedEmail.replace(/@gamail\.com$/, "@gmail.com"));
+  }
+
+  if (normalizedEmail.endsWith("@gamil.com")) {
+    candidates.add(normalizedEmail.replace(/@gamil\.com$/, "@gmail.com"));
+  }
+
+  return [...candidates];
+};
+
 const sanitizeUser = (userDoc) => ({
   id: userDoc._id?.toString?.() || userDoc.id,
   name: userDoc.name,
@@ -26,10 +48,20 @@ const sanitizeUser = (userDoc) => ({
 });
 
 const findUserByEmail = async (email) => {
+  const emailCandidates = getEmailCandidates(email);
+
   if (isDbConnected()) {
-    return User.findOne({ email });
+    return User.findOne({ email: { $in: emailCandidates } });
   }
-  return findFileUserByEmail(email);
+
+  for (const candidate of emailCandidates) {
+    const user = await findFileUserByEmail(candidate);
+    if (user) {
+      return user;
+    }
+  }
+
+  return null;
 };
 
 const createUserRecord = async ({ name, email, password, role }) => {

@@ -369,3 +369,61 @@ Thank you!
 To: 6362210340
 Message: Pooja booking confirmed! Service: Satyanarayana Puja on 2026-06-19T09:30. Amount: ₹1201. -Temple
 
+[2026-06-15T11:36:01.608Z] EMAIL
+To: sonu@gmail.com
+Subject: Donation Receipt
+Donation Receipt
+Amount: ₹501
+Category: Annadanam
+Transaction ID: SIM_TXN_1781523361277
+Thank you for your donation!
+
+[2026-06-16T15:47:20.213Z] EMAIL
+To: sanvi@gmail.com
+Subject: Pooja Booking Confirmation
+Pooja Booking Confirmation
+Service: Satyanarayana Puja
+Date & Time: 2026-06-17T10:18
+Amount: ₹1201
+Thank you!
+
+[2026-06-16T15:47:20.221Z] SMS
+To: 9945650664
+Message: Pooja booking confirmed! Service: Satyanarayana Puja on 2026-06-17T10:18. Amount: ₹1201. -Temple
+
+[2026-06-16T15:47:46.030Z] EMAIL
+To: sanvi@gmail.com
+Subject: Donation Receipt
+Donation Receipt
+Amount: ₹5000
+Category: Special Donation
+Transaction ID: SIM_TXN_1781624865366
+Thank you for your donation!
+
+[2026-06-16T15:48:12.496Z] EMAIL
+To: sanvi@gmail.com
+Subject: Prasadam Order Confirmation
+Prasadam Order Confirmed
+Item: Panchamrit Prasadam
+Quantity: 5
+Amount: ₹505
+Thank you!
+
+[2026-06-16T15:48:19.439Z] EMAIL
+To: sanvi@gmail.com
+Subject: Prasadam Order Confirmation
+Prasadam Order Confirmed
+Item: Laddu Prasadam
+Quantity: 1
+Amount: ₹151
+Thank you!
+
+[2026-06-16T15:48:40.704Z] EMAIL
+To: sanvi@gmail.com
+Subject: Donation Receipt
+Donation Receipt
+Amount: ₹500
+Category: Temple Fund
+Transaction ID: SIM_TXN_1781624920361
+Thank you for your donation!
+

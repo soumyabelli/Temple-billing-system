@@ -11,6 +11,7 @@ const LoginForm = () => {
 
   const [selectedRole, setSelectedRole] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [passwordResetToken, setPasswordResetToken] = useState(null);
@@ -21,6 +22,7 @@ const LoginForm = () => {
   });
 
   const handleChange = (e) => {
+    setErrorMessage("");
     setFormData((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
@@ -31,28 +33,17 @@ const LoginForm = () => {
     e.preventDefault();
 
     if (!formData.email || !formData.password) {
-      alert("Please enter email and password");
+      setErrorMessage("Please enter email and password.");
       return;
     }
 
-    // Ensure role is always sent (backend expects role to match selected account)
-    const roleToSend = selectedRole || undefined;
-
-    // Debug payload to quickly find why backend returns 400
-    // eslint-disable-next-line no-console
-    console.log("[Auth/Login] payload sent:", {
-      email: formData.email,
-      passwordPresent: Boolean(formData.password),
-      role: roleToSend,
-    });
-
-
     try {
       setIsLoading(true);
+      setErrorMessage("");
       const res = await login({ ...formData, role: selectedRole });
       const userRole = res.user?.role;
       if (!userRole) {
-        alert("Role not found for this account. Please contact admin.");
+        setErrorMessage("Role not found for this account. Please contact admin.");
         return;
       }
 
@@ -71,7 +62,7 @@ const LoginForm = () => {
       }
       navigate(`/${userRole}`);
     } catch (error) {
-      alert(error.response?.data?.message || "Login failed. Please check server and credentials.");
+      setErrorMessage(error.response?.data?.message || "Login failed. Please check server and credentials.");
     } finally {
       setIsLoading(false);
     }
@@ -132,6 +123,12 @@ const LoginForm = () => {
       </div>
 
       <RoleSelector selectedRole={selectedRole} setSelectedRole={setSelectedRole} />
+
+      {errorMessage ? (
+        <div className="mt-5 rounded-2xl border border-red-300/50 bg-red-950/50 px-4 py-3 text-sm text-red-100">
+          {errorMessage}
+        </div>
+      ) : null}
 
       <form className="mt-8 space-y-6" onSubmit={handleLogin}>
         <div>
