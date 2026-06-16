@@ -129,7 +129,7 @@ export default function CashierDashboard() {
     payments: {
       total: 45230,
       breakdown: [
-        { name: "Cash", value: 18230, color: "#10B981" },
+        { name: "Cashs", value: 18230, color: "#10B981" },
         { name: "UPI", value: 15400, color: "#7C3AED" },
         { name: "Card", value: 8750, color: "#2563EB" },
         { name: "Net Banking", value: 2850, color: "#F59E0B" },
