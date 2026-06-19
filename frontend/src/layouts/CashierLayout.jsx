@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { FaBell } from "react-icons/fa";
 import { MdMenu } from "react-icons/md";
 import LogoutModal from "../components/LogoutModal";
@@ -104,6 +104,7 @@ const CashierLayout = ({ children, onLogoutClick }) => {
 
         <div className="px-4 py-4 md:px-6 md:py-6">
           {typeof children === "function" ? children({ activeItem }) : children}
+          <Outlet />
         </div>
       </main>
 
