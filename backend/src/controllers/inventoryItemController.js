@@ -99,7 +99,11 @@ const updateInventoryItem = async (req, res) => {
     }
 
     // Send low stock alert if updated stock is below minimum
+<<<<<<< HEAD
     if (item.currentStock < item.minimumStock) {
+=======
+    if (item.currentStock <= item.minimumStock) {
+>>>>>>> 1a512012f6af945a370c9e9129f3773ce078e50c
       await createStaffNotification({
         title: "⚠️ Low Stock Alert",
         message: `${item.name} stock is below minimum level. Current: ${item.currentStock} ${item.unit}, Minimum: ${item.minimumStock} ${item.unit}.`,

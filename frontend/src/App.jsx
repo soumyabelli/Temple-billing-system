@@ -37,6 +37,7 @@ import BillingManagement from "./pages/admin/BillingManagement";
 import InventoryManagement from "./pages/admin/InventoryManagement";
 import NotificationsCenter from "./pages/admin/NotificationsCenter";
 import AdminLayout from "./layouts/AdminLayout";
+
 import CashierLayout from "./layouts/CashierLayout";
 
 import AccountantDashboard from "./pages/accountant/AccountantDashboard";
@@ -64,8 +65,6 @@ import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import LandingPage from "./pages/LandingPage";
 
 import Attendance from "./pages/staff/Attendance";
-
-
 
 function App() {
   return (

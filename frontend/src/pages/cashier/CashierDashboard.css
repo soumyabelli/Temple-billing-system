@@ -3,9 +3,17 @@
 :root {
   --font-sans: 'Outfit', sans-serif;
   --font-serif: 'Cinzel', Georgia, serif;
+<<<<<<< HEAD
+
+  --bg-main: #fff3d6;
+
+  --bg-card: #FFFFFF;
+
+=======
   
   --bg-main: #F4F6F9;
   --bg-card: #FFFFFF;
+>>>>>>> 1a512012f6af945a370c9e9129f3773ce078e50c
   --color-maroon-dark: #3B0007;
   --color-maroon-deep: #2E0209;
   --color-maroon-light: #5E0C17;
@@ -47,7 +55,12 @@ body {
   position: fixed;
   left: 0;
   top: 0;
+<<<<<<< HEAD
+  background: linear-gradient(180deg, rgba(255,165,0,0.95) 0%, rgba(245,158,11,0.98) 100%);
+
+=======
   background: linear-gradient(180deg, var(--color-maroon-dark) 0%, var(--color-maroon-deep) 100%);
+>>>>>>> 1a512012f6af945a370c9e9129f3773ce078e50c
   color: #FFF;
   padding: 24px 20px;
   display: flex;
@@ -63,7 +76,12 @@ body {
   left: 0;
   width: 4px;
   height: 100%;
+<<<<<<< HEAD
+  background: linear-gradient(180deg, rgba(231, 180, 59, 0.95) 0%, rgba(245,158,11,0.98) 100%);
+
+=======
   background: linear-gradient(180deg, var(--color-gold) 0%, var(--color-gold-bright) 100%);
+>>>>>>> 1a512012f6af945a370c9e9129f3773ce078e50c
 }
 
 .sidebar-brand {
@@ -106,9 +124,16 @@ body {
   align-items: center;
   gap: 14px;
   padding: 14px 16px;
+<<<<<<< HEAD
+  background: rgba(232, 216, 181, 0.22);
+  border-radius: var(--border-radius-lg);
+  border: 1px solid #EADBC8;
+
+=======
   background: rgba(255, 255, 255, 0.04);
   border-radius: var(--border-radius-lg);
   border: 1px solid rgba(255, 255, 255, 0.05);
+>>>>>>> 1a512012f6af945a370c9e9129f3773ce078e50c
   margin-bottom: 24px;
 }
 
@@ -175,7 +200,12 @@ body {
   gap: 14px;
   padding: 12px 16px;
   border-radius: 12px;
+<<<<<<< HEAD
+  color: #3b2a17;
+
+=======
   color: rgba(255, 255, 255, 0.7);
+>>>>>>> 1a512012f6af945a370c9e9129f3773ce078e50c
   cursor: pointer;
   margin-bottom: 6px;
   font-size: 13px;
@@ -185,8 +215,14 @@ body {
 }
 
 .menu-item:hover {
+<<<<<<< HEAD
+  background: rgba(255, 255, 255, 0.25);
+  color: #7a4b1b;
+
+=======
   background: rgba(255, 255, 255, 0.05);
   color: #FFF;
+>>>>>>> 1a512012f6af945a370c9e9129f3773ce078e50c
   transform: translateX(4px);
 }
 
@@ -434,8 +470,15 @@ body {
 .main-body-content {
   flex: 1;
   overflow-y: auto;
+<<<<<<< HEAD
+  overflow-x: hidden;
   padding: 24px 32px;
   background-color: var(--bg-main);
+
+=======
+  padding: 24px 32px;
+  background-color: var(--bg-main);
+>>>>>>> 1a512012f6af945a370c9e9129f3773ce078e50c
 }
 
 /* STATS CARDS */
@@ -1050,6 +1093,29 @@ body {
    PREMIUM GLASS STATS CARDS
 ========================= */
 
+<<<<<<< HEAD
+/* Keep the existing (non-glass) layout for readability.
+   This section was overriding earlier .stat-card styles with blur/glass,
+   which made text hard to read on the light-orange dashboard. */
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background-color: var(--bg-card);
+  border-radius: var(--border-radius-lg);
+  border: 1px solid #E2E8F0;
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s ease;
+  min-height: 120px;
+}
+
+=======
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
@@ -1078,6 +1144,7 @@ body {
 
   min-height: 150px;
 }
+>>>>>>> 1a512012f6af945a370c9e9129f3773ce078e50c
 
 .stat-card::before{
   content:"";
@@ -1089,12 +1156,20 @@ body {
 }
 
 .stat-card:hover{
+<<<<<<< HEAD
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+
+=======
   transform: translateY(-10px) scale(1.03);
   box-shadow:
     0 20px 40px rgba(0,0,0,.18),
     0 0 30px rgba(255,255,255,.2);
 }
 
+>>>>>>> 1a512012f6af945a370c9e9129f3773ce078e50c
 .stat-header{
   display:flex;
   justify-content:space-between;
