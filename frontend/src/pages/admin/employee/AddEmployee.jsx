@@ -20,6 +20,11 @@ const initialForm = {
   photo: null,
   gender: "Male",
   dob: "",
+  employeeType: "Full Time",
+  salary: "",
+  joiningDate: "",
+  emergencyContact: "",
+  aadhar: "",
   // Step 2 – Professional Details
   role: "priest",
   department: "Priest Services",
@@ -43,6 +48,26 @@ const isPastOrToday = (v) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   return new Date(v) <= today;
+};
+
+const isAdult = (dob) => {
+  if (!dob) return false;
+
+  const birthDate = new Date(dob);
+  const today = new Date();
+
+  let age = today.getFullYear() - birthDate.getFullYear();
+
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+
+  if (
+    monthDiff < 0 ||
+    (monthDiff === 0 && today.getDate() < birthDate.getDate())
+  ) {
+    age--;
+  }
+
+  return age >= 18;
 };
 
 const steps = [
@@ -111,14 +136,71 @@ const AddEmployee = () => {
       if (!form.email.trim() || !isValidEmail(form.email))
         return setMessage({ type: "error", text: "Please enter a valid email address." });
       if (!form.phone.trim() || !isValidPhone(form.phone))
-        return setMessage({ type: "error", text: "Please enter a valid phone number (10–15 digits)." });
-      if (!form.dob || !isValidDate(form.dob) || !isPastOrToday(form.dob))
-        return setMessage({ type: "error", text: "Please enter a valid date of birth." });
+        return setMessage({ type: "error", text: "Please enter a valid phone number (10 digits)." });
+      if (!form.emergencyContact ||!isValidPhone(form.emergencyContact)) {
+        return setMessage({ type: "error", text: "Enter valid emergency contact number.",});}
+      if (!/^[0-9]{12}$/.test(form.aadhar)) {
+        return setMessage({ type: "error", text: "Aadhaar number must be 12 digits.",});}
+      if (!form.dob ||!isValidDate(form.dob) ||!isPastOrToday(form.dob)) {
+          return setMessage({ type: "error", text: "Please enter a valid date of birth.",});
+       }
+      if (!isAdult(form.dob)) {
+        return setMessage({ type: "error", text: "Employee must be at least 18 years old.",});
+      }
     }
     if (step === 1) {
-      if (!form.department) return setMessage({ type: "error", text: "Please select a department." });
-      if (!form.defaultDuty) return setMessage({ type: "error", text: "Please select a default duty." });
-    }
+  if (!form.salary || Number(form.salary) <= 0) {
+    return setMessage({
+      type: "error",
+      text: "Salary must be greater than 0.",
+    });
+  }
+
+  if (!form.joiningDate) {
+    return setMessage({
+      type: "error",
+      text: "Joining Date is required.",
+    });
+  }
+
+  const dobDate = new Date(form.dob);
+const joiningDate = new Date(form.joiningDate);
+
+const eighteenthBirthday = new Date(dobDate);
+
+eighteenthBirthday.setFullYear(
+  eighteenthBirthday.getFullYear() + 18
+);
+
+if (joiningDate < eighteenthBirthday) {
+  return setMessage({
+    type: "error",
+    text:
+      "Joining Date must be after employee turns 18 years old.",
+  });
+}
+
+  if (joiningDate > new Date()) {
+    return setMessage({
+      type: "error",
+      text: "Joining Date cannot be a future date.",
+    });
+  }
+
+  if (!form.department) {
+    return setMessage({
+      type: "error",
+      text: "Please select a department.",
+    });
+  }
+
+  if (!form.defaultDuty) {
+    return setMessage({
+      type: "error",
+      text: "Please select a default duty.",
+    });
+  }
+}
     setMessage(null);
     setStep((prev) => prev + 1);
   };
@@ -138,20 +220,29 @@ const AddEmployee = () => {
     setIsSaving(true);
     try {
       const payload = {
-        name: form.name.trim(),
-        email: form.email.trim(),
-        password: form.password,
-        phone: form.phone.trim(),
-        address: form.address.trim(),
-        gender: form.gender,
-        dob: form.dob,
-        role: form.role,
-        department: form.department,
-        defaultShift: form.defaultShift,
-        defaultDuty: form.defaultDuty,
-        dutyLocation: form.dutyLocation,
-        photo: "",
-      };
+  name: form.name.trim(),
+  email: form.email.trim(),
+  password: form.password,
+  phone: form.phone.trim(),
+  address: form.address.trim(),
+
+  gender: form.gender,
+  dob: form.dob,
+
+  employeeType: form.employeeType,
+  salary: Number(form.salary),
+  joiningDate: form.joiningDate,
+  emergencyContact: form.emergencyContact,
+  aadhaar: form.aadhar,
+
+  role: form.role,
+  department: form.department,
+  defaultShift: form.defaultShift,
+  defaultDuty: form.defaultDuty,
+  dutyLocation: form.dutyLocation,
+
+  photo: "",
+};
       await createEmployee(payload);
       setMessage({ type: "success", text: "Employee created successfully." });
       setForm(initialForm);
@@ -283,8 +374,40 @@ const AddEmployee = () => {
                     type="date"
                     value={form.dob}
                     onChange={handleChange("dob")}
-                    className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition"
-                    required
+                    max={
+                      new Date(
+                        new Date().setFullYear(
+                          new Date().getFullYear() - 18
+                        )
+                      )
+                    .toISOString()
+                    .split("T")[0]
+                    }
+                  />
+                </label>
+
+                {/*Emergency Contact*/}
+                <label className="block space-y-2 text-sm text-slate-700">
+                  Emergency Contact *
+                  <input
+                    type="tel"
+                    value={form.emergencyContact}
+                    onChange={handleChange("emergencyContact")}
+                    placeholder="Emergency Contact Number"
+                    className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3"
+                  />
+                </label>
+
+                {/* Aadhar Number */}
+                <label className="block space-y-2 text-sm text-slate-700">
+                  Aadhaar Number *
+                  <input
+                    type="text"
+                    maxLength={12}
+                    value={form.aadhar}
+                    onChange={handleChange("aadhar")}
+                    placeholder="123456789012"
+                    className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3"
                   />
                 </label>
 
@@ -364,6 +487,56 @@ const AddEmployee = () => {
                     ))}
                   </select>
                   <p className="text-xs text-slate-400 mt-1">Auto-loaded based on selected role</p>
+                </label>
+
+                {/* Employee Type */}
+                <label className="block space-y-2 text-sm text-slate-700">
+                  Employee Type *
+                  <select
+                    value={form.employeeType}
+                    onChange={handleChange("employeeType")}
+                    className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3"
+                  >
+                  <option value="Full Time">Full Time</option>
+                  <option value="Part Time">Part Time</option>
+                  <option value="Contract">Contract</option>
+                  </select>
+                </label>
+
+                {/* Salary */}
+                <label className="block space-y-2 text-sm text-slate-700">
+                  Monthly Salary *
+                  <input
+                    type="number"
+                    min="1"
+                    value={form.salary}
+                    onChange={handleChange("salary")}
+                    placeholder="25000"
+                    className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3"
+                  />
+                </label>
+
+                {/* Joining Date */}
+                <label className="block space-y-2 text-sm text-slate-700">
+                  Joining Date *
+                  <input
+  type="date"
+  value={form.joiningDate}
+  onChange={handleChange("joiningDate")}
+  min={
+    form.dob
+      ? new Date(
+          new Date(form.dob).setFullYear(
+            new Date(form.dob).getFullYear() + 18
+          )
+        )
+          .toISOString()
+          .split("T")[0]
+      : ""
+  }
+  max={new Date().toISOString().split("T")[0]}
+  className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3"
+/>
                 </label>
 
                 {/* Default Shift */}
@@ -470,6 +643,26 @@ const AddEmployee = () => {
                     <div>
                       <p className="text-slate-500 text-xs">Department</p>
                       <p className="font-semibold text-slate-800">{form.department}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-500 text-xs">Employee Type</p>
+                      <p className="font-semibold text-slate-800">{form.employeeType}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-500 text-xs">Salary</p>
+                      <p className="font-semibold text-slate-800">₹{form.salary}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-500 text-xs">Joining Date</p>
+                      <p className="font-semibold text-slate-800">{form.joiningDate}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-500 text-xs">Emergency Contact</p>
+                      <p className="font-semibold text-slate-800">{form.emergencyContact}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-500 text-xs">Aadhaar</p>
+                      <p className="font-semibold text-slate-800">{form.aadhar}</p>
                     </div>
                     <div>
                       <p className="text-slate-500 text-xs">Default Shift</p>

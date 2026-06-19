@@ -39,6 +39,7 @@ const inventoryItemSchema = new mongoose.Schema(
 
 // Virtual: compute stock status
 inventoryItemSchema.virtual("status").get(function () {
+  if (this.currentStock === 0) return "Out Of Stock";
   return this.currentStock < this.minimumStock ? "Low Stock" : "Available";
 });
 

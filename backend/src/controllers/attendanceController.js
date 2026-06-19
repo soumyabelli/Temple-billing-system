@@ -68,6 +68,18 @@ const parseClockTimeToDate = (dateKey, timeValue) => {
   return result;
 };
 
+const parseTimeToMinutes = (time) => {
+  const value = clean(time).toUpperCase();
+  const match = value.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/);
+  if (!match) return 0;
+  let hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  const meridiem = match[3];
+  if (meridiem === "PM" && hours !== 12) hours += 12;
+  if (meridiem === "AM" && hours === 12) hours = 0;
+  return hours * 60 + minutes;
+};
+
 const resolveShiftDefinition = async (shiftName) => {
   const value = clean(shiftName);
   if (!value) return null;
@@ -135,6 +147,14 @@ const buildDailyAssignmentContext = async (staff, tasks = [], shiftLookup = null
     shiftName = shiftDefinition.shiftName || shiftName;
     shiftStartTime = shiftDefinition.startTime || shiftStartTime;
     shiftEndTime = shiftDefinition.endTime || shiftEndTime;
+  }
+
+  // Provide default timing if none is set
+  if (!shiftStartTime) {
+    shiftStartTime = "09:00 AM";
+  }
+  if (!shiftEndTime) {
+    shiftEndTime = "05:00 PM";
   }
 
   const dutyName = clean(primaryDutyTask?.dutyName || primaryDutyTask?.duty || primaryDutyTask?.title || defaultDuty);
@@ -324,8 +344,9 @@ const normalizeAttendanceStatus = (status) => {
   const value = clean(status);
   if (!value) return "Absent";
   if (value.toLowerCase() === "half day") return "Half Day";
-  if (value.toLowerCase() === "late") return "Late";
+  if (value.toLowerCase() === "late") return "Late"; // Keep for backward compatibility
   if (value.toLowerCase() === "leave") return "Leave";
+  if (value.toLowerCase() === "pending") return "Pending";
   if (value.toLowerCase() === "present") return "Present";
   if (value.toLowerCase() === "absent") return "Absent";
   return ATTENDANCE_STATUSES.includes(value) ? value : "Absent";
@@ -519,6 +540,9 @@ const buildDashboardResponse = async (staffId, monthValue) => {
         lateDays += 1;
       } else if (status === "Present") {
         presentDays += 1;
+      } else if (status === "Pending") {
+        // Pending means checked in but not checked out yet - don't count as present/absent yet
+        // Will only count once they check out and status is finalized
       } else if (status === "Half Day") {
         halfDays += 1;
       } else if (status === "Absent") {
@@ -677,7 +701,7 @@ const buildDashboardResponse = async (staffId, monthValue) => {
   };
 };
 
-const buildAdminAttendanceDashboard = async (monthValue) => {
+const buildAdminAttendanceDashboard = async (monthValue, filterEmployeeId = null) => {
   const { monthKey, monthIndex, startDate, endDate, monthLabel } = getMonthRange(monthValue);
   const currentMonthKey = toDateKey(new Date()).slice(0, 7);
   const analyticsEndDate = monthKey === currentMonthKey ? new Date() : endDate;
@@ -687,8 +711,18 @@ const buildAdminAttendanceDashboard = async (monthValue) => {
   today.setHours(0, 0, 0, 0);
   const todayKey = toDateKey(today);
 
+  // Build employee query
+  const employeeQuery = { role: { $ne: "admin" } };
+  if (filterEmployeeId) {
+    employeeQuery.$or = [
+      { _id: mongoose.Types.ObjectId.isValid(filterEmployeeId) ? filterEmployeeId : null },
+      { name: filterEmployeeId },
+      { email: filterEmployeeId },
+    ].filter(item => Object.values(item)[0] !== null);
+  }
+
   const [employees, attendanceDocs, leaveDocs, dutyDocs, shiftDocs] = await Promise.all([
-    Employee.find({ role: { $ne: "admin" } }).sort({ name: 1 }),
+    Employee.find(employeeQuery).sort({ name: 1 }),
     Attendance.find({ dateKey: { $gte: startKey, $lte: endKey } }).sort({ dateKey: -1, createdAt: -1 }),
     Leave.find({
       status: "Approved",
@@ -854,21 +888,22 @@ const buildAdminAttendanceDashboard = async (monthValue) => {
     const attendance = attendanceMap.get(`${employee.id}:${todayKey}`);
     const leave = leaveMap.get(`${employee.id}:${todayKey}`);
     if (leave || !attendance) return count;
-    return normalizeAttendanceStatus(attendance.status) === "Late" ? count + 1 : count;
+    return Boolean(attendance.isLateCheckIn) ? count + 1 : count;
   }, 0);
   const todayPresentCount = employeeList.reduce((count, employee) => {
     const attendance = attendanceMap.get(`${employee.id}:${todayKey}`);
     const leave = leaveMap.get(`${employee.id}:${todayKey}`);
     if (leave || !attendance) return count;
     const status = normalizeAttendanceStatus(attendance.status);
-    return status === "Present" || status === "Late" ? count + 1 : count;
+    return status === "Present" || status === "Pending" ? count + 1 : count;
   }, 0);
   const todayAbsentCount = employeeList.reduce((count, employee) => {
     const attendance = attendanceMap.get(`${employee.id}:${todayKey}`);
     const leave = leaveMap.get(`${employee.id}:${todayKey}`);
     if (leave) return count;
     if (!attendance) return count + 1;
-    return normalizeAttendanceStatus(attendance.status) === "Absent" ? count + 1 : count;
+    const status = normalizeAttendanceStatus(attendance.status);
+    return status === "Absent" ? count + 1 : count;
   }, 0);
   const expectedEntries = employeeList.length * timeline.length;
   const attendancePercent = expectedEntries > 0 ? Math.round((presentDays / expectedEntries) * 100) : 0;
@@ -964,6 +999,19 @@ const buildAdminAttendanceDashboard = async (monthValue) => {
     return accumulator;
   }, {});
 
+  // Get records for selected employee if specified
+  let selectedEmployeeRecords = [];
+  let selectedEmployee = null;
+  if (filterEmployeeId && employees.length > 0) {
+    selectedEmployee = employees[0];
+    selectedEmployeeRecords = records.filter(
+      (r) =>
+        r.employeeId === selectedEmployee.id ||
+        r.employeeEmail?.toLowerCase() === selectedEmployee.email?.toLowerCase() ||
+        r.employeeName === selectedEmployee.name
+    );
+  }
+
   return {
     success: true,
     month: monthKey,
@@ -989,6 +1037,8 @@ const buildAdminAttendanceDashboard = async (monthValue) => {
       { label: "Attendance", value: `${attendancePercent}%`, tone: "info" },
     ],
     records,
+    selectedEmployee,
+    selectedEmployeeRecords,
     todayRecords,
     timeline,
     shiftSummary,
@@ -1089,8 +1139,8 @@ exports.getStaffAttendanceSummary = async (req, res) => {
 
 exports.getAdminAttendanceDashboard = async (req, res) => {
   try {
-    const { month } = req.query;
-    const payload = await buildAdminAttendanceDashboard(month);
+    const { month, employeeId } = req.query;
+    const payload = await buildAdminAttendanceDashboard(month, employeeId || null);
 
     return res.json(payload);
   } catch (error) {
@@ -1194,13 +1244,14 @@ exports.markAttendance = async (req, res) => {
         assignmentType: dailyContext.temporaryShiftTask?.assignmentType || dailyContext.primaryDutyTask?.assignmentType || "Default Shift",
         dutyName: dailyContext.dutyName || dailyContext.defaultDuty || "",
         dutyArea: dailyContext.dutyArea || dailyContext.dutyLocation || "",
-        status: isLate ? "Late" : "Present",
+        status: "Pending",
         workingMinutes: 0,
         workingHours: "--",
         isOvertime: isOvertime,
         overtimeMinutes: 0,
         overtimeHours: "--",
         source: "manual",
+        isLateCheckIn: isLate,
       };
 
       attendance = attendance
@@ -1248,11 +1299,24 @@ exports.markAttendance = async (req, res) => {
 
     const checkInAt = attendance.checkInAt ? new Date(attendance.checkInAt) : now;
     const workingMinutes = Math.max(0, Math.round((now.getTime() - checkInAt.getTime()) / 60000));
+    const workingHours = workingMinutes / 60;
 
     attendance.checkOut = formatTimeLabel(now);
     attendance.checkOutAt = now;
     attendance.workingMinutes = workingMinutes;
     attendance.workingHours = formatWorkingHours(workingMinutes);
+
+    // Calculate attendance status based on temple rules: working hours
+    // ≥ 6 Hours: Present
+    // 4 - 5.99 Hours: Half Day
+    // < 4 Hours: Absent
+    if (workingHours >= 6) {
+      attendance.status = "Present";
+    } else if (workingHours >= 4 && workingHours < 6) {
+      attendance.status = "Half Day";
+    } else {
+      attendance.status = "Absent";
+    }
 
     // Calculate overtime if employee has both default shift and temporary assignment
     if (attendance.isOvertime) {
@@ -1261,10 +1325,6 @@ exports.markAttendance = async (req, res) => {
       const overtimeMinutes = Math.max(0, workingMinutes - standardWorkingMinutes);
       attendance.overtimeMinutes = overtimeMinutes;
       attendance.overtimeHours = formatWorkingHours(overtimeMinutes);
-    }
-
-    if (attendance.status === "Absent") {
-      attendance.status = "Present";
     }
 
     await attendance.save();

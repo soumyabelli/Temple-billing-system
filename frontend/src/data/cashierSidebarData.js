@@ -1,14 +1,30 @@
-import { FaHome, FaFileInvoice, FaCreditCard, FaHeart, FaCalendarAlt, FaBox, FaReceipt, FaHistory, FaSignOutAlt } from "react-icons/fa";
+import {
+  FaHome,
+  FaFileInvoice,
+  FaCalendarAlt,
+  FaHeart,
+  FaReceipt,
+  FaUsers,
+  FaCreditCard,
+  FaChartBar,
+  FaBoxes,
+  FaBell,
+  FaUserCircle,
+  FaSignOutAlt,
+} from "react-icons/fa";
 
 export const cashierSidebarItems = [
   { title: "Dashboard", icon: FaHome, path: "/cashier" },
-  { title: "Quick Billing", icon: FaFileInvoice, path: "/cashier/quick-billing" },
-  { title: "Payment Processing", icon: FaCreditCard, path: "/cashier/payment-processing" },
-  { title: "Receipt Generation", icon: FaHeart, path: "/cashier/receipt-generation" },
-  { title: "Today's Transactions", icon: FaCalendarAlt, path: "/cashier/transactions" },
-  { title: "Booking Payments", icon: FaBox, path: "/cashier/booking-payments" },
+  { title: "Billing", icon: FaFileInvoice, path: "/cashier/billing" },
+  { title: "Pooja Bookings", icon: FaCalendarAlt, path: "/cashier/pooja-bookings" },
+  { title: "Donations", icon: FaHeart, path: "/cashier/donations" },
   { title: "Prasadam Sales", icon: FaReceipt, path: "/cashier/prasadam-sales" },
-  { title: "Notifications", icon: FaHistory, path: "/cashier/notifications" },
+  { title: "Receipts", icon: FaReceipt, path: "/cashier/receipts" },
+  { title: "Register Devotees", icon: FaUsers, path: "/cashier/register-devotees" },
+  { title: "Payments", icon: FaCreditCard, path: "/cashier/payments" },
+  { title: "Reports", icon: FaChartBar, path: "/cashier/reports" },
+  { title: "Inventory", icon: FaBoxes, path: "/cashier/inventory" },
+  { title: "Notifications", icon: FaBell, path: "/cashier/notifications" },
+  { title: "Profile", icon: FaUserCircle, path: "/cashier/profile" },
   { title: "Logout", icon: FaSignOutAlt, path: "/login" },
 ];
-

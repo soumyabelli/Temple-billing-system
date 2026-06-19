@@ -5,6 +5,7 @@ const Event = require("../models/Event");
 const SupportRequest = require("../models/SupportRequest");
 const User = require("../models/User");
 const PrasadamOrder = require("../models/PrasadamOrder");
+const Bill = require("../models/Bill");
 const { isDbConnected } = require("../config/db");
 const crypto = require("crypto");
 const Razorpay = require("razorpay");
@@ -16,6 +17,35 @@ const PRASADAM_MENU = {
   "Pulihora Prasadam": 121,
   "Sweet Pongal Prasadam": 131,
   "Curd Rice Prasadam": 111,
+};
+
+const createLedgerBill = async ({
+  devoteeName,
+  sevaType,
+  amount,
+  paymentMode,
+  billType,
+  referenceNo,
+  sourceId,
+  notes,
+  status = "Paid",
+}) => {
+  try {
+    return await Bill.create({
+      devoteeName,
+      sevaType,
+      amount,
+      paymentMode,
+      billType,
+      referenceNo,
+      sourceId,
+      notes,
+      status,
+    });
+  } catch (error) {
+    console.warn("Failed to create bill ledger entry:", error.message);
+    return null;
+  }
 };
 
 const getBookings = async (req, res) => {
@@ -69,6 +99,18 @@ const createBooking = async (req, res) => {
       status: status || "Pending",
       contactNumber,
       notes,
+    });
+
+    await createLedgerBill({
+      devoteeName,
+      sevaType: service,
+      amount: numericAmount,
+      paymentMode: pm || paymentMethod || "Cash",
+      billType: "Pooja Booking",
+      referenceNo: `BK-${String(booking._id).slice(-6).toUpperCase()}`,
+      sourceId: booking._id.toString(),
+      notes,
+      status: booking.status === "Confirmed" ? "Paid" : "Pending",
     });
 
     // Send notification to database
@@ -162,6 +204,18 @@ const createDonation = async (req, res) => {
       status: "Completed",
       eventId: eventId || undefined,
       donatedBy: donatedBy || undefined,
+    });
+
+    await createLedgerBill({
+      devoteeName: donorName.trim(),
+      sevaType: category,
+      amount: numericAmount,
+      paymentMode,
+      billType: "Donation",
+      referenceNo: `DN-${String(donation._id).slice(-6).toUpperCase()}`,
+      sourceId: donation._id.toString(),
+      notes,
+      status: "Paid",
     });
 
     await Notification.create({
@@ -616,7 +670,8 @@ const createPrasadamOrder = async (req, res) => {
     if (Number.isNaN(normalizedQty) || normalizedQty < 1) {
       return res.status(400).json({ error: "Quantity must be at least 1." });
     }
-    const unitPrice = PRASADAM_MENU[itemName];
+    const requestedUnitPrice = Number(req.body.unitPrice ?? req.body.price);
+    const unitPrice = PRASADAM_MENU[itemName] || (!Number.isNaN(requestedUnitPrice) && requestedUnitPrice > 0 ? requestedUnitPrice : 0);
     if (!unitPrice) {
       return res.status(400).json({ error: "Selected prasadam item is not available in temple menu." });
     }
@@ -633,6 +688,18 @@ const createPrasadamOrder = async (req, res) => {
       amount: totalAmount,
       paymentMethod: paymentMethod || "UPI",
       status: "Placed",
+    });
+
+    await createLedgerBill({
+      devoteeName,
+      sevaType: itemName,
+      amount: totalAmount,
+      paymentMode: paymentMethod || "UPI",
+      billType: "Prasadam Sale",
+      referenceNo: `PR-${String(order._id).slice(-6).toUpperCase()}`,
+      sourceId: order._id.toString(),
+      notes: `Quantity: ${normalizedQty}, Unit Price: ${unitPrice}`,
+      status: "Paid",
     });
 
     await Notification.create({
@@ -712,6 +779,18 @@ const createRazorpayOrder = async (req, res) => {
         transactionId: `SIM_TXN_${Date.now()}`,
       });
 
+      await createLedgerBill({
+        devoteeName: donorName || "Anonymous",
+        sevaType: category,
+        amount: numericAmount,
+        paymentMode,
+        billType: "Donation",
+        referenceNo: `DN-${String(donation._id).slice(-6).toUpperCase()}`,
+        sourceId: donation._id.toString(),
+        notes,
+        status: "Paid",
+      });
+
       // Update event collection immediately for simulated donations
       if (eventId) {
         try {
@@ -766,6 +845,18 @@ const createRazorpayOrder = async (req, res) => {
       razorpayOrderId: order.id,
     });
 
+    await createLedgerBill({
+      devoteeName: donorName || "Anonymous",
+      sevaType: category,
+      amount: numericAmount,
+      paymentMode,
+      billType: "Donation",
+      referenceNo: `DN-${String(donation._id).slice(-6).toUpperCase()}`,
+      sourceId: donation._id.toString(),
+      notes,
+      status: "Pending",
+    });
+
     return res.status(201).json({ order, donation, key: process.env.RAZORPAY_KEY_ID || "" });
   } catch (error) {
     console.error("createRazorpayOrder error:", error);
@@ -797,6 +888,11 @@ const verifyRazorpayPayment = async (req, res) => {
     donation.razorpayPaymentId = razorpay_payment_id;
     donation.razorpaySignature = razorpay_signature;
     await donation.save();
+
+    await Bill.updateMany(
+      { sourceId: donation._id.toString() },
+      { status: "Paid" }
+    );
 
     // If donation linked to an event, increment its collection
     if (donation.eventId) {
@@ -858,6 +954,11 @@ const handleRazorpayWebhook = async (req, res) => {
         donation.razorpaySignature = signature;
         await donation.save();
 
+        await Bill.updateMany(
+          { sourceId: donation._id.toString() },
+          { status: "Paid" }
+        );
+
         if (donation.eventId) {
           try {
             await Event.findByIdAndUpdate(String(donation.eventId), { $inc: { collection: Number(donation.amount) || amount } });
@@ -901,6 +1002,13 @@ const updateBookingStatus = async (req, res) => {
     }
 
     await booking.save();
+
+    await Bill.updateMany(
+      { sourceId: booking._id.toString() },
+      {
+        status: status === "Confirmed" ? "Paid" : status === "Cancelled" || status === "Rejected" ? "Cancelled" : "Pending",
+      }
+    );
 
     await Notification.create({
       title: "Booking Status Updated",

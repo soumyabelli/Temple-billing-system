@@ -2,9 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 
 import ProtectedRoute from "./components/common/ProtectedRoute";
 
-import AdminDashboard from "./pages/AdminDashboard";
-
-
+import AdminDashboard from "./pages/admin/AdminDashboard";
 import DonationManagement from "./pages/admin/DonationManagement";
 import AllDonations from "./pages/admin/donations/AllDonations";
 import AddDonation from "./pages/admin/donations/AddDonation";
@@ -39,15 +37,25 @@ import BillingManagement from "./pages/admin/BillingManagement";
 import InventoryManagement from "./pages/admin/InventoryManagement";
 import NotificationsCenter from "./pages/admin/NotificationsCenter";
 import AdminLayout from "./layouts/AdminLayout";
-
-import AccountantDashboard from "./pages/accountant/AccountantDashboard";
-import CashierDashboard from "./pages/cashier/CashierDashboard";
-import PriestDashboard from "./pages/priest/PriestDashboard";
-import StaffDashboard from "./pages/staff/StaffDashboard";
 import CashierLayout from "./layouts/CashierLayout";
 
+import AccountantDashboard from "./pages/accountant/AccountantDashboard";
+import CashierDashboardPage from "./pages/cashier/CashierDashboardPage";
+import BillingPage from "./pages/cashier/BillingPage";
+import PoojaBookingsPage from "./pages/cashier/PoojaBookingsPage";
+import DonationsPage from "./pages/cashier/DonationsPage";
+import PrasadamPage from "./pages/cashier/PrasadamPage";
+import ReceiptsPage from "./pages/cashier/ReceiptsPage";
+import PaymentsPage from "./pages/cashier/PaymentsPage";
+import ReportsPage from "./pages/cashier/ReportsPage";
+import InventoryPage from "./pages/cashier/InventoryPage";
+import NotificationsPage from "./pages/cashier/NotificationsPage";
+import ProfilePage from "./pages/cashier/ProfilePage";
+import RegisterDevoteesPage from "./pages/cashier/RegisterDevoteesPage";
+import PriestDashboard from "./pages/priest/PriestDashboard";
+import StaffDashboard from "./pages/staff/StaffDashboard";
+import LeaveHistory from "./pages/staff/LeaveHistory";
 import DevoteeDashboard from "./pages/devotee/DevoteeDashboard";
-
 
 import LoginPage from "./pages/auth/LoginPage";
 import AuthLoginPage from "./pages/auth/AuthLoginPage";
@@ -57,21 +65,7 @@ import LandingPage from "./pages/LandingPage";
 
 import Attendance from "./pages/staff/Attendance";
 
-import QuickBillingPage from "./pages/cashier/QuickBillingPage";
-import BillingPage from "./pages/cashier/BillingPage";
-import BookingPayments from "./pages/cashier/BookingPayments";
-import DonationsPage from "./pages/cashier/DonationsPage";
-import PrasadamSales from "./pages/cashier/PrasadamSales";
-import ReceiptsPage from "./pages/cashier/ReceiptsPage";
-import ReceiptGenerationPage from "./pages/cashier/ReceiptGeneration";
 
-
-import DevoteesPage from "./pages/cashier/PoojaBookingsPage";
-import PaymentProcessing from "./pages/cashier/PaymentProcessing";
-import ReportsPage from "./pages/cashier/ReportsPage";
-import InventoryPage from "./pages/cashier/InventoryPage";
-import NotificationsPage from "./pages/cashier/NotificationsPage";
-import ProfilePage from "./pages/cashier/ProfilePage";
 
 function App() {
   return (
@@ -85,17 +79,6 @@ function App() {
       <Route
         path="/forgot-password"
         element={<ForgotPasswordPage />}
-      />
-
-      <Route
-        path="/cashier/quick-billing"
-        element={
-          <ProtectedRoute allowedRoles={["cashier", "admin"]}>
-            <CashierDashboard>
-              <QuickBillingPage />
-            </CashierDashboard>
-          </ProtectedRoute>
-        }
       />
 
       {/* ADMIN */}
@@ -120,11 +103,10 @@ function App() {
         path="/leave-history"
         element={
           <ProtectedRoute allowedRoles={["staff"]}>
-            <LeaveManagement />
+            <LeaveHistory />
           </ProtectedRoute>
         }
       />
-
 
       <Route
         path="/assign-task"
@@ -496,22 +478,21 @@ function App() {
       <Route
         path="/cashier"
         element={
-          <ProtectedRoute allowedRoles={["cashier"]}>
+          <ProtectedRoute allowedRoles={["cashier", "admin"]}>
             <CashierLayout />
           </ProtectedRoute>
         }
       >
-        <Route index element={<CashierDashboard />} />
-        <Route path="quick-billing" element={<QuickBillingPage />} />
+        <Route index element={<CashierDashboardPage />} />
+        <Route path="dashboard" element={<CashierDashboardPage />} />
+        <Route path="quick-billing" element={<BillingPage />} />
         <Route path="billing" element={<BillingPage />} />
-        <Route path="bookings" element={<BookingPayments />} />
+        <Route path="pooja-bookings" element={<PoojaBookingsPage />} />
         <Route path="donations" element={<DonationsPage />} />
-        <Route path="prasadam" element={<PrasadamSales />} />
+        <Route path="prasadam-sales" element={<PrasadamPage />} />
         <Route path="receipts" element={<ReceiptsPage />} />
-        <Route path="receipt-generation" element={<ReceiptGenerationPage />} />
-
-        <Route path="devotees" element={<DevoteesPage />} />
-        <Route path="payments" element={<PaymentProcessing />} />
+        <Route path="register-devotees" element={<RegisterDevoteesPage />} />
+        <Route path="payments" element={<PaymentsPage />} />
         <Route path="reports" element={<ReportsPage />} />
         <Route path="inventory" element={<InventoryPage />} />
         <Route path="notifications" element={<NotificationsPage />} />
@@ -519,9 +500,72 @@ function App() {
       </Route>
 
       {/* PRIEST */}
-
       <Route
         path="/priest"
+        element={
+          <ProtectedRoute allowedRoles={["priest"]}>
+            <PriestDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/priest/assigned-poojas"
+        element={
+          <ProtectedRoute allowedRoles={["priest"]}>
+            <PriestDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/priest/seva-schedule"
+        element={
+          <ProtectedRoute allowedRoles={["priest"]}>
+            <PriestDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/priest/completed-services"
+        element={
+          <ProtectedRoute allowedRoles={["priest"]}>
+            <PriestDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/priest/special-duties"
+        element={
+          <ProtectedRoute allowedRoles={["priest"]}>
+            <PriestDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/priest/festival-duties"
+        element={
+          <ProtectedRoute allowedRoles={["priest"]}>
+            <PriestDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/priest/notifications"
+        element={
+          <ProtectedRoute allowedRoles={["priest"]}>
+            <PriestDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/priest/profile"
+        element={
+          <ProtectedRoute allowedRoles={["priest"]}>
+            <PriestDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/priest/settings"
         element={
           <ProtectedRoute allowedRoles={["priest"]}>
             <PriestDashboard />

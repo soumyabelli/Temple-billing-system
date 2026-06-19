@@ -25,13 +25,31 @@ const bookingSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["Pending", "Confirmed", "Rejected", "Cancelled"],
+      enum: ["Pending", "Confirmed", "Rejected", "Cancelled", "In Progress", "Completed", "Upcoming", "Assigned"],
       default: "Pending",
     },
     contactNumber: { type: String, trim: true },
     notes: { type: String, trim: true },
     // whether this booking has been counted towards an event's registrations/collection
     counted: { type: Boolean, default: false },
+    assignedPriest: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      sparse: true,
+    },
+    startedAt: {
+      type: Date,
+    },
+    completedAt: {
+      type: Date,
+    },
+    pendingReason: {
+      type: String,
+      trim: true,
+    },
+    pendingAt: {
+      type: Date,
+    },
   },
   { timestamps: true }
 );

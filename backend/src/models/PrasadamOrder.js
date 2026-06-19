@@ -16,7 +16,7 @@ const prasadamOrderSchema = new mongoose.Schema(
     amount: { type: Number, required: true, min: 0 },
     paymentMethod: {
       type: String,
-      enum: ["UPI", "Cash", "Card", "Net Banking"],
+      enum: ["UPI", "Cash", "Card", "Bank Transfer", "Net Banking", "Debit Card", "Credit Card"],
       default: "UPI",
     },
     status: { type: String, enum: ["Placed", "Preparing", "Ready", "Delivered", "Cancelled"], default: "Placed" },

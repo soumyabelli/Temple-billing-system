@@ -10,6 +10,8 @@ const leaveRoutes = require("./routes/leaveRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const shiftRoutes = require("./routes/shiftRoutes");
 const adminInventoryRoutes = require("./routes/adminInventoryRoutes");
+const billRoutes = require("./routes/billRoutes");
+const priestRoutes = require("./routes/priestRoutes");
 
 const app = express();
 
@@ -30,5 +32,7 @@ app.use("/api/staff/attendance", attendanceRoutes);
 app.use("/api/leaves", leaveRoutes);
 app.use("/api/shifts", shiftRoutes);
 app.use("/api/admin", adminInventoryRoutes);
+app.use("/api/bills", billRoutes);
+app.use("/api/priest", priestRoutes);
 
 module.exports = app;

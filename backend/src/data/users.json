@@ -2,7 +2,7 @@
   {
     "id": "26764e61-1807-4c28-9475-b924e63abd68",
     "name": "admin",
-    "email": "admin@gamail.com",
+    "email": "admin@gmail.com",
     "password": "$2b$10$gbTgS4yqowYDNjG86osN4eGVBCCWW1dN4C5v1dDUaW/eCIOZMP0He",
     "role": "admin",
     "createdAt": "2026-05-19T09:01:47.438Z",
@@ -45,5 +45,16 @@
     "provider": "local",
     "createdAt": "2026-05-23T06:21:10.008Z",
     "updatedAt": "2026-05-23T06:21:10.008Z"
+  },
+  {
+    "id": "7000331e-e09f-4471-8be7-b4dd0edf90c0",
+    "name": "sonu",
+    "email": "sonu@gmail.com",
+    "password": "$2b$10$g1F9huJ34Zd8Iw9YEYdIGuWSoQkbWYTsAJ13d04nTlJtneHLwq7z6",
+    "role": "devotee",
+    "mustChangePassword": false,
+    "provider": "local",
+    "createdAt": "2026-06-15T11:23:46.118Z",
+    "updatedAt": "2026-06-15T11:23:46.118Z"
   }
 ]
