@@ -31,11 +31,7 @@ exports.getInventoryCatalog = async (req, res) => {
       unit: item.unit,
       stock: item.currentStock,
       minimumStock: item.minimumStock,
-<<<<<<< HEAD
-      status: item.currentStock < item.minimumStock ? "Low Stock" : "Available",
-=======
-      status: item.currentStock <= item.minimumStock ? "Low Stock" : "Available",
->>>>>>> 1a512012f6af945a370c9e9129f3773ce078e50c
+      status: item.currentStock === 0 ? "Out Of Stock" : item.currentStock <= item.minimumStock ? "Low Stock" : "Available",
     }));
     return res.json({ success: true, items });
   } catch (error) {
@@ -46,41 +42,23 @@ exports.getInventoryCatalog = async (req, res) => {
 // POST /api/staff/inventory-requests
 exports.createInventoryRequest = async (req, res) => {
   try {
-<<<<<<< HEAD
-    const { staffId, staffName, itemName, quantity, unit, reason } = req.body;
+    const { staffId, staffName, itemName, quantity, unit, reason, requestedBy } = req.body;
     const trimmedItemName = clean(itemName);
     const trimmedQuantity = clean(quantity);
     const trimmedUnit = clean(unit);
     const trimmedReason = clean(reason);
     const trimmedStaffId = clean(staffId);
-    const trimmedStaffName = clean(staffName);
+    const trimmedStaffName = clean(staffName || requestedBy);
 
     if (!trimmedStaffId || !trimmedStaffName || !trimmedItemName || !trimmedQuantity || !trimmedUnit || !trimmedReason) {
       return res.status(400).json({
         success: false,
         message: "staffId, staffName, itemName, quantity, unit and reason are required",
-=======
-    const { staffId, staffName, itemName, quantity, unit, reason, requestedBy } = req.body;
-    const trimmedItemName = clean(itemName);
-    const trimmedUnit = clean(unit);
-    const trimmedReason = clean(reason);
-    const trimmedStaffId = clean(staffId);
-    const trimmedStaffName = clean(staffName || requestedBy);
-
-    if (!trimmedStaffId || !trimmedStaffName || !trimmedItemName || !trimmedUnit || !trimmedReason) {
-      return res.status(400).json({
-        success: false,
-        message: "staffId, staffName/requestedBy, itemName, quantity, unit and reason are required",
->>>>>>> 1a512012f6af945a370c9e9129f3773ce078e50c
       });
     }
 
     // Validate quantity is a positive number
-<<<<<<< HEAD
     const parsedQty = parseFloat(trimmedQuantity);
-=======
-    const parsedQty = parseFloat(quantity);
->>>>>>> 1a512012f6af945a370c9e9129f3773ce078e50c
     if (isNaN(parsedQty) || parsedQty <= 0) {
       return res.status(400).json({
         success: false,
@@ -111,14 +89,9 @@ exports.createInventoryRequest = async (req, res) => {
     const request = await InventoryRequest.create({
       staffId: trimmedStaffId,
       staffName: trimmedStaffName,
-<<<<<<< HEAD
-      itemName: trimmedItemName,
-      quantity: trimmedQuantity,
-=======
       requestedBy: trimmedStaffName,
       itemName: trimmedItemName,
       quantity: parsedQty,
->>>>>>> 1a512012f6af945a370c9e9129f3773ce078e50c
       unit: trimmedUnit,
       reason: trimmedReason,
       status: "Pending",
@@ -130,11 +103,7 @@ exports.createInventoryRequest = async (req, res) => {
     // Notify admin
     await createStaffNotification({
       title: "🔔 New Inventory Request",
-<<<<<<< HEAD
-      message: `${trimmedStaffName} requested ${trimmedQuantity} ${trimmedUnit} of ${trimmedItemName}.\nReason: ${trimmedReason}`,
-=======
       message: `${trimmedStaffName} requested ${parsedQty} ${trimmedUnit} of ${trimmedItemName}.\nReason: ${trimmedReason}`,
->>>>>>> 1a512012f6af945a370c9e9129f3773ce078e50c
       audienceRole: "admin",
       category: "inventory",
     });
@@ -187,57 +156,6 @@ exports.updateInventoryRequestStatus = async (req, res) => {
       });
     }
 
-<<<<<<< HEAD
-    const updatePayload = {
-      status: normalizedStatus,
-      adminReason: normalizedStatus === "Pending" ? "" : clean(adminReason),
-      reviewedBy: normalizedStatus === "Pending" ? "" : clean(reviewedBy),
-      reviewedAt: normalizedStatus === "Pending" ? null : new Date(),
-    };
-
-    const updatedRequest = await InventoryRequest.findByIdAndUpdate(id, updatePayload, { new: true });
-
-    if (!updatedRequest) {
-      return res.status(404).json({ success: false, message: "Inventory request not found" });
-    }
-
-    // If approved: deduct stock from InventoryItem
-    if (normalizedStatus === "Approved") {
-      const parsedQty = parseFloat(updatedRequest.quantity);
-      if (!isNaN(parsedQty) && parsedQty > 0) {
-        const inventoryItem = await InventoryItem.findOne({
-          name: { $regex: new RegExp(`^${updatedRequest.itemName}$`, "i") },
-        });
-
-        if (inventoryItem) {
-          inventoryItem.currentStock = Math.max(0, inventoryItem.currentStock - parsedQty);
-          await inventoryItem.save();
-
-          // Check if stock fell below minimum after deduction
-          if (inventoryItem.currentStock < inventoryItem.minimumStock) {
-            await createStaffNotification({
-              title: "⚠️ Low Stock Alert",
-              message: `${inventoryItem.name} stock is now below minimum level. Current: ${inventoryItem.currentStock} ${inventoryItem.unit}, Minimum: ${inventoryItem.minimumStock} ${inventoryItem.unit}. Please reorder soon.`,
-              audienceRole: "admin",
-              category: "inventory",
-            });
-          }
-        }
-      }
-    }
-
-    // Send notification to staff
-    if (normalizedStatus === "Approved" || normalizedStatus === "Rejected") {
-      const message =
-        normalizedStatus === "Rejected"
-          ? `Your request for ${updatedRequest.itemName} (${updatedRequest.quantity} ${updatedRequest.unit}) has been rejected.\nReason: ${updatePayload.adminReason}`
-          : `✅ Your request for ${updatedRequest.itemName} (${updatedRequest.quantity} ${updatedRequest.unit}) has been approved.`;
-
-      await createStaffNotification({
-        title: `🔔 Request ${normalizedStatus}`,
-        message,
-        audienceId: updatedRequest.staffId,
-=======
     const request = await InventoryRequest.findById(id);
     if (!request) {
       return res.status(404).json({ success: false, message: "Inventory request not found" });
@@ -321,16 +239,11 @@ exports.updateInventoryRequestStatus = async (req, res) => {
         title: "🔔 Request Rejected",
         message: `Your request for ${request.itemName} (${request.quantity} ${request.unit}) has been rejected.\nReason: ${request.adminReason}`,
         audienceId: request.staffId,
->>>>>>> 1a512012f6af945a370c9e9129f3773ce078e50c
         category: "inventory",
       });
     }
 
-<<<<<<< HEAD
-    return res.json({ success: true, request: updatedRequest });
-=======
     return res.json({ success: true, request });
->>>>>>> 1a512012f6af945a370c9e9129f3773ce078e50c
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }

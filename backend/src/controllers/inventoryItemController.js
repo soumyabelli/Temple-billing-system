@@ -1,7 +1,7 @@
 const InventoryItem = require("../models/InventoryItem");
 const { createStaffNotification } = require("../utils/notificationService");
 
-const INVENTORY_UNITS = ["Kg", "Liter", "Pack", "Pieces"];
+const INVENTORY_UNITS = ["Kg", "Liter", "Pack", "Pieces", "Box"];
 
 const DEFAULT_ITEMS = [
   { name: "Camphor", unit: "Pack", currentStock: 4, minimumStock: 10, category: "Pooja" },
@@ -98,12 +98,8 @@ const updateInventoryItem = async (req, res) => {
       return res.status(404).json({ success: false, message: "Inventory item not found." });
     }
 
-    // Send low stock alert if updated stock is below minimum
-<<<<<<< HEAD
-    if (item.currentStock < item.minimumStock) {
-=======
+    // Send low stock alert if updated stock is at or below minimum
     if (item.currentStock <= item.minimumStock) {
->>>>>>> 1a512012f6af945a370c9e9129f3773ce078e50c
       await createStaffNotification({
         title: "⚠️ Low Stock Alert",
         message: `${item.name} stock is below minimum level. Current: ${item.currentStock} ${item.unit}, Minimum: ${item.minimumStock} ${item.unit}.`,
