@@ -145,7 +145,7 @@ const AddEmployee = () => {
           return setMessage({ type: "error", text: "Please enter a valid date of birth.",});
        }
       if (!isAdult(form.dob)) {
-        return setMessage({ type: "error", text: "Employee must be at least 18 years old.",});
+        return setMessage({ type: "error", text: "Employees must be at least 18 years old.",});
       }
     }
     if (step === 1) {
@@ -159,7 +159,7 @@ const AddEmployee = () => {
   if (!form.joiningDate) {
     return setMessage({
       type: "error",
-      text: "Joining Date is required.",
+      text: "Joining Date is required, Please put the joining date.",
     });
   }
 

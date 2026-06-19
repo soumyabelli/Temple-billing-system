@@ -8,7 +8,7 @@ import EmployeeTable from "../../../components/admin/employee/EmployeeTable";
 import { attendanceTrend, payrollTrend } from "./employeeData";
 import { getEmployees, getEmployee, deleteEmployee } from "../../../services/employeeService";
 
-const chartColors = ["#7c3aed", "#ec4899", "#38bdf8", "#f59e0b", "#10b981"];
+const chartColors = ["#7c3aed", "#f5449c", "#38bdf8", "#f59e0b", "#10b981"];
 
 const AllEmployees = () => {
   const navigate = useNavigate();
