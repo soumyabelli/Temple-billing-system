@@ -5,12 +5,8 @@ import { getPrasadamOrders } from "../../services/devoteeService";
 
 const API_BASE = "http://localhost:5000/api";
 
-<<<<<<< HEAD
-const INVENTORY_UNITS = ["Kg", "Liter", "Pack", "Pieces"];
-=======
 const INVENTORY_UNITS = ["Kg", "Liter", "Pack", "Pieces", "Box"];
 const INVENTORY_CATEGORIES = ["Pooja", "Abhisheka", "Prasadam", "Annadanam", "Maintenance", "Electrical", "Office", "Festival"];
->>>>>>> 1a512012f6af945a370c9e9129f3773ce078e50c
 
 const formatCurrency = (value) => `₹ ${Number(value || 0).toLocaleString()}`;
 
@@ -37,11 +33,7 @@ const EMPTY_ITEM_FORM = { name: "", unit: "Pack", currentStock: "", minimumStock
 // Low Stock Alert Banner
 // ─────────────────────────────────────────────
 const LowStockBanner = ({ items }) => {
-<<<<<<< HEAD
-  const lowItems = items.filter((i) => i.currentStock < i.minimumStock);
-=======
   const lowItems = items.filter((i) => i.currentStock <= i.minimumStock);
->>>>>>> 1a512012f6af945a370c9e9129f3773ce078e50c
   if (lowItems.length === 0) return null;
   return (
     <div style={{ background: "#fff7ed", border: "1px solid #fb923c", borderRadius: "12px", padding: "14px 18px", marginBottom: "16px" }}>
@@ -124,40 +116,16 @@ const ItemFormModal = ({ editItem, onClose, onSave }) => {
             </div>
             <div>
               <label style={{ fontSize: "13px", fontWeight: 600, color: "#475569", display: "block", marginBottom: "6px" }}>Category</label>
-<<<<<<< HEAD
-              <input
-                type="text"
-                value={form.category}
-                onChange={(e) => setForm((p) => ({ ...p, category: e.target.value }))}
-                placeholder="e.g. Pooja"
-                style={{ width: "100%", border: "1px solid #cbd5e1", borderRadius: "10px", padding: "9px 12px", fontSize: "14px" }}
-              />
-=======
               <select
                 value={form.category}
-                onChange={(e) =>
-                  setForm((p) => ({
-                    ...p,
-                    category: e.target.value,
-                  }))
-                }
-                style={{
-                  width: "100%",
-                  border: "1px solid #cbd5e1",
-                  borderRadius: "10px",
-                  padding: "9px 12px",
-                  fontSize: "14px",
-              }}
+                onChange={(e) => setForm((p) => ({ ...p, category: e.target.value }))}
+                style={{ width: "100%", border: "1px solid #cbd5e1", borderRadius: "10px", padding: "9px 12px", fontSize: "14px" }}
               >
-              <option value="">Select Category</option>
-
-                {INVENTORY_CATEGORIES.map((category) => (
-                <option key={category} value={category}>
-                  {category}
-                </option>
-              ))}
-            </select>
->>>>>>> 1a512012f6af945a370c9e9129f3773ce078e50c
+                <option value="">Select Category</option>
+                {INVENTORY_CATEGORIES.map((cat) => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
             </div>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
@@ -166,11 +134,7 @@ const ItemFormModal = ({ editItem, onClose, onSave }) => {
               <input
                 type="number"
                 min="0"
-<<<<<<< HEAD
-                step="0.01"
-=======
                 step="1"
->>>>>>> 1a512012f6af945a370c9e9129f3773ce078e50c
                 value={form.currentStock}
                 onChange={(e) => setForm((p) => ({ ...p, currentStock: e.target.value }))}
                 placeholder="0"
@@ -182,11 +146,7 @@ const ItemFormModal = ({ editItem, onClose, onSave }) => {
               <input
                 type="number"
                 min="0"
-<<<<<<< HEAD
-                step="0.01"
-=======
                 step="1"
->>>>>>> 1a512012f6af945a370c9e9129f3773ce078e50c
                 value={form.minimumStock}
                 onChange={(e) => setForm((p) => ({ ...p, minimumStock: e.target.value }))}
                 placeholder="0"
@@ -611,11 +571,7 @@ const InventoryManagement = () => {
                     <tr><td colSpan="7" className="px-4 py-6 text-center text-sm text-[#64748b]">No inventory items found. Click "+ Add Item" to get started.</td></tr>
                   ) : (
                     filteredItems.map((item) => {
-<<<<<<< HEAD
-                      const isLow = item.currentStock < item.minimumStock;
-=======
                       const isLow = item.currentStock <= item.minimumStock;
->>>>>>> 1a512012f6af945a370c9e9129f3773ce078e50c
                       return (
                         <tr key={item._id} className="border-b border-[#f1f5f9] hover:bg-[#f8fafc]">
                           <td className="px-4 py-4 font-semibold text-[#0f172a]">{item.name}</td>
