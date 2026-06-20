@@ -17,8 +17,8 @@ import { getAdminUsers } from "../../services/authService";
 import { getDevoteeBookings, getDevoteeDonations } from "../../services/devoteeService";
 
 const statCards = [
-  { title: "Total Revenue", amount: "Rs 2,45,680", trend: "12.3%", trendUp: true, icon: <FaRupeeSign />, accent: "bg-orange-100 text-orange-600" },
-  { title: "Daily Collection", amount: "Rs 48,650", trend: "8.2%", trendUp: true, icon: <FaDonate />, accent: "bg-green-100 text-green-600" },
+  { title: "Total Revenues", amount: "Rs 2,45,680", trend: "12.3%", trendUp: true, icon: <FaRupeeSign />, accent: "bg-orange-100 text-orange-600" },
+  { title: "Daily Collections", amount: "Rs 48,650", trend: "8.2%", trendUp: true, icon: <FaDonate />, accent: "bg-green-100 text-green-600" },
   { title: "Pooja Bookings", amount: "156", trend: "18%", trendUp: true, icon: <MdTempleBuddhist />, accent: "bg-violet-100 text-violet-600" },
   { title: "Total Donations", amount: "Rs 75,230", trend: "15.4%", trendUp: true, icon: <FaDonate />, accent: "bg-amber-100 text-amber-600" },
   { title: "Prasadam Sales", amount: "Rs 21,430", trend: "7.1%", trendUp: true, icon: <FaBoxes />, accent: "bg-sky-100 text-sky-600" },
@@ -92,7 +92,7 @@ const AdminDashboard = () => {
         setBookings(bookingsRes.bookings || []);
         setDonations(donationsRes.donations || []);
       } catch (error) {
-        console.warn("Unable to load admin devotee data", error);
+        console.warn("Unable to load admin devotee data . please try again", error);
       }
     };
     if (token) load();

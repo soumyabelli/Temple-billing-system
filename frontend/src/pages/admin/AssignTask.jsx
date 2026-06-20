@@ -338,7 +338,7 @@ const AssignTask = () => {
                 <textarea
                   value={form.description}
                   onChange={updateField("description")}
-                  placeholder="Enter task description"
+                  placeholder="Enter task description here"
                   rows={4}
                   className="min-h-24 flex-1 resize-none px-4 py-3 text-sm outline-none"
                 />
