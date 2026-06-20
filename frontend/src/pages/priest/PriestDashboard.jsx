@@ -34,6 +34,12 @@ import {
 } from "../../services/priestService";
 import AssignedPoojas from "./AssignedPoojas";
 import SevaSchedule from "./SevaSchedule";
+import CompletedServices from "./CompletedServices";
+import SpecialDuties from "./SpecialDuties";
+import FestivalDuties from "./FestivalDuties";
+import PriestNotifications from "./PriestNotifications";
+import PriestProfile from "./PriestProfile";
+import PriestSettings from "./PriestSettings";
 
 const API_BASE = "http://localhost:5000/api";
 
@@ -595,77 +601,309 @@ const PriestDashboard = () => {
     </div>
   );
 
-  // 4. COMPLETED SERVICES VIEW
+  // 4. COMPLETED SERVICES VIEW — fully connected to API
   const CompletedServicesView = ({ darkMode }) => {
+    const [data, setData] = useState([]);
+    const [stats, setStats] = useState({ completedToday: 0, completedThisWeek: 0, completedThisMonth: 0, avgDuration: "0m" });
+    const [loading, setLoading] = useState(true);
+    const [fetchError, setFetchError] = useState("");
     const [search, setSearch] = useState("");
+    const [filter, setFilter] = useState("all");
+    const [sort, setSort] = useState("latest");
+    const [startDate, setStartDate] = useState("");
+    const [endDate, setEndDate] = useState("");
+    const [page, setPage] = useState(1);
+    const PAGE_SIZE = 10;
 
-    const filtered = completedServices.filter((service) =>
-      service.pooja.toLowerCase().includes(search.toLowerCase()) ||
-      service.devotee.toLowerCase().includes(search.toLowerCase())
-    );
+    const fetchCompleted = async () => {
+      try {
+        setLoading(true);
+        setFetchError("");
+        const token = localStorage.getItem("token");
+        const params = new URLSearchParams({ sort });
+        if (search.trim()) params.append("search", search.trim());
+        if (filter !== "all") params.append("filter", filter);
+        if (filter === "custom" && startDate && endDate) {
+          params.append("startDate", startDate);
+          params.append("endDate", endDate);
+        }
+        const res = await axios.get(`${API_BASE}/priest/completed-services?${params}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setData(res.data.services || []);
+        if (res.data.stats) setStats(res.data.stats);
+      } catch (err) {
+        setFetchError(err.response?.data?.message || "Failed to load completed services.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    useEffect(() => {
+      fetchCompleted();
+      setPage(1);
+    }, [filter, sort, startDate, endDate]);
+
+    const handleSearch = (e) => {
+      e.preventDefault();
+      fetchCompleted();
+      setPage(1);
+    };
+
+    const totalPages = Math.ceil(data.length / PAGE_SIZE);
+    const paged = data.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+    const card = darkMode ? "bg-[#1f2937] border-slate-700" : "bg-white border-[#ece8e1]";
+    const txt  = darkMode ? "text-slate-100" : "text-[#1d1b19]";
+    const sub  = darkMode ? "text-slate-400" : "text-slate-500";
+    const row  = darkMode ? "hover:bg-slate-800/40 border-slate-700" : "hover:bg-slate-50/50 border-slate-100";
+    const inp  = darkMode ? "bg-slate-800 border-slate-700 text-slate-100 placeholder-slate-500" : "bg-white border-slate-200 text-slate-800";
+
+    const FILTERS = [
+      { id: "all",   label: "All Time" },
+      { id: "today", label: "Today" },
+      { id: "week",  label: "This Week" },
+      { id: "month", label: "This Month" },
+      { id: "custom",label: "Custom Range" },
+    ];
+
+    const statCards = [
+      { label: "Completed Today",      value: stats.completedToday,    color: "bg-emerald-50 border-emerald-100 text-emerald-700", icon: "✅" },
+      { label: "Completed This Week",  value: stats.completedThisWeek,  color: "bg-blue-50 border-blue-100 text-blue-700",          icon: "📅" },
+      { label: "Completed This Month", value: stats.completedThisMonth, color: "bg-purple-50 border-purple-100 text-purple-700",    icon: "🗓️" },
+      { label: "Avg Completion Time",  value: stats.avgDuration,        color: "bg-amber-50 border-amber-100 text-amber-700",       icon: "⏱️" },
+    ];
 
     return (
       <div className="space-y-6 fade-in">
-        <div className={`p-6 rounded-2xl border transition-colors ${darkMode ? "bg-[#1f2937] border-slate-700 text-slate-100" : "bg-white border-[#ece8e1]"
-          }`}>
+
+        {/* ── Header ── */}
+        <div className={`p-6 rounded-2xl border transition-colors ${card} ${txt}`}>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <h2 className="text-2xl font-extrabold flex items-center gap-2">
-                <FaCheckCircle className="text-emerald-500" /> Completed Services Logs
+                <FaCheckCircle className="text-emerald-500" /> Completed Services
               </h2>
-              <p className={`text-sm mt-1 ${darkMode ? "text-slate-300" : "text-slate-600"}`}>
+              <p className={`text-sm mt-1 ${sub}`}>
                 Historical log of all pooja and seva bookings completed by you.
               </p>
             </div>
-
-            <div className={`relative px-4 py-2 border rounded-xl flex items-center gap-2 max-w-sm ${darkMode ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"
-              }`}>
-              <FaSearch className="text-slate-400" />
-              <input
-                type="text"
-                placeholder="Search by pooja or devotee..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="bg-transparent outline-none text-sm w-full"
-              />
-            </div>
+            <button
+              onClick={fetchCompleted}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500 text-white text-sm font-bold hover:bg-emerald-600 transition-colors shrink-0"
+            >
+              🔄 Refresh
+            </button>
           </div>
         </div>
 
-        <div className={`rounded-2xl p-6 border transition-colors ${darkMode ? "bg-[#1f2937] border-slate-700 text-slate-100" : "bg-white border-[#ece8e1]"
-          }`}>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className={`border-b ${darkMode ? "border-slate-700" : "border-slate-200"}`}>
-                  <th className={`text-left pb-3 font-semibold ${darkMode ? "text-slate-400" : "text-slate-500"}`}>ID</th>
-                  <th className={`text-left pb-3 font-semibold ${darkMode ? "text-slate-400" : "text-slate-500"}`}>Date & Time</th>
-                  <th className={`text-left pb-3 font-semibold ${darkMode ? "text-slate-400" : "text-slate-500"}`}>Pooja Name</th>
-                  <th className={`text-left pb-3 font-semibold ${darkMode ? "text-slate-400" : "text-slate-500"}`}>Devotee</th>
-                  <th className={`text-center pb-3 font-semibold ${darkMode ? "text-slate-400" : "text-slate-500"}`}>Record status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {filtered.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
-                    <td className={`py-3.5 px-2 font-medium ${darkMode ? "text-slate-400" : "text-slate-500"}`}>#PJS-{item.id}0{item.id}</td>
-                    <td className={`py-3.5 px-2 ${darkMode ? "text-slate-300" : "text-slate-600"}`}>{item.time}</td>
-                    <td className={`py-3.5 px-2 font-bold ${darkMode ? "text-slate-200" : "text-slate-800"}`}>{item.pooja}</td>
-                    <td className={`py-3.5 px-2 ${darkMode ? "text-slate-300" : "text-slate-700"}`}>{item.devotee}</td>
-                    <td className="py-3.5 px-2 text-center">
-                      <span className="px-2.5 py-1 rounded-full text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-100">
-                        Verified & Archived
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {/* ── Stats Cards ── */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {statCards.map((s) => (
+            <div key={s.label} className={`rounded-2xl border p-5 ${card}`}>
+              <div className={`inline-flex items-center justify-center w-10 h-10 rounded-xl border text-xl mb-3 ${s.color}`}>
+                {s.icon}
+              </div>
+              <p className={`text-2xl font-extrabold ${txt}`}>{s.value}</p>
+              <p className={`text-xs font-semibold mt-1 ${sub}`}>{s.label}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* ── Search + Filters + Sort ── */}
+        <div className={`rounded-2xl border p-5 ${card} space-y-4`}>
+          {/* Search */}
+          <form onSubmit={handleSearch} className="flex gap-2">
+            <div className={`flex-1 flex items-center gap-2 px-4 py-2 rounded-xl border ${inp}`}>
+              <FaSearch className="text-slate-400 shrink-0" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by Booking ID, Devotee Name, or Pooja Name…"
+                className="bg-transparent outline-none text-sm w-full"
+              />
+            </div>
+            <button
+              type="submit"
+              className="px-5 py-2 rounded-xl bg-orange-500 text-white text-sm font-bold hover:bg-orange-600 transition-colors"
+            >
+              Search
+            </button>
+          </form>
+
+          {/* Filter buttons */}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className={`text-xs font-semibold ${sub} mr-1`}>Filter:</span>
+            {FILTERS.map((f) => (
+              <button
+                key={f.id}
+                onClick={() => { setFilter(f.id); setPage(1); }}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                  filter === f.id
+                    ? "bg-orange-500 text-white shadow-sm"
+                    : darkMode
+                      ? "bg-slate-800 text-slate-300 hover:bg-slate-700"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+
+            {/* Sort toggle */}
+            <div className="ml-auto flex items-center gap-2">
+              <span className={`text-xs font-semibold ${sub}`}>Sort:</span>
+              <button
+                onClick={() => setSort(sort === "latest" ? "oldest" : "latest")}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all border ${
+                  darkMode ? "bg-slate-800 border-slate-700 text-slate-300" : "bg-white border-slate-200 text-slate-700"
+                }`}
+              >
+                {sort === "latest" ? "⬇️ Latest First" : "⬆️ Oldest First"}
+              </button>
+            </div>
           </div>
+
+          {/* Custom date range */}
+          {filter === "custom" && (
+            <div className="flex flex-wrap gap-3 items-center pt-1">
+              <div className="flex items-center gap-2">
+                <label className={`text-xs font-semibold ${sub}`}>From:</label>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className={`text-sm rounded-xl border px-3 py-1.5 outline-none ${inp}`}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <label className={`text-xs font-semibold ${sub}`}>To:</label>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className={`text-sm rounded-xl border px-3 py-1.5 outline-none ${inp}`}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ── Table ── */}
+        <div className={`rounded-2xl border transition-colors ${card}`}>
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-16 gap-3">
+              <div className="w-10 h-10 border-4 border-orange-400 border-t-transparent rounded-full animate-spin" />
+              <p className={`text-sm ${sub}`}>Loading completed services…</p>
+            </div>
+          ) : fetchError ? (
+            <div className="flex flex-col items-center justify-center py-16 gap-3">
+              <p className="text-rose-500 font-semibold text-sm">{fetchError}</p>
+              <button
+                onClick={fetchCompleted}
+                className="px-4 py-2 rounded-xl bg-orange-500 text-white text-sm font-bold hover:bg-orange-600"
+              >
+                Retry
+              </button>
+            </div>
+          ) : data.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 gap-2">
+              <span className="text-5xl">🏛️</span>
+              <p className={`font-bold ${txt}`}>No completed services found</p>
+              <p className={`text-sm ${sub}`}>Try adjusting your search or filter.</p>
+            </div>
+          ) : (
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm min-w-[900px]">
+                  <thead>
+                    <tr className={`border-b ${darkMode ? "border-slate-700 bg-slate-800/50" : "border-slate-200 bg-slate-50"}`}>
+                      {["Booking ID", "Date", "Pooja Name", "Devotee Name", "Mobile", "Started At", "Completed At", "Duration", "Status"].map((h) => (
+                        <th key={h} className={`text-left px-4 py-3 text-xs font-bold uppercase tracking-wider ${sub}`}>
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className={`divide-y ${darkMode ? "divide-slate-800" : "divide-slate-100"}`}>
+                    {paged.map((item) => (
+                      <tr key={String(item.bookingId)} className={`transition-colors ${row}`}>
+                        <td className={`px-4 py-3.5 font-mono text-xs font-bold ${darkMode ? "text-slate-300" : "text-slate-600"}`}>
+                          #{String(item.bookingId).slice(-6).toUpperCase()}
+                        </td>
+                        <td className={`px-4 py-3.5 ${darkMode ? "text-slate-300" : "text-slate-700"}`}>{item.date}</td>
+                        <td className={`px-4 py-3.5 font-semibold ${darkMode ? "text-slate-200" : "text-slate-800"}`}>{item.poojaName}</td>
+                        <td className={`px-4 py-3.5 ${darkMode ? "text-slate-300" : "text-slate-700"}`}>{item.devoteeName}</td>
+                        <td className={`px-4 py-3.5 ${darkMode ? "text-slate-400" : "text-slate-500"}`}>{item.devoteeMobile}</td>
+                        <td className={`px-4 py-3.5 text-xs ${darkMode ? "text-slate-400" : "text-slate-500"}`}>{item.startedAt}</td>
+                        <td className={`px-4 py-3.5 text-xs ${darkMode ? "text-slate-400" : "text-slate-500"}`}>{item.completedAt}</td>
+                        <td className="px-4 py-3.5">
+                          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-100">
+                            {item.duration}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <span className="px-2.5 py-1 rounded-full text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-100">
+                            ✓ Completed
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* ── Pagination ── */}
+              {totalPages > 1 && (
+                <div className={`flex items-center justify-between px-5 py-4 border-t ${darkMode ? "border-slate-700" : "border-slate-100"}`}>
+                  <p className={`text-xs ${sub}`}>
+                    Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, data.length)} of {data.length} records
+                  </p>
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      disabled={page === 1}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors disabled:opacity-40 ${
+                        darkMode ? "bg-slate-800 text-slate-300 hover:bg-slate-700" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                      }`}
+                    >
+                      ← Prev
+                    </button>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                      <button
+                        key={p}
+                        onClick={() => setPage(p)}
+                        className={`w-8 h-8 rounded-lg text-xs font-bold transition-colors ${
+                          p === page
+                            ? "bg-orange-500 text-white"
+                            : darkMode
+                              ? "bg-slate-800 text-slate-300 hover:bg-slate-700"
+                              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={page === totalPages}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors disabled:opacity-40 ${
+                        darkMode ? "bg-slate-800 text-slate-300 hover:bg-slate-700" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                      }`}
+                    >
+                      Next →
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
     );
   };
+
 
   // 5. SPECIAL DUTIES VIEW
   const SpecialDutiesView = ({ darkMode }) => (
@@ -985,17 +1223,17 @@ const PriestDashboard = () => {
           case "Seva Schedule":
             return <SevaSchedule darkMode={darkMode} />;
           case "Completed Services":
-            return <CompletedServicesView darkMode={darkMode} />;
+            return <CompletedServices darkMode={darkMode} />;
           case "Special Duties":
-            return <SpecialDutiesView darkMode={darkMode} />;
+            return <SpecialDuties darkMode={darkMode} />;
           case "Festival Duties":
-            return <FestivalDutiesView darkMode={darkMode} />;
+            return <FestivalDuties darkMode={darkMode} />;
           case "Notifications":
-            return <NotificationsView darkMode={darkMode} />;
+            return <PriestNotifications darkMode={darkMode} />;
           case "Profile":
-            return <ProfileView darkMode={darkMode} />;
+            return <PriestProfile darkMode={darkMode} />;
           case "Settings":
-            return <SettingsView darkMode={darkMode} />;
+            return <PriestSettings darkMode={darkMode} />;
           default:
             return <DashboardView darkMode={darkMode} />;
         }

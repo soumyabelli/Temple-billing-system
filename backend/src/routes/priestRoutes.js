@@ -12,6 +12,21 @@ const {
   getSevaSchedule,
   getSevaInstructions,
   getMaterialChecklist,
+  getCompletedServices,
+  getSpecialDuties,
+  acceptDuty,
+  rejectDuty,
+  completeDuty,
+  getFestivalDuties,
+  markFestivalDutyAttendance,
+  completeFestivalDuty,
+  getNotifications,
+  readNotification,
+  readAllNotifications,
+  getProfile,
+  updateProfile,
+  getSettings,
+  updateSettings,
 } = require("../controllers/priestController");
 const { authenticate, authorizeRoles } = require("../middleware/authMiddleware");
 
@@ -37,5 +52,32 @@ router.put("/pending-pooja/:id", pendingPooja);
 router.get("/seva-schedule", getSevaSchedule);
 router.get("/seva-instructions", getSevaInstructions);
 router.get("/material-checklist", getMaterialChecklist);
+
+// Module 3 Endpoints
+router.get("/completed-services", getCompletedServices);
+
+// Module 4 Endpoints
+router.get("/special-duties", getSpecialDuties);
+router.put("/accept-duty/:id", acceptDuty);
+router.put("/reject-duty/:id", rejectDuty);
+router.put("/complete-duty/:id", completeDuty);
+
+// Module 5 Endpoints
+router.get("/festival-duties", getFestivalDuties);
+router.put("/festival-duty-attendance/:id", markFestivalDutyAttendance);
+router.put("/festival-duty-complete/:id", completeFestivalDuty);
+
+// Module 6 Endpoints
+router.get("/notifications", getNotifications);
+router.put("/notifications/read/:id", readNotification);
+router.put("/notifications/read-all", readAllNotifications);
+
+// Module 7 Endpoints
+router.get("/profile", getProfile);
+router.put("/profile", updateProfile);
+
+// Module 8 Endpoints
+router.get("/settings", getSettings);
+router.put("/settings", updateSettings);
 
 module.exports = router;

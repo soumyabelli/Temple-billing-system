@@ -112,6 +112,28 @@ const employeeSchema = new mongoose.Schema({
     default: "Active",
   },
 
+  experience: {
+    type: String,
+  },
+
+  vedaShakha: {
+    type: String,
+  },
+
+  specializations: {
+    type: [String],
+    default: [],
+  },
+
+  languages: {
+    type: [String],
+    default: [],
+  },
+
+  certification: {
+    type: String,
+  },
+
   createdAt: {
     type: Date,
     default: Date.now,

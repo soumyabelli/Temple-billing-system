@@ -634,8 +634,7 @@ const Attendance = () => {
         </div>
       </SectionCard>
 
-      <div className="grid gap-5 xl:grid-cols-[1.65fr_0.95fr]">
-        <div className="space-y-5">
+            <div className="space-y-6">
         <SectionCard
           title="Monthly Attendance Records"
           subtitle={selectedEmployee ? `Monthly attendance for ${selectedEmployee.name}.` : "Monthly attendance for the selected employee."}
@@ -704,32 +703,7 @@ const Attendance = () => {
             </div>
           </SectionCard>
 
-          <SectionCard title={`Monthly Overview (${monthLabel})`} subtitle="Summary of staff attendance for the selected month.">
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {summaryCards.slice(0, 6).map((card) => (
-                <div key={card.label || card.title} className="rounded-[22px] border border-slate-200 bg-white p-4">
-                  <p className="text-sm text-slate-500">{card.label || card.title}</p>
-                  <p className="mt-2 text-3xl font-semibold text-slate-900">{card.value}</p>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-5">
-              <div className="mb-3 flex items-center justify-between text-sm font-semibold text-slate-600">
-                <span>Attendance Progress</span>
-                <span>{summary.attendancePercent || 0}%</span>
-              </div>
-              <div className="h-3 overflow-hidden rounded-full bg-slate-200">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-lime-500"
-                  style={{ width: `${summary.attendancePercent || 0}%` }}
-                />
-              </div>
-            </div>
-          </SectionCard>
-        </div>
-
-        <div className="space-y-5">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
           <SectionCard title="Attendance Trend" subtitle="Daily attendance percentage across the selected month." className="overflow-hidden">
             <div className="h-[280px]">
               <ResponsiveContainer width="100%" height="100%">
@@ -759,7 +733,9 @@ const Attendance = () => {
               </ResponsiveContainer>
             </div>
           </SectionCard>
+        </div>
 
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
           <SectionCard title="Attendance Calendar" subtitle="Day-wise status for the selected employee or month view.">
             <div className="grid grid-cols-7 gap-2 text-center text-xs font-semibold text-slate-500">
               {calendarDays.slice(0, 7).map((day, index) => (
@@ -813,8 +789,33 @@ const Attendance = () => {
               <p className="mt-1"><span className="font-semibold text-slate-900">Attendance:</span> {monthlyEmployeeSummary.attendancePercent}%</p>
             </div>
           </SectionCard>
+        </div>
 
-          {editingRecord ? (
+        <SectionCard title={`Monthly Overview (${monthLabel})`} subtitle="Summary of staff attendance for the selected month.">
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {summaryCards.slice(0, 6).map((card) => (
+                <div key={card.label || card.title} className="rounded-[22px] border border-slate-200 bg-white p-4">
+                  <p className="text-sm text-slate-500">{card.label || card.title}</p>
+                  <p className="mt-2 text-3xl font-semibold text-slate-900">{card.value}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-5">
+              <div className="mb-3 flex items-center justify-between text-sm font-semibold text-slate-600">
+                <span>Attendance Progress</span>
+                <span>{summary.attendancePercent || 0}%</span>
+              </div>
+              <div className="h-3 overflow-hidden rounded-full bg-slate-200">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-lime-500"
+                  style={{ width: `${summary.attendancePercent || 0}%` }}
+                />
+              </div>
+            </div>
+          </SectionCard>
+
+        {editingRecord ? (
             <SectionCard title={`Manual Correction - ${correctionTargetName}`} subtitle="Update check-in, check-out, shift, or status." className="overflow-hidden">
               <div className="grid gap-3 md:grid-cols-2">
                 <label className="flex flex-col gap-2 text-sm text-slate-600">
@@ -891,6 +892,7 @@ const Attendance = () => {
             </SectionCard>
           ) : null}
 
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
           <SectionCard title="Today's Duties" subtitle="Assigned duties for today from the tasks module.">
             <div className="space-y-3">
               {todayDuty.length === 0 ? (
@@ -940,7 +942,6 @@ const Attendance = () => {
           </SectionCard>
         </div>
       </div>
-
     </div>
   );
 };

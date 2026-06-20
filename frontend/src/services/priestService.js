@@ -227,3 +227,159 @@ export const getMaterialChecklist = async () => {
     throw error;
   }
 };
+
+// --- MODULE 3: COMPLETED SERVICES ---
+export const getCompletedServicesFilter = async (params = {}) => {
+  try {
+    const response = await axios.get(`${API_BASE}/priest/completed-services`, {
+      params,
+      headers: getAuthHeaders(),
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching completed services:", error);
+    throw error;
+  }
+};
+
+// --- MODULE 4: SPECIAL DUTIES ---
+export const getSpecialDuties = async () => {
+  try {
+    const response = await axios.get(`${API_BASE}/priest/special-duties`, {
+      headers: getAuthHeaders(),
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching special duties:", error);
+    throw error;
+  }
+};
+
+export const acceptSpecialDuty = async (id) => {
+  try {
+    const response = await axios.put(`${API_BASE}/priest/accept-duty/${id}`, {}, { headers: getAuthHeaders() });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const rejectSpecialDuty = async (id, rejectionReason) => {
+  try {
+    const response = await axios.put(`${API_BASE}/priest/reject-duty/${id}`, { rejectionReason }, { headers: getAuthHeaders() });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const completeSpecialDuty = async (id) => {
+  try {
+    const response = await axios.put(`${API_BASE}/priest/complete-duty/${id}`, {}, { headers: getAuthHeaders() });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// --- MODULE 5: FESTIVAL DUTIES ---
+export const getFestivalDuties = async () => {
+  try {
+    const response = await axios.get(`${API_BASE}/priest/festival-duties`, {
+      headers: getAuthHeaders(),
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const markFestivalDutyAttendance = async (id) => {
+  try {
+    const response = await axios.put(`${API_BASE}/priest/festival-duty-attendance/${id}`, {}, { headers: getAuthHeaders() });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const completeFestivalDuty = async (id) => {
+  try {
+    const response = await axios.put(`${API_BASE}/priest/festival-duty-complete/${id}`, {}, { headers: getAuthHeaders() });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// --- MODULE 6: NOTIFICATIONS ---
+export const getNotifications = async () => {
+  try {
+    const response = await axios.get(`${API_BASE}/priest/notifications`, {
+      headers: getAuthHeaders(),
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const readNotification = async (id) => {
+  try {
+    const response = await axios.put(`${API_BASE}/priest/notifications/read/${id}`, {}, { headers: getAuthHeaders() });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const readAllNotifications = async () => {
+  try {
+    const response = await axios.put(`${API_BASE}/priest/notifications/read-all`, {}, { headers: getAuthHeaders() });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// --- MODULE 7: PROFILE ---
+export const getProfile = async () => {
+  try {
+    const response = await axios.get(`${API_BASE}/priest/profile`, {
+      headers: getAuthHeaders(),
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const updateProfile = async (profileData) => {
+  try {
+    const response = await axios.put(`${API_BASE}/priest/profile`, profileData, { headers: getAuthHeaders() });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// --- MODULE 8: SETTINGS ---
+export const getSettings = async () => {
+  try {
+    const response = await axios.get(`${API_BASE}/priest/settings`, {
+      headers: getAuthHeaders(),
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const updateSettings = async (settingsData) => {
+  try {
+    const response = await axios.put(`${API_BASE}/priest/settings`, settingsData, { headers: getAuthHeaders() });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};

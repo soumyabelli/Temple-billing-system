@@ -388,8 +388,8 @@ const StaffDashboard = () => {
         const matchesStatus = filteredStatus === "all" || task.status === filteredStatus;
         const matchesSearch = searchQuery
           ? `${task.title || task.duty || ""} ${task.area || task.description || ""}`
-              .toLowerCase()
-              .includes(searchQuery.toLowerCase())
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase())
           : true;
         return matchesStatus && matchesSearch;
       });
@@ -1511,7 +1511,7 @@ const StaffDashboard = () => {
                 </div>
                 <form className="leave-form" onSubmit={handleInventorySubmit}>
                   <div>
-                    <label htmlFor="inv-itemName">Item Name <span style={{color:"#ef4444"}}>*</span></label>
+                    <label htmlFor="inv-itemName">Item Name <span style={{ color: "#ef4444" }}>*</span></label>
                     <select
                       id="inv-itemName"
                       value={inventoryForm.itemName}
@@ -1532,7 +1532,7 @@ const StaffDashboard = () => {
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                     <div>
-                      <label htmlFor="inv-quantity">Quantity <span style={{color:"#ef4444"}}>*</span></label>
+                      <label htmlFor="inv-quantity">Quantity <span style={{ color: "#ef4444" }}>*</span></label>
                       <input
                         id="inv-quantity"
                         type="number"
@@ -1544,7 +1544,7 @@ const StaffDashboard = () => {
                       />
                     </div>
                     <div>
-                      <label htmlFor="inv-unit">Unit <span style={{color:"#ef4444"}}>*</span></label>
+                      <label htmlFor="inv-unit">Unit <span style={{ color: "#ef4444" }}>*</span></label>
                       <select
                         id="inv-unit"
                         value={inventoryForm.unit}
@@ -1558,7 +1558,7 @@ const StaffDashboard = () => {
                     </div>
                   </div>
                   <div>
-                    <label htmlFor="inv-reason">Reason <span style={{color:"#ef4444"}}>*</span></label>
+                    <label htmlFor="inv-reason">Reason <span style={{ color: "#ef4444" }}>*</span></label>
                     <textarea
                       id="inv-reason"
                       rows="4"

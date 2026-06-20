@@ -5,7 +5,8 @@ const User = require("../models/User");
 const mongoose = require("mongoose");
 const InventoryItem = require("../models/InventoryItem");
 const Instruction = require("../models/Instruction");
-
+const Employee = require("../models/Employee");
+const PriestSetting = require("../models/PriestSetting");
 // Helper to check if a booking date is today
 const isDateToday = (dateStr) => {
   try {
@@ -593,3 +594,505 @@ exports.getMaterialChecklist = async (req, res) => {
     return res.status(500).json({ message: "Failed to load material checklist" });
   }
 };
+
+// ─── Helper: compute duration string from two Date objects ────────────────────
+const computeDuration = (startedAt, completedAt) => {
+  if (!startedAt || !completedAt) return "N/A";
+  try {
+    const diffMs = new Date(completedAt) - new Date(startedAt);
+    if (diffMs <= 0) return "N/A";
+    const totalMins = Math.floor(diffMs / 60000);
+    const hours = Math.floor(totalMins / 60);
+    const mins  = totalMins % 60;
+    if (hours > 0) return `${hours}h ${mins}m`;
+    return `${mins}m`;
+  } catch {
+    return "N/A";
+  }
+};
+
+// GET /api/priest/completed-services
+exports.getCompletedServices = async (req, res) => {
+  try {
+    const priestId = req.user.id;
+    const { search, filter, startDate, endDate, sort } = req.query;
+
+    const query = {
+      assignedPriest: priestId,
+      status: "Completed",
+    };
+
+    const now  = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    if (filter === "today") {
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      query.completedAt = { $gte: today, $lt: tomorrow };
+    } else if (filter === "week") {
+      const weekStart = new Date(today);
+      weekStart.setDate(today.getDate() - today.getDay());
+      query.completedAt = { $gte: weekStart };
+    } else if (filter === "month") {
+      const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+      query.completedAt = { $gte: monthStart };
+    } else if (filter === "custom" && startDate && endDate) {
+      const rangeStart = new Date(startDate);
+      const rangeEnd   = new Date(endDate);
+      rangeEnd.setHours(23, 59, 59, 999);
+      query.completedAt = { $gte: rangeStart, $lte: rangeEnd };
+    }
+
+    if (search && search.trim() !== "") {
+      const rx = { $regex: search.trim(), $options: "i" };
+      const orConditions = [
+        { devoteeName: rx },
+        { service: rx },
+      ];
+      if (mongoose.Types.ObjectId.isValid(search.trim())) {
+        orConditions.push({ _id: search.trim() });
+      }
+      query.$or = orConditions;
+    }
+
+    const sortOrder = sort === "oldest" ? 1 : -1;
+    const bookings = await Booking.find(query).sort({ completedAt: sortOrder, createdAt: sortOrder });
+
+    const formatted = bookings.map(b => ({
+      bookingId: b._id,
+      poojaName:    b.service || "N/A",
+      devoteeName:  b.devoteeName || "N/A",
+      devoteeMobile: b.devoteePhone || b.contactNumber || "N/A",
+      date: b.datetime ? b.datetime.split("T")[0] : (b.createdAt ? b.createdAt.toISOString().split("T")[0] : "N/A"),
+      startedAt:   b.startedAt  ? formatDateTime(b.startedAt)  : "N/A",
+      completedAt: b.completedAt ? formatDateTime(b.completedAt) : "N/A",
+      duration:    computeDuration(b.startedAt, b.completedAt),
+      status: "Completed",
+    }));
+
+    const allCompleted = await Booking.find({ assignedPriest: priestId, status: "Completed" });
+
+    const tomorrow   = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
+    const weekStart  = new Date(today); weekStart.setDate(today.getDate() - today.getDay());
+    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+
+    const completedToday = allCompleted.filter(b =>
+      b.completedAt && new Date(b.completedAt) >= today && new Date(b.completedAt) < tomorrow
+    ).length;
+
+    const completedThisWeek = allCompleted.filter(b =>
+      b.completedAt && new Date(b.completedAt) >= weekStart
+    ).length;
+
+    const completedThisMonth = allCompleted.filter(b =>
+      b.completedAt && new Date(b.completedAt) >= monthStart
+    ).length;
+
+    const durationsMs = allCompleted
+      .filter(b => b.startedAt && b.completedAt)
+      .map(b => new Date(b.completedAt) - new Date(b.startedAt))
+      .filter(d => d > 0);
+
+    const avgMins = durationsMs.length
+      ? Math.round(durationsMs.reduce((a, b) => a + b, 0) / durationsMs.length / 60000)
+      : 0;
+    const avgDurationStr = avgMins >= 60
+      ? `${Math.floor(avgMins / 60)}h ${avgMins % 60}m`
+      : `${avgMins}m`;
+
+    return res.status(200).json({
+      services: formatted,
+      total: formatted.length,
+      stats: {
+        completedToday,
+        completedThisWeek,
+        completedThisMonth,
+        avgDuration: avgDurationStr,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching completed services:", error);
+    return res.status(500).json({ message: "Failed to load completed services" });
+  }
+};
+
+// MODULE 4: SPECIAL DUTIES
+
+exports.getSpecialDuties = async (req, res) => {
+  try {
+    const priestId = req.user.id;
+    const user = await User.findById(priestId);
+    
+    const duties = await Task.find({
+      $or: [{ staffId: priestId }, { staffEmail: user?.email }],
+      assignmentType: { $in: ["Special Duty", "Duty & Shift"] },
+    }).sort({ createdAt: -1 });
+
+    const formatted = duties.map(d => ({
+      id: d._id,
+      title: d.dutyName || d.duty || d.title,
+      description: d.description || d.notes || "",
+      assignedPriest: d.staffName,
+      assignedBy: d.assignedBy,
+      date: d.dateKey || (d.dueDate ? d.dueDate.split("T")[0] : ""),
+      startTime: d.startTime || (d.time ? d.time.split(" - ")[0] : ""),
+      endTime: d.endTime || (d.time && d.time.includes(" - ") ? d.time.split(" - ")[1] : ""),
+      compensation: d.compensation || "Standard",
+      priority: d.priority || "Medium",
+      status: d.status,
+    }));
+
+    return res.status(200).json(formatted);
+  } catch (error) {
+    console.error("Error fetching special duties:", error);
+    return res.status(500).json({ message: "Failed to load special duties" });
+  }
+};
+
+exports.acceptDuty = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const priestId = req.user.id;
+    const user = await User.findById(priestId);
+
+    const task = await Task.findOne({ _id: id, $or: [{ staffId: priestId }, { staffEmail: user?.email }] });
+    if (!task) return res.status(404).json({ message: "Duty not found" });
+
+    task.status = "Accepted";
+    task.acceptedAt = new Date();
+    await task.save();
+
+    return res.status(200).json({ message: "Duty accepted", task });
+  } catch (error) {
+    console.error("Error accepting duty:", error);
+    return res.status(500).json({ message: "Failed to accept duty" });
+  }
+};
+
+exports.rejectDuty = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { rejectionReason } = req.body;
+    const priestId = req.user.id;
+    const user = await User.findById(priestId);
+
+    const task = await Task.findOne({ _id: id, $or: [{ staffId: priestId }, { staffEmail: user?.email }] });
+    if (!task) return res.status(404).json({ message: "Duty not found" });
+
+    task.status = "Rejected";
+    task.rejectedAt = new Date();
+    task.rejectionReason = rejectionReason;
+    await task.save();
+
+    return res.status(200).json({ message: "Duty rejected", task });
+  } catch (error) {
+    console.error("Error rejecting duty:", error);
+    return res.status(500).json({ message: "Failed to reject duty" });
+  }
+};
+
+exports.completeDuty = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const priestId = req.user.id;
+    const user = await User.findById(priestId);
+
+    const task = await Task.findOne({ _id: id, $or: [{ staffId: priestId }, { staffEmail: user?.email }] });
+    if (!task) return res.status(404).json({ message: "Duty not found" });
+
+    task.status = "Completed";
+    task.completedAt = new Date();
+    await task.save();
+
+    return res.status(200).json({ message: "Duty completed", task });
+  } catch (error) {
+    console.error("Error completing duty:", error);
+    return res.status(500).json({ message: "Failed to complete duty" });
+  }
+};
+
+// MODULE 5: FESTIVAL DUTIES
+
+exports.getFestivalDuties = async (req, res) => {
+  try {
+    const priestId = req.user.id;
+    const user = await User.findById(priestId);
+    
+    const duties = await Task.find({
+      $or: [{ staffId: priestId }, { staffEmail: user?.email }],
+      assignmentType: "Festival Duty",
+    }).sort({ createdAt: -1 });
+
+    const formatted = duties.map(d => ({
+      id: d._id,
+      festivalName: d.dutyName || d.duty || d.title,
+      role: d.role || "Priest",
+      description: d.description || d.notes || "",
+      date: d.dateKey || (d.dueDate ? d.dueDate.split("T")[0] : ""),
+      location: d.area || d.dutyArea || "Main Temple",
+      startTime: d.startTime || (d.time ? d.time.split(" - ")[0] : ""),
+      endTime: d.endTime || (d.time && d.time.includes(" - ") ? d.time.split(" - ")[1] : ""),
+      status: d.status,
+      attendanceStatus: d.attendanceStatus,
+    }));
+
+    return res.status(200).json(formatted);
+  } catch (error) {
+    console.error("Error fetching festival duties:", error);
+    return res.status(500).json({ message: "Failed to load festival duties" });
+  }
+};
+
+exports.markFestivalDutyAttendance = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const priestId = req.user.id;
+    const user = await User.findById(priestId);
+
+    const task = await Task.findOne({ _id: id, $or: [{ staffId: priestId }, { staffEmail: user?.email }] });
+    if (!task) return res.status(404).json({ message: "Duty not found" });
+
+    task.status = "Attended";
+    task.attendanceStatus = "Present";
+    await task.save();
+
+    return res.status(200).json({ message: "Attendance marked successfully", task });
+  } catch (error) {
+    console.error("Error marking attendance:", error);
+    return res.status(500).json({ message: "Failed to mark attendance" });
+  }
+};
+
+exports.completeFestivalDuty = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const priestId = req.user.id;
+    const user = await User.findById(priestId);
+
+    const task = await Task.findOne({ _id: id, $or: [{ staffId: priestId }, { staffEmail: user?.email }] });
+    if (!task) return res.status(404).json({ message: "Duty not found" });
+
+    task.status = "Completed";
+    task.completedAt = new Date();
+    await task.save();
+
+    return res.status(200).json({ message: "Festival duty completed", task });
+  } catch (error) {
+    console.error("Error completing festival duty:", error);
+    return res.status(500).json({ message: "Failed to complete festival duty" });
+  }
+};
+
+// MODULE 6: NOTIFICATIONS
+
+exports.getNotifications = async (req, res) => {
+  try {
+    const priestId = req.user.id;
+    const user = await User.findById(priestId);
+    
+    const notifications = await Notification.find({
+      $or: [
+        { audienceId: priestId },
+        { audienceEmail: user?.email },
+        { audienceRole: "priest" }
+      ]
+    }).sort({ createdAt: -1 });
+
+    const formatted = notifications.map(n => ({
+      id: n._id,
+      title: n.title,
+      message: n.message,
+      category: n.category || "General Notice",
+      date: n.createdAt,
+      read: n.read || n.viewed,
+    }));
+
+    return res.status(200).json(formatted);
+  } catch (error) {
+    console.error("Error fetching notifications:", error);
+    return res.status(500).json({ message: "Failed to load notifications" });
+  }
+};
+
+exports.readNotification = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const notification = await Notification.findById(id);
+    if (!notification) return res.status(404).json({ message: "Notification not found" });
+
+    notification.read = true;
+    notification.viewed = true;
+    notification.readAt = new Date();
+    notification.viewedAt = new Date();
+    await notification.save();
+
+    return res.status(200).json({ message: "Notification marked as read" });
+  } catch (error) {
+    console.error("Error reading notification:", error);
+    return res.status(500).json({ message: "Failed to mark notification as read" });
+  }
+};
+
+exports.readAllNotifications = async (req, res) => {
+  try {
+    const priestId = req.user.id;
+    const user = await User.findById(priestId);
+
+    await Notification.updateMany({
+      $or: [
+        { audienceId: priestId },
+        { audienceEmail: user?.email },
+        { audienceRole: "priest" }
+      ],
+      read: false
+    }, {
+      read: true,
+      viewed: true,
+      readAt: new Date(),
+      viewedAt: new Date()
+    });
+
+    return res.status(200).json({ message: "All notifications marked as read" });
+  } catch (error) {
+    console.error("Error reading all notifications:", error);
+    return res.status(500).json({ message: "Failed to mark all notifications as read" });
+  }
+};
+
+// MODULE 7: PRIEST PROFILE
+
+exports.getProfile = async (req, res) => {
+  try {
+    const priestId = req.user.id;
+    const user = await User.findById(priestId);
+    
+    // Attempt to find the employee record mapping to this user
+    let employee = await Employee.findOne({ email: user.email });
+    
+    if (!employee) {
+      // Create a dummy employee record if none exists
+      employee = await Employee.create({
+        name: user.name,
+        email: user.email,
+        password: user.password,
+        role: "priest",
+        phone: user.phone || "9999999999",
+        salary: 0,
+        joiningDate: new Date(),
+        experience: "5 Years",
+        vedaShakha: "Rig Veda",
+        specializations: ["Homa", "Alankaram"],
+        languages: ["Sanskrit", "English", "Hindi"],
+      });
+    }
+
+    const formatted = {
+      name: employee.name,
+      employeeId: employee._id,
+      phone: employee.phone || "",
+      email: employee.email,
+      address: employee.address || "",
+      gender: employee.gender || "Male",
+      dob: employee.dob || "",
+      joiningDate: employee.joiningDate ? new Date(employee.joiningDate).toISOString().split("T")[0] : "",
+      experience: employee.experience || "",
+      vedaShakha: employee.vedaShakha || "",
+      specializations: employee.specializations || [],
+      languages: employee.languages || [],
+      certification: employee.certification || "",
+      photo: employee.photo || "",
+    };
+
+    return res.status(200).json(formatted);
+  } catch (error) {
+    console.error("Error fetching profile:", error);
+    return res.status(500).json({ message: "Failed to load profile" });
+  }
+};
+
+exports.updateProfile = async (req, res) => {
+  try {
+    const priestId = req.user.id;
+    const user = await User.findById(priestId);
+    const { phone, address, photo } = req.body;
+
+    if (phone && !/^\d{10}$/.test(phone)) {
+      return res.status(400).json({ message: "Phone must be 10 digits" });
+    }
+
+    const employee = await Employee.findOne({ email: user.email });
+    if (!employee) return res.status(404).json({ message: "Employee record not found" });
+
+    if (phone) employee.phone = phone;
+    if (address) employee.address = address;
+    if (photo) employee.photo = photo;
+    await employee.save();
+
+    // Also sync phone with User model
+    if (phone) {
+      user.phone = phone;
+      await user.save();
+    }
+
+    return res.status(200).json({ message: "Profile updated successfully", profile: employee });
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    return res.status(500).json({ message: "Failed to update profile" });
+  }
+};
+
+// MODULE 8: PRIEST SETTINGS
+
+exports.getSettings = async (req, res) => {
+  try {
+    const priestId = req.user.id;
+    const user = await User.findById(priestId);
+    const employee = await Employee.findOne({ email: user.email });
+    
+    if (!employee) {
+      return res.status(404).json({ message: "Employee record not found for priest settings" });
+    }
+
+    let settings = await PriestSetting.findOne({ priestId: employee._id });
+    if (!settings) {
+      settings = await PriestSetting.create({ priestId: employee._id });
+    }
+
+    return res.status(200).json(settings);
+  } catch (error) {
+    console.error("Error fetching settings:", error);
+    return res.status(500).json({ message: "Failed to load settings" });
+  }
+};
+
+exports.updateSettings = async (req, res) => {
+  try {
+    const priestId = req.user.id;
+    const user = await User.findById(priestId);
+    const employee = await Employee.findOne({ email: user.email });
+    
+    if (!employee) {
+      return res.status(404).json({ message: "Employee record not found for priest settings" });
+    }
+
+    let settings = await PriestSetting.findOne({ priestId: employee._id });
+    if (!settings) {
+      settings = new PriestSetting({ priestId: employee._id });
+    }
+
+    const { smsNotifications, dutyReminders, calendarWidget, agamaReferenceModule } = req.body;
+
+    if (smsNotifications !== undefined) settings.smsNotifications = smsNotifications;
+    if (dutyReminders !== undefined) settings.dutyReminders = dutyReminders;
+    if (calendarWidget !== undefined) settings.calendarWidget = calendarWidget;
+    if (agamaReferenceModule !== undefined) settings.agamaReferenceModule = agamaReferenceModule;
+
+    await settings.save();
+
+    return res.status(200).json({ message: "Settings updated successfully", settings });
+  } catch (error) {
+    console.error("Error updating settings:", error);
+    return res.status(500).json({ message: "Failed to update settings" });
+  }
+};
+
