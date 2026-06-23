@@ -10,7 +10,7 @@ const Bill = require("../models/Bill");
 const { isDbConnected } = require("../config/db");
 const crypto = require("crypto");
 const Razorpay = require("razorpay");
-const { createStaffBroadcastNotifications, createBroadcastNotifications } = require("../utils/notificationService");
+const { createStaffBroadcastNotifications, createBroadcastNotifications, createStaffNotification } = require("../utils/notificationService");
 const { sendBookingConfirmation, sendDonationReceipt, sendPrasadamOrderConfirmation } = require("../utils/communicationService");
 const PRASADAM_MENU = {
   "Laddu Prasadam": 151,
@@ -121,6 +121,14 @@ const createBooking = async (req, res) => {
       audienceEmail: devoteeEmail ? String(devoteeEmail).toLowerCase() : undefined,
     });
 
+    // Also notify the cashier role
+    await createStaffNotification({
+      title: `📅 Pooja Booking: ${service}`,
+      message: `New booking for "${devoteeName}" — ${service} — ₹${numericAmount} (${pm || "Cash"}) is recorded.`,
+      audienceRole: "cashier",
+      category: "booking",
+    }).catch(() => {});
+
     // Send multi-channel notifications (Email & SMS) if devotee info is available
     if (devoteeEmail || devoteePhone || contactNumber) {
       const devotee = { name: devoteeName, email: devoteeEmail, phone: devoteePhone || contactNumber };
@@ -211,7 +219,7 @@ const createDonation = async (req, res) => {
       devoteeName: donorName.trim(),
       sevaType: category,
       amount: numericAmount,
-      paymentMode,
+      paymentMode: paymentMethod || "UPI",
       billType: "Donation",
       referenceNo: `DN-${String(donation._id).slice(-6).toUpperCase()}`,
       sourceId: donation._id.toString(),
@@ -224,6 +232,14 @@ const createDonation = async (req, res) => {
       message: `${donorName.trim()} donated INR ${numericAmount} for ${category}.`,
       audienceEmail: donorEmail ? String(donorEmail).toLowerCase() : undefined,
     });
+
+    // Also notify the cashier role
+    await createStaffNotification({
+      title: `💖 Donation Received`,
+      message: `${donorName.trim()} donated ₹${numericAmount} for ${category} (${paymentMethod || "UPI"}).`,
+      audienceRole: "cashier",
+      category: "donation",
+    }).catch(() => {});
 
     // Send multi-channel notifications (Email & SMS) if donor info is available
     if (donorEmail || donorPhone || contactNumber) {
@@ -715,6 +731,14 @@ const createPrasadamOrder = async (req, res) => {
       message: `${devoteeName} ordered ${itemName} x${normalizedQty}.`,
       audienceEmail: email ? String(email).toLowerCase() : undefined,
     });
+
+    // Also notify the cashier role
+    await createStaffNotification({
+      title: `🍚 Prasadam Order: ${itemName}`,
+      message: `${devoteeName} ordered ${itemName} x${normalizedQty} — ₹${totalAmount} (${paymentMethod || "UPI"}).`,
+      audienceRole: "cashier",
+      category: "prasadam",
+    }).catch(() => {});
 
     // Send multi-channel notifications (Email & SMS) if devotee info is available
     if (email || phone) {

@@ -14,6 +14,7 @@ import {
   sumBy,
 } from "../../services/cashierService";
 import { getDonationTypes } from "../../services/donationTypeService";
+import { useNotifications } from "../../context/NotificationContext";
 
 const emptyForm = {
   donorName: "",
@@ -35,6 +36,7 @@ const statusStyles = {
 
 export default function DonationsPage() {
   const navigate = useNavigate();
+  const { loadNotifications } = useNotifications();
   const [donationTypes, setDonationTypes] = useState(getDonationTypes());
   const [events, setEvents] = useState([]);
   const [donations, setDonations] = useState([]);
@@ -191,6 +193,7 @@ export default function DonationsPage() {
       });
       setMessage("Donation saved successfully. The bill ledger and admin reports were updated.");
       await loadData();
+      loadNotifications().catch(() => {});
     } catch (error) {
       setMessage(error.response?.data?.error || error.response?.data?.message || "Failed to save donation.");
     } finally {

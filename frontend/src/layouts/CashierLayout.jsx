@@ -6,6 +6,7 @@ import LogoutModal from "../components/LogoutModal";
 import CashierSidebar from "../components/common/CashierSidebar";
 import { useAuth } from "../context/AuthContext";
 import { cashierSidebarItems } from "../data/cashierSidebarData";
+import { useNotifications } from "../context/NotificationContext";
 
 const findActiveItem = (path) => {
   const matched = cashierSidebarItems.find((item) => {
@@ -20,6 +21,7 @@ const CashierLayout = ({ children, onLogoutClick }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { logoutUser } = useAuth();
+  const { unreadCount } = useNotifications();
   const [activeItem, setActiveItem] = useState(findActiveItem(location.pathname));
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -55,6 +57,7 @@ const CashierLayout = ({ children, onLogoutClick }) => {
         mobileOpen={mobileOpen}
         setMobileOpen={setMobileOpen}
         onLogoutClick={handleSidebarLogoutClick}
+        unreadCount={unreadCount}
       />
 
       <main
@@ -92,11 +95,19 @@ const CashierLayout = ({ children, onLogoutClick }) => {
               </div>
               <button
                 type="button"
+                onClick={() => navigate("/cashier/notifications")}
                 className="relative inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[#f1d2a2] bg-white/90 text-[#8a5200] shadow-sm transition hover:bg-white"
                 aria-label="Notifications"
+                id="cashier-bell-btn"
               >
                 <FaBell size={16} />
-                <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full border-2 border-white bg-[#f28c18]" />
+                {unreadCount > 0 ? (
+                  <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-[#f28c18] text-[10px] font-extrabold text-white">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                ) : (
+                  <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full border-2 border-white bg-slate-300" />
+                )}
               </button>
             </div>
           </div>
@@ -119,3 +130,5 @@ const CashierLayout = ({ children, onLogoutClick }) => {
 };
 
 export default CashierLayout;
+
+

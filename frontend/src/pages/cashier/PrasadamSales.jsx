@@ -13,6 +13,7 @@ import {
   isToday,
   sumBy,
 } from "../../services/cashierService";
+import { useNotifications } from "../../context/NotificationContext";
 
 const emptyForm = {
   devoteeName: "",
@@ -33,6 +34,7 @@ const statusStyles = {
 
 const PrasadamSales = () => {
   const navigate = useNavigate();
+  const { loadNotifications } = useNotifications();
   const [prasadamTypes, setPrasadamTypes] = useState([]);
   const [orders, setOrders] = useState([]);
   const [bills, setBills] = useState([]);
@@ -181,6 +183,7 @@ const PrasadamSales = () => {
       });
       setMessage("Prasadam order saved successfully. The bill and history were updated.");
       await loadData();
+      loadNotifications().catch(() => {});
     } catch (error) {
       setMessage(error.response?.data?.error || error.response?.data?.message || "Failed to save prasadam order.");
     } finally {

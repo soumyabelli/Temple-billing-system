@@ -162,8 +162,8 @@ const CashierDashboardPage = () => {
   return (
     <CashierPageShell
       eyebrow="Temple Cashier Dashboard"
-      title="Temple billing, bookings and collections at a glance"
-      description="A single workspace for pooja bookings, donation entry, prasadam sales, bill tracking, receipts and quick settlement."
+      title=""
+      description=""
       image={templeBg}
       imageAlt="Temple dashboard background"
       stats={stats}

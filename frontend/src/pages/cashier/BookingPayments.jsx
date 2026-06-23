@@ -13,6 +13,7 @@ import {
   sumBy,
 } from "../../services/cashierService";
 import { getPoojaTypes } from "../../services/poojaTypeService";
+import { useNotifications } from "../../context/NotificationContext";
 
 const emptyForm = {
   devoteeName: "",
@@ -45,6 +46,7 @@ const buildMinDateTime = () => {
 
 const BookingPayments = () => {
   const navigate = useNavigate();
+  const { loadNotifications } = useNotifications();
   const [poojaTypes, setPoojaTypes] = useState(getPoojaTypes());
   const [bookings, setBookings] = useState([]);
   const [bills, setBills] = useState([]);
@@ -203,6 +205,7 @@ const BookingPayments = () => {
       });
       setMessage("Pooja booking saved successfully. The history and bill ledger were updated.");
       await loadData();
+      loadNotifications().catch(() => {});
     } catch (error) {
       setMessage(error.response?.data?.error || error.response?.data?.message || "Failed to save booking.");
     } finally {

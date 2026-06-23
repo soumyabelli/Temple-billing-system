@@ -506,3 +506,16 @@ Thank you!
 To: 6362210340
 Message: Pooja booking confirmed! Service: Archana on 2026-06-18T06:30. Amount: ₹501. -Temple
 
+[2026-06-23T09:48:02.954Z] EMAIL
+To: Soumya@mail.com
+Subject: Pooja Booking Confirmation
+Pooja Booking Confirmation
+Service: Satyanarayana Puja
+Date & Time: 2026-06-23T15:32
+Amount: ₹1201
+Thank you!
+
+[2026-06-23T09:48:02.959Z] SMS
+To: 9740265462
+Message: Pooja booking confirmed! Service: Satyanarayana Puja on 2026-06-23T15:32. Amount: ₹1201. -Temple
+

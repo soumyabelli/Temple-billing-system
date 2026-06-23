@@ -38,14 +38,16 @@ const CashierPageShell = ({
           accentStyles[accent] || accentStyles.orange
         }`}
       >
-        <div className="grid gap-0 lg:grid-cols-[1.15fr_0.85fr]">
+        <div className="grid gap-0">
           <div className="p-6 md:p-8 lg:p-10">
             <div className="inline-flex items-center rounded-full border border-[#f6d29b] bg-white/85 px-3 py-1 text-xs font-bold uppercase tracking-[0.22em] text-[#8a5200]">
               {eyebrow}
             </div>
-            <h1 className="mt-4 text-[2.35rem] md:text-[3rem] lg:text-[3.6rem] font-extrabold leading-tight text-slate-950">
-              {title}
-            </h1>
+            {title ? (
+              <h1 className="mt-4 text-[2.35rem] md:text-[3rem] lg:text-[3.6rem] font-extrabold leading-tight text-slate-950">
+                {title}
+              </h1>
+            ) : null}
             {description ? (
               <p className="mt-3 max-w-3xl text-[1.02rem] md:text-[1.1rem] font-medium leading-8 text-slate-800">
                 {description}
@@ -61,19 +63,6 @@ const CashierPageShell = ({
                 ))}
               </div>
             ) : null}
-          </div>
-
-          <div className="relative min-h-[240px] lg:min-h-full">
-            {image ? (
-              <img
-                src={image}
-                alt={imageAlt}
-                className="absolute inset-0 h-full w-full object-cover"
-              />
-            ) : (
-              <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,208,140,0.95),rgba(255,244,225,0.98))]" />
-            )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-black/5 to-transparent" />
           </div>
         </div>
       </section>
