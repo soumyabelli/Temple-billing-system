@@ -28,6 +28,11 @@ const {
   getSettings,
   updateSettings,
 } = require("../controllers/priestController");
+const {
+  getInventoryCatalog,
+  createInventoryRequest,
+  getInventoryRequests,
+} = require("../controllers/inventoryRequestController");
 const { authenticate, authorizeRoles } = require("../middleware/authMiddleware");
 
 const router = express.Router();
@@ -79,5 +84,11 @@ router.put("/profile", updateProfile);
 // Module 8 Endpoints
 router.get("/settings", getSettings);
 router.put("/settings", updateSettings);
+
+// Inventory Endpoints
+router.get("/inventory/catalog", getInventoryCatalog);
+router.post("/inventory-requests", createInventoryRequest);
+router.get("/inventory-requests", getInventoryRequests);
+router.get("/inventory-requests/:userId", getInventoryRequests);
 
 module.exports = router;

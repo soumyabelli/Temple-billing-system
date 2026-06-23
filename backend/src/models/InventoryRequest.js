@@ -4,16 +4,22 @@ const INVENTORY_REQUEST_STATUSES = ["Pending", "Approved", "Rejected"];
 
 const inventoryRequestSchema = new mongoose.Schema(
   {
-    staffId: {
+    userId: {
       type: String,
       required: true,
       trim: true,
       index: true,
     },
-    staffName: {
+    userName: {
       type: String,
       required: true,
       trim: true,
+    },
+    role: {
+      type: String,
+      enum: ["Staff", "Priest"],
+      required: true,
+      default: "Staff",
     },
     requestedBy: {
       type: String,
@@ -50,6 +56,24 @@ const inventoryRequestSchema = new mongoose.Schema(
       type: String,
       default: "",
       trim: true,
+    },
+    rejectionReason: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    rejectedAt: {
+      type: Date,
+      default: null,
+    },
+    approvedBy: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    approvedAt: {
+      type: Date,
+      default: null,
     },
     reviewedBy: {
       type: String,

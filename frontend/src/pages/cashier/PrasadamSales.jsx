@@ -7,12 +7,12 @@ import {
   createPrasadamOrder,
   fetchBills,
   fetchPrasadamOrders,
+  fetchPrasadamMaster,
   formatCurrency,
   formatDateTime,
   isToday,
   sumBy,
 } from "../../services/cashierService";
-import { getPrasadamTypes } from "../../services/prasadamTypeService";
 
 const emptyForm = {
   devoteeName: "",
@@ -33,7 +33,7 @@ const statusStyles = {
 
 const PrasadamSales = () => {
   const navigate = useNavigate();
-  const [prasadamTypes, setPrasadamTypes] = useState(getPrasadamTypes());
+  const [prasadamTypes, setPrasadamTypes] = useState([]);
   const [orders, setOrders] = useState([]);
   const [bills, setBills] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -41,20 +41,30 @@ const PrasadamSales = () => {
   const [message, setMessage] = useState("");
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
-  const [form, setForm] = useState(() => {
-    const initial = getPrasadamTypes()[0];
-    return {
-      ...emptyForm,
-      itemName: initial?.name || "",
-    };
+  const [form, setForm] = useState({
+    ...emptyForm,
   });
 
   const loadData = async () => {
     setLoading(true);
     try {
-      const [orderRows, billRows] = await Promise.allSettled([fetchPrasadamOrders(), fetchBills()]);
+      const [orderRows, billRows, typesRows] = await Promise.allSettled([
+        fetchPrasadamOrders(),
+        fetchBills(),
+        fetchPrasadamMaster()
+      ]);
       setOrders(orderRows.status === "fulfilled" ? orderRows.value : []);
       setBills(billRows.status === "fulfilled" ? billRows.value : []);
+      
+      const types = typesRows.status === "fulfilled" ? typesRows.value : [];
+      setPrasadamTypes(types);
+      
+      setForm((prev) => {
+        if (!prev.itemName && types.length > 0) {
+          return { ...prev, itemName: types[0].name };
+        }
+        return prev;
+      });
     } finally {
       setLoading(false);
     }
@@ -62,15 +72,6 @@ const PrasadamSales = () => {
 
   useEffect(() => {
     loadData();
-
-    const onStorage = (event) => {
-      if (event.key === "prasadamTypes") {
-        setPrasadamTypes(getPrasadamTypes());
-      }
-    };
-
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
   }, []);
 
   useEffect(() => {
@@ -241,7 +242,12 @@ const PrasadamSales = () => {
                   }`}
                 >
                   <p className="text-base font-extrabold text-slate-950">{type.name}</p>
-                  <p className="mt-2 text-sm font-semibold text-[#8a5200]">{formatCurrency(type.price)}</p>
+                  <div className="mt-2 flex items-center justify-between">
+                    <p className="text-sm font-semibold text-[#8a5200]">{formatCurrency(type.price)}</p>
+                    <p className={`text-xs font-bold ${type.availableQuantity > 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                      {type.availableQuantity > 0 ? `${type.availableQuantity} in stock` : "Out of stock"}
+                    </p>
+                  </div>
                 </button>
               );
             })}

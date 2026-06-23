@@ -5,6 +5,7 @@ const Event = require("../models/Event");
 const SupportRequest = require("../models/SupportRequest");
 const User = require("../models/User");
 const PrasadamOrder = require("../models/PrasadamOrder");
+const Prasadam = require("../models/Prasadam");
 const Bill = require("../models/Bill");
 const { isDbConnected } = require("../config/db");
 const crypto = require("crypto");
@@ -671,10 +672,17 @@ const createPrasadamOrder = async (req, res) => {
       return res.status(400).json({ error: "Quantity must be at least 1." });
     }
     const requestedUnitPrice = Number(req.body.unitPrice ?? req.body.price);
-    const unitPrice = PRASADAM_MENU[itemName] || (!Number.isNaN(requestedUnitPrice) && requestedUnitPrice > 0 ? requestedUnitPrice : 0);
-    if (!unitPrice) {
-      return res.status(400).json({ error: "Selected prasadam item is not available in temple menu." });
+
+    const prasadamItem = await Prasadam.findOne({ name: { $regex: new RegExp(`^${itemName}$`, "i") } });
+    if (!prasadamItem) {
+      return res.status(404).json({ error: "Prasadam item not found in master list." });
     }
+
+    if (prasadamItem.availableQuantity < normalizedQty) {
+      return res.status(400).json({ error: "Prasadam currently unavailable. Out Of Stock or insufficient quantity." });
+    }
+
+    const unitPrice = prasadamItem.price;
     const totalAmount = unitPrice * normalizedQty;
 
     const order = await PrasadamOrder.create({
@@ -716,6 +724,17 @@ const createPrasadamOrder = async (req, res) => {
         quantity: normalizedQty,
         amount: totalAmount,
         status: "Placed",
+      });
+    }
+
+    prasadamItem.availableQuantity -= normalizedQty;
+    await prasadamItem.save();
+
+    if (prasadamItem.availableQuantity <= prasadamItem.minimumStock) {
+      await createStaffBroadcastNotifications({
+        title: "⚠️ Low Prasadam Stock",
+        message: `${prasadamItem.name} stock is low. Current: ${prasadamItem.availableQuantity}.`,
+        category: "inventory",
       });
     }
 

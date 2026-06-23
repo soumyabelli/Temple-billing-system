@@ -1,5 +1,6 @@
 const InventoryRequest = require("../models/InventoryRequest");
 const InventoryItem = require("../models/InventoryItem");
+const InventoryLog = require("../models/InventoryLog");
 const { createStaffNotification } = require("../utils/notificationService");
 const { seedDefaultItems } = require("./inventoryItemController");
 
@@ -39,21 +40,22 @@ exports.getInventoryCatalog = async (req, res) => {
   }
 };
 
-// POST /api/staff/inventory-requests
+// POST /api/staff/inventory-requests (and /api/priest/inventory-requests)
 exports.createInventoryRequest = async (req, res) => {
   try {
-    const { staffId, staffName, itemName, quantity, unit, reason, requestedBy } = req.body;
+    const { userId, staffId, userName, staffName, role, itemName, quantity, unit, reason, requestedBy } = req.body;
     const trimmedItemName = clean(itemName);
     const trimmedQuantity = clean(quantity);
     const trimmedUnit = clean(unit);
     const trimmedReason = clean(reason);
-    const trimmedStaffId = clean(staffId);
-    const trimmedStaffName = clean(staffName || requestedBy);
+    const trimmedUserId = clean(userId || staffId);
+    const trimmedUserName = clean(userName || staffName || requestedBy);
+    const requestRole = clean(role) || "Staff";
 
-    if (!trimmedStaffId || !trimmedStaffName || !trimmedItemName || !trimmedQuantity || !trimmedUnit || !trimmedReason) {
+    if (!trimmedUserId || !trimmedUserName || !trimmedItemName || !trimmedQuantity || !trimmedUnit || !trimmedReason) {
       return res.status(400).json({
         success: false,
-        message: "staffId, staffName, itemName, quantity, unit and reason are required",
+        message: "userId, userName, itemName, quantity, unit and reason are required",
       });
     }
 
@@ -73,7 +75,7 @@ exports.createInventoryRequest = async (req, res) => {
     todayEnd.setHours(23, 59, 59, 999);
 
     const duplicate = await InventoryRequest.findOne({
-      staffId: trimmedStaffId,
+      userId: trimmedUserId,
       itemName: trimmedItemName,
       status: "Pending",
       createdAt: { $gte: todayStart, $lte: todayEnd },
@@ -87,9 +89,10 @@ exports.createInventoryRequest = async (req, res) => {
     }
 
     const request = await InventoryRequest.create({
-      staffId: trimmedStaffId,
-      staffName: trimmedStaffName,
-      requestedBy: trimmedStaffName,
+      userId: trimmedUserId,
+      userName: trimmedUserName,
+      role: requestRole,
+      requestedBy: trimmedUserName,
       itemName: trimmedItemName,
       quantity: parsedQty,
       unit: trimmedUnit,
@@ -103,7 +106,7 @@ exports.createInventoryRequest = async (req, res) => {
     // Notify admin
     await createStaffNotification({
       title: "🔔 New Inventory Request",
-      message: `${trimmedStaffName} requested ${parsedQty} ${trimmedUnit} of ${trimmedItemName}.\nReason: ${trimmedReason}`,
+      message: `${trimmedUserName} (${requestRole}) requested ${parsedQty} ${trimmedUnit} of ${trimmedItemName}.\nReason: ${trimmedReason}`,
       audienceRole: "admin",
       category: "inventory",
     });
@@ -114,11 +117,12 @@ exports.createInventoryRequest = async (req, res) => {
   }
 };
 
-// GET /api/staff/inventory-requests or /api/staff/inventory-requests/:staffId
+// GET /api/staff/inventory-requests or /api/staff/inventory-requests/:userId
 exports.getInventoryRequests = async (req, res) => {
   try {
-    const { staffId } = req.params;
-    const query = staffId ? { staffId: clean(staffId) } : {};
+    const { staffId, userId } = req.params;
+    const id = clean(userId || staffId);
+    const query = id ? { userId: id } : {};
     const requests = await InventoryRequest.find(query).sort({ createdAt: -1 });
     return res.json({ success: true, requests });
   } catch (error) {
@@ -126,11 +130,12 @@ exports.getInventoryRequests = async (req, res) => {
   }
 };
 
-// GET /api/staff/inventory-requests/:staffId/summary
+// GET /api/staff/inventory-requests/:userId/summary
 exports.getInventorySummary = async (req, res) => {
   try {
-    const { staffId } = req.params;
-    const requests = await InventoryRequest.find({ staffId: clean(staffId) });
+    const { staffId, userId } = req.params;
+    const id = clean(userId || staffId);
+    const requests = await InventoryRequest.find({ userId: id });
     const summary = buildInventorySummary(requests);
     return res.json({ success: true, summary });
   } catch (error) {
@@ -138,18 +143,18 @@ exports.getInventorySummary = async (req, res) => {
   }
 };
 
-// PUT /api/staff/inventory-requests/:id/status
+// PUT /api/admin/inventory-requests/:id/status
 exports.updateInventoryRequestStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, adminReason, reviewedBy } = req.body;
+    const { status, adminReason, rejectionReason, reviewedBy } = req.body;
     const normalizedStatus = clean(status);
 
     if (!INVENTORY_REQUEST_STATUSES.includes(normalizedStatus)) {
       return res.status(400).json({ success: false, message: "Invalid inventory request status" });
     }
 
-    if (normalizedStatus === "Rejected" && !clean(adminReason)) {
+    if (normalizedStatus === "Rejected" && !clean(adminReason) && !clean(rejectionReason)) {
       return res.status(400).json({
         success: false,
         message: "Reason is required when rejecting inventory requests",
@@ -194,20 +199,30 @@ exports.updateInventoryRequestStatus = async (req, res) => {
 - Quantity Approved: ${parsedQty}
 - Stock Before: ${stockBefore}
 - Stock After: ${stockAfter}
-- Employee Name: ${request.staffName}
+- Employee Name: ${request.userName}
 - Approval Time: ${new Date().toISOString()}`);
 
       request.status = "Approved";
       request.adminReason = clean(adminReason);
-      request.reviewedBy = clean(reviewedBy) || "Admin";
+      request.reviewedBy = clean(reviewedBy) || (req.user ? req.user.name : "Admin");
       request.reviewedAt = new Date();
+      request.approvedBy = clean(reviewedBy) || (req.user ? req.user.name : "Admin");
+      request.approvedAt = new Date();
       await request.save();
 
-      // Send notification to employee
+      await InventoryLog.create({
+        item: inventoryItem._id,
+        action: "Consumed",
+        quantity: parsedQty,
+        oldStock: stockBefore,
+        newStock: stockAfter,
+        user: req.user ? req.user.id : null,
+      });
+
       await createStaffNotification({
         title: "🔔 Request Approved",
         message: `✅ Your request for ${request.itemName} (${request.quantity} ${request.unit}) has been approved.`,
-        audienceId: request.staffId,
+        audienceId: request.userId,
         category: "inventory",
       });
 
@@ -229,16 +244,17 @@ exports.updateInventoryRequestStatus = async (req, res) => {
       }
 
       request.status = "Rejected";
-      request.adminReason = clean(adminReason);
-      request.reviewedBy = clean(reviewedBy) || "Admin";
+      request.adminReason = clean(adminReason) || clean(rejectionReason);
+      request.rejectionReason = clean(rejectionReason) || clean(adminReason);
+      request.reviewedBy = clean(reviewedBy) || (req.user ? req.user.name : "Admin");
       request.reviewedAt = new Date();
+      request.rejectedAt = new Date();
       await request.save();
 
-      // Send notification to employee
       await createStaffNotification({
         title: "🔔 Request Rejected",
         message: `Your request for ${request.itemName} (${request.quantity} ${request.unit}) has been rejected.\nReason: ${request.adminReason}`,
-        audienceId: request.staffId,
+        audienceId: request.userId,
         category: "inventory",
       });
     }
