@@ -955,9 +955,9 @@ const InventoryManagement = () => {
                           <td className="px-4 py-4 font-semibold text-[#0f172a]">{log?.item?.name || "Unknown"}</td>
                           <td className="px-4 py-4">
                             <span className={`rounded-full px-3 py-1 text-xs font-semibold ${log?.action === "Added" ? "bg-[#d1fae5] text-[#166534]" :
-                                log?.action === "Updated" ? "bg-[#e0e7ff] text-[#3730a3]" :
-                                  log?.action === "Consumed" ? "bg-[#fee2e2] text-[#b91c1c]" :
-                                    "bg-[#fef3c7] text-[#92400e]"
+                              log?.action === "Updated" ? "bg-[#e0e7ff] text-[#3730a3]" :
+                                log?.action === "Consumed" ? "bg-[#fee2e2] text-[#b91c1c]" :
+                                  "bg-[#fef3c7] text-[#92400e]"
                               }`}>
                               {log?.action}
                             </span>

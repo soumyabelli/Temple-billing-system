@@ -1,0 +1,13 @@
+import axios from "axios";
+
+const API_BASE = "http://localhost:5000/api/bookings";
+
+export const getDashboardBookings = async () => {
+  const response = await axios.get(`${API_BASE}/dashboard`);
+  return response.data;
+};
+
+export const getAllBookings = async (params) => {
+  const response = await axios.get(`${API_BASE}/all`, { params });
+  return response.data;
+};

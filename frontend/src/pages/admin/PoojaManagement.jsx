@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   MdCalendarMonth,
   MdOutlineCalendarToday,
@@ -11,7 +12,8 @@ import {
   MdOutlinePrint,
 } from "react-icons/md";
 import { FaDownload } from "react-icons/fa6";
-import { getDevoteeBookings, getDevoteeDonations, updateBookingStatus } from "../../services/devoteeService";
+import { getDevoteeDonations, updateBookingStatus } from "../../services/devoteeService";
+import { getDashboardBookings } from "../../services/bookingService";
 import { getPoojaTypes, savePoojaTypes, removePoojaType } from "../../services/poojaTypeService";
 
 const formatCurrency = (value) => `Rs ${Number(value || 0).toLocaleString()}`;
@@ -25,6 +27,7 @@ const statusTheme = {
 
 const PoojaManagement = () => {
   const [bookings, setBookings] = useState([]);
+  const [statsData, setStatsData] = useState(null);
   const [donations, setDonations] = useState([]);
   const [query, setQuery] = useState("");
   const [poojaTypes, setPoojaTypes] = useState(getPoojaTypes());
@@ -74,8 +77,9 @@ const PoojaManagement = () => {
   useEffect(() => {
     const load = async () => {
       try {
-        const [bRes, dRes] = await Promise.all([getDevoteeBookings(), getDevoteeDonations()]);
-        setBookings(bRes.bookings || []);
+        const [bRes, dRes] = await Promise.all([getDashboardBookings(), getDevoteeDonations()]);
+        setBookings(bRes.latestBookings || []);
+        setStatsData(bRes.stats || null);
         setDonations(dRes.donations || []);
       } catch (error) {
         console.warn("Unable to load pooja management data", error);
@@ -85,8 +89,9 @@ const PoojaManagement = () => {
   }, []);
 
   const reloadData = async () => {
-    const [bRes, dRes] = await Promise.all([getDevoteeBookings(), getDevoteeDonations()]);
-    setBookings(bRes.bookings || []);
+    const [bRes, dRes] = await Promise.all([getDashboardBookings(), getDevoteeDonations()]);
+    setBookings(bRes.latestBookings || []);
+    setStatsData(bRes.stats || null);
     setDonations(dRes.donations || []);
   };
 
@@ -102,8 +107,8 @@ const PoojaManagement = () => {
   const filteredBookings = useMemo(() => {
     const q = query.trim().toLowerCase();
     const rows = bookings.map((b, idx) => ({
-      id: `BK${String(1000 + idx + 1)}`,
-      devotee: b.devoteeName,
+      id: `BK${b._id ? String(b._id).slice(-6).toUpperCase() : String(1000 + idx + 1)}`,
+      devotee: b.devoteeName || b.customerName,
       pooja: b.service,
       date: b.datetime ? new Date(b.datetime).toLocaleDateString() : "-",
       slot: b.datetime ? new Date(b.datetime).toLocaleTimeString() : "-",
@@ -116,11 +121,10 @@ const PoojaManagement = () => {
     return rows.filter((r) => (r.devotee || "").toLowerCase().includes(q) || (r.pooja || "").toLowerCase().includes(q) || (r.id || "").toLowerCase().includes(q));
   }, [bookings, query]);
 
-  const today = new Date().toDateString();
-  const todays = filteredBookings.filter((b) => b.raw?.datetime && new Date(b.raw.datetime).toDateString() === today).length;
-  const upcoming = filteredBookings.filter((b) => b.raw?.datetime && new Date(b.raw.datetime) > new Date()).length;
-  const completed = filteredBookings.filter((b) => (b.status || "").toLowerCase() === "completed").length;
-  const revenue = filteredBookings.reduce((sum, b) => sum + Number(b.amount || 0), 0);
+  const todays = statsData?.todays || 0;
+  const upcoming = statsData?.upcoming || 0;
+  const completed = statsData?.completed || 0;
+  const revenue = statsData?.totalRevenue || 0;
 
   const stats = [
     { title: "Today's Bookings", value: todays, icon: MdOutlineCalendarToday, iconBg: "bg-[#fff1e2]", iconText: "text-[#f97316]" },
@@ -259,7 +263,10 @@ const PoojaManagement = () => {
         <div className="xl:col-span-8 space-y-4">
           <div className="overflow-hidden rounded-2xl border border-[#ece8e1] bg-white">
             <div className="flex flex-col gap-3 border-b border-[#f0ece6] px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-              <h2 className="text-[36px] font-bold text-[#15141f]">Pooja Bookings</h2>
+              <div className="flex items-center gap-4">
+                <h2 className="text-[36px] font-bold text-[#15141f]">Pooja Bookings</h2>
+                <Link to="/admin/pooja/all-bookings" className="rounded-xl bg-[#15141f] px-4 py-2 text-sm font-semibold text-white hover:bg-black">View All Bookings</Link>
+              </div>
               <div className="flex h-11 items-center gap-2 rounded-xl border border-[#ece8e1] bg-[#faf9f7] px-3 text-[#858b96]">
                 <MdOutlineSearch size={20} />
                 <input value={query} onChange={(e) => setQuery(e.target.value)} className="w-[220px] bg-transparent text-[16px] text-[#242938] outline-none placeholder:text-[#9ca3af]" placeholder="Search booking..." />
@@ -337,10 +344,11 @@ const PoojaManagement = () => {
         <div className="xl:col-span-4 rounded-2xl border border-[#ece8e1] bg-white p-4">
           <h3 className="text-[30px] font-bold text-[#15141f]">Booking Overview</h3>
           <div className="mt-4 space-y-2 text-[15px] text-[#2f3645]">
-            <div className="flex items-center justify-between"><span>Total Bookings</span><span>{filteredBookings.length}</span></div>
-            <div className="flex items-center justify-between"><span>Confirmed</span><span>{filteredBookings.filter((b) => b.status === "Confirmed").length}</span></div>
-            <div className="flex items-center justify-between"><span>Pending</span><span>{filteredBookings.filter((b) => b.status === "Pending").length}</span></div>
-            <div className="flex items-center justify-between"><span>Completed</span><span>{filteredBookings.filter((b) => b.status === "Completed").length}</span></div>
+            <div className="flex items-center justify-between"><span>Total Bookings</span><span>{statsData?.totalBookings || 0}</span></div>
+            <div className="flex items-center justify-between"><span>Confirmed</span><span>{statsData?.confirmed || 0}</span></div>
+            <div className="flex items-center justify-between"><span>Pending</span><span>{statsData?.pending || 0}</span></div>
+            <div className="flex items-center justify-between"><span>Completed</span><span>{statsData?.completed || 0}</span></div>
+            <div className="flex items-center justify-between"><span>Cancelled</span><span>{statsData?.cancelled || 0}</span></div>
             <div className="border-t border-[#f0ece6] pt-2"><p className="text-[14px] text-[#6b7280]">Total Revenue</p><p className="text-[34px] leading-none font-bold text-[#f97316]">{formatCurrency(revenue)}</p></div>
           </div>
         </div>
