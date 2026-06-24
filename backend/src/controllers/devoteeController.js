@@ -8,6 +8,7 @@ const PrasadamOrder = require("../models/PrasadamOrder");
 const Prasadam = require("../models/Prasadam");
 const Bill = require("../models/Bill");
 const { isDbConnected } = require("../config/db");
+const fileUserStore = require("../store/fileUserStore");
 const crypto = require("crypto");
 const Razorpay = require("razorpay");
 const { createStaffBroadcastNotifications, createBroadcastNotifications, createStaffNotification } = require("../utils/notificationService");
@@ -271,8 +272,14 @@ const getNotifications = async (req, res) => {
     const email = String(req.query.email || "").trim().toLowerCase();
     // If email provided, return user-specific notifications and broadcasts
     if (email) {
-      const user = await User.findOne({ email }).select("role");
-      const role = user?.role || null;
+      let role = null;
+      if (isDbConnected()) {
+        const user = await User.findOne({ email }).select("role");
+        role = user?.role || null;
+      } else {
+        const user = await fileUserStore.findUserByEmail(email);
+        role = user?.role || null;
+      }
 
       const orFilters = [{ audienceEmail: email }, { audienceEmail: { $exists: false } }];
       if (role) orFilters.push({ audienceRole: role });
@@ -292,8 +299,18 @@ const getNotifications = async (req, res) => {
 const getProfile = async (req, res) => {
   try {
     if (req.query.email) {
-      const user = await User.findOne({ email: req.query.email }).select("-password");
+      let user = null;
+      if (isDbConnected()) {
+        user = await User.findOne({ email: req.query.email }).select("-password");
+      } else {
+        user = await fileUserStore.findUserByEmail(req.query.email);
+      }
       if (user) {
+        const getYear = (dateVal) => {
+          if (!dateVal) return "2025";
+          const d = new Date(dateVal);
+          return Number.isNaN(d.getTime()) ? "2025" : String(d.getFullYear());
+        };
         return res.status(200).json({
           profile: {
             id: user._id?.toString?.() || user.id,
@@ -303,7 +320,7 @@ const getProfile = async (req, res) => {
             address: user.address || "",
             place: user.place || "",
             role: user.role || "devotee",
-            memberSince: user.createdAt?.getFullYear?.() || "2025",
+            memberSince: user.createdAt ? getYear(user.createdAt) : "2025",
           },
         });
       }
@@ -554,22 +571,52 @@ const updateProfile = async (req, res) => {
       return res.status(400).json({ error: "currentEmail is required." });
     }
 
-    const user = await User.findOne({ email: currentEmail.trim().toLowerCase() });
-    if (!user) {
-      return res.status(404).json({ error: "Profile not found." });
+    let user;
+    const getYear = (dateVal) => {
+      if (!dateVal) return "2025";
+      const d = new Date(dateVal);
+      return Number.isNaN(d.getTime()) ? "2025" : String(d.getFullYear());
+    };
+
+    if (isDbConnected()) {
+      user = await User.findOne({ email: currentEmail.trim().toLowerCase() });
+      if (!user) {
+        return res.status(404).json({ error: "Profile not found." });
+      }
+
+      if (name && String(name).trim()) user.name = String(name).trim();
+      if (email && String(email).trim()) user.email = String(email).trim().toLowerCase();
+      if (phone && String(phone).trim()) user.phone = String(phone).trim();
+      if (address && String(address).trim()) user.address = String(address).trim();
+      if (place && String(place).trim()) user.place = String(place).trim();
+      await user.save();
+
+      await Notification.create({
+        title: "Profile Updated",
+        message: `${user.name} updated devotee profile details.`,
+      }).catch(() => {});
+    } else {
+      user = await fileUserStore.findUserByEmail(currentEmail.trim().toLowerCase());
+      if (!user) {
+        return res.status(404).json({ error: "Profile not found." });
+      }
+
+      const updates = {};
+      if (name && String(name).trim()) updates.name = String(name).trim();
+      if (email && String(email).trim()) updates.email = String(email).trim().toLowerCase();
+      if (phone && String(phone).trim()) updates.phone = String(phone).trim();
+      if (address && String(address).trim()) updates.address = String(address).trim();
+      if (place && String(place).trim()) updates.place = String(place).trim();
+
+      if (updates.email && updates.email !== user.email) {
+        const emailExists = await fileUserStore.findUserByEmail(updates.email);
+        if (emailExists) {
+          return res.status(409).json({ error: "Email already exists. Please use a different email." });
+        }
+      }
+
+      user = await fileUserStore.updateUser(user.id, updates);
     }
-
-    if (name && String(name).trim()) user.name = String(name).trim();
-    if (email && String(email).trim()) user.email = String(email).trim().toLowerCase();
-    if (phone && String(phone).trim()) user.phone = String(phone).trim();
-    if (address && String(address).trim()) user.address = String(address).trim();
-    if (place && String(place).trim()) user.place = String(place).trim();
-    await user.save();
-
-    await Notification.create({
-      title: "Profile Updated",
-      message: `${user.name} updated devotee profile details.`,
-    });
 
     return res.status(200).json({
       profile: {
@@ -580,7 +627,7 @@ const updateProfile = async (req, res) => {
         address: user.address || "",
         place: user.place || "",
         role: user.role || "devotee",
-        memberSince: user.createdAt?.getFullYear?.() || "2025",
+        memberSince: user.createdAt ? getYear(user.createdAt) : "2025",
       },
     });
   } catch (error) {
@@ -793,6 +840,7 @@ const createRazorpayOrder = async (req, res) => {
     if (!isDbConnected()) return res.status(500).json({ error: "Database not connected." });
 
     const { amount, donorName, donorEmail, donorPhone, category = "General", paymentMethod = "UPI", notes, eventId } = req.body;
+    const paymentMode = paymentMethod || "UPI";
     const numericAmount = Number(amount);
     if (!numericAmount || Number.isNaN(numericAmount) || numericAmount <= 0) {
       return res.status(400).json({ error: "Invalid amount provided." });

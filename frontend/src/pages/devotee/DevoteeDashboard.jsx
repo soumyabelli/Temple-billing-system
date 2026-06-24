@@ -1791,76 +1791,86 @@ const DevoteeDashboard = () => {
     </div>
   );
 
-  const renderFestivalEvents = () => (
-    <div className="space-y-6">
-      <div className={`${glassCard}`}>
-        <h2 className="text-[2rem] font-bold">Festival Events</h2>
-        <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {eventsData.length > 0 ? (
-            eventsData.map((item) => {
-              const isSelected = selectedEventId === item._id;
-              return (
-                <div
-                  key={`${item.title}-${item.formattedDate || item._id}`}
-                  onClick={() => setSelectedEventId(item._id)}
-                  className={`${glassItem} p-4 cursor-pointer ${isSelected ? 'ring-2 ring-offset-2 ring-[#ff8b00]' : ''}`}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1">
-                      <p className="text-lg font-semibold text-[#17151f]">{item.title}</p>
-                      <p className="mt-2 flex items-center gap-2 text-sm text-[#5d5d5d]">
-                        <span className="text-base">📅</span>
-                        {item.formattedDate || item.date}
-                      </p>
-                      {item.location && (
-                        <p className="mt-1 flex items-center gap-2 text-sm text-[#5d5d5d]">
-                          <span className="text-base">📍</span>
-                          {item.location}
+  const renderFestivalEvents = () => {
+    const getMyDonationTotalForEvent = (eventId) => {
+      if (!eventId) return 0;
+      return (donationsData || [])
+        .filter((d) => d && d.eventId != null && String(d.eventId) === String(eventId))
+        .reduce((sum, d) => sum + (typeof d.amount === "number" ? d.amount : Number(d.amount) || 0), 0);
+    };
+
+    return (
+      <div className="space-y-6">
+        <div className={`${glassCard}`}>
+          <h2 className="text-[2rem] font-bold">Festival Events</h2>
+          <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {eventsData.length > 0 ? (
+              eventsData.map((item) => {
+                const isSelected = selectedEventId === item._id;
+                const myTotal = getMyDonationTotalForEvent(item._id);
+                return (
+                  <div
+                    key={`${item.title}-${item.formattedDate || item._id}`}
+                    onClick={() => setSelectedEventId(item._id)}
+                    className={`${glassItem} p-4 cursor-pointer ${isSelected ? "ring-2 ring-offset-2 ring-[#ff8b00]" : ""}`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1">
+                        <p className="text-lg font-semibold text-[#17151f]">{item.title}</p>
+                        <p className="mt-2 flex items-center gap-2 text-sm text-[#5d5d5d]">
+                          <span className="text-base">📅</span>
+                          {item.formattedDate || item.date}
                         </p>
-                      )}
-                      {item.description && (
-                        <p className="mt-2 text-xs text-[#6b6b6b]">{item.description.substring(0, 60)}...</p>
-                      )}
-                    </div>
-                    <div className="ml-4 flex flex-col items-end gap-2">
-                      <div className="text-sm text-[#6b6b6b]">{item.registrations || 0} regs</div>
-                      <div className="text-lg font-bold text-[#1b7f77]">{formatCurrency(item.collection || 0)}</div>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          // switch to donations page and preselect this event
-                          setSelectedEventId(item._id);
-                          setActivePage("Donations");
-                          // after navigation/render, scroll to form and focus amount
-                          setTimeout(() => {
-                            const form = document.getElementById('donation-form');
-                            if (form) {
-                              form.scrollIntoView({ behavior: 'smooth' });
-                              const amt = document.getElementById('donation-amount-input');
-                              if (amt) amt.focus();
-                            }
-                          }, 250);
-                        }}
-                        className="mt-2 rounded-xl bg-[#ff8b00] px-3 py-1 text-sm font-semibold text-white"
-                      >
-                        Donate
-                      </button>
+                        {item.location && (
+                          <p className="mt-1 flex items-center gap-2 text-sm text-[#5d5d5d]">
+                            <span className="text-base">📍</span>
+                            {item.location}
+                          </p>
+                        )}
+                        {item.description && (
+                          <p className="mt-2 text-xs text-[#6b6b6b]">{item.description.substring(0, 60)}...</p>
+                        )}
+                      </div>
+                      <div className="ml-4 flex flex-col items-end gap-2">
+                        <div className="text-sm text-[#6b6b6b]">{item.registrations || 0} regs</div>
+                        <div className="text-lg font-bold text-[#1b7f77]">{formatCurrency(myTotal || 0)}</div>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // switch to donations page and preselect this event
+                            setSelectedEventId(item._id);
+                            setActivePage("Donations");
+                            // after navigation/render, scroll to form and focus amount
+                            setTimeout(() => {
+                              const form = document.getElementById("donation-form");
+                              if (form) {
+                                form.scrollIntoView({ behavior: "smooth" });
+                                const amt = document.getElementById("donation-amount-input");
+                                if (amt) amt.focus();
+                              }
+                            }, 250);
+                          }}
+                          className="mt-2 rounded-xl bg-[#ff8b00] px-3 py-1 text-sm font-semibold text-white"
+                        >
+                          Donate
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })
-          ) : (
-            <div className={`${glassItem} col-span-full text-center text-[#5d5d5d] py-8`}>
-              <p className="text-lg">No festival events available.</p>
-              <p className="mt-1 text-sm">Check back later for upcoming festivals!</p>
-            </div>
-          )}
+                );
+              })
+            ) : (
+              <div className={`${glassItem} col-span-full text-center text-[#5d5d5d] py-8`}>
+                <p className="text-lg">No festival events available.</p>
+                <p className="mt-1 text-sm">Check back later for upcoming festivals!</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderNotifications = () => (
     <div className="space-y-6">
@@ -1917,78 +1927,89 @@ const DevoteeDashboard = () => {
     </div>
   );
 
-  const renderProfile = () => (
-    <div className="space-y-6">
-      <div className={`${glassCard}`}>
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h2 className="text-[2rem] font-bold">Profile</h2>
-            <p className="mt-2 text-[#5d5d5d]">Manage your devotee profile and contact information.</p>
-          </div>
-          <button type="button" onClick={() => setProfileEditMode((prev) => !prev)} className="rounded-2xl bg-[#bc630f] px-4 py-2 text-sm font-semibold text-white">
-            {profileEditMode ? "Cancel" : "Edit Profile"}
-          </button>
-        </div>
-        {profileMessage && <div className="mt-4 rounded-xl bg-[#e8f7ef] p-3 text-sm text-[#1c6f3d]">{profileMessage}</div>}
-        {profileError && <div className="mt-4 rounded-xl bg-[#fde8e8] p-3 text-sm text-[#a12525]">{profileError}</div>}
-        {profileEditMode && (
-          <div className="mt-4 grid gap-3 rounded-2xl border border-[#f0f0f0] bg-[#fbfaf8] p-4">
+  const renderProfile = () => {
+    const displayValue = (v) => {
+      const s = v == null ? "" : String(v).trim();
+      return s ? s : "-";
+    };
+
+    return (
+      <div className="space-y-6">
+        <div className={`${glassCard}`}>
+          <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <label className="block text-sm font-medium text-[#5d5d5d] mb-2">Full Name *</label>
-              <input className={glassInput} value={profileForm.name} onChange={(e) => setProfileForm((prev) => ({ ...prev, name: e.target.value }))} placeholder="Enter full name" />
+              <h2 className="text-[2rem] font-bold">Profile</h2>
+              <p className="mt-2 text-[#5d5d5d]">Manage your devotee profile and contact information.</p>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-[#5d5d5d] mb-2">Email Address *</label>
-              <input className={glassInput} value={profileForm.email} onChange={(e) => setProfileForm((prev) => ({ ...prev, email: e.target.value }))} placeholder="Enter email" />
+            <button
+              type="button"
+              onClick={() => setProfileEditMode((prev) => !prev)}
+              className="rounded-2xl bg-[#bc630f] px-4 py-2 text-sm font-semibold text-white"
+            >
+              {profileEditMode ? "Cancel" : "Edit Profile"}
+            </button>
+          </div>
+          {profileMessage && <div className="mt-4 rounded-xl bg-[#e8f7ef] p-3 text-sm text-[#1c6f3d]">{profileMessage}</div>}
+          {profileError && <div className="mt-4 rounded-xl bg-[#fde8e8] p-3 text-sm text-[#a12525]">{profileError}</div>}
+          {profileEditMode && (
+            <div className="mt-4 grid gap-3 rounded-2xl border border-[#f0f0f0] bg-[#fbfaf8] p-4">
+              <div>
+                <label className="block text-sm font-medium text-[#5d5d5d] mb-2">Full Name *</label>
+                <input className={glassInput} value={profileForm.name} onChange={(e) => setProfileForm((prev) => ({ ...prev, name: e.target.value }))} placeholder="Enter full name" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#5d5d5d] mb-2">Email Address *</label>
+                <input className={glassInput} value={profileForm.email} onChange={(e) => setProfileForm((prev) => ({ ...prev, email: e.target.value }))} placeholder="Enter email" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#5d5d5d] mb-2">Phone Number *</label>
+                <input className={glassInput} value={profileForm.phone} onChange={(e) => setProfileForm((prev) => ({ ...prev, phone: e.target.value }))} placeholder="Enter 10-digit phone number" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#5d5d5d] mb-2">Place/City *</label>
+                <input className={glassInput} value={profileForm.place} onChange={(e) => setProfileForm((prev) => ({ ...prev, place: e.target.value }))} placeholder="Enter place or city" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#5d5d5d] mb-2">Address *</label>
+                <textarea rows="3" className={glassInput} value={profileForm.address} onChange={(e) => setProfileForm((prev) => ({ ...prev, address: e.target.value }))} placeholder="Enter complete address" />
+              </div>
+              <button type="button" onClick={handleProfileSave} className={`${glassButton} col-span-full mt-4`}>💾 Save Changes</button>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-[#5d5d5d] mb-2">Phone Number *</label>
-              <input className={glassInput} value={profileForm.phone} onChange={(e) => setProfileForm((prev) => ({ ...prev, phone: e.target.value }))} placeholder="Enter 10-digit phone number" />
+          )}
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className={glassItem}>
+              <p className="text-sm text-[#7a6f5d]">Full Name</p>
+              <p className="mt-2 text-lg font-semibold text-[#1f1f1f]">{profileData.name || devoteeName}</p>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-[#5d5d5d] mb-2">Place/City *</label>
-              <input className={glassInput} value={profileForm.place} onChange={(e) => setProfileForm((prev) => ({ ...prev, place: e.target.value }))} placeholder="Enter place or city" />
+            <div className={glassItem}>
+              <p className="text-sm text-[#7a6f5d]">Email Address</p>
+              <p className="mt-2 text-lg font-semibold text-[#1f1f1f]">{profileData.email}</p>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-[#5d5d5d] mb-2">Address *</label>
-              <textarea rows="3" className={glassInput} value={profileForm.address} onChange={(e) => setProfileForm((prev) => ({ ...prev, address: e.target.value }))} placeholder="Enter complete address" />
+            <div className={glassItem}>
+              <p className="text-sm text-[#7a6f5d]">Phone Number</p>
+              <p className="mt-2 text-lg font-semibold text-[#1f1f1f]">{displayValue(profileData.phone)}</p>
             </div>
-            <button type="button" onClick={handleProfileSave} className={`${glassButton} col-span-full mt-4`}>💾 Save Changes</button>
-          </div>
-        )}
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <div className={glassItem}>
-            <p className="text-sm text-[#7a6f5d]">Full Name</p>
-            <p className="mt-2 text-lg font-semibold text-[#1f1f1f]">{profileData.name || devoteeName}</p>
-          </div>
-          <div className={glassItem}>
-            <p className="text-sm text-[#7a6f5d]">Email Address</p>
-            <p className="mt-2 text-lg font-semibold text-[#1f1f1f]">{profileData.email}</p>
-          </div>
-          <div className={glassItem}>
-            <p className="text-sm text-[#7a6f5d]">Phone Number</p>
-            <p className="mt-2 text-lg font-semibold text-[#1f1f1f]">{profileData.phone || "Not provided"}</p>
-          </div>
-          <div className={glassItem}>
-            <p className="text-sm text-[#7a6f5d]">Place/City</p>
-            <p className="mt-2 text-lg font-semibold text-[#1f1f1f]">{profileData.place || "Not provided"}</p>
-          </div>
-          <div className={`${glassItem} sm:col-span-2 lg:col-span-1`}>
-            <p className="text-sm text-[#7a6f5d]">Role</p>
-            <p className="mt-2 text-lg font-semibold text-[#1f1f1f]">{profileData.role || "devotee"}</p>
-          </div>
-          <div className={glassItem}>
-            <p className="text-sm text-[#7a6f5d]">Member Since</p>
-            <p className="mt-2 text-lg font-semibold text-[#1f1f1f]">{profileData.memberSince || "2026"}</p>
-          </div>
-          <div className={`${glassItem} lg:col-span-2`}>
-            <p className="text-sm text-[#7a6f5d]">Address</p>
-            <p className="mt-2 text-sm text-[#1f1f1f] leading-relaxed">{profileData.address || "Not provided"}</p>
+            <div className={glassItem}>
+              <p className="text-sm text-[#7a6f5d]">Place/City</p>
+              <p className="mt-2 text-lg font-semibold text-[#1f1f1f]">{displayValue(profileData.place)}</p>
+            </div>
+            <div className={`${glassItem} sm:col-span-2 lg:col-span-1`}>
+              <p className="text-sm text-[#7a6f5d]">Role</p>
+              <p className="mt-2 text-lg font-semibold text-[#1f1f1f]">{profileData.role || "devotee"}</p>
+            </div>
+            <div className={glassItem}>
+              <p className="text-sm text-[#7a6f5d]">Member Since</p>
+              <p className="mt-2 text-lg font-semibold text-[#1f1f1f]">{profileData.memberSince || "2026"}</p>
+            </div>
+            <div className={`${glassItem} lg:col-span-2`}>
+              <p className="text-sm text-[#7a6f5d]">Address</p>
+              <p className="mt-2 text-sm text-[#1f1f1f] leading-relaxed">{displayValue(profileData.address)}</p>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderSupport = () => (
     <div className="space-y-6">

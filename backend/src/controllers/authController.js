@@ -65,11 +65,11 @@ const findUserByEmail = async (email) => {
   return null;
 };
 
-const createUserRecord = async ({ name, email, password, role }) => {
+const createUserRecord = async ({ name, email, password, role, phone, address, place }) => {
   if (isDbConnected()) {
-    return User.create({ name, email, password, role, provider: "local" });
+    return User.create({ name, email, password, role, phone, address, place, provider: "local" });
   }
-  return createFileUser({ name, email, password, role, provider: "local" });
+  return createFileUser({ name, email, password, role, phone, address, place, provider: "local" });
 };
 
 const updateUserRecord = async (id, updates) => {
