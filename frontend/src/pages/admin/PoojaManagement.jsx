@@ -7,13 +7,13 @@ import {
   MdOutlineVerified,
   MdOutlineCurrencyRupee,
   MdOutlineSearch,
-  MdOutlineFilterAlt,
-  MdOutlineRemoveRedEye,
-  MdOutlinePrint,
+  MdOutlineClose,
 } from "react-icons/md";
 import { FaDownload } from "react-icons/fa6";
-import { getDevoteeDonations, updateBookingStatus } from "../../services/devoteeService";
-import { getDashboardBookings } from "../../services/bookingService";
+import { jsPDF } from "jspdf";
+import "jspdf-autotable";
+import { getDevoteeDonations } from "../../services/devoteeService";
+import { getDashboardBookings, updateBookingStatusAdmin, getBookingReceipt } from "../../services/bookingService";
 import { getPoojaTypes, savePoojaTypes, removePoojaType } from "../../services/poojaTypeService";
 
 const formatCurrency = (value) => `Rs ${Number(value || 0).toLocaleString()}`;
@@ -21,7 +21,12 @@ const formatCurrency = (value) => `Rs ${Number(value || 0).toLocaleString()}`;
 const statusTheme = {
   Confirmed: "bg-[#e8f6e9] text-[#187a3b]",
   Pending: "bg-[#fff1df] text-[#ea580c]",
+  Booked: "bg-[#fff1df] text-[#ea580c]",
+  Approved: "bg-[#e0f2fe] text-[#0369a1]",
+  Assigned: "bg-[#ede9fe] text-[#6d28d9]",
+  "In Progress": "bg-[#fef3c7] text-[#92400e]",
   Completed: "bg-[#e9efff] text-[#2454c9]",
+  Rejected: "bg-[#fde8e8] text-[#a12525]",
   Cancelled: "bg-[#fde8e8] text-[#a12525]",
 };
 
@@ -35,6 +40,12 @@ const PoojaManagement = () => {
   const [typePrice, setTypePrice] = useState(501);
   const [editingType, setEditingType] = useState(null);
   const [typeMessage, setTypeMessage] = useState("");
+  
+  // State for Manage Pooja Types modal
+  const [showTypeModal, setShowTypeModal] = useState(false);
+  
+  // State for Viewing Booking Details modal
+  const [viewingBooking, setViewingBooking] = useState(null);
 
   const loadPoojaTypes = () => setPoojaTypes(getPoojaTypes());
 
@@ -54,6 +65,7 @@ const PoojaManagement = () => {
     setEditingType(null);
     setTypeName("");
     setTypePrice(501);
+    setShowTypeModal(false);
   };
 
   const handleEditType = (type) => {
@@ -61,6 +73,7 @@ const PoojaManagement = () => {
     setTypePrice(type.price);
     setEditingType(type.name);
     setTypeMessage("");
+    setShowTypeModal(true);
   };
 
   const handleDeleteType = (name) => {
@@ -97,10 +110,177 @@ const PoojaManagement = () => {
 
   const handleStatusChange = async (id, status) => {
     try {
-      await updateBookingStatus(id, status);
+      await updateBookingStatusAdmin(id, status);
       await reloadData();
     } catch (error) {
       console.warn("Unable to update booking status", error);
+    }
+  };
+
+  const handleDownloadReceipt = async (row) => {
+    try {
+      const bookingId = row.raw?._id;
+      let receiptData;
+      
+      if (bookingId) {
+        try {
+          const res = await getBookingReceipt(bookingId);
+          receiptData = res.receipt;
+        } catch (e) {
+          console.warn("Could not fetch online receipt data, fallback to row details", e);
+        }
+      }
+
+      if (!receiptData) {
+        const rawBooking = row.raw || {};
+        receiptData = {
+          receiptNumber: row.receiptId || `RC-BK${String(rawBooking._id || '').slice(-6).toUpperCase()}`,
+          bookingId: row.bookingId || `BK${String(rawBooking._id || '').slice(-6).toUpperCase()}`,
+          bookingNumber: rawBooking.bookingNumber || "",
+          transactionId: rawBooking.transactionId || "N/A",
+          devotee: {
+            name:   row.devotee || rawBooking.devoteeName || rawBooking.customerName || "N/A",
+            mobile: rawBooking.devoteePhone || rawBooking.contactNumber || "N/A",
+            email:  rawBooking.devoteeEmail || "N/A",
+          },
+          pooja: {
+            name:   rawBooking.service || "N/A",
+            date:   rawBooking.datetime || new Date().toISOString(),
+            slot:   rawBooking.datetime ? new Date(rawBooking.datetime).toLocaleTimeString("en-IN") : "N/A",
+            priest: rawBooking.priestName || "Not Assigned",
+          },
+          payment: {
+            baseAmount:  rawBooking.amount || 0,
+            gst:         rawBooking.gst || 0,
+            totalAmount: (rawBooking.amount || 0) + (rawBooking.gst || 0),
+            method:      row.method || rawBooking.paymentMethod || "UPI",
+            status:      rawBooking.paymentStatus || "Pending",
+          },
+          status:    rawBooking.status || "Pending",
+          createdAt: rawBooking.createdAt || new Date(),
+        };
+      }
+
+      const doc = new jsPDF({ unit: "mm", format: "a4" });
+      const pageW = doc.internal.pageSize.getWidth();
+      let currentY = 15;
+
+      doc.setFillColor(212, 120, 32);
+      doc.rect(0, 0, pageW, 40, "F");
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(22);
+      doc.text("SRI HARIDHARA TEMPLE", pageW / 2, currentY + 5, { align: "center" });
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.text("123 Temple Road, Heritage Town, Bangalore - 560001", pageW / 2, currentY + 12, { align: "center" });
+      doc.text("Email: contact@haridharatemple.org | Tel: +91 80 2345 6789", pageW / 2, currentY + 17, { align: "center" });
+
+      doc.setFillColor(243, 235, 220);
+      doc.rect(15, 48, pageW - 30, 10, "F");
+      
+      doc.setTextColor(139, 69, 19);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.text("POOJA BOOKING RECEIPT", pageW / 2, 54, { align: "center" });
+
+      currentY = 68;
+
+      doc.setTextColor(50, 50, 50);
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "bold");
+      doc.text(`Receipt No: ${receiptData.receiptNumber}`, 15, currentY);
+      doc.text(`Booking Date: ${new Date(receiptData.createdAt).toLocaleDateString("en-IN")}`, pageW - 15, currentY, { align: "right" });
+      currentY += 6;
+      doc.setFont("helvetica", "normal");
+      doc.text(`Booking ID: ${receiptData.bookingId}`, 15, currentY);
+      doc.text(`Transaction ID: ${receiptData.transactionId}`, pageW - 15, currentY, { align: "right" });
+
+      currentY += 10;
+
+      doc.autoTable({
+        startY: currentY,
+        theme: "plain",
+        headStyles: { fillColor: [243, 235, 220], textColor: [139, 69, 19], fontStyle: "bold" },
+        bodyStyles: { textColor: [50, 50, 50] },
+        head: [["DEVOTEE DETAILS", ""]],
+        body: [
+          ["Name:", receiptData.devotee.name],
+          ["Mobile:", receiptData.devotee.mobile],
+          ["Email:", receiptData.devotee.email],
+        ],
+        margin: { left: 15, right: 15 },
+        styles: { fontSize: 9, cellPadding: 2 }
+      });
+
+      currentY = doc.previousAutoTable.finalY + 6;
+
+      doc.autoTable({
+        startY: currentY,
+        theme: "plain",
+        headStyles: { fillColor: [243, 235, 220], textColor: [139, 69, 19], fontStyle: "bold" },
+        bodyStyles: { textColor: [50, 50, 50] },
+        head: [["POOJA DETAILS", ""]],
+        body: [
+          ["Pooja Name:", receiptData.pooja.name],
+          ["Pooja Date:", new Date(receiptData.pooja.date).toLocaleDateString("en-IN")],
+          ["Time Slot:", receiptData.pooja.slot],
+          ["Priest Assigned:", receiptData.pooja.priest],
+        ],
+        margin: { left: 15, right: 15 },
+        styles: { fontSize: 9, cellPadding: 2 }
+      });
+
+      currentY = doc.previousAutoTable.finalY + 6;
+
+      const gstText = receiptData.payment.gst > 0 ? `Rs ${receiptData.payment.gst}` : "Nil (0%)";
+      doc.autoTable({
+        startY: currentY,
+        theme: "striped",
+        headStyles: { fillColor: [212, 120, 32], textColor: [255, 255, 255], fontStyle: "bold" },
+        head: [["Description", "Amount"]],
+        body: [
+          [`Base Price for ${receiptData.pooja.name}`, `Rs ${Number(receiptData.payment.baseAmount).toLocaleString()}`],
+          ["GST (CGST/SGST)", gstText],
+          [`Total Paid (${receiptData.payment.method})`, `Rs ${Number(receiptData.payment.totalAmount).toLocaleString()}`]
+        ],
+        margin: { left: 15, right: 15 },
+        styles: { fontSize: 9, cellPadding: 3 },
+        columnStyles: {
+          1: { halign: "right", fontStyle: "bold" }
+        }
+      });
+
+      currentY = doc.previousAutoTable.finalY + 12;
+
+      doc.setFillColor(240, 240, 240);
+      doc.rect(15, currentY, 60, 10, "F");
+      doc.setTextColor(30, 30, 30);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.text(`Payment Status: ${receiptData.payment.status}`, 18, currentY + 6);
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(100, 100, 100);
+      doc.line(pageW - 65, currentY + 12, pageW - 15, currentY + 12);
+      doc.text("Authorized Signatory", pageW - 40, currentY + 16, { align: "center" });
+
+      currentY += 28;
+
+      doc.setFillColor(212, 120, 32);
+      doc.rect(0, 280, pageW, 17, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "italic");
+      doc.setFontSize(9);
+      doc.text("Thank you for your booking. May the Lord shower His divine blessings upon you and your family.", pageW / 2, 290, { align: "center" });
+
+      doc.save(`Receipt_${receiptData.receiptNumber}.pdf`);
+    } catch (error) {
+      console.error("PDF generation failed", error);
+      alert("Failed to generate PDF receipt. Please check console for details.");
     }
   };
 
@@ -140,6 +320,7 @@ const PoojaManagement = () => {
     amount: formatCurrency(b.amount),
     method: donations.find((d) => (d.donorName || "") === b.devotee)?.paymentMethod || "UPI",
     date: b.createdAt ? new Date(b.createdAt).toLocaleString() : "-",
+    raw: b.raw,
   }));
 
   return (
@@ -174,58 +355,24 @@ const PoojaManagement = () => {
       </div>
 
       <div className="rounded-2xl border border-[#ece8e1] bg-white p-5">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-[#f0ece6] pb-4 mb-4">
           <div>
             <h2 className="text-[30px] font-bold text-[#15141f]">Manage Pooja Types</h2>
             <p className="mt-1 text-sm text-[#5d6674]">Add, edit or remove pooja services and their booking prices.</p>
           </div>
-          <div className="w-full max-w-[360px] rounded-3xl border border-[#f0f0f0] bg-[#fafaf9] p-5">
-            <label className="block text-sm font-semibold text-[#4f4f4f]">
-              Pooja Name
-              <input
-                type="text"
-                value={typeName}
-                onChange={(e) => setTypeName(e.target.value)}
-                className="mt-2 w-full rounded-3xl border border-[#ded6c6] bg-white px-4 py-3 text-base outline-none"
-                placeholder="e.g. Lakshmi Archana"
-              />
-            </label>
-            <label className="mt-4 block text-sm font-semibold text-[#4f4f4f]">
-              Price
-              <input
-                type="number"
-                min="1"
-                value={typePrice}
-                onChange={(e) => setTypePrice(Number(e.target.value))}
-                className="mt-2 w-full rounded-3xl border border-[#ded6c6] bg-white px-4 py-3 text-base outline-none"
-                placeholder="Enter price"
-              />
-            </label>
-            <div className="mt-4 flex items-center gap-2">
-              <button
-                type="button"
-                onClick={handleSaveType}
-                className="rounded-2xl bg-[#1b7f77] px-4 py-3 text-sm font-semibold text-white"
-              >
-                {editingType ? "Update Type" : "Add Type"}
-              </button>
-              {editingType && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEditingType(null);
-                    setTypeName("");
-                    setTypePrice(501);
-                    setTypeMessage("");
-                  }}
-                  className="rounded-2xl border border-[#d1d5db] bg-white px-4 py-3 text-sm font-semibold text-[#374151]"
-                >
-                  Cancel
-                </button>
-              )}
-            </div>
-            {typeMessage && <p className="mt-3 text-sm text-[#1f6f5d]">{typeMessage}</p>}
-          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setEditingType(null);
+              setTypeName("");
+              setTypePrice(501);
+              setTypeMessage("");
+              setShowTypeModal(true);
+            }}
+            className="flex items-center gap-1.5 rounded-xl bg-[#1b7f77] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#146059]"
+          >
+            + Add Pooja Type
+          </button>
         </div>
 
         <div className="mt-6 overflow-x-auto">
@@ -244,8 +391,8 @@ const PoojaManagement = () => {
                     <td className="px-4 py-3 font-medium">{type.name}</td>
                     <td className="px-4 py-3">{`₹ ${type.price.toLocaleString()}`}</td>
                     <td className="px-4 py-3 space-x-2">
-                      <button type="button" onClick={() => handleEditType(type)} className="rounded-lg bg-[#f8fafc] px-3 py-2 text-sm font-semibold text-[#1f2937]">Edit</button>
-                      <button type="button" onClick={() => handleDeleteType(type.name)} className="rounded-lg bg-[#fef2f2] px-3 py-2 text-sm font-semibold text-[#b91c1c]">Delete</button>
+                      <button type="button" onClick={() => handleEditType(type)} className="rounded-lg bg-[#f8fafc] px-3 py-2 text-sm font-semibold text-[#1f2937] hover:bg-[#f1f5f9]">Edit</button>
+                      <button type="button" onClick={() => handleDeleteType(type.name)} className="rounded-lg bg-[#fef2f2] px-3 py-2 text-sm font-semibold text-[#b91c1c] hover:bg-[#fee2e2]">Delete</button>
                     </td>
                   </tr>
                 ))
@@ -288,23 +435,59 @@ const PoojaManagement = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredBookings.map((row) => (
-                    <tr key={row.id} className="border-t border-[#f0ece6] text-[#2f3645]">
-                      <td className="px-4 py-3">{row.id}</td>
-                      <td className="px-4 py-3 font-medium">{row.devotee}</td>
-                      <td className="px-4 py-3">{row.pooja}</td>
-                      <td className="px-4 py-3">{row.date}</td>
-                      <td className="px-4 py-3">{row.slot}</td>
-                      <td className="px-4 py-3 font-semibold">{formatCurrency(row.amount)}</td>
-                      <td className="px-4 py-3"><span className={`rounded-lg px-2.5 py-1 text-[13px] font-semibold ${statusTheme[row.status] || statusTheme.Pending}`}>{row.status}</span></td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <button type="button" onClick={() => handleStatusChange(row.raw._id, "Confirmed")} className="rounded bg-green-100 px-2 py-1 text-xs font-semibold text-green-700">Approve</button>
-                          <button type="button" onClick={() => handleStatusChange(row.raw._id, "Rejected")} className="rounded bg-rose-100 px-2 py-1 text-xs font-semibold text-rose-700">Reject</button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                  {filteredBookings.map((row) => {
+                    const isPast = row.raw.datetime ? new Date(row.raw.datetime) < new Date() : false;
+                    return (
+                      <tr key={row.id} className="border-t border-[#f0ece6] text-[#2f3645]">
+                        <td className="px-4 py-3">{row.id}</td>
+                        <td className="px-4 py-3 font-medium">{row.devotee}</td>
+                        <td className="px-4 py-3">{row.pooja}</td>
+                        <td className="px-4 py-3">{row.date}</td>
+                        <td className="px-4 py-3">{row.slot}</td>
+                        <td className="px-4 py-3 font-semibold">{formatCurrency(row.amount)}</td>
+                        <td className="px-4 py-3">
+                          <span className={`rounded-lg px-2.5 py-1 text-[13px] font-semibold ${statusTheme[row.status] || statusTheme.Pending}`}>
+                            {row.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            {(row.status === "Pending" || row.status === "Booked" || !row.status) && (
+                              <>
+                                <button
+                                  type="button"
+                                  disabled={isPast}
+                                  title={isPast ? "Booking date has already passed." : ""}
+                                  onClick={() => handleStatusChange(row.raw._id, "Approved")}
+                                  className="rounded bg-green-100 px-2 py-1 text-xs font-semibold text-green-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                                >
+                                  Approve
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={isPast}
+                                  title={isPast ? "Booking date has already passed." : ""}
+                                  onClick={() => handleStatusChange(row.raw._id, "Rejected")}
+                                  className="rounded bg-rose-100 px-2 py-1 text-xs font-semibold text-rose-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                                >
+                                  Reject
+                                </button>
+                              </>
+                            )}
+                            {(row.status === "Assigned" || row.status === "In Progress") && (
+                              <button
+                                type="button"
+                                onClick={() => setViewingBooking(row.raw)}
+                                className="rounded bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-700 hover:bg-blue-200"
+                              >
+                                View
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -333,7 +516,9 @@ const PoojaManagement = () => {
                     <td className="py-2 font-semibold">{row.amount}</td>
                     <td className="py-2">{row.method}</td>
                     <td className="py-2">{row.date}</td>
-                    <td className="py-2 text-[#f97316]"><FaDownload /></td>
+                    <td className="py-2 text-[#f97316] cursor-pointer" onClick={() => handleDownloadReceipt(row)}>
+                      <FaDownload />
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -351,6 +536,153 @@ const PoojaManagement = () => {
             <div className="flex items-center justify-between"><span>Cancelled</span><span>{statsData?.cancelled || 0}</span></div>
             <div className="border-t border-[#f0ece6] pt-2"><p className="text-[14px] text-[#6b7280]">Total Revenue</p><p className="text-[34px] leading-none font-bold text-[#f97316]">{formatCurrency(revenue)}</p></div>
           </div>
+        </div>
+      </div>
+
+      {/* ── Manage Pooja Types Popup Modal ───────────────────────────────────── */}
+      {showTypeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="w-full max-w-[400px] rounded-3xl border border-[#f0f0f0] bg-white p-6 shadow-2xl relative">
+            <button
+              type="button"
+              onClick={() => {
+                setShowTypeModal(false);
+                setEditingType(null);
+                setTypeName("");
+                setTypePrice(501);
+                setTypeMessage("");
+              }}
+              className="absolute top-4 right-4 text-[#858b96] hover:text-[#15141f] text-2xl font-bold"
+            >
+              &times;
+            </button>
+            <h3 className="text-xl font-bold text-[#15141f] mb-4">
+              {editingType ? "Edit Pooja Type" : "Add Pooja Type"}
+            </h3>
+            <label className="block text-sm font-semibold text-[#4f4f4f]">
+              Pooja Name
+              <input
+                type="text"
+                value={typeName}
+                onChange={(e) => setTypeName(e.target.value)}
+                className="mt-2 w-full rounded-3xl border border-[#ded6c6] bg-white px-4 py-3 text-base outline-none focus:border-[#8b5e3c]"
+                placeholder="e.g. Lakshmi Archana"
+              />
+            </label>
+            <label className="mt-4 block text-sm font-semibold text-[#4f4f4f]">
+              Price
+              <input
+                type="number"
+                min="1"
+                value={typePrice}
+                onChange={(e) => setTypePrice(Number(e.target.value))}
+                className="mt-2 w-full rounded-3xl border border-[#ded6c6] bg-white px-4 py-3 text-base outline-none focus:border-[#8b5e3c]"
+                placeholder="Enter price"
+              />
+            </label>
+            <div className="mt-6 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleSaveType}
+                className="w-full rounded-3xl bg-[#1b7f77] py-3 text-sm font-semibold text-white hover:bg-[#146059]"
+              >
+                {editingType ? "Update Type" : "Add Type"}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowTypeModal(false);
+                  setEditingType(null);
+                  setTypeName("");
+                  setTypePrice(501);
+                  setTypeMessage("");
+                }}
+                className="w-full rounded-3xl border border-[#d1d5db] bg-white py-3 text-sm font-semibold text-[#374151]"
+              >
+                Cancel
+              </button>
+            </div>
+            {typeMessage && <p className="mt-3 text-sm text-[#1f6f5d]">{typeMessage}</p>}
+          </div>
+        </div>
+      )}
+
+      {/* ── Booking Details View Modal ───────────────────────────────────────── */}
+      {viewingBooking && (
+        <BookingDetailsModal
+          booking={viewingBooking}
+          onClose={() => setViewingBooking(null)}
+        />
+      )}
+    </div>
+  );
+};
+
+// Sub-component: BookingDetailsModal
+const BookingDetailsModal = ({ booking, onClose }) => {
+  if (!booking) return null;
+  const dateStr = booking.datetime ? new Date(booking.datetime).toLocaleDateString() : "-";
+  const slotStr = booking.datetime ? new Date(booking.datetime).toLocaleTimeString() : "-";
+  
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+      <div className="w-full max-w-lg rounded-3xl border border-[#ece8e1] bg-white p-6 shadow-2xl relative">
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute top-4 right-4 text-[#858b96] hover:text-[#15141f] text-2xl font-bold"
+        >
+          &times;
+        </button>
+        <h3 className="text-2xl font-bold text-[#15141f] mb-4">Booking Details</h3>
+        
+        <div className="space-y-3 text-[15px] text-[#2f3645]">
+          <div className="flex justify-between border-b border-[#f0ece6] pb-2">
+            <span className="font-semibold text-gray-500">Booking ID:</span>
+            <span>BK{String(booking._id).slice(-6).toUpperCase()}</span>
+          </div>
+          <div className="flex justify-between border-b border-[#f0ece6] pb-2">
+            <span className="font-semibold text-gray-500">Devotee Name:</span>
+            <span>{booking.devoteeName || booking.customerName}</span>
+          </div>
+          <div className="flex justify-between border-b border-[#f0ece6] pb-2">
+            <span className="font-semibold text-gray-500">Pooja Service:</span>
+            <span>{booking.service}</span>
+          </div>
+          <div className="flex justify-between border-b border-[#f0ece6] pb-2">
+            <span className="font-semibold text-gray-500">Pooja Date:</span>
+            <span>{dateStr}</span>
+          </div>
+          <div className="flex justify-between border-b border-[#f0ece6] pb-2">
+            <span className="font-semibold text-gray-500">Time Slot:</span>
+            <span>{slotStr}</span>
+          </div>
+          <div className="flex justify-between border-b border-[#f0ece6] pb-2">
+            <span className="font-semibold text-gray-500">Amount:</span>
+            <span className="font-bold text-[#f97316]">Rs {Number(booking.amount || 0).toLocaleString()}</span>
+          </div>
+          {booking.paymentMethod && (
+            <div className="flex justify-between border-b border-[#f0ece6] pb-2">
+              <span className="font-semibold text-gray-500">Payment Method:</span>
+              <span>{booking.paymentMethod}</span>
+            </div>
+          )}
+          <div className="flex justify-between border-b border-[#f0ece6] pb-2">
+            <span className="font-semibold text-gray-500">Status:</span>
+            <span className={`rounded-lg px-2.5 py-1 text-[13px] font-semibold ${statusTheme[booking.status] || statusTheme.Pending}`}>
+              {booking.status || "Pending"}
+            </span>
+          </div>
+        </div>
+        
+        <div className="mt-6 flex justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-2xl border border-[#d1d5db] bg-white px-5 py-2.5 text-sm font-semibold text-[#374151] hover:bg-[#f9fafb]"
+          >
+            Close
+          </button>
         </div>
       </div>
     </div>
