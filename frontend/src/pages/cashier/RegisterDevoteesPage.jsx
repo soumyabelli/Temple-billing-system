@@ -15,6 +15,8 @@ const emptyForm = {
   confirmPassword: "",
 };
 
+const normalizeEmail = (email) => String(email || "").trim().toLowerCase().replace(/@temple\.local$/, "@gmail.com");
+
 const RegisterDevoteesPage = () => {
   const { loadNotifications } = useNotifications();
   const [form, setForm] = useState(emptyForm);
@@ -47,7 +49,7 @@ const RegisterDevoteesPage = () => {
     try {
       await registerDevotee({
         name: form.name.trim(),
-        email: form.email.trim(),
+        email: normalizeEmail(form.email),
         phone: form.phone.trim(),
         address: form.address.trim(),
         place: form.place.trim(),
@@ -58,7 +60,7 @@ const RegisterDevoteesPage = () => {
 
       const newDevotee = {
         name: form.name.trim(),
-        email: form.email.trim(),
+        email: normalizeEmail(form.email),
         phone: form.phone.trim(),
         place: form.place.trim(),
       };

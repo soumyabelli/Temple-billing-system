@@ -11,35 +11,16 @@ const {
   getAllUsers: getAllFileUsers,
 } = require("../store/fileUserStore");
 const { createStaffNotification } = require("../utils/notificationService");
+const { buildEmailLookup, normalizeEmail } = require("../utils/email");
 
 const ALLOWED_ROLES = ["admin", "accountant", "cashier", "priest", "staff", "devotee"];
 
-const getEmailCandidates = (email) => {
-  const normalizedEmail = String(email || "").toLowerCase().trim();
-  if (!normalizedEmail) return [];
-
-  const candidates = new Set([normalizedEmail]);
-
-  if (normalizedEmail.endsWith("@gmail.com")) {
-    candidates.add(normalizedEmail.replace(/@gmail\.com$/, "@gamail.com"));
-    candidates.add(normalizedEmail.replace(/@gmail\.com$/, "@gamil.com"));
-  }
-
-  if (normalizedEmail.endsWith("@gamail.com")) {
-    candidates.add(normalizedEmail.replace(/@gamail\.com$/, "@gmail.com"));
-  }
-
-  if (normalizedEmail.endsWith("@gamil.com")) {
-    candidates.add(normalizedEmail.replace(/@gamil\.com$/, "@gmail.com"));
-  }
-
-  return [...candidates];
-};
+const normalizeDevoteeEmail = normalizeEmail;
 
 const sanitizeUser = (userDoc) => ({
   id: userDoc._id?.toString?.() || userDoc.id,
   name: userDoc.name,
-  email: userDoc.email,
+  email: normalizeDevoteeEmail(userDoc.email),
   phone: userDoc.phone || "",
   address: userDoc.address || "",
   place: userDoc.place || "",
@@ -49,27 +30,25 @@ const sanitizeUser = (userDoc) => ({
 });
 
 const findUserByEmail = async (email) => {
-  const emailCandidates = getEmailCandidates(email);
+  const normalizedEmail = normalizeDevoteeEmail(email);
+  if (!normalizedEmail) return null;
 
   if (isDbConnected()) {
-    return User.findOne({ email: { $in: emailCandidates } });
+    return User.findOne(buildEmailLookup("email", normalizedEmail));
   }
 
-  for (const candidate of emailCandidates) {
-    const user = await findFileUserByEmail(candidate);
-    if (user) {
-      return user;
-    }
-  }
-
-  return null;
+  return findFileUserByEmail(normalizedEmail);
 };
 
+
+
+
 const createUserRecord = async ({ name, email, password, role, phone, address, place }) => {
+  const normalizedEmail = normalizeDevoteeEmail(email);
   if (isDbConnected()) {
-    return User.create({ name, email, password, role, phone, address, place, provider: "local" });
+    return User.create({ name, email: normalizedEmail, password, role, phone, address, place, provider: "local" });
   }
-  return createFileUser({ name, email, password, role, phone, address, place, provider: "local" });
+  return createFileUser({ name, email: normalizedEmail, password, role, phone, address, place, provider: "local" });
 };
 
 const updateUserRecord = async (id, updates) => {
@@ -89,7 +68,7 @@ const findUserById = async (id) => {
 const registerUser = async (req, res) => {
   try {
     const { name, email, password, confirmPassword, phone, address, place, role } = req.body;
-    const normalizedEmail = String(email || "").toLowerCase().trim();
+    const normalizedEmail = normalizeDevoteeEmail(email);
     const normalizedRole = String(role || "").toLowerCase().trim();
 
     // Validate required fields
@@ -160,7 +139,7 @@ const issueAuthResponse = (res, user, message = "Login successful") => {
 const loginUser = async (req, res) => {
   try {
     const { email, password, role } = req.body;
-    const normalizedEmail = String(email || "").toLowerCase().trim();
+    const normalizedEmail = normalizeDevoteeEmail(email);
     const normalizedRole = String(role || "").toLowerCase().trim();
 
     if (!email || !password) {
@@ -212,7 +191,7 @@ const getUsersForAdmin = async (req, res) => {
 const createUserByAdmin = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
-    const normalizedEmail = String(email || "").toLowerCase().trim();
+    const normalizedEmail = normalizeDevoteeEmail(email);
     const normalizedRole = String(role || "").toLowerCase().trim();
 
     if (!name || !email || !password || !role) {
@@ -290,7 +269,7 @@ const changePassword = async (req, res) => {
 
 const forgotPassword = async (req, res) => {
   try {
-    const normalizedEmail = String(req.body.email || "").toLowerCase().trim();
+    const normalizedEmail = normalizeDevoteeEmail(req.body.email);
     if (!normalizedEmail) {
       return res.status(400).json({ message: "Email is required" });
     }
@@ -316,7 +295,7 @@ const forgotPassword = async (req, res) => {
 const resetPassword = async (req, res) => {
   try {
     const { email, token, newPassword } = req.body;
-    const normalizedEmail = String(email || "").toLowerCase().trim();
+    const normalizedEmail = normalizeDevoteeEmail(email);
     if (!normalizedEmail || !token || !newPassword) {
       return res.status(400).json({ message: "Email, token and new password are required" });
     }
@@ -350,7 +329,7 @@ const resetPassword = async (req, res) => {
 
 const googleLogin = async (req, res) => {
   try {
-    const normalizedEmail = String(req.body.email || "").toLowerCase().trim();
+    const normalizedEmail = normalizeDevoteeEmail(req.body.email);
     const name = String(req.body.name || "Devotee");
     if (!normalizedEmail) {
       return res.status(400).json({ message: "Google email is required" });
