@@ -15,6 +15,7 @@ import DevoteeDetails from "./DevoteeDetails";
 import NotificationsCenter from "./NotificationsCenter";
 import { getAdminUsers } from "../../services/authService";
 import { getDevoteeBookings, getDevoteeDonations } from "../../services/devoteeService";
+import axios from "axios";
 
 const statCards = [
   { title: "Total Revenues", amount: "Rs 2,45,680", trend: "12.3%", trendUp: true, icon: <FaRupeeSign />, accent: "bg-orange-100 text-orange-600" },
@@ -24,7 +25,7 @@ const statCards = [
   { title: "Prasadam Sales", amount: "Rs 21,430", trend: "7.1%", trendUp: true, icon: <FaBoxes />, accent: "bg-sky-100 text-sky-600" },
   { title: "Pending Payments", amount: "Rs 12,560", trend: "2.2%", trendUp: false, icon: <MdOutlinePayments />, accent: "bg-rose-100 text-rose-600" },
   { title: "Total Devotees", amount: "2,350", trend: "4.3%", trendUp: true, icon: <FaUsers />, accent: "bg-blue-100 text-blue-600" },
-  { title: "Low Stock Items", amount: "8", trend: "Requires attention", trendUp: false, icon: <FaBoxes />, accent: "bg-red-100 text-red-600" },
+  { title: "Low Stock Items", amount: "0", id: "lowStock", trend: "Requires attention", trendUp: false, icon: <FaBoxes />, accent: "bg-red-100 text-red-600" },
   { title: "Active Duty Assignments", amount: "24", trend: "Today", trendUp: true, icon: <FaUsers />, accent: "bg-emerald-100 text-emerald-600" },
   { title: "Extra Shift Assignments", amount: "5", trend: "Today", trendUp: true, icon: <FaUsers />, accent: "bg-purple-100 text-purple-600" },
   { title: "Overtime Hours", amount: "12 hrs", trend: "This Week", trendUp: true, icon: <FaRupeeSign />, accent: "bg-orange-100 text-orange-600" },
@@ -65,7 +66,7 @@ const DashboardView = ({ darkMode }) => (
       </div>
       <div className={`rounded-2xl border p-5 ${darkMode ? "bg-[#1f2937] border-[#334155]" : "bg-white border-[#ece8e1]"}`}>
         <h3 className={`text-2xl font-bold mb-3 ${darkMode ? "text-slate-100" : "text-[#1d1b19]"}`}>Low Stock Alerts</h3>
-        <LowStock />
+        <LowStock items={[]} />
       </div>
     </div>
   </>
@@ -77,22 +78,28 @@ const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [donations, setDonations] = useState([]);
+  const [inventoryItems, setInventoryItems] = useState([]);
+  const [prasadamReports, setPrasadamReports] = useState(null);
   const navigate = useNavigate();
   const { logoutUser, token } = useAuth();
 
   useEffect(() => {
     const load = async () => {
       try {
-        const [usersRes, bookingsRes, donationsRes] = await Promise.all([
+        const [usersRes, bookingsRes, donationsRes, inventoryRes, prasadamRes] = await Promise.all([
           getAdminUsers(token),
           getDevoteeBookings(),
           getDevoteeDonations(),
+          axios.get("http://localhost:5000/api/admin/inventory-items").catch(() => ({ data: { items: [] } })),
+          axios.get("http://localhost:5000/api/prasadam/reports/sales").catch(() => ({ data: { totalRevenue: 0 } })),
         ]);
         setUsers(usersRes.users || []);
         setBookings(bookingsRes.bookings || []);
         setDonations(donationsRes.donations || []);
+        setInventoryItems(inventoryRes.data?.items || []);
+        setPrasadamReports(prasadamRes.data || null);
       } catch (error) {
-        console.warn("Unable to load admin devotee data . please try again", error);
+        console.warn("Unable to load admin data . please try again", error);
       }
     };
     if (token) load();
@@ -137,12 +144,54 @@ const AdminDashboard = () => {
     setSelectedDevotee(null);
   };
 
+  const dynamicStatCards = useMemo(() => {
+    const lowStockCount = inventoryItems.filter(i => i.currentStock <= i.minimumStock).length;
+    const prasadamSales = prasadamReports?.totalRevenue || 21430;
+
+    return statCards.map(card => {
+      if (card.id === "lowStock") return { ...card, amount: lowStockCount.toString() };
+      if (card.title === "Prasadam Sales") return { ...card, amount: `Rs ${prasadamSales.toLocaleString()}` };
+      return card;
+    });
+  }, [inventoryItems, prasadamReports]);
+
   return (
     <>
       <AdminLayout onLogoutClick={() => setShowLogout(true)}>
         {({ activeItem, darkMode }) => {
           if (activeItem === "Dashboard") {
-            return <DashboardView darkMode={darkMode} />;
+            return (
+              <>
+                <div className="mt-5">
+                  <h1 className={`text-[30px] md:text-[38px] font-bold leading-tight ${darkMode ? "text-slate-100" : "text-[#1d1b19]"}`}>Welcome back, Admin</h1>
+                  <p className={`${darkMode ? "text-slate-300" : "text-gray-600"}`}>Manage collections, bookings and operations from one dashboard.</p>
+                </div>
+
+                <DashboardCards cards={dynamicStatCards} />
+
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mt-4">
+                  <div className={`rounded-2xl border p-4 ${darkMode ? "bg-[#1f2937] border-[#334155]" : "bg-white border-[#ece8e1]"}`}>
+                    <h3 className={`text-xl font-bold ${darkMode ? "text-slate-100" : "text-[#1d1b19]"}`}>Monthly Revenue</h3>
+                    <RevenueChart />
+                  </div>
+                  <div className={`rounded-2xl border p-4 ${darkMode ? "bg-[#1f2937] border-[#334155]" : "bg-white border-[#ece8e1]"}`}>
+                    <h3 className={`text-xl font-bold ${darkMode ? "text-slate-100" : "text-[#1d1b19]"}`}>Donation Sources</h3>
+                    <DonationChart />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mt-4">
+                  <div className={`rounded-2xl border p-5 ${darkMode ? "bg-[#1f2937] border-[#334155]" : "bg-white border-[#ece8e1]"}`}>
+                    <h3 className={`text-2xl font-bold mb-3 ${darkMode ? "text-slate-100" : "text-[#1d1b19]"}`}>Recent Bookings</h3>
+                    <RecentBookings />
+                  </div>
+                  <div className={`rounded-2xl border p-5 ${darkMode ? "bg-[#1f2937] border-[#334155]" : "bg-white border-[#ece8e1]"}`}>
+                    <h3 className={`text-2xl font-bold mb-3 ${darkMode ? "text-slate-100" : "text-[#1d1b19]"}`}>Low Stock Alerts</h3>
+                    <LowStock items={inventoryItems.map(i => ({ name: i.name, stock: i.currentStock, status: i.currentStock <= i.minimumStock ? "Low" : "OK" }))} />
+                  </div>
+                </div>
+              </>
+            );
           }
 
           if (activeItem === "Devotees Management") {

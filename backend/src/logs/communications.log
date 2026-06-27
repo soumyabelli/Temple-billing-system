@@ -506,6 +506,45 @@ Thank you!
 To: 6362210340
 Message: Pooja booking confirmed! Service: Archana on 2026-06-18T06:30. Amount: ₹501. -Temple
 
+[2026-06-23T09:48:02.954Z] EMAIL
+To: Soumya@mail.com
+Subject: Pooja Booking Confirmation
+Pooja Booking Confirmation
+Service: Satyanarayana Puja
+Date & Time: 2026-06-23T15:32
+Amount: ₹1201
+Thank you!
+
+[2026-06-23T09:48:02.959Z] SMS
+To: 9740265462
+Message: Pooja booking confirmed! Service: Satyanarayana Puja on 2026-06-23T15:32. Amount: ₹1201. -Temple
+
+[2026-06-24T11:14:09.713Z] EMAIL
+To: maahe@gmail.com
+Subject: Donation Receipt
+Donation Receipt
+Amount: ₹501
+Category: Annadanam
+Transaction ID: SIM_TXN_1782299649243
+Thank you for your donation!
+
+[2026-06-24T11:14:09.728Z] SMS
+To: 9740265462
+Message: Donation received! Amount: ₹501. Transaction ID: SIM_TXN_1782299649243. Thank you! -Temple
+
+[2026-06-25T04:20:35.140Z] EMAIL
+To: maahe@gmail.com
+Subject: Donation Receipt
+Donation Receipt
+Amount: ₹501
+Category: Annadanam
+Transaction ID: SIM_TXN_1782361234642
+Thank you for your donation!
+
+[2026-06-25T04:20:35.150Z] SMS
+To: 9740265462
+Message: Donation received! Amount: ₹501. Transaction ID: SIM_TXN_1782361234642. Thank you! -Temple
+
 [2026-06-27T05:08:16.846Z] EMAIL
 To: rakshi@gmail.com
 Subject: Pooja Booking Confirmation

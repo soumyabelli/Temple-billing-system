@@ -10,6 +10,7 @@ const {
   updateUser: updateFileUser,
   getAllUsers: getAllFileUsers,
 } = require("../store/fileUserStore");
+const { createStaffNotification } = require("../utils/notificationService");
 
 const ALLOWED_ROLES = ["admin", "accountant", "cashier", "priest", "staff", "devotee"];
 
@@ -64,11 +65,11 @@ const findUserByEmail = async (email) => {
   return null;
 };
 
-const createUserRecord = async ({ name, email, password, role }) => {
+const createUserRecord = async ({ name, email, password, role, phone, address, place }) => {
   if (isDbConnected()) {
-    return User.create({ name, email, password, role, provider: "local" });
+    return User.create({ name, email, password, role, phone, address, place, provider: "local" });
   }
-  return createFileUser({ name, email, password, role, provider: "local" });
+  return createFileUser({ name, email, password, role, phone, address, place, provider: "local" });
 };
 
 const updateUserRecord = async (id, updates) => {
@@ -126,6 +127,14 @@ const registerUser = async (req, res) => {
       password: hashedPassword,
       role: normalizedRole,
     });
+
+    // Notify cashier role about new devotee registration
+    createStaffNotification({
+      title: "🙏 New Devotee Registered",
+      message: `Devotee "${name}" (${phone}) has been registered successfully and can now log in.`,
+      audienceRole: "cashier",
+      category: "registration",
+    }).catch(() => {});
 
     return res.status(201).json({
       message: "Registration successful",

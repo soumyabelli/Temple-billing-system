@@ -38,7 +38,7 @@ const findUserById = async (id) => {
   return users.find((user) => user.id === id) || null;
 };
 
-const createUser = async ({ name, email, password, role, mustChangePassword = false, provider = "local" }) => {
+const createUser = async ({ name, email, password, role, phone, address, place, mustChangePassword = false, provider = "local" }) => {
   const users = await readUsers();
   const user = {
     id: crypto.randomUUID(),
@@ -46,6 +46,9 @@ const createUser = async ({ name, email, password, role, mustChangePassword = fa
     email,
     password,
     role,
+    phone: phone || "",
+    address: address || "",
+    place: place || "",
     mustChangePassword,
     provider,
     createdAt: new Date().toISOString(),

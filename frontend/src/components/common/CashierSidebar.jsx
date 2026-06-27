@@ -14,6 +14,7 @@ const CashierSidebar = ({
   mobileOpen,
   setMobileOpen,
   onLogoutClick,
+  unreadCount = 0,
 }) => {
   useEffect(() => {
     if (!mobileOpen) return;
@@ -77,6 +78,8 @@ const CashierSidebar = ({
               const Icon = item.icon;
               const active = item.title === activeItem || isActivePath(item);
               const isLogout = item.title === "Logout";
+              const isNotifications = item.title === "Notifications";
+              const showBadge = isNotifications && unreadCount > 0;
 
               return (
                 <button
@@ -106,6 +109,15 @@ const CashierSidebar = ({
                   {active ? <span className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-white" /> : null}
                   {isLogout ? <FaSignOutAlt size={18} className="shrink-0" /> : <Icon size={18} className="shrink-0" />}
                   {!collapsed ? <span className="text-[15px] font-semibold leading-tight">{item.title}</span> : null}
+                  {showBadge ? (
+                    <span
+                      className={`ml-auto flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1 text-[10px] font-extrabold ${
+                        active ? "bg-white text-[#f28c18]" : "bg-[#f28c18] text-white"
+                      }`}
+                    >
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  ) : null}
                 </button>
               );
             })}

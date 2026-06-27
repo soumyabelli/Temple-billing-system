@@ -1,4 +1,5 @@
 const Bill = require("../models/Bill");
+const { createStaffNotification } = require("../utils/notificationService");
 
 const getBills = async (req, res) => {
   try {
@@ -40,6 +41,14 @@ const createBill = async (req, res) => {
       notes,
       status,
     });
+    // Fire notification to cashier role
+    createStaffNotification({
+      title: `💰 New Bill Created`,
+      message: `Bill for "${devoteeName}" — ${sevaType} — ₹${amount} (${paymentMode || "Cash"}) has been recorded.`,
+      audienceRole: "cashier",
+      category: "billing",
+    }).catch(() => {});
+
     return res.status(201).json(bill);
   } catch (error) {
     return res.status(500).json({ message: "Failed to create bill", error: error.message });

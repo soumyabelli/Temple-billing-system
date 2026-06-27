@@ -1,41 +1,16 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { FaBell, FaCheckCircle, FaFilter, FaSyncAlt } from "react-icons/fa";
-import templeBg from "../../assets/temple-bg.jpg";
 import CashierPageShell from "../../components/cashier/CashierPageShell";
 import { useAuth } from "../../context/AuthContext";
-import {
-  fetchNotifications,
-  formatDateTime,
-  markNotificationRead,
-} from "../../services/cashierService";
+import { useNotifications } from "../../context/NotificationContext";
+import { formatDateTime } from "../../services/cashierService";
+import templeBg from "../../assets/temple-bg.jpg";
 
 const Notifications = () => {
   const { user } = useAuth();
-  const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { notifications, unreadCount, loading, loadNotifications, markRead } = useNotifications();
   const [filter, setFilter] = useState("All");
   const [message, setMessage] = useState("");
-
-  const userId = user?.id || user?._id || "";
-
-  const loadNotifications = async () => {
-    setLoading(true);
-    try {
-      const rows = await fetchNotifications(userId);
-      setNotifications(rows);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadNotifications();
-  }, [userId]);
-
-  const unreadCount = useMemo(
-    () => notifications.filter((notification) => !notification.read).length,
-    [notifications]
-  );
 
   const filteredNotifications = useMemo(() => {
     return [...notifications]
@@ -76,12 +51,7 @@ const Notifications = () => {
 
   const handleMarkRead = async (notificationId) => {
     try {
-      await markNotificationRead(notificationId);
-      setNotifications((current) =>
-        current.map((notification) =>
-          notification._id === notificationId ? { ...notification, read: true, readAt: new Date() } : notification
-        )
-      );
+      await markRead(notificationId);
       setMessage("Notification marked as read.");
     } catch (error) {
       setMessage("Unable to update notification status.");

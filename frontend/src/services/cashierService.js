@@ -116,6 +116,11 @@ export const createPrasadamOrder = async (payload) => {
   return response.data?.order || null;
 };
 
+export const fetchPrasadamMaster = async () => {
+  const response = await axios.get(`${API_BASE}/prasadam`);
+  return response.data?.items || [];
+};
+
 export const cancelPrasadamOrder = async (id) => {
   const response = await axios.patch(`${API_BASE}/devotee/prasadam-orders/${id}/cancel`);
   return response.data?.order || null;

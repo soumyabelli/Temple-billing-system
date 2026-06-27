@@ -22,6 +22,7 @@ import {
   FaEnvelope,
   FaLanguage,
   FaAward,
+  FaBoxOpen,
 } from "react-icons/fa";
 import { MdTempleHindu, MdArrowForward, MdFestival } from "react-icons/md";
 import { useAuth } from "../../context/AuthContext";
@@ -40,6 +41,7 @@ import FestivalDuties from "./FestivalDuties";
 import PriestNotifications from "./PriestNotifications";
 import PriestProfile from "./PriestProfile";
 import PriestSettings from "./PriestSettings";
+import PriestInventory from "./PriestInventory";
 
 const API_BASE = "http://localhost:5000/api";
 
@@ -1228,6 +1230,8 @@ const PriestDashboard = () => {
             return <SpecialDuties darkMode={darkMode} />;
           case "Festival Duties":
             return <FestivalDuties darkMode={darkMode} />;
+          case "Inventory Requests":
+            return <PriestInventory darkMode={darkMode} />;
           case "Notifications":
             return <PriestNotifications darkMode={darkMode} />;
           case "Profile":

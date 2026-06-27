@@ -11,6 +11,7 @@ import {
   FaCalendarAlt,
   FaCheckCircle,
   FaStar,
+  FaBoxOpen,
 } from "react-icons/fa";
 
 export const priestSidebarItems = [
@@ -20,6 +21,7 @@ export const priestSidebarItems = [
   { title: "Completed Services", icon: FaCheckCircle, path: "/priest/completed-services" },
   { title: "Special Duties", icon: FaStar, path: "/priest/special-duties" },
   { title: "Festival Duties", icon: MdFestival, path: "/priest/festival-duties" },
+  { title: "Inventory Requests", icon: FaBoxOpen, path: "/priest/inventory-requests" },
   { title: "Notifications", icon: MdNotifications, path: "/priest/notifications" },
   { title: "Profile", icon: MdOutlinePerson, path: "/priest/profile" },
   { title: "Settings", icon: MdOutlineSettings, path: "/priest/settings" },

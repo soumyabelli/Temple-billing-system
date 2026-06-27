@@ -1,11 +1,13 @@
 import axios from "axios";
 
-const API_BASE = "http://localhost:5000/api/devotee";
+const API_BASE = "/api/devotee";
+
 
 export const getDevoteeBookings = async (email) => {
   const response = await axios.get(`${API_BASE}/bookings`, { params: email ? { email } : {} });
   return response.data;
 };
+
 
 export const getDevoteeDonations = async (email) => {
   try {

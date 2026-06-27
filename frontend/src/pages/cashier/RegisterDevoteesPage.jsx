@@ -3,6 +3,7 @@ import { FaCheckCircle, FaUserPlus } from "react-icons/fa";
 import templeBg from "../../assets/temple-bg.jpg";
 import CashierPageShell from "../../components/cashier/CashierPageShell";
 import { registerDevotee } from "../../services/cashierService";
+import { useNotifications } from "../../context/NotificationContext";
 
 const emptyForm = {
   name: "",
@@ -15,10 +16,18 @@ const emptyForm = {
 };
 
 const RegisterDevoteesPage = () => {
+  const { loadNotifications } = useNotifications();
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
-  const [recent, setRecent] = useState([]);
+  const [recent, setRecent] = useState(() => {
+    try {
+      const stored = localStorage.getItem("recentDevotees");
+      return stored ? JSON.parse(stored) : [];
+    } catch (e) {
+      return [];
+    }
+  });
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -47,18 +56,22 @@ const RegisterDevoteesPage = () => {
         role: "devotee",
       });
 
-      setRecent((current) => [
-        {
-          name: form.name.trim(),
-          email: form.email.trim(),
-          phone: form.phone.trim(),
-          place: form.place.trim(),
-        },
-        ...current,
-      ].slice(0, 5));
+      const newDevotee = {
+        name: form.name.trim(),
+        email: form.email.trim(),
+        phone: form.phone.trim(),
+        place: form.place.trim(),
+      };
+
+      setRecent((current) => {
+        const updated = [newDevotee, ...current].slice(0, 5);
+        localStorage.setItem("recentDevotees", JSON.stringify(updated));
+        return updated;
+      });
 
       setForm(emptyForm);
       setMessage("Devotee registered successfully. They can now log in with the new account.");
+      loadNotifications().catch(() => {});
     } catch (error) {
       setMessage(error.response?.data?.message || "Failed to register devotee.");
     } finally {

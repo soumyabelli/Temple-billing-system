@@ -56,5 +56,16 @@
     "provider": "local",
     "createdAt": "2026-06-15T11:23:46.118Z",
     "updatedAt": "2026-06-15T11:23:46.118Z"
+  },
+  {
+    "id": "e3ead65a-c06e-497b-9154-4d9e7288c991",
+    "name": "Gandiji",
+    "email": "gandiji@gmail.com",
+    "password": "$2b$10$cnFitXzfY/n/QpJs9zux3uWaidJkEDemh7fPIjDKMdtOoznyKd5oi",
+    "role": "devotee",
+    "mustChangePassword": false,
+    "provider": "local",
+    "createdAt": "2026-06-24T09:12:36.402Z",
+    "updatedAt": "2026-06-24T09:12:36.402Z"
   }
 ]

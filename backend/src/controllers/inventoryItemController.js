@@ -1,4 +1,5 @@
 const InventoryItem = require("../models/InventoryItem");
+const InventoryLog = require("../models/InventoryLog");
 const { createStaffNotification } = require("../utils/notificationService");
 
 const INVENTORY_UNITS = ["Kg", "Liter", "Pack", "Pieces", "Box"];
@@ -35,7 +36,7 @@ const getAllInventoryItems = async (req, res) => {
 // POST /api/admin/inventory-items
 const createInventoryItem = async (req, res) => {
   try {
-    const { name, unit, currentStock, minimumStock, category } = req.body;
+    const { name, unit, currentStock, minimumStock, category, description } = req.body;
 
     if (!clean(name)) {
       return res.status(400).json({ success: false, message: "Item name is required." });
@@ -59,6 +60,16 @@ const createInventoryItem = async (req, res) => {
       currentStock: Number(currentStock),
       minimumStock: Number(minimumStock),
       category: clean(category),
+      description: clean(description),
+    });
+
+    await InventoryLog.create({
+      item: item._id,
+      action: "Added",
+      quantity: item.currentStock,
+      oldStock: 0,
+      newStock: item.currentStock,
+      user: req.user.id,
     });
 
     return res.status(201).json({ success: true, item });
@@ -74,7 +85,12 @@ const createInventoryItem = async (req, res) => {
 const updateInventoryItem = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, unit, currentStock, minimumStock, category } = req.body;
+    const { name, unit, currentStock, minimumStock, category, description } = req.body;
+
+    const existingItem = await InventoryItem.findById(id);
+    if (!existingItem) {
+      return res.status(404).json({ success: false, message: "Inventory item not found." });
+    }
 
     const updatePayload = {};
 
@@ -91,11 +107,19 @@ const updateInventoryItem = async (req, res) => {
     if (currentStock !== undefined) updatePayload.currentStock = Math.max(0, Number(currentStock));
     if (minimumStock !== undefined) updatePayload.minimumStock = Math.max(0, Number(minimumStock));
     if (category !== undefined) updatePayload.category = clean(category);
+    if (description !== undefined) updatePayload.description = clean(description);
 
     const item = await InventoryItem.findByIdAndUpdate(id, updatePayload, { new: true });
 
-    if (!item) {
-      return res.status(404).json({ success: false, message: "Inventory item not found." });
+    if (currentStock !== undefined && Number(currentStock) !== existingItem.currentStock) {
+      await InventoryLog.create({
+        item: item._id,
+        action: "Updated",
+        quantity: Math.abs(Number(currentStock) - existingItem.currentStock),
+        oldStock: existingItem.currentStock,
+        newStock: item.currentStock,
+        user: req.user.id,
+      });
     }
 
     // Send low stock alert if updated stock is at or below minimum
@@ -131,10 +155,56 @@ const deleteInventoryItem = async (req, res) => {
   }
 };
 
+// POST /api/admin/inventory-items/:id/restock
+const restockItem = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { quantityAdded } = req.body;
+
+    if (!quantityAdded || Number(quantityAdded) <= 0) {
+      return res.status(400).json({ success: false, message: "Valid quantity added is required." });
+    }
+
+    const item = await InventoryItem.findById(id);
+    if (!item) {
+      return res.status(404).json({ success: false, message: "Inventory item not found." });
+    }
+
+    const oldStock = item.currentStock;
+    item.currentStock += Number(quantityAdded);
+    await item.save();
+
+    await InventoryLog.create({
+      item: item._id,
+      action: "Restocked",
+      quantity: Number(quantityAdded),
+      oldStock,
+      newStock: item.currentStock,
+      user: req.user.id,
+    });
+
+    return res.json({ success: true, message: "Item restocked successfully", item });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// GET /api/admin/inventory-logs
+const getInventoryLogs = async (req, res) => {
+  try {
+    const logs = await InventoryLog.find().populate("item", "name").populate("user", "name role").sort({ date: -1 }).limit(100);
+    return res.json({ success: true, logs });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 module.exports = {
   getAllInventoryItems,
   createInventoryItem,
   updateInventoryItem,
   deleteInventoryItem,
   seedDefaultItems,
+  restockItem,
+  getInventoryLogs,
 };

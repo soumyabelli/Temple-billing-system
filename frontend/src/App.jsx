@@ -30,6 +30,7 @@ import LeaveManagement from "./pages/admin/employee/LeaveManagement";
 import Performance from "./pages/admin/employee/Performance";
 import ShiftManagement from "./pages/admin/employee/ShiftManagement";
 import PoojaManagement from "./pages/admin/PoojaManagement";
+import AllBookings from "./pages/admin/AllBookings";
 import FeedbackManagement from "./pages/admin/FeedbackManagement";
 import SettingsManagement from "./pages/admin/SettingsManagement";
 import FestivalsEventsManagement from "./pages/admin/FestivalsEventsManagement";
@@ -152,6 +153,16 @@ function App() {
           <ProtectedRoute allowedRoles={["admin"]}>
             <AdminLayout>
               <PoojaManagement />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/pooja/all-bookings"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminLayout>
+              <AllBookings />
             </AdminLayout>
           </ProtectedRoute>
         }
