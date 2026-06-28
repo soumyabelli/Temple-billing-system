@@ -58,22 +58,91 @@ const buildLeaveSummary = (leaves) => {
   return summary;
 };
 
+// Returns today's date as "YYYY-MM-DD" using the server's LOCAL timezone
+// (never use toISOString() here — that would give UTC which may be yesterday in IST)
+const getLocalTodayStr = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
 exports.applyLeave = async (req, res) => {
   try {
     const { staffId, staffName, reason, fromDate, toDate, leaveType } = req.body;
 
-    if (!staffId || !staffName || !reason || !fromDate || !toDate) {
+    // ── Required field presence ──────────────────────────────────────────────
+    const missing = [];
+    if (!staffId)   missing.push("staffId");
+    if (!staffName) missing.push("staffName");
+    if (!leaveType || !String(leaveType).trim()) missing.push("leaveType");
+    if (!fromDate)  missing.push("fromDate");
+    if (!toDate)    missing.push("toDate");
+
+    if (missing.length > 0) {
       return res.status(400).json({
         success: false,
-        message: "staffId, staffName, reason, fromDate and toDate are required",
+        message: `Missing required fields: ${missing.join(", ")}`,
       });
     }
 
+    // ── Reason validation ────────────────────────────────────────────────────
+    const trimmedReason = String(reason || "").trim();
+    if (!trimmedReason) {
+      return res.status(400).json({
+        success: false,
+        message: "Reason is required and cannot be empty or whitespace.",
+      });
+    }
+    if (trimmedReason.length < 10) {
+      return res.status(400).json({
+        success: false,
+        message: "Reason must be at least 10 characters long.",
+      });
+    }
+
+    // ── Date format validation ───────────────────────────────────────────────
+    const fromParsed = parseISODate(fromDate);
+    const toParsed   = parseISODate(toDate);
+
+    if (!fromParsed) {
+      return res.status(400).json({
+        success: false,
+        message: "From Date is not a valid date (expected YYYY-MM-DD).",
+      });
+    }
+    if (!toParsed) {
+      return res.status(400).json({
+        success: false,
+        message: "To Date is not a valid date (expected YYYY-MM-DD).",
+      });
+    }
+
+    // ── Date range validation (local timezone) ───────────────────────────────
+    const todayStr   = getLocalTodayStr();
+    const todayStart = parseISODate(todayStr); // midnight today in server local time
+
+    if (fromParsed < todayStart) {
+      return res.status(400).json({
+        success: false,
+        message: `From Date (${fromDate}) cannot be before today (${todayStr}).`,
+      });
+    }
+
+    if (toParsed < fromParsed) {
+      return res.status(400).json({
+        success: false,
+        message: `To Date (${toDate}) cannot be before From Date (${fromDate}).`,
+      });
+    }
+
+    // ── Save ─────────────────────────────────────────────────────────────────
     const leave = await Leave.create({
       staffId,
       staffName,
-      reason,
-      leaveType: leaveType || "General",
+      reason: trimmedReason,
+      leaveType: String(leaveType).trim() || "General",
       fromDate,
       toDate,
       status: "Pending",
@@ -86,7 +155,7 @@ exports.applyLeave = async (req, res) => {
       title: "Leave Request",
       message: `${leave.staffName} submitted a leave request`,
       audienceRole: "admin",
-      category: "leave"
+      category: "leave",
     });
 
     return res.json({
@@ -100,6 +169,7 @@ exports.applyLeave = async (req, res) => {
     });
   }
 };
+
 
 exports.getLeaves = async (req, res) => {
   try {

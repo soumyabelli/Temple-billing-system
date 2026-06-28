@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const ATTENDANCE_STATUSES = ["Present", "Absent", "Half Day", "Leave", "Pending"];
+const ATTENDANCE_STATUSES = ["Present", "Absent", "Half Day", "Leave", "Pending", "Working", "Holiday", "Late"];
 
 const attendanceSchema = new mongoose.Schema(
   {
@@ -118,6 +118,20 @@ const attendanceSchema = new mongoose.Schema(
     source: {
       type: String,
       default: "manual",
+      trim: true,
+    },
+    correctedBy: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    correctionDate: {
+      type: Date,
+      default: null,
+    },
+    correctionReason: {
+      type: String,
+      default: "",
       trim: true,
     },
   },

@@ -353,6 +353,26 @@ const normalizeAttendanceStatus = (status) => {
   return ATTENDANCE_STATUSES.includes(value) ? value : "Absent";
 };
 
+const getEffectiveStatus = (attendance, leave, shiftStartTime) => {
+  if (leave) return "Leave";
+  if (!attendance) return "Absent";
+  if (attendance.status === "Holiday") return "Holiday";
+  if (attendance.status === "Leave") return "Leave";
+  
+  const isLate = attendance.isLateCheckIn || 
+                 (attendance.checkIn && attendance.checkIn !== "--" && shiftStartTime && 
+                  parseTimeToMinutes(attendance.checkIn) > parseTimeToMinutes(shiftStartTime));
+  if (isLate) return "Late";
+  
+  if (attendance.checkIn && attendance.checkIn !== "--" && (!attendance.checkOut || attendance.checkOut === "--")) {
+    return "Working";
+  }
+  if (attendance.checkIn && attendance.checkIn !== "--" && attendance.checkOut && attendance.checkOut !== "--") {
+    return "Present";
+  }
+  return attendance.status || "Absent";
+};
+
 const buildCalendar = ({ monthIndex, startDate, endDate, statusByDate, todayKey, selectedKey }) => {
   const firstVisibleDate = new Date(startDate);
   const startOffset = (firstVisibleDate.getDay() + 6) % 7;
@@ -708,19 +728,21 @@ const buildAdminAttendanceDashboard = async (monthValue, filterEmployeeId = null
   const analyticsEndDate = monthKey === currentMonthKey ? new Date() : endDate;
   const startKey = toDateKey(startDate);
   const endKey = toDateKey(analyticsEndDate);
+  
+  // Set todayKey as filters.date if provided, otherwise the actual today's date
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const todayKey = toDateKey(today);
+  const todayKey = filters.date ? filters.date : toDateKey(today);
 
   // Build employee query
   const employeeQuery = {
     role: { $ne: "admin" },
     status: { $in: ["Active", "On Leave"] },
   };
-  if (filters.role && filters.role !== "all") {
+  if (filters.role && filters.role !== "all" && filters.role !== "All") {
     employeeQuery.role = String(filters.role).toLowerCase();
   }
-  if (filters.department && filters.department !== "all") {
+  if (filters.department && filters.department !== "all" && filters.department !== "All") {
     employeeQuery.department = filters.department;
   }
   if (filterEmployeeId) {
@@ -767,6 +789,7 @@ const buildAdminAttendanceDashboard = async (monthValue, filterEmployeeId = null
         id: employee._id.toString(),
         name: employee.name,
         email: employee.email,
+        photo: employee.photo || "",
         shift: employee.defaultShift || employee.shift || "Morning",
         shiftStartTime: shiftDefinition?.startTime || "",
         shiftEndTime: shiftDefinition?.endTime || "",
@@ -798,6 +821,12 @@ const buildAdminAttendanceDashboard = async (monthValue, filterEmployeeId = null
   attendanceDocs.forEach((attendance) => {
     const recordKey = `${attendance.staffId || attendance.employeeId || attendance.staffEmail || ""}:${attendance.dateKey}`;
     attendanceMap.set(recordKey, attendance);
+    
+    // Also support lookup by employeeId directly
+    const empId = attendance.employeeId || attendance.staffId;
+    if (empId) {
+      attendanceMap.set(`${empId}:${attendance.dateKey}`, attendance);
+    }
   });
 
   const leaveMap = new Map();
@@ -824,179 +853,29 @@ const buildAdminAttendanceDashboard = async (monthValue, filterEmployeeId = null
   const getEmployeeContext = (employee) =>
     employeeContextById.get(employee.id) || employeeContextByEmail.get(normalizeEmail(employee.email)) || null;
 
-  const timeline = [];
-  let presentDays = 0;
-  let absentDays = 0;
-  let halfDays = 0;
-  let leaveDays = 0;
-  let lateDays = 0;
-  let eligibleEmployeeDays = 0;
-
-  for (let cursor = new Date(startDate); cursor <= analyticsEndDate; cursor.setDate(cursor.getDate() + 1)) {
-    const currentKey = toDateKey(cursor);
-    let presentCount = 0;
-    let absentCount = 0;
-    let leaveCount = 0;
-    let lateCount = 0;
-    let halfDayCount = 0;
-
-    employeeList.forEach((employee) => {
-      if (employee.joiningDate && currentKey < employee.joiningDate) return;
-      eligibleEmployeeDays += 1;
-      const attendance = attendanceMap.get(`${employee.id}:${currentKey}`);
-      const leave = leaveMap.get(`${employee.id}:${currentKey}`);
-
-      if (leave) {
-        leaveCount += 1;
-        leaveDays += 1;
-        return;
-      }
-
-      if (attendance) {
-        const status = normalizeAttendanceStatus(attendance.status);
-        if (status === "Late") {
-          presentCount += 1;
-          presentDays += 1;
-          lateCount += 1;
-          lateDays += 1;
-        } else if (status === "Present") {
-          presentCount += 1;
-          presentDays += 1;
-        } else if (status === "Half Day") {
-          halfDayCount += 1;
-          halfDays += 1;
-        } else if (status === "Absent") {
-          absentCount += 1;
-          absentDays += 1;
-        } else if (status === "Leave") {
-          leaveCount += 1;
-          leaveDays += 1;
-        }
-        return;
-      }
-
-      if (currentKey <= endKey) {
-        absentCount += 1;
-        absentDays += 1;
-      }
-    });
-
-    const activeEmployees =
-      employeeList.filter((employee) => !employee.joiningDate || currentKey >= employee.joiningDate).length || 1;
-    const attendancePercent = Math.round((presentCount / activeEmployees) * 100);
-    timeline.push({
-      dateKey: currentKey,
-      date: formatDateLabel(cursor),
-      present: presentCount,
-      absent: absentCount,
-      leave: leaveCount,
-      late: lateCount,
-      halfDays: halfDayCount,
-      attendancePercent,
-    });
-  }
-
+  // 1. Calculate Today's records and statuses for each employee on todayKey (filtered or today)
   const eligibleTodayEmployees = employeeList.filter(
     (employee) => !employee.joiningDate || employee.joiningDate <= todayKey
   );
-  const todayLeaveCount = eligibleTodayEmployees.reduce((count, employee) => {
-    return count + (leaveMap.get(`${employee.id}:${todayKey}`) ? 1 : 0);
-  }, 0);
-  const todayLateCount = eligibleTodayEmployees.reduce((count, employee) => {
-    const attendance = attendanceMap.get(`${employee.id}:${todayKey}`);
-    const leave = leaveMap.get(`${employee.id}:${todayKey}`);
-    if (leave || !attendance) return count;
-    return Boolean(attendance.isLateCheckIn) ? count + 1 : count;
-  }, 0);
-  const todayPresentCount = eligibleTodayEmployees.reduce((count, employee) => {
-    const attendance = attendanceMap.get(`${employee.id}:${todayKey}`);
-    const leave = leaveMap.get(`${employee.id}:${todayKey}`);
-    if (leave || !attendance) return count;
-    const status = normalizeAttendanceStatus(attendance.status);
-    return status === "Present" || status === "Pending" ? count + 1 : count;
-  }, 0);
-  const todayAbsentCount = eligibleTodayEmployees.reduce((count, employee) => {
-    const attendance = attendanceMap.get(`${employee.id}:${todayKey}`);
-    const leave = leaveMap.get(`${employee.id}:${todayKey}`);
-    if (leave) return count;
-    if (!attendance) return count + 1;
-    const status = normalizeAttendanceStatus(attendance.status);
-    return status === "Absent" ? count + 1 : count;
-  }, 0);
-  const expectedEntries = eligibleEmployeeDays;
-  const attendancePercent = expectedEntries > 0 ? Math.round((presentDays / expectedEntries) * 100) : 0;
-
-  const records = [
-    ...attendanceDocs.map((attendance) => {
-      const employee = buildEmployeeLookup(attendance);
-      const employeeContext = employee ? getEmployeeContext(employee) : null;
-      return {
-        id: attendance._id.toString(),
-        employeeId: attendance.employeeId || attendance.staffId || employee?.id || "",
-        employeeEmail: attendance.staffEmail || employee?.email || "",
-        dateKey: attendance.dateKey,
-        date: parseDateKey(attendance.dateKey) ? formatDateLabel(parseDateKey(attendance.dateKey)) : attendance.dateKey,
-        employeeName: attendance.staffName || employee?.name || "Unknown",
-        department: employee?.department || "General",
-        shift: attendance.shift || employeeContext?.shiftName || employee?.shift || "Morning",
-        shiftStartTime: attendance.shiftStartTime || employeeContext?.shiftStartTime || employee?.shiftStartTime || "",
-        shiftEndTime: attendance.shiftEndTime || employeeContext?.shiftEndTime || employee?.shiftEndTime || "",
-        assignmentType: attendance.assignmentType || employeeContext?.temporaryShiftTask?.assignmentType || "",
-        dutyName: attendance.dutyName || employeeContext?.dutyName || employee?.defaultDuty || "",
-        dutyArea: attendance.dutyArea || employeeContext?.dutyArea || employee?.dutyLocation || "",
-        defaultDuty: employee?.defaultDuty || "",
-        dutyLocation: employee?.dutyLocation || "",
-        checkIn: attendance.checkIn || "--",
-        checkOut: attendance.checkOut || "--",
-        workingHours: attendance.workingHours || "--",
-        status: normalizeAttendanceStatus(attendance.status),
-      };
-    }),
-    ...leaveDocs
-      .filter((leave) => !attendanceDocs.some((attendance) => attendance.staffId === leave.staffId && attendance.dateKey >= leave.fromDate && attendance.dateKey <= leave.toDate))
-      .map((leave) => ({
-        id: leave._id.toString(),
-        employeeId: leave.staffId || "",
-        employeeEmail: leave.staffEmail || "",
-        dateKey: leave.fromDate,
-        date: parseDateKey(leave.fromDate) ? formatDateLabel(parseDateKey(leave.fromDate)) : leave.fromDate,
-        employeeName: leave.staffName || "Unknown",
-        department: "Leave",
-        shift: "Morning",
-        shiftStartTime: "",
-        shiftEndTime: "",
-        assignmentType: "",
-        dutyName: "",
-        dutyArea: "",
-        defaultDuty: "",
-        dutyLocation: "",
-        checkIn: "--",
-        checkOut: "--",
-        workingHours: "--",
-        status: "Leave",
-      })),
-  ]
-    .sort((a, b) => b.dateKey.localeCompare(a.dateKey))
-    .slice(0, 250);
 
   const todayRecords = eligibleTodayEmployees.map((employee) => {
     const attendance = attendanceMap.get(`${employee.id}:${todayKey}`);
     const leave = leaveMap.get(`${employee.id}:${todayKey}`);
     const employeeContext = getEmployeeContext(employee);
-    const status = leave
-      ? "Leave"
-      : attendance
-        ? normalizeAttendanceStatus(attendance.status)
-        : "Absent";
+    const shiftStartTime = attendance?.shiftStartTime || employeeContext?.shiftStartTime || employee.shiftStartTime || "09:00 AM";
+    const status = getEffectiveStatus(attendance, leave, shiftStartTime);
 
     return {
       id: attendance?._id?.toString() || `${employee.id}:${todayKey}`,
       employeeId: employee.id,
+      employeePhoto: employee.photo || "",
       employeeName: employee.name,
       employeeEmail: employee.email,
+      role: employee.role,
+      department: employee.department,
       shift: attendance?.shift || employeeContext?.shiftName || employee.shift || "Morning",
-      shiftStartTime: attendance?.shiftStartTime || employeeContext?.shiftStartTime || employee.shiftStartTime || "",
-      shiftEndTime: attendance?.shiftEndTime || employeeContext?.shiftEndTime || employee.shiftEndTime || "",
+      shiftStartTime: shiftStartTime,
+      shiftEndTime: attendance?.shiftEndTime || employeeContext?.shiftEndTime || employee.shiftEndTime || "05:00 PM",
       assignmentType: attendance?.assignmentType || employeeContext?.temporaryShiftTask?.assignmentType || "Default Shift",
       dutyName: attendance?.dutyName || employeeContext?.dutyName || employee.defaultDuty || "",
       dutyArea: attendance?.dutyArea || employeeContext?.dutyArea || employee.dutyLocation || "",
@@ -1005,11 +884,151 @@ const buildAdminAttendanceDashboard = async (monthValue, filterEmployeeId = null
       checkIn: attendance?.checkIn || "--",
       checkOut: attendance?.checkOut || "--",
       status,
-      late: status === "Late",
       workingHours: attendance?.workingHours || "--",
+      workingMinutes: attendance?.workingMinutes || 0,
       note: attendance?.note || "",
+      correctedBy: attendance?.correctedBy || "",
+      correctionDate: attendance?.correctionDate || null,
+      correctionReason: attendance?.correctionReason || "",
     };
   });
+
+  // Calculate today's summary metrics (before applying the status filter to the table records)
+  const totalEmployeesCount = todayRecords.length;
+  const todayPresentCount = todayRecords.filter(r => ["Present", "Working", "Late"].includes(r.status)).length;
+  const todayAbsentCount = todayRecords.filter(r => r.status === "Absent").length;
+  const todayLeaveCount = todayRecords.filter(r => r.status === "Leave").length;
+  const todayLateCount = todayRecords.filter(r => r.status === "Late").length;
+
+  const overview = [
+    { label: "Total Employees", value: String(totalEmployeesCount), tone: "info" },
+    { label: "Present Today", value: String(todayPresentCount), tone: "success" },
+    { label: "Absent Today", value: String(todayAbsentCount), tone: "danger" },
+    { label: "On Leave", value: String(todayLeaveCount), tone: "warning" },
+    { label: "Late Check-in", value: String(todayLateCount), tone: "accent" },
+  ];
+
+  // Apply Status filter to Today's Records
+  let filteredTodayRecords = todayRecords;
+  if (filters.status && filters.status !== "all" && filters.status !== "All") {
+    filteredTodayRecords = todayRecords.filter(r => r.status.toLowerCase() === filters.status.toLowerCase());
+  }
+
+  // 2. Build Monthly History records for all matching employees
+  const employeeSet = new Set(employeeList.map(e => e.id));
+
+  const attendanceRecords = attendanceDocs
+    .filter(doc => {
+      const emp = buildEmployeeLookup(doc);
+      return emp && employeeSet.has(emp.id);
+    })
+    .map(doc => {
+      const emp = buildEmployeeLookup(doc);
+      const empContext = getEmployeeContext(emp);
+      const shiftStartTime = doc.shiftStartTime || empContext?.shiftStartTime || emp?.shiftStartTime || "09:00 AM";
+      const status = getEffectiveStatus(doc, null, shiftStartTime);
+      return {
+        id: doc._id.toString(),
+        employeeId: emp.id,
+        employeePhoto: emp.photo || "",
+        employeeName: emp.name,
+        employeeEmail: emp.email,
+        dateKey: doc.dateKey,
+        date: parseDateKey(doc.dateKey) ? formatDateLabel(parseDateKey(doc.dateKey)) : doc.dateKey,
+        department: emp.department || "General",
+        shift: doc.shift || emp.defaultShift || emp.shift || "Morning",
+        shiftStartTime: shiftStartTime,
+        shiftEndTime: doc.shiftEndTime || empContext?.shiftEndTime || emp?.shiftEndTime || "05:00 PM",
+        checkIn: doc.checkIn || "--",
+        checkOut: doc.checkOut || "--",
+        workingHours: doc.workingHours || "--",
+        workingMinutes: doc.workingMinutes || 0,
+        status: status,
+        correctedBy: doc.correctedBy || "",
+        correctionDate: doc.correctionDate || null,
+        correctionReason: doc.correctionReason || "",
+      };
+    });
+
+  const leaveRecords = leaveDocs
+    .filter(leave => {
+      const emp = employeeById.get(leave.staffId) || employeeByEmail.get(normalizeEmail(leave.staffEmail));
+      return emp && employeeSet.has(emp.id);
+    })
+    .filter(leave => {
+      return !attendanceDocs.some(att => att.staffId === leave.staffId && att.dateKey === leave.fromDate);
+    })
+    .map(leave => {
+      const emp = employeeById.get(leave.staffId) || employeeByEmail.get(normalizeEmail(leave.staffEmail));
+      return {
+        id: leave._id.toString(),
+        employeeId: emp.id,
+        employeePhoto: emp.photo || "",
+        employeeName: emp.name,
+        employeeEmail: emp.email,
+        dateKey: leave.fromDate,
+        date: parseDateKey(leave.fromDate) ? formatDateLabel(parseDateKey(leave.fromDate)) : leave.fromDate,
+        department: emp.department || "General",
+        shift: emp.defaultShift || emp.shift || "Morning",
+        shiftStartTime: "",
+        shiftEndTime: "",
+        checkIn: "--",
+        checkOut: "--",
+        workingHours: "--",
+        status: "Leave",
+      };
+    });
+
+  const monthlyHistory = [...attendanceRecords, ...leaveRecords].sort((a, b) => b.dateKey.localeCompare(a.dateKey));
+  
+  // Apply Status filter to Monthly History
+  let filteredMonthlyHistory = monthlyHistory;
+  if (filters.status && filters.status !== "all" && filters.status !== "All") {
+    filteredMonthlyHistory = monthlyHistory.filter(r => r.status.toLowerCase() === filters.status.toLowerCase());
+  }
+
+  // 3. Build Timeline (Calendar Days stats)
+  const timeline = [];
+  for (let cursor = new Date(startDate); cursor <= analyticsEndDate; cursor.setDate(cursor.getDate() + 1)) {
+    const currentKey = toDateKey(cursor);
+    let dayPresentCount = 0;
+    let dayAbsentCount = 0;
+    let dayLeaveCount = 0;
+    let dayLateCount = 0;
+    let dayHolidayCount = 0;
+
+    employeeList.forEach((employee) => {
+      if (employee.joiningDate && currentKey < employee.joiningDate) return;
+      const attendance = attendanceMap.get(`${employee.id}:${currentKey}`);
+      const leave = leaveMap.get(`${employee.id}:${currentKey}`);
+      const employeeContext = getEmployeeContext(employee);
+      const shiftStartTime = attendance?.shiftStartTime || employeeContext?.shiftStartTime || employee.shiftStartTime || "09:00 AM";
+
+      const status = getEffectiveStatus(attendance, leave, shiftStartTime);
+      if (status === "Present" || status === "Working" || status === "Late") {
+        dayPresentCount += 1;
+        if (status === "Late") {
+          dayLateCount += 1;
+        }
+      } else if (status === "Leave") {
+        dayLeaveCount += 1;
+      } else if (status === "Holiday") {
+        dayHolidayCount += 1;
+      } else {
+        dayAbsentCount += 1;
+      }
+    });
+
+    timeline.push({
+      dateKey: currentKey,
+      date: formatDateLabel(cursor),
+      present: dayPresentCount,
+      absent: dayAbsentCount,
+      leave: dayLeaveCount,
+      holiday: dayHolidayCount,
+      late: dayLateCount,
+    });
+  }
 
   const shiftSummary = employeeContexts.reduce((accumulator, employee) => {
     const label = employee.todayContext?.shiftName || employee.shift || "Morning";
@@ -1017,12 +1036,12 @@ const buildAdminAttendanceDashboard = async (monthValue, filterEmployeeId = null
     return accumulator;
   }, {});
 
-  // Get records for selected employee if specified
+  // For Employee Summary, if filtering a single employee, let's also pass their summary details
   let selectedEmployeeRecords = [];
   let selectedEmployee = null;
   if (filterEmployeeId && employees.length > 0) {
     selectedEmployee = employees[0];
-    selectedEmployeeRecords = records.filter(
+    selectedEmployeeRecords = monthlyHistory.filter(
       (r) =>
         r.employeeId === selectedEmployee.id ||
         r.employeeEmail?.toLowerCase() === selectedEmployee.email?.toLowerCase() ||
@@ -1037,42 +1056,20 @@ const buildAdminAttendanceDashboard = async (monthValue, filterEmployeeId = null
     headerDate: formatLongDateLabel(today),
     summary: {
       workingDays: timeline.length,
-      presentDays,
-      absentDays,
-      leaveDays,
-      halfDays,
-      lateDays,
-      attendancePercent,
+      presentDays: todayPresentCount, // fallback or general month stats if needed
+      absentDays: todayAbsentCount,
+      leaveDays: todayLeaveCount,
+      lateDays: todayLateCount,
       totalEmployees: eligibleTodayEmployees.length,
       totalRecords: attendanceDocs.length,
     },
-    overview: [
-      { label: "Total Employees", value: String(eligibleTodayEmployees.length), tone: "info" },
-      { label: "Present Today", value: String(todayPresentCount), tone: "success" },
-      { label: "Absent Today", value: String(todayAbsentCount), tone: "danger" },
-      { label: "On Leave", value: String(todayLeaveCount), tone: "warning" },
-      { label: "Late Arrivals", value: String(todayLateCount), tone: "accent" },
-      { label: "Attendance", value: `${attendancePercent}%`, tone: "info" },
-    ],
-    records,
+    overview,
+    records: filteredMonthlyHistory,
     selectedEmployee,
     selectedEmployeeRecords,
-    todayRecords,
+    todayRecords: filteredTodayRecords,
     timeline,
     shiftSummary,
-    todayDuty: dutyDocs.map((task) => createTaskPayload(task)),
-    today: {
-      dateKey: todayKey,
-      dateLabel: formatLongDateLabel(today),
-      presentCount: todayPresentCount,
-      absentCount: todayAbsentCount,
-      leaveCount: todayLeaveCount,
-      lateCount: todayLateCount,
-      dutyCount: dutyDocs.length,
-      attendancePercent: eligibleTodayEmployees.length > 0
-        ? Math.round((todayPresentCount / eligibleTodayEmployees.length) * 100)
-        : 0,
-    },
   };
 };
 
@@ -1159,7 +1156,7 @@ exports.getStaffAttendanceSummary = async (req, res) => {
 
 exports.getAdminAttendanceDashboard = async (req, res) => {
   try {
-    const { month, year, employeeId, role, department } = req.query;
+    const { month, year, employeeId, role, department, date, status } = req.query;
     const monthValue = month && /^\d{4}-\d{2}$/.test(month)
       ? month
       : year && month
@@ -1168,7 +1165,7 @@ exports.getAdminAttendanceDashboard = async (req, res) => {
     const payload = await buildAdminAttendanceDashboard(
       monthValue,
       employeeId || null,
-      { role, department }
+      { role, department, date, status }
     );
 
     return res.json(payload);
@@ -1400,7 +1397,7 @@ exports.markAttendance = async (req, res) => {
 exports.updateAttendance = async (req, res) => {
   try {
     const { id } = req.params;
-    const { checkIn, checkOut, status, note, workingMinutes, shift } = req.body;
+    const { checkIn, checkOut, status, note, reason, workingMinutes, shift } = req.body;
 
     if (!clean(id)) {
       return res.status(400).json({
@@ -1419,12 +1416,12 @@ exports.updateAttendance = async (req, res) => {
 
     if (checkIn !== undefined) {
       attendance.checkIn = clean(checkIn) || "--";
-      attendance.checkInAt = parseClockTimeToDate(attendance.dateKey, attendance.checkIn);
+      attendance.checkInAt = attendance.checkIn !== "--" ? parseClockTimeToDate(attendance.dateKey, attendance.checkIn) : null;
     }
 
     if (checkOut !== undefined) {
       attendance.checkOut = clean(checkOut) || "--";
-      attendance.checkOutAt = parseClockTimeToDate(attendance.dateKey, attendance.checkOut);
+      attendance.checkOutAt = attendance.checkOut !== "--" ? parseClockTimeToDate(attendance.dateKey, attendance.checkOut) : null;
     }
 
     if (shift !== undefined) {
@@ -1443,13 +1440,20 @@ exports.updateAttendance = async (req, res) => {
       const computedMinutes = Math.max(0, Math.round((attendance.checkOutAt.getTime() - attendance.checkInAt.getTime()) / 60000));
       attendance.workingMinutes = computedMinutes;
       attendance.workingHours = formatWorkingHours(computedMinutes);
+    } else {
+      attendance.workingMinutes = 0;
+      attendance.workingHours = "--";
     }
 
     if (status !== undefined) {
       attendance.status = clean(status) || attendance.status;
     }
 
+    attendance.correctedBy = req.user?.name || req.user?.email || "Admin";
+    attendance.correctionDate = new Date();
+    attendance.correctionReason = reason || note || "";
     attendance.source = "admin-correction";
+    
     await attendance.save();
 
     return res.json({
