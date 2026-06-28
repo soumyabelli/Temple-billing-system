@@ -80,8 +80,9 @@ const getBookings = async (req, res) => {
 
 const createBooking = async (req, res) => {
   try {
-    const { devoteeName, devoteeEmail, devoteePhone, service, datetime, amount, status, contactNumber, notes, devoteeId, eventId, paymentMethod } = req.body;
+    const { devoteeName, devoteeEmail, devoteePhone, service, datetime, amount, contactNumber, notes, devoteeId, eventId, paymentMethod } = req.body;
     const normalizedDevoteeEmail = normalizeEmail(devoteeEmail);
+    const bookingStatus = "Pending";
 
     if (!devoteeName || !service || !datetime || amount == null) {
       return res.status(400).json({ error: "Missing required booking fields." });
@@ -115,7 +116,7 @@ const createBooking = async (req, res) => {
       datetime,
       amount: numericAmount,
       paymentMethod: pm || undefined,
-      status: status || "Pending",
+      status: bookingStatus,
       contactNumber,
       notes,
     });
@@ -137,6 +138,7 @@ const createBooking = async (req, res) => {
       title: "Booking Submitted",
       message: `Your ${service} booking is pending approval.`,
       audienceEmail: normalizedDevoteeEmail || undefined,
+      category: "booking",
     });
 
     // Also notify the cashier role
@@ -150,16 +152,16 @@ const createBooking = async (req, res) => {
     // Send multi-channel notifications (Email & SMS) if devotee info is available
     if (devoteeEmail || devoteePhone || contactNumber) {
       const devotee = { name: devoteeName, email: normalizedDevoteeEmail, phone: devoteePhone || contactNumber };
-      await sendBookingConfirmation(devotee, {
+      sendBookingConfirmation(devotee, {
         service,
         datetime,
-        amount,
-        status: status || "Pending",
-      });
+        amount: numericAmount,
+        status: bookingStatus,
+      }).catch((err) => console.warn("Failed to send booking confirmation:", err.message));
     }
 
     // If this booking is linked to an event and already confirmed, update event aggregates
-    if (eventId && (booking.status === "Confirmed" || (status && status === "Confirmed"))) {
+    if (eventId && booking.status === "Confirmed") {
       try {
         await Event.findByIdAndUpdate(String(eventId), {
           $inc: { registrations: 1, collection: Number(amount) || 0 },
@@ -173,6 +175,7 @@ const createBooking = async (req, res) => {
 
     return res.status(201).json({ booking: normalizeBookingEmails(booking.toObject ? booking.toObject() : booking) });
   } catch (error) {
+    console.error("createBooking error:", error);
     return res.status(500).json({ error: "Unable to create booking." });
   }
 };
@@ -288,26 +291,29 @@ const createDonation = async (req, res) => {
 const getNotifications = async (req, res) => {
   try {
     const email = normalizeEmail(req.query.email);
-    // If email provided, return user-specific notifications and broadcasts
+    const filters = [{ audienceRole: "devotee" }];
+
+    // If email is provided, return only this devotee's notifications plus explicit devotee broadcasts.
     if (email) {
-      let role = null;
+      let user = null;
       if (isDbConnected()) {
-        const user = await User.findOne(buildEmailLookup("email", email)).select("role");
-        role = user?.role || null;
+        user = await User.findOne(buildEmailLookup("email", email)).select("_id role");
       } else {
-        const user = await fileUserStore.findUserByEmail(email);
-        role = user?.role || null;
+        user = await fileUserStore.findUserByEmail(email);
       }
 
-      const orFilters = [buildEmailLookup("audienceEmail", email), { audienceEmail: { $exists: false } }];
-      if (role) orFilters.push({ audienceRole: role });
+      const emailFilter = buildEmailLookup("audienceEmail", email);
+      if (emailFilter) filters.push(emailFilter);
 
-      const notifications = await Notification.find({ $or: orFilters }).sort({ createdAt: -1 });
+      const userId = user?._id?.toString?.() || user?.id;
+      if (userId) filters.push({ audienceId: userId });
+
+      const notifications = await Notification.find({ $or: filters }).sort({ createdAt: -1 });
       return res.status(200).json({ notifications });
     }
 
-    // No email: return all notifications for admin/staff views
-    const notifications = await Notification.find().sort({ createdAt: -1 });
+    // No email: return only public devotee broadcasts, not staff/admin/internal notifications.
+    const notifications = await Notification.find({ audienceRole: "devotee" }).sort({ createdAt: -1 });
     return res.status(200).json({ notifications });
   } catch (error) {
     return res.status(500).json({ error: "Failed to load notifications." });
@@ -1128,6 +1134,7 @@ const updateBookingStatus = async (req, res) => {
       title: "Booking Status Updated",
       message: `Your ${booking.service} booking is now ${status}.`,
       audienceEmail: booking.devoteeEmail || undefined,
+      category: "booking",
     });
 
     return res.status(200).json({ booking, previousStatus });

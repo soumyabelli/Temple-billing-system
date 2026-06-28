@@ -8,9 +8,9 @@ const staff = JSON.parse(localStorage.getItem("user"));
 
 // Build YYYY-MM-DD from the browser's LOCAL clock — never use toISOString()
 const getLocalDateKey = (date = new Date()) => {
-  const year  = date.getFullYear();
+  const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day   = String(date.getDate()).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 };
 
@@ -39,13 +39,13 @@ const LeaveRequest = () => {
     toDate: "",
   });
 
-  const [errors, setErrors]            = useState({});
+  const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // ── Validation ──────────────────────────────────────────────────────────────
   const validate = () => {
     const today = getLocalDateKey(); // recalculate at submit time in case date changed
-    const errs  = {};
+    const errs = {};
 
     if (!form.leaveType || !form.leaveType.trim()) {
       errs.leaveType = "Leave Type is required.";
@@ -89,8 +89,8 @@ const LeaveRequest = () => {
     try {
       await axios.post("http://localhost:5000/api/leaves/apply", {
         ...form,
-        reason:    form.reason.trim(),
-        staffId:   staff?.id   || staff?._id,
+        reason: form.reason.trim(),
+        staffId: staff?.id || staff?._id,
         staffName: staff?.name || "Staff",
       });
 

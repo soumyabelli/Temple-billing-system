@@ -39,9 +39,37 @@ const menuItems = [
 ];
 
 const formatCurrency = (value) => {
-  if (typeof value === "number") return `₹ ${value.toLocaleString()}`;
-  if (typeof value === "string" && value.trim()) return value;
-  return "₹ 0";
+  const amount = Number(String(value ?? "").replace(/[^0-9.-]+/g, ""));
+  return `Rs ${Number.isNaN(amount) ? 0 : amount.toLocaleString("en-IN")}`;
+};
+
+const formatDateDisplay = (value) => {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return date.toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+};
+
+const formatDateTimeDisplay = (value) => {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return date.toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+const buildReceiptId = (prefix, item = {}) => {
+  const source = item.bookingNumber || item.transactionId || item._id || item.id || Date.now();
+  return `${prefix}-${String(source).slice(-8).toUpperCase()}`;
 };
 
 // Helper function to check if a booking is upcoming (datetime in future)
@@ -210,6 +238,8 @@ const DevoteeDashboard = () => {
   const [bookingContact, setBookingContact] = useState("");
   const [bookingNotes, setBookingNotes] = useState("");
   const [bookingLoading, setBookingLoading] = useState(false);
+  const [bookingError, setBookingError] = useState("");
+  const [bookingSuccess, setBookingSuccess] = useState("");
   const [bookingPaymentMethod, setBookingPaymentMethod] = useState("UPI");
   const [donationCategories, setDonationCategories] = useState(getDonationTypes());
   const [donationCategory, setDonationCategory] = useState(getDonationTypes()[0] || "General");
@@ -553,7 +583,13 @@ const DevoteeDashboard = () => {
   };
 
   const handleBookingSubmit = async () => {
-    if (!bookingService || !bookingDatetime || !bookingAmount) return;
+    setBookingError("");
+    setBookingSuccess("");
+
+    if (!bookingService || !bookingDatetime || !bookingAmount) {
+      setBookingError("Please select a pooja, date and amount before booking.");
+      return;
+    }
 
     // Validate selected datetime is in the future
     const selected = new Date(bookingDatetime);
@@ -563,37 +599,62 @@ const DevoteeDashboard = () => {
     }
 
     if (!bookingPaymentMethod) {
-      window.alert("Please select a payment method for the booking.");
+      setBookingError("Please select a payment method for the booking.");
+      return;
+    }
+
+    const activeEmail = String(profileData.email || user?.email || "").trim().toLowerCase();
+    const activeName = String(profileData.name || user?.name || "").trim();
+    const activePhone = String(profileData.phone || bookingContact || "").trim();
+
+    if (!activeName || !activeEmail) {
+      setBookingError("Please complete your profile name and email before booking a pooja.");
       return;
     }
 
     setBookingLoading(true);
     try {
       const payload = {
-        devoteeName: profileData.name,
-        devoteeEmail: profileData.email,
-        devoteePhone: profileData.phone,
+        devoteeName: activeName,
+        devoteeEmail: activeEmail,
+        devoteePhone: activePhone || undefined,
         service: bookingService,
         datetime: bookingDatetime,
         amount: bookingAmount,
         paymentMethod: bookingPaymentMethod,
-        status: "Pending",
-        contactNumber: bookingContact,
-        notes: bookingNotes,
+        contactNumber: bookingContact || activePhone || undefined,
+        notes: bookingNotes || undefined,
       };
 
-      await createDevoteeBooking(payload);
-      const bookingsRes = await getDevoteeBookings(user?.email);
-      setBookingsData(bookingsRes.bookings || []);
-      setBookingService("Abhisheka");
+      const bookingRes = await createDevoteeBooking(payload);
+      const createdBooking = bookingRes?.booking;
+      if (createdBooking?._id) {
+        setBookingsData((prev) => [createdBooking, ...prev.filter((booking) => booking._id !== createdBooking._id)]);
+      }
+
+      try {
+        const [bookingsRes, notificationsRes] = await Promise.all([
+          getDevoteeBookings(activeEmail),
+          getDevoteeNotifications(activeEmail),
+        ]);
+        setBookingsData(bookingsRes.bookings || (createdBooking ? [createdBooking] : []));
+        setNotificationsData(formatNotifications(notificationsRes.notifications || []));
+      } catch (refreshError) {
+        console.warn("Unable to refresh bookings after create", refreshError);
+      }
+
+      const firstPooja = poojaTypes[0];
+      setBookingService(firstPooja?.name || "");
       setBookingDatetime("");
-      setBookingAmount(501);
+      setBookingAmount(firstPooja?.price || 0);
       setBookingContact("");
       setBookingNotes("");
       setBookingPaymentMethod("UPI");
+      setBookingSuccess("Pooja booking submitted successfully. It is now pending approval.");
       setActivePage("My Bookings");
     } catch (error) {
       console.warn("Unable to create booking", error);
+      setBookingError(error?.response?.data?.error || "Unable to create booking. Please try again.");
     } finally {
       setBookingLoading(false);
     }
@@ -822,72 +883,234 @@ const DevoteeDashboard = () => {
     }
   };
 
+  const addPdfFooter = (doc, margin, pageWidth, pageHeight) => {
+    doc.setDrawColor(229, 217, 197);
+    doc.line(margin, pageHeight - 18, pageWidth - margin, pageHeight - 18);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(112, 103, 94);
+    doc.text("Generated by Temple Billing System", margin, pageHeight - 10);
+    doc.text("Thank you for your devotion and support.", pageWidth - margin, pageHeight - 10, { align: "right" });
+  };
+
   const downloadPdfFile = (filename, lines) => {
-    const doc = new jsPDF();
-    const pageWidth = 170;
-    const lineHeight = 8;
-    let y = 20;
+    const doc = new jsPDF({ unit: "mm", format: "a4" });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 16;
+    let y = 42;
 
+    doc.setFillColor(180, 106, 19);
+    doc.rect(0, 0, pageWidth, 28, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
-    doc.text("Temple Billing System Receipt", 20, y);
-    doc.setFontSize(11);
-    y += 10;
+    doc.text("Sri Shanti Mahadev Mandir", margin, 12);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.text("Temple Billing System Report", margin, 20);
 
+    doc.setTextColor(31, 29, 25);
+    doc.setFontSize(10);
     lines.forEach((line) => {
-      const splitLines = doc.splitTextToSize(String(line), pageWidth);
+      const splitLines = doc.splitTextToSize(String(line), pageWidth - margin * 2);
       splitLines.forEach((text) => {
-        if (y > 280) {
+        if (y > pageHeight - 26) {
+          addPdfFooter(doc, margin, pageWidth, pageHeight);
           doc.addPage();
-          y = 20;
+          y = 24;
         }
-        doc.text(text, 20, y);
-        y += lineHeight;
+        doc.text(text, margin, y);
+        y += 7;
       });
     });
 
+    addPdfFooter(doc, margin, pageWidth, pageHeight);
     doc.save(filename);
   };
 
-  const handleReceiptDownload = (item, type = "donation") => {
-    const receiptDate =
-      item.date || (item.createdAt ? new Date(item.createdAt).toLocaleDateString() : "");
-    const receiptId = item._id?.slice(-8) || "N/A";
-    const baseLines = [
-      `Receipt ID: ${receiptId}`,
-      `Date: ${receiptDate}`,
-      `Devotee: ${profileData.name}`,
-      `Email: ${profileData.email}`,
-      `Role: ${profileData.role}`,
-      "",
-    ];
+  const downloadReceiptPdf = ({ filename, title, receiptId, receiptDate, status, devotee, details, items, totalAmount, notes }) => {
+    const doc = new jsPDF({ unit: "mm", format: "a4" });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 16;
+    let y = 18;
 
-    if (type === "prasadam") {
-      downloadPdfFile(`prasadam-receipt-${receiptId}.pdf`, [
-        "Prasadam Receipt",
-        "----------------",
-        ...baseLines,
-        `Item: ${item.itemName || "Prasadam"}`,
-        `Quantity: ${item.quantity || 1}`,
-        `Unit Price: ${formatCurrency(item.unitPrice || 0)}`,
-        `Total Amount: ${formatCurrency(item.amount)}`,
-        `Payment Method: ${item.paymentMethod || "UPI"}`,
-        `Status: ${item.status || "Placed"}`,
-      ]);
+    doc.setFillColor(180, 106, 19);
+    doc.rect(0, 0, pageWidth, 34, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(17);
+    doc.text("Sri Shanti Mahadev Mandir", margin, y);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.text("Official Temple Receipt", margin, y + 8);
+    doc.text(`Receipt No: ${receiptId}`, pageWidth - margin, y, { align: "right" });
+    doc.text(`Date: ${receiptDate}`, pageWidth - margin, y + 8, { align: "right" });
+
+    y = 48;
+    doc.setTextColor(31, 29, 25);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(15);
+    doc.text(title, margin, y);
+
+    doc.setFontSize(9);
+    doc.setFillColor(250, 247, 241);
+    doc.setDrawColor(229, 217, 197);
+    doc.roundedRect(pageWidth - margin - 40, y - 7, 40, 10, 2, 2, "FD");
+    doc.setTextColor(116, 81, 25);
+    doc.text(String(status || "Completed"), pageWidth - margin - 20, y - 1, { align: "center" });
+
+    y += 12;
+    doc.setFillColor(255, 252, 246);
+    doc.setDrawColor(235, 226, 213);
+    doc.roundedRect(margin, y, pageWidth - margin * 2, 34, 2, 2, "FD");
+    doc.setTextColor(31, 29, 25);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.text("Devotee Details", margin + 4, y + 7);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.text(`Name: ${devotee.name || "-"}`, margin + 4, y + 15);
+    doc.text(`Email: ${devotee.email || "-"}`, margin + 4, y + 22);
+    doc.text(`Phone: ${devotee.phone || "-"}`, margin + 4, y + 29);
+
+    y += 44;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.text("Receipt Details", margin, y);
+    y += 6;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    details.filter(Boolean).forEach(([label, value]) => {
+      doc.setTextColor(112, 92, 62);
+      doc.text(`${label}:`, margin, y);
+      doc.setTextColor(31, 29, 25);
+      doc.text(String(value || "-"), margin + 42, y);
+      y += 7;
+    });
+
+    y += 4;
+    const tableX = margin;
+    const tableWidth = pageWidth - margin * 2;
+    const colWidths = [tableWidth - 62, 24, 38];
+    const headerHeight = 10;
+    doc.setFillColor(255, 240, 223);
+    doc.setDrawColor(241, 206, 156);
+    doc.rect(tableX, y, tableWidth, headerHeight, "FD");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(110, 69, 7);
+    doc.text("Description", tableX + 3, y + 6.5);
+    doc.text("Qty", tableX + colWidths[0] + 3, y + 6.5);
+    doc.text("Amount", tableX + colWidths[0] + colWidths[1] + colWidths[2] - 3, y + 6.5, { align: "right" });
+    y += headerHeight;
+
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(31, 29, 25);
+    items.forEach((row) => {
+      const descriptionLines = doc.splitTextToSize(String(row.description || "-"), colWidths[0] - 6);
+      const rowHeight = Math.max(12, descriptionLines.length * 5 + 4);
+      doc.setDrawColor(232, 225, 214);
+      doc.rect(tableX, y, tableWidth, rowHeight, "S");
+      doc.text(descriptionLines, tableX + 3, y + 6);
+      doc.text(String(row.quantity || "1"), tableX + colWidths[0] + 3, y + 6);
+      doc.text(String(row.amount || "-"), tableX + tableWidth - 3, y + 6, { align: "right" });
+      y += rowHeight;
+    });
+
+    y += 6;
+    doc.setFillColor(250, 247, 241);
+    doc.roundedRect(pageWidth - margin - 72, y, 72, 18, 2, 2, "F");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(112, 92, 62);
+    doc.text("Total Amount", pageWidth - margin - 68, y + 7);
+    doc.setTextColor(31, 29, 25);
+    doc.setFontSize(12);
+    doc.text(String(totalAmount || "Rs 0"), pageWidth - margin - 4, y + 13, { align: "right" });
+
+    if (notes) {
+      y += 28;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.text("Notes", margin, y);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.text(doc.splitTextToSize(String(notes), pageWidth - margin * 2), margin, y + 7);
+    }
+
+    addPdfFooter(doc, margin, pageWidth, pageHeight);
+    doc.save(filename);
+  };
+
+  const getReceiptDevotee = (item = {}) => ({
+    name: item.devoteeName || item.donorName || profileData.name,
+    email: item.devoteeEmail || item.donorEmail || item.email || profileData.email,
+    phone: item.devoteePhone || item.donorPhone || item.phone || item.contactNumber || profileData.phone || "",
+  });
+
+  const handleReceiptDownload = (item, type = "donation") => {
+    if (type === "booking") {
+      const receiptId = buildReceiptId("PB", item);
+      downloadReceiptPdf({
+        filename: `pooja-booking-receipt-${receiptId}.pdf`,
+        title: "Pooja Booking Receipt",
+        receiptId,
+        receiptDate: formatDateDisplay(item.createdAt || new Date()),
+        status: item.status || "Pending",
+        devotee: getReceiptDevotee(item),
+        details: [
+          ["Service", item.service || "Pooja Booking"],
+          ["Pooja Date", formatDateTimeDisplay(item.datetime)],
+          ["Payment Method", item.paymentMethod || "UPI"],
+          ["Booking No", item.bookingNumber || item._id || "-"],
+        ],
+        items: [{ description: item.service || "Pooja Booking", quantity: "1", amount: formatCurrency(item.amount) }],
+        totalAmount: formatCurrency(item.amount),
+        notes: item.notes,
+      });
       return;
     }
-    const donationLines = [
-      "Donation Receipt",
-      "----------------",
-      ...baseLines,
-      item.eventTitle ? `Event: ${item.eventTitle}` : null,
-      `Donation Type: ${item.category || item.type || "Donation"}`,
-      `Amount: ${formatCurrency(item.amount)}`,
-      `Payment Method: ${item.paymentMethod || "UPI"}`,
-      `Status: ${item.status || "Completed"}`,
-      item.notes ? `Notes: ${item.notes}` : null,
-    ].filter(Boolean);
 
-    downloadPdfFile(`donation-receipt-${receiptId}.pdf`, donationLines);
+    if (type === "prasadam") {
+      const receiptId = buildReceiptId("PR", item);
+      downloadReceiptPdf({
+        filename: `prasadam-receipt-${receiptId}.pdf`,
+        title: "Prasadam Receipt",
+        receiptId,
+        receiptDate: formatDateDisplay(item.createdAt || item.date),
+        status: item.status || "Placed",
+        devotee: getReceiptDevotee(item),
+        details: [
+          ["Item", item.itemName || "Prasadam"],
+          ["Payment Method", item.paymentMethod || "UPI"],
+          ["Unit Price", formatCurrency(item.unitPrice || 0)],
+        ],
+        items: [{ description: item.itemName || "Prasadam", quantity: item.quantity || 1, amount: formatCurrency(item.amount) }],
+        totalAmount: formatCurrency(item.amount),
+      });
+      return;
+    }
+
+    const receiptId = buildReceiptId("DN", item);
+    downloadReceiptPdf({
+      filename: `donation-receipt-${receiptId}.pdf`,
+      title: "Donation Receipt",
+      receiptId,
+      receiptDate: formatDateDisplay(item.date || item.createdAt),
+      status: item.status || "Completed",
+      devotee: getReceiptDevotee(item),
+      details: [
+        ["Donation Type", item.category || item.type || "Donation"],
+        ["Payment Method", item.paymentMethod || "UPI"],
+        item.eventTitle ? ["Event", item.eventTitle] : null,
+        item.transactionId ? ["Transaction ID", item.transactionId] : null,
+      ],
+      items: [{ description: item.category || item.type || "Donation", quantity: "1", amount: formatCurrency(item.amount) }],
+      totalAmount: formatCurrency(item.amount),
+      notes: item.notes,
+    });
   };
 
   const handlePaymentHistoryDownload = () => {
@@ -1018,7 +1241,7 @@ const DevoteeDashboard = () => {
                       {item.status}
                     </span>
                   </div>
-                  <p className="mt-1 text-sm text-[#4f4f4f]">{item.datetime ? new Date(item.datetime).toLocaleString() : "-"}</p>
+                  <p className="mt-1 text-sm text-[#4f4f4f]">{formatDateTimeDisplay(item.datetime)}</p>
                 </div>
               ))
             ) : (
@@ -1123,7 +1346,7 @@ const DevoteeDashboard = () => {
                   upcomingBookings.map((row) => (
                     <tr key={`${row.service}-${row.datetime || row._id}`} className="border-t border-[#f0f0f0]">
                       <td className="px-5 py-3 text-base font-semibold">{row.service}</td>
-                      <td className="px-5 py-3 text-sm text-[#3f3f3f]">{row.datetime ? new Date(row.datetime).toLocaleString() : "-"}</td>
+                      <td className="px-5 py-3 text-sm text-[#3f3f3f]">{formatDateTimeDisplay(row.datetime)}</td>
                       <td className="px-5 py-3 text-base font-semibold">{formatCurrency(row.amount)}</td>
                       <td className="px-5 py-3">
                         <span className={`rounded-full px-3 py-1 text-sm font-semibold ${row.status === "Confirmed" ? "bg-[#def5e5] text-[#16853f]" : "bg-[#faefcf] text-[#ce7a0f]"}`}>
@@ -1286,6 +1509,12 @@ const DevoteeDashboard = () => {
             >
               {bookingLoading ? "Booking..." : "Book Pooja"}
             </button>
+            {bookingError ? (
+              <p className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{bookingError}</p>
+            ) : null}
+            {bookingSuccess ? (
+              <p className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">{bookingSuccess}</p>
+            ) : null}
           </div>
 
           <div className="space-y-4 rounded-[28px] border border-white/45 bg-white/62 p-6 shadow-[0_20px_52px_rgba(113,82,28,0.12)] backdrop-blur-xl">
@@ -1314,7 +1543,7 @@ const DevoteeDashboard = () => {
             <div className="rounded-[26px] border border-white/45 bg-white/65 p-4 text-sm text-[#6d5a35] shadow-sm backdrop-blur-sm">
               <p className="font-semibold">Booking summary</p>
               <p className="mt-3">Service: {bookingService}</p>
-              <p>Date: {bookingDatetime ? new Date(bookingDatetime).toLocaleString() : "Not selected"}</p>
+              <p>Date: {bookingDatetime ? formatDateTimeDisplay(bookingDatetime) : "Not selected"}</p>
               <p>Amount: {formatCurrency(bookingAmount)}</p>
               <p>Payment: {bookingPaymentMethod}</p>
             </div>
@@ -1329,7 +1558,7 @@ const DevoteeDashboard = () => {
       <div className={`${glassCard}`}>
         <div className="flex items-center justify-between">
           <h2 className="text-[2rem] font-bold">My Bookings</h2>
-          <button type="button" className="rounded-2xl bg-[#1b7f77] px-4 py-2 text-sm font-semibold text-white">New Booking</button>
+          <button type="button" onClick={() => setActivePage("Book Pooja")} className="rounded-2xl bg-[#1b7f77] px-4 py-2 text-sm font-semibold text-white">New Booking</button>
         </div>
         <div className="mt-6 overflow-x-auto">
           <table className="w-full min-w-[650px] text-left text-sm text-[#3f3f3f]">
@@ -1339,6 +1568,7 @@ const DevoteeDashboard = () => {
                 <th className="px-5 py-3">Date & Time</th>
                 <th className="px-5 py-3">Amount</th>
                 <th className="px-5 py-3">Status</th>
+                <th className="px-5 py-3">Receipt</th>
               </tr>
             </thead>
             <tbody>
@@ -1346,18 +1576,23 @@ const DevoteeDashboard = () => {
                 bookingsData.map((row) => (
                   <tr key={`${row.service}-${row.datetime || row._id}`} className="border-t border-[#f0f0f0]">
                     <td className="px-5 py-3 font-semibold">{row.service}</td>
-                    <td className="px-5 py-3">{row.datetime}</td>
+                    <td className="px-5 py-3">{formatDateTimeDisplay(row.datetime)}</td>
                     <td className="px-5 py-3">{formatCurrency(row.amount)}</td>
                     <td className="px-5 py-3">
                       <span className={`rounded-full px-3 py-1 text-sm font-semibold ${row.status === "Confirmed" ? "bg-[#def5e5] text-[#16853f]" : "bg-[#faefcf] text-[#ce7a0f]"}`}>
                         {row.status}
                       </span>
                     </td>
+                    <td className="px-5 py-3 text-[#af6317]">
+                      <button type="button" onClick={() => handleReceiptDownload(row, "booking")} className="font-semibold">
+                        Download
+                      </button>
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="4" className="px-5 py-6 text-center text-[#5d5d5d]">
+                  <td colSpan="5" className="px-5 py-6 text-center text-[#5d5d5d]">
                     No bookings available.
                   </td>
                 </tr>
@@ -1732,7 +1967,34 @@ const DevoteeDashboard = () => {
     <div className="space-y-6">
       <div className={`${glassCard}`}>
         <h2 className="text-[2rem] font-bold">Receipts</h2>
-        <div className="mt-6 grid gap-6 xl:grid-cols-2">
+        <div className="mt-6 grid gap-6 xl:grid-cols-3">
+          <div className={glassSection}>
+            <h3 className="text-xl font-semibold">Pooja Booking Receipts</h3>
+            <div className="mt-4 space-y-3">
+              {bookingsData.length > 0 ? (
+                bookingsData.map((item) => (
+                  <div key={`${item._id || item.bookingNumber || item.service}`} className={glassItem}>
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                      <div>
+                        <p className="text-lg font-semibold">{item.service || "Pooja Booking"}</p>
+                        <p className="text-sm text-[#5d5d5d]">{formatDateTimeDisplay(item.datetime)}</p>
+                        <p className="mt-1 text-sm text-[#6b6b6b]">Receipt ID: {buildReceiptId("PB", item)}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-lg font-bold text-[#1b7f77]">{formatCurrency(item.amount)}</p>
+                        <button type="button" onClick={() => handleReceiptDownload(item, "booking")} className="mt-3 rounded-2xl bg-[#1b7f77] px-4 py-2 text-sm font-semibold text-white">
+                          Download PDF
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className={`${glassItem} text-[#5d5d5d]`}>No pooja booking receipts available.</div>
+              )}
+            </div>
+          </div>
+
           <div className={glassSection}>
             <h3 className="text-xl font-semibold">Donation Receipts</h3>
             <div className="mt-4 space-y-3">
@@ -1742,8 +2004,8 @@ const DevoteeDashboard = () => {
                     <div className="flex flex-wrap items-center justify-between gap-4">
                       <div>
                         <p className="text-lg font-semibold">{item.category || item.type || "Donation"}</p>
-                        <p className="text-sm text-[#5d5d5d]">{item.date || new Date(item.createdAt).toLocaleDateString()}</p>
-                        <p className="mt-1 text-sm text-[#6b6b6b]">Receipt ID: {item._id?.slice(-8) || "N/A"}</p>
+                        <p className="text-sm text-[#5d5d5d]">{formatDateDisplay(item.date || item.createdAt)}</p>
+                        <p className="mt-1 text-sm text-[#6b6b6b]">Receipt ID: {buildReceiptId("DN", item)}</p>
                       </div>
                       <div className="text-right">
                         <p className="text-lg font-bold text-[#1b7f77]">{formatCurrency(item.amount)}</p>
@@ -1769,7 +2031,7 @@ const DevoteeDashboard = () => {
                     <div className="flex flex-wrap items-center justify-between gap-4">
                       <div>
                         <p className="text-lg font-semibold">{item.itemName}</p>
-                        <p className="text-sm text-[#5d5d5d]">{item.createdAt ? new Date(item.createdAt).toLocaleDateString() : ""}</p>
+                        <p className="text-sm text-[#5d5d5d]">{formatDateDisplay(item.createdAt)}</p>
                         <p className="mt-1 text-sm text-[#6b6b6b]">Qty: {item.quantity || 1}</p>
                       </div>
                       <div className="text-right">
@@ -2202,11 +2464,3 @@ const DevoteeDashboard = () => {
 };
 
 export default DevoteeDashboard;
-
-
-
-
-
-
-
-

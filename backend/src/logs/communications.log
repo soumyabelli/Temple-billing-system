@@ -584,3 +584,29 @@ Thank you for your donation!
 To: 9740265462
 Message: Donation received! Amount: ₹501. Transaction ID: SIM_TXN_1782553581079. Thank you! -Temple
 
+[2026-06-28T11:44:44.671Z] EMAIL
+To: milt@gmail.com
+Subject: Donation Receipt
+Donation Receipt
+Amount: ₹501
+Category: Pooja
+Transaction ID: SIM_TXN_1782647084370
+Thank you for your donation!
+
+[2026-06-28T11:44:44.676Z] SMS
+To: 9945650664
+Message: Donation received! Amount: ₹501. Transaction ID: SIM_TXN_1782647084370. Thank you! -Temple
+
+[2026-06-28T11:45:37.270Z] EMAIL
+To: milt@gmail.com
+Subject: Prasadam Order Confirmation
+Prasadam Order Confirmed
+Item: Laddu Prasadam
+Quantity: 1
+Amount: ₹151
+Thank you!
+
+[2026-06-28T11:45:37.274Z] SMS
+To: 9945650664
+Message: Prasadam order confirmed! Item: Laddu Prasadam. Qty: 1. Ready soon! -Temple
+
