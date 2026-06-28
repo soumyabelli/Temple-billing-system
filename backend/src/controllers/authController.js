@@ -15,6 +15,7 @@ const { createStaffNotification } = require("../utils/notificationService");
 const { buildEmailLookup, normalizeEmail } = require("../utils/email");
 const { canLoginForStatus } = require("../utils/employeeAccess");
 
+
 const ALLOWED_ROLES = ["admin", "accountant", "cashier", "priest", "staff", "devotee"];
 
 const normalizeDevoteeEmail = normalizeEmail;
