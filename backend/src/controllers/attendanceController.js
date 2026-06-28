@@ -6,6 +6,7 @@ const Shift = require("../models/Shift");
 const Task = require("../models/Task");
 const User = require("../models/User");
 const { createNotification, createStaffNotification } = require("../utils/notificationService");
+const { canMarkAttendanceForStatus } = require("../utils/employeeAccess");
 
 const ATTENDANCE_STATUSES = ["Present", "Absent", "Late", "Half Day", "Leave"];
 const CHECK_IN_LATE_TIME = { hour: 9, minute: 30 };
@@ -701,7 +702,7 @@ const buildDashboardResponse = async (staffId, monthValue) => {
   };
 };
 
-const buildAdminAttendanceDashboard = async (monthValue, filterEmployeeId = null) => {
+const buildAdminAttendanceDashboard = async (monthValue, filterEmployeeId = null, filters = {}) => {
   const { monthKey, monthIndex, startDate, endDate, monthLabel } = getMonthRange(monthValue);
   const currentMonthKey = toDateKey(new Date()).slice(0, 7);
   const analyticsEndDate = monthKey === currentMonthKey ? new Date() : endDate;
@@ -712,7 +713,16 @@ const buildAdminAttendanceDashboard = async (monthValue, filterEmployeeId = null
   const todayKey = toDateKey(today);
 
   // Build employee query
-  const employeeQuery = { role: { $ne: "admin" } };
+  const employeeQuery = {
+    role: { $ne: "admin" },
+    status: { $in: ["Active", "On Leave"] },
+  };
+  if (filters.role && filters.role !== "all") {
+    employeeQuery.role = String(filters.role).toLowerCase();
+  }
+  if (filters.department && filters.department !== "all") {
+    employeeQuery.department = filters.department;
+  }
   if (filterEmployeeId) {
     employeeQuery.$or = [
       { _id: mongoose.Types.ObjectId.isValid(filterEmployeeId) ? filterEmployeeId : null },
@@ -765,6 +775,7 @@ const buildAdminAttendanceDashboard = async (monthValue, filterEmployeeId = null
         department: employee.department || "General",
         role: employee.role || "staff",
         status: employee.status || "Active",
+        joiningDate: employee.joiningDate ? toDateKey(new Date(employee.joiningDate)) : "",
         todayContext,
       };
     })
@@ -819,6 +830,7 @@ const buildAdminAttendanceDashboard = async (monthValue, filterEmployeeId = null
   let halfDays = 0;
   let leaveDays = 0;
   let lateDays = 0;
+  let eligibleEmployeeDays = 0;
 
   for (let cursor = new Date(startDate); cursor <= analyticsEndDate; cursor.setDate(cursor.getDate() + 1)) {
     const currentKey = toDateKey(cursor);
@@ -829,6 +841,8 @@ const buildAdminAttendanceDashboard = async (monthValue, filterEmployeeId = null
     let halfDayCount = 0;
 
     employeeList.forEach((employee) => {
+      if (employee.joiningDate && currentKey < employee.joiningDate) return;
+      eligibleEmployeeDays += 1;
       const attendance = attendanceMap.get(`${employee.id}:${currentKey}`);
       const leave = leaveMap.get(`${employee.id}:${currentKey}`);
 
@@ -867,7 +881,8 @@ const buildAdminAttendanceDashboard = async (monthValue, filterEmployeeId = null
       }
     });
 
-    const activeEmployees = employeeList.length || 1;
+    const activeEmployees =
+      employeeList.filter((employee) => !employee.joiningDate || currentKey >= employee.joiningDate).length || 1;
     const attendancePercent = Math.round((presentCount / activeEmployees) * 100);
     timeline.push({
       dateKey: currentKey,
@@ -881,23 +896,26 @@ const buildAdminAttendanceDashboard = async (monthValue, filterEmployeeId = null
     });
   }
 
-  const todayLeaveCount = employeeList.reduce((count, employee) => {
+  const eligibleTodayEmployees = employeeList.filter(
+    (employee) => !employee.joiningDate || employee.joiningDate <= todayKey
+  );
+  const todayLeaveCount = eligibleTodayEmployees.reduce((count, employee) => {
     return count + (leaveMap.get(`${employee.id}:${todayKey}`) ? 1 : 0);
   }, 0);
-  const todayLateCount = employeeList.reduce((count, employee) => {
+  const todayLateCount = eligibleTodayEmployees.reduce((count, employee) => {
     const attendance = attendanceMap.get(`${employee.id}:${todayKey}`);
     const leave = leaveMap.get(`${employee.id}:${todayKey}`);
     if (leave || !attendance) return count;
     return Boolean(attendance.isLateCheckIn) ? count + 1 : count;
   }, 0);
-  const todayPresentCount = employeeList.reduce((count, employee) => {
+  const todayPresentCount = eligibleTodayEmployees.reduce((count, employee) => {
     const attendance = attendanceMap.get(`${employee.id}:${todayKey}`);
     const leave = leaveMap.get(`${employee.id}:${todayKey}`);
     if (leave || !attendance) return count;
     const status = normalizeAttendanceStatus(attendance.status);
     return status === "Present" || status === "Pending" ? count + 1 : count;
   }, 0);
-  const todayAbsentCount = employeeList.reduce((count, employee) => {
+  const todayAbsentCount = eligibleTodayEmployees.reduce((count, employee) => {
     const attendance = attendanceMap.get(`${employee.id}:${todayKey}`);
     const leave = leaveMap.get(`${employee.id}:${todayKey}`);
     if (leave) return count;
@@ -905,7 +923,7 @@ const buildAdminAttendanceDashboard = async (monthValue, filterEmployeeId = null
     const status = normalizeAttendanceStatus(attendance.status);
     return status === "Absent" ? count + 1 : count;
   }, 0);
-  const expectedEntries = employeeList.length * timeline.length;
+  const expectedEntries = eligibleEmployeeDays;
   const attendancePercent = expectedEntries > 0 ? Math.round((presentDays / expectedEntries) * 100) : 0;
 
   const records = [
@@ -961,7 +979,7 @@ const buildAdminAttendanceDashboard = async (monthValue, filterEmployeeId = null
     .sort((a, b) => b.dateKey.localeCompare(a.dateKey))
     .slice(0, 250);
 
-  const todayRecords = employeeList.map((employee) => {
+  const todayRecords = eligibleTodayEmployees.map((employee) => {
     const attendance = attendanceMap.get(`${employee.id}:${todayKey}`);
     const leave = leaveMap.get(`${employee.id}:${todayKey}`);
     const employeeContext = getEmployeeContext(employee);
@@ -1025,11 +1043,11 @@ const buildAdminAttendanceDashboard = async (monthValue, filterEmployeeId = null
       halfDays,
       lateDays,
       attendancePercent,
-      totalEmployees: employeeList.length,
+      totalEmployees: eligibleTodayEmployees.length,
       totalRecords: attendanceDocs.length,
     },
     overview: [
-      { label: "Total Employees", value: String(employeeList.length), tone: "info" },
+      { label: "Total Employees", value: String(eligibleTodayEmployees.length), tone: "info" },
       { label: "Present Today", value: String(todayPresentCount), tone: "success" },
       { label: "Absent Today", value: String(todayAbsentCount), tone: "danger" },
       { label: "On Leave", value: String(todayLeaveCount), tone: "warning" },
@@ -1051,7 +1069,9 @@ const buildAdminAttendanceDashboard = async (monthValue, filterEmployeeId = null
       leaveCount: todayLeaveCount,
       lateCount: todayLateCount,
       dutyCount: dutyDocs.length,
-      attendancePercent: employeeList.length > 0 ? Math.round((todayPresentCount / employeeList.length) * 100) : 0,
+      attendancePercent: eligibleTodayEmployees.length > 0
+        ? Math.round((todayPresentCount / eligibleTodayEmployees.length) * 100)
+        : 0,
     },
   };
 };
@@ -1139,8 +1159,17 @@ exports.getStaffAttendanceSummary = async (req, res) => {
 
 exports.getAdminAttendanceDashboard = async (req, res) => {
   try {
-    const { month, employeeId } = req.query;
-    const payload = await buildAdminAttendanceDashboard(month, employeeId || null);
+    const { month, year, employeeId, role, department } = req.query;
+    const monthValue = month && /^\d{4}-\d{2}$/.test(month)
+      ? month
+      : year && month
+        ? `${year}-${String(month).padStart(2, "0")}`
+        : month;
+    const payload = await buildAdminAttendanceDashboard(
+      monthValue,
+      employeeId || null,
+      { role, department }
+    );
 
     return res.json(payload);
   } catch (error) {
@@ -1183,6 +1212,26 @@ exports.markAttendance = async (req, res) => {
     }
 
     const employee = await Employee.findOne({ email: staff.staffEmail }) || await Employee.findById(staff.employeeId);
+    if (!employee) {
+      return res.status(404).json({ success: false, message: "Employee profile not found" });
+    }
+    if (!canMarkAttendanceForStatus(employee.status)) {
+      return res.status(403).json({
+        success: false,
+        message: employee.status === "On Leave"
+          ? "Attendance is unavailable while employee status is On Leave"
+          : `Attendance is disabled because employee status is ${employee.status || "Inactive"}`,
+      });
+    }
+    if (employee.joiningDate) {
+      const joiningKey = toDateKey(new Date(employee.joiningDate));
+      if (dateKey < joiningKey) {
+        return res.status(403).json({
+          success: false,
+          message: `Attendance becomes available on the joining date (${joiningKey})`,
+        });
+      }
+    }
     const todayTasks = await Task.find(await buildTaskQuery(staffId, dateKey));
     const dailyContext = await buildDailyAssignmentContext(
       {

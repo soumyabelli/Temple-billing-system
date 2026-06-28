@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
+const { getEmailAliases, normalizeEmail } = require("../utils/email");
 
 const dataDir = path.join(__dirname, "..", "data");
 const usersFilePath = path.join(dataDir, "users.json");
@@ -30,7 +31,8 @@ const writeUsers = async (users) => {
 
 const findUserByEmail = async (email) => {
   const users = await readUsers();
-  return users.find((user) => user.email === email) || null;
+  const aliases = getEmailAliases(email);
+  return users.find((user) => aliases.includes(String(user.email || "").toLowerCase())) || null;
 };
 
 const findUserById = async (id) => {
@@ -43,7 +45,7 @@ const createUser = async ({ name, email, password, role, phone, address, place, 
   const user = {
     id: crypto.randomUUID(),
     name,
-    email,
+    email: normalizeEmail(email),
     password,
     role,
     phone: phone || "",
@@ -71,6 +73,7 @@ const updateUser = async (id, updates) => {
   users[idx] = {
     ...users[idx],
     ...updates,
+    email: Object.prototype.hasOwnProperty.call(updates, "email") ? normalizeEmail(updates.email) : users[idx].email,
     id: users[idx].id,
     updatedAt: new Date().toISOString(),
   };

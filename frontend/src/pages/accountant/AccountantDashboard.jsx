@@ -25,6 +25,7 @@ const AccountantDashboard = () => {
 
   const displayName = user?.name || "Accountant";
   const initials = displayName.charAt(0).toUpperCase();
+  const avatarSrc = user?.photo || "";
   const currentDate = formatCurrentDate();
   const currentWeekday = formatWeekday();
 
@@ -65,7 +66,9 @@ const AccountantDashboard = () => {
             </button>
 
             <div className="accountant-user">
-              <div className="accountant-user__avatar">{initials}</div>
+              <div className="accountant-user__avatar">
+                {avatarSrc ? <img src={avatarSrc} alt={displayName} className="h-full w-full rounded-full object-cover" /> : initials}
+              </div>
               <div className="accountant-user__meta">
                 <strong>{displayName}</strong>
                 <span>Accountant</span>

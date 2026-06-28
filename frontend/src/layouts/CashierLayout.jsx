@@ -20,8 +20,10 @@ const findActiveItem = (path) => {
 const CashierLayout = ({ children, onLogoutClick }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { logoutUser } = useAuth();
+  const { logoutUser, user } = useAuth();
   const { unreadCount } = useNotifications();
+  const avatarSrc = user?.photo || "";
+  const avatarInitial = (user?.name || "C").charAt(0).toUpperCase();
   const [activeItem, setActiveItem] = useState(findActiveItem(location.pathname));
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -85,6 +87,15 @@ const CashierLayout = ({ children, onLogoutClick }) => {
             </div>
 
             <div className="flex items-center gap-3">
+              <div className="hidden h-11 w-11 overflow-hidden rounded-2xl border border-[#f1d2a2] bg-white shadow-sm md:block">
+                {avatarSrc ? (
+                  <img src={avatarSrc} alt={user?.name || "Cashier"} className="h-full w-full object-cover" />
+                ) : (
+                  <div className="grid h-full w-full place-items-center text-sm font-bold text-[#8a5200]">
+                    {avatarInitial}
+                  </div>
+                )}
+              </div>
               <div className="hidden rounded-full border border-[#f1d2a2] bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm md:block">
                 {new Date().toLocaleDateString("en-IN", {
                   weekday: "long",
@@ -130,5 +141,4 @@ const CashierLayout = ({ children, onLogoutClick }) => {
 };
 
 export default CashierLayout;
-
 

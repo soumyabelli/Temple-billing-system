@@ -49,15 +49,18 @@ const getStaffProfileDetails = (profile = {}) => [
   { label: "Gender", value: profile.gender || "-" },
   { label: "Aadhaar", value: profile.aadhaar || "-" },
   { label: "Joining Date", value: profile.joiningDate || "-" },
-  { label: "Shift", value: profile.shift || "-" },
+  { label: "Shift", value: profile.currentDuty?.shift || profile.defaultShift || profile.shift || "-" },
   { label: "Department", value: profile.department || "-" },
   { label: "Employment Type", value: profile.employmentType || "-" },
   { label: "Salary", value: profile.salary || "-" },
-  { label: "Permissions", value: profile.permissions || "-" },
-  { label: "Default Shift", value: profile.defaultShift || "-" },
-  { label: "Default Duty", value: profile.defaultDuty || "-" },
-  { label: "Duty Location", value: profile.dutyLocation || "-" },
-  { label: "Document URL", value: profile.documentUrl || "-" },
+  { label: "Current Duty", value: profile.currentDuty?.dutyName || profile.defaultDuty || "-" },
+  { label: "Attendance Status", value: profile.attendanceStatus || "Not Marked" },
+  { label: "Leave Balance", value: `${profile.leaveBalance ?? 0} days` },
+  { label: "Duty Location", value: profile.currentDuty?.dutyLocation || profile.dutyLocation || "-" },
+  { label: "Created Date", value: profile.createdAt ? new Date(profile.createdAt).toLocaleDateString("en-IN") : "-" },
+  { label: "Updated Date", value: profile.updatedAt ? new Date(profile.updatedAt).toLocaleDateString("en-IN") : "-" },
+  { label: "Created By", value: profile.createdBy || "Admin" },
+  { label: "Last Login", value: profile.lastLogin ? new Date(profile.lastLogin).toLocaleString("en-IN") : "-" },
 ];
 
 const formatHeaderDate = () =>
@@ -162,9 +165,15 @@ const toProfileForm = (profile = {}) => ({
   defaultShift: profile.defaultShift || "",
   defaultDuty: profile.defaultDuty || "",
   dutyLocation: profile.dutyLocation || "",
-  permissions: profile.permissions || "",
+  currentDuty: profile.currentDuty || {},
+  attendanceStatus: profile.attendanceStatus || "Not Marked",
+  leaveBalance: profile.leaveBalance ?? 0,
   status: profile.status || "Active",
   photo: profile.photo || "",
+  createdAt: profile.createdAt || "",
+  updatedAt: profile.updatedAt || "",
+  createdBy: profile.createdBy || "",
+  lastLogin: profile.lastLogin || "",
 });
 
 const StaffDashboard = () => {

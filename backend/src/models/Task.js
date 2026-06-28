@@ -113,6 +113,21 @@ const taskSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    supervisor: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    priority: {
+      type: String,
+      enum: ["Low", "Medium", "High", "Urgent"],
+      default: "Medium",
+    },
+    workingHours: {
+      type: String,
+      default: "",
+      trim: true,
+    },
     status: {
       type: String,
       enum: TASK_STATUSES,

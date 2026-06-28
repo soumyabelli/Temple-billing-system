@@ -10,6 +10,14 @@ const Topbar = ({ darkMode, toggleDarkMode, onOpenMobileSidebar }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [notificationCount, setNotificationCount] = useState(0);
+  const avatarSrc = user?.photo || "";
+  const avatarInitial = (user?.name || "Admin").charAt(0).toUpperCase();
+  const displayName = user?.name || "Admin";
+  const displayRole = user?.role === "admin"
+    ? "Super Admin"
+    : user?.role
+      ? `${user.role.charAt(0).toUpperCase()}${user.role.slice(1)}`
+    : "Super Admin";
 
   useEffect(() => {
     const loadNotifications = async () => {
@@ -70,10 +78,18 @@ const Topbar = ({ darkMode, toggleDarkMode, onOpenMobileSidebar }) => {
         </button>
 
         <div className="hidden sm:flex items-center gap-3">
-          <img src="https://i.pravatar.cc/100" alt="Admin" className="w-10 h-10 rounded-full border border-white/30" />
+          <div className="h-10 w-10 overflow-hidden rounded-full border border-white/30 bg-white/70">
+            {avatarSrc ? (
+              <img src={avatarSrc} alt={displayName} className="h-full w-full object-cover" />
+            ) : (
+              <div className={`grid h-full w-full place-items-center text-sm font-bold ${darkMode ? "text-slate-100" : "text-[#1f1f1f]"}`}>
+                {avatarInitial}
+              </div>
+            )}
+          </div>
           <div>
-            <h3 className={`font-bold leading-tight ${darkMode ? "text-slate-100" : "text-[#1f1f1f]"}`}>Admin</h3>
-            <p className={`text-sm ${darkMode ? "text-slate-400" : "text-gray-500"}`}>Super Admin</p>
+            <h3 className={`font-bold leading-tight ${darkMode ? "text-slate-100" : "text-[#1f1f1f]"}`}>{displayName}</h3>
+            <p className={`text-sm ${darkMode ? "text-slate-400" : "text-gray-500"}`}>{displayRole}</p>
           </div>
           <MdKeyboardArrowDown className={darkMode ? "text-slate-400" : "text-gray-400"} />
         </div>

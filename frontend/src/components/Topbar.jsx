@@ -32,7 +32,9 @@ const Topbar = ({ darkMode, toggleDarkMode, onOpenMobileSidebar }) => {
         </div>
 
         <div className="hidden sm:flex items-center gap-3">
-          <img src="https://i.pravatar.cc/100" alt="Admin" className="w-10 h-10 rounded-full border border-white/30" />
+          <div className="grid h-10 w-10 place-items-center rounded-full border border-white/30 bg-white/70 font-bold text-[#1f1f1f]">
+            A
+          </div>
           <div>
             <h3 className={`font-bold leading-tight ${darkMode ? "text-slate-100" : "text-[#1f1f1f]"}`}>Admin</h3>
             <p className={`text-sm ${darkMode ? "text-slate-400" : "text-gray-500"}`}>Super Admin</p>

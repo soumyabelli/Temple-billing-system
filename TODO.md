@@ -1,6 +1,9 @@
-- [ ] Read/update DevoteeDashboard.jsx to add segmented Donation History vs Prasadam Booking History UI
-- [ ] Add separate download handlers for both histories (if missing/need reuse)
-- [ ] Replace Payment History view with segmented layout
-- [ ] Verify tables render correctly for empty states
-- [ ] Run frontend build/lint (if available) and ensure no runtime errors
+# Temple Billing System - TODO
+
+## Booking 500 Internal Server Error (Devotee)
+- [ ] Add server-side error details for devotee booking creation (log actual error, return message)
+- [ ] Make booking creation resilient to notification/bill failures by not failing the whole request
+- [ ] Align devotee booking API payload validation with Booking model requirements (gst, paymentMethod enums, datetime format)
+- [ ] (Optional) Add frontend payload normalization for createDevoteeBooking
+- [ ] Run backend tests: create booking request and verify 201 response
 

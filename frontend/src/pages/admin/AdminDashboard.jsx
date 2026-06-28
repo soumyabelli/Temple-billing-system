@@ -17,6 +17,8 @@ import { getAdminUsers } from "../../services/authService";
 import { getDevoteeBookings, getDevoteeDonations } from "../../services/devoteeService";
 import axios from "axios";
 
+const normalizeEmail = (email) => String(email || "").trim().toLowerCase().replace(/@temple\.local$/, "@gmail.com");
+
 const statCards = [
   { title: "Total Revenues", amount: "Rs 2,45,680", trend: "12.3%", trendUp: true, icon: <FaRupeeSign />, accent: "bg-orange-100 text-orange-600" },
   { title: "Daily Collections", amount: "Rs 48,650", trend: "8.2%", trendUp: true, icon: <FaDonate />, accent: "bg-green-100 text-green-600" },
@@ -107,12 +109,12 @@ const AdminDashboard = () => {
 
   const devoteeUsers = useMemo(() => {
     const fromUsers = users.filter((u) => (u.role || "").toLowerCase() === "devotee");
-    const map = new Map(fromUsers.map((u) => [String(u.email || "").toLowerCase(), u]));
+    const map = new Map(fromUsers.map((u) => [normalizeEmail(u.email), { ...u, email: normalizeEmail(u.email) }]));
 
     bookings.forEach((b) => {
       const name = String(b.devoteeName || "").trim();
       if (!name) return;
-      const pseudoEmail = `${name.toLowerCase().replace(/\s+/g, ".")}@temple.local`;
+      const pseudoEmail = `${name.toLowerCase().replace(/\s+/g, ".")}@gmail.com`;
       if (!map.has(pseudoEmail)) {
         map.set(pseudoEmail, { name, email: pseudoEmail, role: "devotee", _id: `booking-${name}` });
       }
@@ -121,7 +123,7 @@ const AdminDashboard = () => {
     donations.forEach((d) => {
       const name = String(d.donorName || "").trim();
       if (!name) return;
-      const pseudoEmail = `${name.toLowerCase().replace(/\s+/g, ".")}@temple.local`;
+      const pseudoEmail = `${name.toLowerCase().replace(/\s+/g, ".")}@gmail.com`;
       if (!map.has(pseudoEmail)) {
         map.set(pseudoEmail, { name, email: pseudoEmail, role: "devotee", _id: `donation-${name}` });
       }

@@ -342,7 +342,9 @@ const CashierDashboard = () => {
                 <span>{new Date().toLocaleDateString()}</span>
               </div>
               <div className="hidden md:flex items-center gap-2">
-                <img src="https://i.pravatar.cc/40" alt="" className="h-10 w-10 rounded-full border border-orange-100" />
+                <div className="grid h-10 w-10 place-items-center rounded-full border border-orange-100 bg-orange-50 text-sm font-bold text-orange-600">
+                  C
+                </div>
                 <div>
                   <div className="text-sm font-bold text-gray-900">Cashier</div>
                   <div className="text-xs text-gray-500">Cashier</div>

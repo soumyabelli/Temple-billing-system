@@ -1,6 +1,8 @@
 const jwt = require("jsonwebtoken");
+const User = require("../models/User");
+const { canLoginForStatus } = require("../utils/employeeAccess");
 
-const authenticate = (req, res, next) => {
+const authenticate = async (req, res, next) => {
   const authHeader = req.headers.authorization || "";
   const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
 
@@ -10,7 +12,11 @@ const authenticate = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || "dev-secret");
-    req.user = decoded;
+    const user = await User.findById(decoded.id).select("role status accountEnabled");
+    if (user && (!user.accountEnabled || !canLoginForStatus(user.status))) {
+      return res.status(403).json({ message: `Account access is disabled (${user.status || "Inactive"}).` });
+    }
+    req.user = { ...decoded, role: user?.role || decoded.role };
     return next();
   } catch (error) {
     return res.status(401).json({ message: "Invalid or expired token" });

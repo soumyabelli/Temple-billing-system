@@ -13,6 +13,7 @@ const crypto = require("crypto");
 const Razorpay = require("razorpay");
 const { createStaffBroadcastNotifications, createBroadcastNotifications, createStaffNotification } = require("../utils/notificationService");
 const { sendBookingConfirmation, sendDonationReceipt, sendPrasadamOrderConfirmation } = require("../utils/communicationService");
+const { buildEmailLookup, normalizeEmail } = require("../utils/email");
 const PRASADAM_MENU = {
   "Laddu Prasadam": 151,
   "Panchamrit Prasadam": 101,
@@ -20,6 +21,21 @@ const PRASADAM_MENU = {
   "Sweet Pongal Prasadam": 131,
   "Curd Rice Prasadam": 111,
 };
+
+const normalizeBookingEmails = (booking) => ({
+  ...booking,
+  devoteeEmail: normalizeEmail(booking.devoteeEmail),
+});
+
+const normalizeDonationEmails = (donation) => ({
+  ...donation,
+  donorEmail: normalizeEmail(donation.donorEmail),
+});
+
+const normalizeOrderEmails = (order) => ({
+  ...order,
+  email: normalizeEmail(order.email),
+});
 
 const createLedgerBill = async ({
   devoteeName,
@@ -52,11 +68,11 @@ const createLedgerBill = async ({
 
 const getBookings = async (req, res) => {
   try {
-    const email = String(req.query.email || "").trim().toLowerCase();
+    const email = normalizeEmail(req.query.email);
     const bookings = email
-      ? await Booking.find({ devoteeEmail: email }).sort({ createdAt: -1 })
+      ? await Booking.find(buildEmailLookup("devoteeEmail", email)).sort({ createdAt: -1 })
       : await Booking.find().sort({ createdAt: -1 });
-    return res.status(200).json({ bookings });
+    return res.status(200).json({ bookings: bookings.map((booking) => normalizeBookingEmails(booking.toObject ? booking.toObject() : booking)) });
   } catch (error) {
     return res.status(500).json({ error: "Failed to load bookings." });
   }
@@ -65,6 +81,7 @@ const getBookings = async (req, res) => {
 const createBooking = async (req, res) => {
   try {
     const { devoteeName, devoteeEmail, devoteePhone, service, datetime, amount, status, contactNumber, notes, devoteeId, eventId, paymentMethod } = req.body;
+    const normalizedDevoteeEmail = normalizeEmail(devoteeEmail);
 
     if (!devoteeName || !service || !datetime || amount == null) {
       return res.status(400).json({ error: "Missing required booking fields." });
@@ -92,7 +109,7 @@ const createBooking = async (req, res) => {
       devoteeId: devoteeId || undefined,
       eventId: eventId || undefined,
       devoteeName,
-      devoteeEmail: devoteeEmail ? String(devoteeEmail).toLowerCase() : undefined,
+      devoteeEmail: normalizedDevoteeEmail || undefined,
       devoteePhone: devoteePhone || contactNumber,
       service,
       datetime,
@@ -119,7 +136,7 @@ const createBooking = async (req, res) => {
     await Notification.create({
       title: "Booking Submitted",
       message: `Your ${service} booking is pending approval.`,
-      audienceEmail: devoteeEmail ? String(devoteeEmail).toLowerCase() : undefined,
+      audienceEmail: normalizedDevoteeEmail || undefined,
     });
 
     // Also notify the cashier role
@@ -132,7 +149,7 @@ const createBooking = async (req, res) => {
 
     // Send multi-channel notifications (Email & SMS) if devotee info is available
     if (devoteeEmail || devoteePhone || contactNumber) {
-      const devotee = { name: devoteeName, email: devoteeEmail, phone: devoteePhone || contactNumber };
+      const devotee = { name: devoteeName, email: normalizedDevoteeEmail, phone: devoteePhone || contactNumber };
       await sendBookingConfirmation(devotee, {
         service,
         datetime,
@@ -154,7 +171,7 @@ const createBooking = async (req, res) => {
       }
     }
 
-    return res.status(201).json({ booking });
+    return res.status(201).json({ booking: normalizeBookingEmails(booking.toObject ? booking.toObject() : booking) });
   } catch (error) {
     return res.status(500).json({ error: "Unable to create booking." });
   }
@@ -162,11 +179,11 @@ const createBooking = async (req, res) => {
 
 const getDonations = async (req, res) => {
   try {
-    const email = String(req.query.email || "").trim().toLowerCase();
+    const email = normalizeEmail(req.query.email);
     const donations = email
-      ? await Donation.find({ donorEmail: email }).sort({ createdAt: -1 })
+      ? await Donation.find(buildEmailLookup("donorEmail", email)).sort({ createdAt: -1 })
       : await Donation.find().sort({ createdAt: -1 });
-    return res.status(200).json({ donations });
+    return res.status(200).json({ donations: donations.map((donation) => normalizeDonationEmails(donation.toObject ? donation.toObject() : donation)) });
   } catch (error) {
     return res.status(500).json({ error: "Failed to load donations." });
   }
@@ -187,6 +204,7 @@ const createDonation = async (req, res) => {
       donatedBy,
       eventId,
     } = req.body;
+    const normalizedDonorEmail = normalizeEmail(donorEmail);
 
     if (!donorName || amount == null) {
       return res.status(400).json({ error: "donorName and amount are required." });
@@ -203,7 +221,7 @@ const createDonation = async (req, res) => {
 
     const donation = await Donation.create({
       donorName: donorName.trim(),
-      donorEmail: donorEmail ? String(donorEmail).trim().toLowerCase() : undefined,
+      donorEmail: normalizedDonorEmail || undefined,
       donorPhone: donorPhone || contactNumber,
       amount: numericAmount,
       category,
@@ -231,7 +249,7 @@ const createDonation = async (req, res) => {
     await Notification.create({
       title: "Donation Received",
       message: `${donorName.trim()} donated INR ${numericAmount} for ${category}.`,
-      audienceEmail: donorEmail ? String(donorEmail).toLowerCase() : undefined,
+      audienceEmail: normalizedDonorEmail || undefined,
     });
 
     // Also notify the cashier role
@@ -244,7 +262,7 @@ const createDonation = async (req, res) => {
 
     // Send multi-channel notifications (Email & SMS) if donor info is available
     if (donorEmail || donorPhone || contactNumber) {
-      const donor = { name: donorName.trim(), email: donorEmail, phone: donorPhone || contactNumber };
+      const donor = { name: donorName.trim(), email: normalizedDonorEmail, phone: donorPhone || contactNumber };
       await sendDonationReceipt(donor, {
         amount: numericAmount,
         category,
@@ -261,7 +279,7 @@ const createDonation = async (req, res) => {
       }
     }
 
-    return res.status(201).json({ donation });
+    return res.status(201).json({ donation: normalizeDonationEmails(donation.toObject ? donation.toObject() : donation) });
   } catch (error) {
     return res.status(500).json({ error: "Unable to create donation." });
   }
@@ -269,19 +287,19 @@ const createDonation = async (req, res) => {
 
 const getNotifications = async (req, res) => {
   try {
-    const email = String(req.query.email || "").trim().toLowerCase();
+    const email = normalizeEmail(req.query.email);
     // If email provided, return user-specific notifications and broadcasts
     if (email) {
       let role = null;
       if (isDbConnected()) {
-        const user = await User.findOne({ email }).select("role");
+        const user = await User.findOne(buildEmailLookup("email", email)).select("role");
         role = user?.role || null;
       } else {
         const user = await fileUserStore.findUserByEmail(email);
         role = user?.role || null;
       }
 
-      const orFilters = [{ audienceEmail: email }, { audienceEmail: { $exists: false } }];
+      const orFilters = [buildEmailLookup("audienceEmail", email), { audienceEmail: { $exists: false } }];
       if (role) orFilters.push({ audienceRole: role });
 
       const notifications = await Notification.find({ $or: orFilters }).sort({ createdAt: -1 });
@@ -299,11 +317,12 @@ const getNotifications = async (req, res) => {
 const getProfile = async (req, res) => {
   try {
     if (req.query.email) {
+      const normalizedEmail = normalizeEmail(req.query.email);
       let user = null;
       if (isDbConnected()) {
-        user = await User.findOne({ email: req.query.email }).select("-password");
+        user = await User.findOne(buildEmailLookup("email", normalizedEmail)).select("-password");
       } else {
-        user = await fileUserStore.findUserByEmail(req.query.email);
+        user = await fileUserStore.findUserByEmail(normalizedEmail);
       }
       if (user) {
         const getYear = (dateVal) => {
@@ -315,7 +334,7 @@ const getProfile = async (req, res) => {
           profile: {
             id: user._id?.toString?.() || user.id,
             name: user.name,
-            email: user.email,
+            email: normalizeEmail(user.email),
             phone: user.phone || "",
             address: user.address || "",
             place: user.place || "",
@@ -570,6 +589,8 @@ const updateProfile = async (req, res) => {
     if (!currentEmail) {
       return res.status(400).json({ error: "currentEmail is required." });
     }
+    const normalizedCurrentEmail = normalizeEmail(currentEmail);
+    const normalizedUpdatedEmail = normalizeEmail(email);
 
     let user;
     const getYear = (dateVal) => {
@@ -579,13 +600,13 @@ const updateProfile = async (req, res) => {
     };
 
     if (isDbConnected()) {
-      user = await User.findOne({ email: currentEmail.trim().toLowerCase() });
+      user = await User.findOne(buildEmailLookup("email", normalizedCurrentEmail));
       if (!user) {
         return res.status(404).json({ error: "Profile not found." });
       }
 
       if (name && String(name).trim()) user.name = String(name).trim();
-      if (email && String(email).trim()) user.email = String(email).trim().toLowerCase();
+      if (normalizedUpdatedEmail) user.email = normalizedUpdatedEmail;
       if (phone && String(phone).trim()) user.phone = String(phone).trim();
       if (address && String(address).trim()) user.address = String(address).trim();
       if (place && String(place).trim()) user.place = String(place).trim();
@@ -596,14 +617,14 @@ const updateProfile = async (req, res) => {
         message: `${user.name} updated devotee profile details.`,
       }).catch(() => {});
     } else {
-      user = await fileUserStore.findUserByEmail(currentEmail.trim().toLowerCase());
+      user = await fileUserStore.findUserByEmail(normalizedCurrentEmail);
       if (!user) {
         return res.status(404).json({ error: "Profile not found." });
       }
 
       const updates = {};
       if (name && String(name).trim()) updates.name = String(name).trim();
-      if (email && String(email).trim()) updates.email = String(email).trim().toLowerCase();
+      if (normalizedUpdatedEmail) updates.email = normalizedUpdatedEmail;
       if (phone && String(phone).trim()) updates.phone = String(phone).trim();
       if (address && String(address).trim()) updates.address = String(address).trim();
       if (place && String(place).trim()) updates.place = String(place).trim();
@@ -622,7 +643,7 @@ const updateProfile = async (req, res) => {
       profile: {
         id: user._id?.toString?.() || user.id,
         name: user.name,
-        email: user.email,
+        email: normalizeEmail(user.email),
         phone: user.phone || "",
         address: user.address || "",
         place: user.place || "",
@@ -713,11 +734,11 @@ const createNotification = async (req, res) => {
 
 const getPrasadamOrders = async (req, res) => {
   try {
-    const email = String(req.query.email || "").trim().toLowerCase();
+    const email = normalizeEmail(req.query.email);
     const orders = email
-      ? await PrasadamOrder.find({ email }).sort({ createdAt: -1 })
+      ? await PrasadamOrder.find(buildEmailLookup("email", email)).sort({ createdAt: -1 })
       : await PrasadamOrder.find().sort({ createdAt: -1 });
-    return res.status(200).json({ orders });
+    return res.status(200).json({ orders: orders.map((order) => normalizeOrderEmails(order.toObject ? order.toObject() : order)) });
   } catch (error) {
     return res.status(500).json({ error: "Failed to load prasadam orders." });
   }
@@ -726,6 +747,7 @@ const getPrasadamOrders = async (req, res) => {
 const createPrasadamOrder = async (req, res) => {
   try {
     const { devoteeName, email, phone, itemName, quantity, paymentMethod, devoteeId } = req.body;
+    const normalizedOrderEmail = normalizeEmail(email);
     if (!devoteeName || !itemName) {
       return res.status(400).json({ error: "devoteeName and itemName are required." });
     }
@@ -751,7 +773,7 @@ const createPrasadamOrder = async (req, res) => {
     const order = await PrasadamOrder.create({
       devoteeId: devoteeId || undefined,
       devoteeName,
-      email,
+      email: normalizedOrderEmail || undefined,
       phone: phone || undefined,
       itemName,
       quantity: normalizedQty,
@@ -776,7 +798,7 @@ const createPrasadamOrder = async (req, res) => {
     await Notification.create({
       title: "New Prasadam Order",
       message: `${devoteeName} ordered ${itemName} x${normalizedQty}.`,
-      audienceEmail: email ? String(email).toLowerCase() : undefined,
+      audienceEmail: normalizedOrderEmail || undefined,
     });
 
     // Also notify the cashier role
@@ -789,7 +811,7 @@ const createPrasadamOrder = async (req, res) => {
 
     // Send multi-channel notifications (Email & SMS) if devotee info is available
     if (email || phone) {
-      const devotee = { name: devoteeName, email, phone };
+      const devotee = { name: devoteeName, email: normalizedOrderEmail, phone };
       await sendPrasadamOrderConfirmation(devotee, {
         item: itemName,
         quantity: normalizedQty,
@@ -809,7 +831,7 @@ const createPrasadamOrder = async (req, res) => {
       });
     }
 
-    return res.status(201).json({ order });
+    return res.status(201).json({ order: normalizeOrderEmails(order.toObject ? order.toObject() : order) });
   } catch (error) {
     return res.status(500).json({ error: "Failed to place prasadam order." });
   }
@@ -840,6 +862,7 @@ const createRazorpayOrder = async (req, res) => {
     if (!isDbConnected()) return res.status(500).json({ error: "Database not connected." });
 
     const { amount, donorName, donorEmail, donorPhone, category = "General", paymentMethod = "UPI", notes, eventId } = req.body;
+    const normalizedDonorEmail = normalizeEmail(donorEmail);
     const paymentMode = paymentMethod || "UPI";
     const numericAmount = Number(amount);
     if (!numericAmount || Number.isNaN(numericAmount) || numericAmount <= 0) {
@@ -858,7 +881,7 @@ const createRazorpayOrder = async (req, res) => {
 
       const donation = await Donation.create({
         donorName: donorName || "Anonymous",
-        donorEmail: donorEmail ? String(donorEmail).toLowerCase() : undefined,
+        donorEmail: normalizedDonorEmail || undefined,
         donorPhone: donorPhone || undefined,
         amount: numericAmount,
         category,
@@ -896,17 +919,17 @@ const createRazorpayOrder = async (req, res) => {
         await Notification.create({
           title: "Donation Received",
           message: `${donorName || "Anonymous"} donated INR ${numericAmount} (simulated).`,
-          audienceEmail: donorEmail ? String(donorEmail).toLowerCase() : undefined,
+          audienceEmail: normalizedDonorEmail || undefined,
         });
         if (donorEmail || donorPhone) {
-          const donor = { name: donorName, email: donorEmail, phone: donorPhone };
+          const donor = { name: donorName, email: normalizedDonorEmail, phone: donorPhone };
           await sendDonationReceipt(donor, { amount: numericAmount, category, transactionId: donation.transactionId });
         }
       } catch (notifErr) {
         console.warn("Notification for simulated donation failed:", notifErr);
       }
 
-      return res.status(201).json({ order, donation, key: "", simulated: true });
+      return res.status(201).json({ order, donation: normalizeDonationEmails(donation.toObject ? donation.toObject() : donation), key: "", simulated: true });
     }
 
     const razorpayClient = new Razorpay({
@@ -925,7 +948,7 @@ const createRazorpayOrder = async (req, res) => {
 
     const donation = await Donation.create({
       donorName: donorName || "Anonymous",
-      donorEmail: donorEmail ? String(donorEmail).toLowerCase() : undefined,
+      donorEmail: normalizedDonorEmail || undefined,
       donorPhone: donorPhone || undefined,
       amount: numericAmount,
       category,
@@ -948,7 +971,7 @@ const createRazorpayOrder = async (req, res) => {
       status: "Pending",
     });
 
-    return res.status(201).json({ order, donation, key: process.env.RAZORPAY_KEY_ID || "" });
+    return res.status(201).json({ order, donation: normalizeDonationEmails(donation.toObject ? donation.toObject() : donation), key: process.env.RAZORPAY_KEY_ID || "" });
   } catch (error) {
     console.error("createRazorpayOrder error:", error);
     const message = error?.message || (error?.error && JSON.stringify(error.error)) || "Failed to create Razorpay order.";
@@ -1009,7 +1032,7 @@ const verifyRazorpayPayment = async (req, res) => {
       console.warn("Notification after verify failed:", notifErr);
     }
 
-    return res.status(200).json({ success: true, donation });
+    return res.status(200).json({ success: true, donation: normalizeDonationEmails(donation.toObject ? donation.toObject() : donation) });
   } catch (error) {
     console.error("verifyRazorpayPayment error:", error);
     return res.status(500).json({ error: "Failed to verify Razorpay payment." });

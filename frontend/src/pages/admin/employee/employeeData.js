@@ -8,14 +8,14 @@ export const employeeStats = [
 ];
 
 export const employees = [
-  { id: "EMP001", photo: "https://i.pravatar.cc/80?img=10", name: "Ramesh Sharma", role: "Head Priest", department: "Priest Services", contact: "+91 98765 43210", shift: "Morning", status: "Active", joiningDate: "01 Jan 2020", salary: "₹95,000" },
-  { id: "EMP002", photo: "https://i.pravatar.cc/80?img=12", name: "Suresh Iyer", role: "Priest", department: "Pooja Services", contact: "+91 87654 32109", shift: "Afternoon", status: "Active", joiningDate: "15 Mar 2021", salary: "₹55,000" },
-  { id: "EMP003", photo: "https://i.pravatar.cc/80?img=14", name: "Anita Desai", role: "Accountant", department: "Accounts", contact: "+91 76543 21098", shift: "Day", status: "Active", joiningDate: "10 Feb 2022", salary: "₹50,000" },
-  { id: "EMP004", photo: "https://i.pravatar.cc/80?img=16", name: "Vikram Singh", role: "Cashier", department: "Billing", contact: "+91 65432 10987", shift: "Evening", status: "On Leave", joiningDate: "05 Apr 2021", salary: "₹40,000" },
-  { id: "EMP005", photo: "https://i.pravatar.cc/80?img=18", name: "Meera Patel", role: "Inventory Manager", department: "Prasadam", contact: "+91 54321 09876", shift: "Day", status: "Active", joiningDate: "12 Jun 2022", salary: "₹48,000" },
-  { id: "EMP006", photo: "https://i.pravatar.cc/80?img=20", name: "Arjun Kumar", role: "Maintenance Lead", department: "Maintenance", contact: "+91 43210 98765", shift: "Night", status: "Active", joiningDate: "20 Jul 2021", salary: "₹38,000" },
-  { id: "EMP007", photo: "https://i.pravatar.cc/80?img=22", name: "Pooja Nair", role: "Support Staff", department: "Devotee Services", contact: "+91 32109 87654", shift: "Morning", status: "Active", joiningDate: "18 Aug 2022", salary: "₹32,000" },
-  { id: "EMP008", photo: "https://i.pravatar.cc/80?img=24", name: "Mukesh Yadav", role: "Security Guard", department: "Security", contact: "+91 21098 76543", shift: "Night", status: "Active", joiningDate: "25 Sep 2021", salary: "₹28,000" },
+  { id: "EMP001", photo: "", name: "Ramesh Sharma", role: "Head Priest", department: "Priest Services", contact: "+91 98765 43210", shift: "Morning", status: "Active", joiningDate: "01 Jan 2020", salary: "₹95,000" },
+  { id: "EMP002", photo: "", name: "Suresh Iyer", role: "Priest", department: "Pooja Services", contact: "+91 87654 32109", shift: "Afternoon", status: "Active", joiningDate: "15 Mar 2021", salary: "₹55,000" },
+  { id: "EMP003", photo: "", name: "Anita Desai", role: "Accountant", department: "Accounts", contact: "+91 76543 21098", shift: "Day", status: "Active", joiningDate: "10 Feb 2022", salary: "₹50,000" },
+  { id: "EMP004", photo: "", name: "Vikram Singh", role: "Cashier", department: "Billing", contact: "+91 65432 10987", shift: "Evening", status: "On Leave", joiningDate: "05 Apr 2021", salary: "₹40,000" },
+  { id: "EMP005", photo: "", name: "Meera Patel", role: "Inventory Manager", department: "Prasadam", contact: "+91 54321 09876", shift: "Day", status: "Active", joiningDate: "12 Jun 2022", salary: "₹48,000" },
+  { id: "EMP006", photo: "", name: "Arjun Kumar", role: "Maintenance Lead", department: "Maintenance", contact: "+91 43210 98765", shift: "Night", status: "Active", joiningDate: "20 Jul 2021", salary: "₹38,000" },
+  { id: "EMP007", photo: "", name: "Pooja Nair", role: "Support Staff", department: "Devotee Services", contact: "+91 32109 87654", shift: "Morning", status: "Active", joiningDate: "18 Aug 2022", salary: "₹32,000" },
+  { id: "EMP008", photo: "", name: "Mukesh Yadav", role: "Security Guard", department: "Security", contact: "+91 21098 76543", shift: "Night", status: "Active", joiningDate: "25 Sep 2021", salary: "₹28,000" },
 ];
 
 export const recentJoinings = [

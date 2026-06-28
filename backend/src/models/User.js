@@ -16,6 +16,19 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
+    username: {
+      type: String,
+      unique: true,
+      sparse: true,
+      lowercase: true,
+      trim: true,
+    },
+    employeeId: {
+      type: String,
+      unique: true,
+      sparse: true,
+      trim: true,
+    },
     phone: {
       type: String,
       trim: true,
@@ -37,6 +50,31 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: allowedRoles,
       default: "devotee",
+    },
+    photo: {
+      type: String,
+      default: "",
+    },
+    status: {
+      type: String,
+      enum: ["Active", "On Leave", "Inactive", "Suspended", "Resigned", "Retired"],
+      default: "Active",
+    },
+    accountEnabled: {
+      type: Boolean,
+      default: true,
+    },
+    permissions: {
+      type: [String],
+      default: [],
+    },
+    menuAccess: {
+      type: [String],
+      default: [],
+    },
+    lastLogin: {
+      type: Date,
+      default: null,
     },
     mustChangePassword: {
       type: Boolean,

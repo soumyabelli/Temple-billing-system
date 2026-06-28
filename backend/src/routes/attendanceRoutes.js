@@ -1,6 +1,7 @@
 const express = require("express");
 
 const router = express.Router();
+const { authenticate, authorizeRoles } = require("../middleware/authMiddleware");
 
 const {
   getAdminAttendanceDashboard,
@@ -11,11 +12,11 @@ const {
   updateAttendance,
 } = require("../controllers/attendanceController");
 
-router.post("/mark", markAttendance);
-router.get("/admin/dashboard", getAdminAttendanceDashboard);
-router.put("/:id", updateAttendance);
-router.get("/:staffId/dashboard", getStaffAttendanceDashboard);
-router.get("/:staffId/records", getStaffAttendanceRecords);
-router.get("/:staffId/summary", getStaffAttendanceSummary);
+router.post("/mark", authenticate, markAttendance);
+router.get("/admin/dashboard", authenticate, authorizeRoles("admin"), getAdminAttendanceDashboard);
+router.put("/:id", authenticate, authorizeRoles("admin"), updateAttendance);
+router.get("/:staffId/dashboard", authenticate, getStaffAttendanceDashboard);
+router.get("/:staffId/records", authenticate, getStaffAttendanceRecords);
+router.get("/:staffId/summary", authenticate, getStaffAttendanceSummary);
 
 module.exports = router;

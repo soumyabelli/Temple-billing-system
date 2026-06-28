@@ -54,8 +54,19 @@ const taskCode = (task, index) => {
   return `TSK${String(index + 1).padStart(4, "0")}`;
 };
 
-const getEmployeeAvatar = (employee, fallback) =>
-  employee?.photo || `https://i.pravatar.cc/120?u=${employee?._id || employee?.email || fallback}`;
+const avatarPalette = ["#7c3aed", "#0ea5e9", "#f59e0b", "#10b981", "#ef4444"];
+
+const hashString = (value) =>
+  String(value || "").split("").reduce((hash, char) => ((hash << 5) - hash + char.charCodeAt(0)) | 0, 0);
+
+const getEmployeeAvatar = (employee, fallback) => {
+  if (employee?.photo) return employee.photo;
+  const source = String(employee?.name || employee?.email || fallback || "Employee");
+  const initial = source.trim().charAt(0).toUpperCase() || "E";
+  const color = avatarPalette[Math.abs(hashString(source)) % avatarPalette.length];
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120"><rect width="120" height="120" rx="60" fill="${color}"/><text x="60" y="67" text-anchor="middle" dominant-baseline="middle" font-family="Arial, sans-serif" font-size="52" font-weight="700" fill="#ffffff">${initial}</text></svg>`;
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+};
 
 const AssignTask = () => {
   const loggedInUser = useMemo(() => JSON.parse(localStorage.getItem("user") || "null"), []);

@@ -4,8 +4,10 @@ import { FiTrash2, FiEye } from "react-icons/fi";
 const statusStyles = {
   Active: "bg-emerald-100 text-emerald-700",
   "On Leave": "bg-amber-100 text-amber-700",
-  Pending: "bg-sky-100 text-sky-700",
-  Absent: "bg-rose-100 text-rose-700",
+  Inactive: "bg-slate-100 text-slate-700",
+  Suspended: "bg-rose-100 text-rose-700",
+  Resigned: "bg-zinc-100 text-zinc-700",
+  Retired: "bg-indigo-100 text-indigo-700",
 };
 
 const EmployeeTable = ({ employees, onView, onDelete, loading }) => {
@@ -33,13 +35,14 @@ const EmployeeTable = ({ employees, onView, onDelete, loading }) => {
           </thead>
           <tbody>
             {employees.map((employee, index) => {
-              const recordId = employee.id || employee._id || "-";
-              const contact = employee.phone || employee.emergencyContact || "—";
+              const recordId = employee.employeeId || employee.id || employee._id || "-";
+              const contact = employee.phone || employee.emergencyContact || "-";
               const joiningDate = employee.joiningDate || employee.createdAt
                 ? new Date(employee.joiningDate || employee.createdAt).toLocaleDateString()
-                : "—";
-              const salary = employee.salary || "₹ 0";
-              const photo = employee.photo || `https://i.pravatar.cc/120?u=${recordId}`;
+                : "-";
+              const salary = employee.salary ? `₹ ${Number(employee.salary).toLocaleString("en-IN")}` : "₹ 0";
+              const shift = employee.currentDuty?.shift || employee.defaultShift || employee.shift || "-";
+              const initial = (employee.name || "E").charAt(0).toUpperCase();
 
               return (
                 <motion.tr
@@ -51,18 +54,24 @@ const EmployeeTable = ({ employees, onView, onDelete, loading }) => {
                 >
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
-                      <img src={photo} alt={employee.name} className="h-11 w-11 rounded-full object-cover border border-slate-200" />
+                      {employee.photo ? (
+                        <img src={employee.photo} alt={employee.name} className="h-11 w-11 rounded-full object-cover border border-slate-200" />
+                      ) : (
+                        <div className="grid h-11 w-11 place-items-center rounded-full border border-slate-200 bg-slate-100 text-sm font-bold text-slate-600">
+                          {initial}
+                        </div>
+                      )}
                       <div>
                         <div className="font-semibold text-slate-900">{employee.name}</div>
-                        <div className="text-xs text-slate-500">{employee.department || "—"}</div>
+                        <div className="text-xs text-slate-500">{employee.department || "-"}</div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-5 py-4 text-slate-700">{recordId.slice ? recordId.slice(0, 8) : recordId}</td>
+                  <td className="px-5 py-4 text-slate-700">{recordId}</td>
                   <td className="px-5 py-4 text-slate-700">{employee.role}</td>
                   <td className="px-5 py-4 text-slate-700">{employee.department}</td>
                   <td className="px-5 py-4 text-slate-700">{contact}</td>
-                  <td className="px-5 py-4 text-slate-700">{employee.shift || "—"}</td>
+                  <td className="px-5 py-4 text-slate-700">{shift}</td>
                   <td className="px-5 py-4">
                     <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[employee.status] || "bg-slate-100 text-slate-700"}`}>
                       {employee.status || "Active"}

@@ -78,9 +78,7 @@ exports.createEmployee = async (req, res) => {
       salary,
       joiningDate,
       employmentType,
-      permissions,
       photo,
-      documentUrl,
     } = req.body;
 
     const normalizedEmail = String(email || "").toLowerCase().trim();
@@ -230,9 +228,7 @@ if (joiningDateObj > today) {
       employmentType,
       defaultDuty: normalizedDefaultDuty,
       dutyLocation: normalizedDutyLocation,
-      permissions,
       photo,
-      documentUrl,
     });
 
     await User.create({

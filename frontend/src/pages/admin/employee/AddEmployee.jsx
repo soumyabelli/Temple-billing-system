@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { FiUpload, FiChevronRight, FiSave, FiUser, FiBriefcase, FiLock } from "react-icons/fi";
+import { FiUpload, FiChevronRight, FiSave, FiUser, FiBriefcase, FiLock, FiCopy } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import SectionCard from "../../../components/admin/employee/SectionCard";
 import {
@@ -32,7 +32,6 @@ const initialForm = {
   defaultDuty: "",
   dutyLocation: "Main Temple Hall",
   // Step 3 – Account Details
-  password: "",
 };
 
 const draftKey = "adminEmployeeDraft";
@@ -70,6 +69,18 @@ const isAdult = (dob) => {
   return age >= 18;
 };
 
+const readFileAsDataUrl = (file) =>
+  new Promise((resolve, reject) => {
+    if (!file) {
+      resolve("");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
 const steps = [
   { label: "Personal Details", icon: <FiUser /> },
   { label: "Professional Details", icon: <FiBriefcase /> },
@@ -82,6 +93,7 @@ const AddEmployee = () => {
   const [form, setForm] = useState(initialForm);
   const [message, setMessage] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [credentials, setCredentials] = useState(null);
 
   // Departments list derived from selected role
   const departmentList = useMemo(() => roleDepartmentMap[form.role] || [], [form.role]);
@@ -146,6 +158,9 @@ const AddEmployee = () => {
        }
       if (!isAdult(form.dob)) {
         return setMessage({ type: "error", text: "Employees must be at least 18 years old.",});
+      }
+      if (form.photo && form.photo.size > 5 * 1024 * 1024) {
+        return setMessage({ type: "error", text: "Profile photo must be 5 MB or smaller." });
       }
     }
     if (step === 1) {
@@ -214,15 +229,12 @@ if (joiningDate < eighteenthBirthday) {
     e.preventDefault();
     setMessage(null);
 
-    if (!form.password || form.password.length < 6)
-      return setMessage({ type: "error", text: "Password must be at least 6 characters long." });
-
     setIsSaving(true);
     try {
+      const photoDataUrl = await readFileAsDataUrl(form.photo);
       const payload = {
   name: form.name.trim(),
   email: form.email.trim(),
-  password: form.password,
   phone: form.phone.trim(),
   address: form.address.trim(),
 
@@ -240,19 +252,40 @@ if (joiningDate < eighteenthBirthday) {
   defaultShift: form.defaultShift,
   defaultDuty: form.defaultDuty,
   dutyLocation: form.dutyLocation,
+  currentDuty: {
+    dutyName: form.defaultDuty,
+    shift: form.defaultShift,
+    dutyLocation: form.dutyLocation,
+    reportingTime: "",
+    workingHours: "",
+    supervisor: "Admin",
+    priority: "Medium",
+  },
 
-  photo: "",
+  photo: photoDataUrl,
 };
-      await createEmployee(payload);
-      setMessage({ type: "success", text: "Employee created successfully." });
+      const response = await createEmployee(payload);
+      setCredentials(response.credentials);
+      setMessage({ type: "success", text: "Employee created successfully. Login credentials are ready." });
       setForm(initialForm);
       localStorage.removeItem(draftKey);
-      navigate("/admin/employees");
     } catch (error) {
       setMessage({ type: "error", text: error.response?.data?.message || "Unable to save employee." });
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const copyCredentials = async () => {
+    if (!credentials) return;
+    await navigator.clipboard.writeText(
+      [
+        `Employee ID: ${credentials.employeeId}`,
+        `Username: ${credentials.username}`,
+        `Temporary Password: ${credentials.temporaryPassword}`,
+      ].join("\n")
+    );
+    setMessage({ type: "success", text: "Credentials copied to clipboard." });
   };
 
   const photoPreview = form.photo ? URL.createObjectURL(form.photo) : null;
@@ -595,8 +628,8 @@ if (joiningDate < eighteenthBirthday) {
                   <ul className="text-xs text-amber-700 space-y-1 list-disc list-inside">
                     <li>Employee Profile is created automatically</li>
                     <li>Default Shift, Duty &amp; Location are assigned</li>
-                    <li>Staff Dashboard is activated for login</li>
-                    <li>Attendance check-in is enabled immediately</li>
+                    <li>Login account and role dashboard are activated</li>
+                    <li>Temporary password is generated automatically</li>
                   </ul>
                 </div>
               </div>
@@ -612,17 +645,9 @@ if (joiningDate < eighteenthBirthday) {
                   </div>
                   <p className="text-xs text-slate-400">Email entered in Step 1 will be used as login</p>
                 </label>
-                <label className="block space-y-2 text-sm text-slate-700 md:col-span-2">
-                  Password <span className="text-rose-500">*</span>
-                  <input
-                    type="password"
-                    value={form.password}
-                    onChange={handleChange("password")}
-                    placeholder="Create a strong password (min 6 chars)"
-                    className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition"
-                    required
-                  />
-                </label>
+                <div className="rounded-3xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-800 md:col-span-2">
+                  Employee ID, username, login account, and temporary password will be generated automatically after Save Employee.
+                </div>
 
                 {/* Summary Review */}
                 <div className="md:col-span-2 rounded-3xl border border-slate-200 bg-slate-50 p-5 space-y-3">
@@ -770,6 +795,35 @@ if (joiningDate < eighteenthBirthday) {
           </div>
         </SectionCard>
       </div>
+      {credentials && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/40 px-4">
+          <div className="w-full max-w-md rounded-[28px] border border-slate-200 bg-white p-6 shadow-2xl">
+            <p className="text-sm uppercase tracking-[0.2em] text-emerald-600">Employee Created</p>
+            <h3 className="mt-2 text-2xl font-bold text-slate-900">Login credentials</h3>
+            <div className="mt-5 space-y-3 rounded-3xl bg-slate-50 p-4 text-sm">
+              <InfoRow label="Employee ID" value={credentials.employeeId} highlight />
+              <InfoRow label="Username" value={credentials.username} highlight />
+              <InfoRow label="Temporary Password" value={credentials.temporaryPassword} highlight />
+            </div>
+            <div className="mt-5 flex flex-wrap justify-end gap-3">
+              <button
+                type="button"
+                onClick={copyCredentials}
+                className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900"
+              >
+                <FiCopy /> Copy Credentials
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate("/admin/employees")}
+                className="rounded-full bg-amber-400 px-5 py-2 text-sm font-semibold text-slate-950"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

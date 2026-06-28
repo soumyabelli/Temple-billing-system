@@ -14,6 +14,7 @@ import {
   MdOutlineKeyboardArrowDown,
   MdAccessTime,
 } from "react-icons/md";
+import { useAuth } from "../../context/AuthContext";
 
 const fieldClass =
   "h-9 w-full rounded-lg border border-[#ece8e1] bg-[#faf9f7] px-3 text-sm text-[#202632] outline-none";
@@ -55,6 +56,16 @@ const SelectField = ({ value }) => (
 );
 
 const SettingsManagement = () => {
+  const { user } = useAuth();
+  const avatarSrc = user?.photo || "";
+  const avatarInitial = (user?.name || "Admin").charAt(0).toUpperCase();
+  const displayName = user?.name || "Admin";
+  const displayRole = user?.role === "admin"
+    ? "Super Admin"
+    : user?.role
+      ? `${user.role.charAt(0).toUpperCase()}${user.role.slice(1)}`
+    : "Super Admin";
+
   return (
     <div className="mt-5 space-y-4 pb-6">
 
@@ -129,12 +140,9 @@ const SettingsManagement = () => {
               <p className="mb-2">Temple Logo</p>
 
               <div className="flex items-center gap-3">
-
-                <img
-                  src="https://i.pravatar.cc/100?img=14"
-                  alt="Temple"
-                  className="h-14 w-14 rounded-full border border-[#ece8e1] object-cover"
-                />
+                <div className="flex h-14 w-14 items-center justify-center rounded-full border border-[#ece8e1] bg-orange-50 text-[#ff8b00]">
+                  <MdTempleBuddhist size={22} />
+                </div>
 
                 <button className="h-10 rounded-lg border border-[#f4caa8] px-3 text-sm font-semibold text-[#f07f00]">
                   Change Logo
@@ -285,21 +293,28 @@ const SettingsManagement = () => {
           </h3>
 
           <div className="mt-3 flex items-center gap-3">
-
-            <img
-              src="https://i.pravatar.cc/100?img=14"
-              alt="Admin"
-              className="h-20 w-20 rounded-full border border-[#ece8e1] object-cover"
-            />
+            <div className="h-20 w-20 overflow-hidden rounded-full border border-[#ece8e1] bg-[#f8f5ef]">
+              {avatarSrc ? (
+                <img
+                  src={avatarSrc}
+                  alt={displayName}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="grid h-full w-full place-items-center text-2xl font-bold text-[#ff8b00]">
+                  {avatarInitial}
+                </div>
+              )}
+            </div>
 
             <div>
 
               <p className="text-[18px] font-bold text-[#17151f]">
-                Admin
+                {displayName}
               </p>
 
               <span className="mt-1 inline-block rounded-full bg-orange-100 px-3 py-1 text-sm font-semibold text-[#b66000]">
-                Super Admin
+                {displayRole}
               </span>
 
             </div>

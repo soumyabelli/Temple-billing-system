@@ -5,12 +5,13 @@ import { FaBell } from "react-icons/fa";
 import { FiSearch } from "react-icons/fi";
 import { MdKeyboardArrowDown, MdLightMode, MdDarkMode, MdMenu } from "react-icons/md";
 import { useAuth } from "../../context/AuthContext";
-import priestAvatar from "../../assets/logo.png"; // Let's use a nice avatar placeholder or the mandir logo
+import priestAvatar from "../../assets/logo.png";
 
 const PriestTopbar = ({ darkMode, toggleDarkMode, onOpenMobileSidebar }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [notificationCount, setNotificationCount] = useState(3); // Mock 3 notifications as seen in design
+  const avatarSrc = user?.photo || priestAvatar;
 
   useEffect(() => {
     const loadNotifications = async () => {
@@ -115,11 +116,11 @@ const PriestTopbar = ({ darkMode, toggleDarkMode, onOpenMobileSidebar }) => {
           }`}
         >
           <img
-            src="https://i.pravatar.cc/150?img=68" // Priest avatar photo placeholder
+            src={avatarSrc}
             alt="Priest profile"
             className="w-9 h-9 rounded-xl object-cover border-2 border-orange-500/60"
             onError={(e) => {
-              e.target.src = "https://i.pravatar.cc/100";
+              e.currentTarget.src = priestAvatar;
             }}
           />
           <div className="hidden sm:block text-left">

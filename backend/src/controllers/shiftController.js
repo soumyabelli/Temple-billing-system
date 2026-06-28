@@ -135,6 +135,11 @@ const serializeAssignment = (assignment, attendance = null, leave = null) => ({
   dutyName: assignment.dutyName || assignment.duty || assignment.title || assignment.shiftName || "",
   dutyArea: assignment.dutyArea || assignment.area || assignment.description || assignment.category || "",
   reportingTime: assignment.reportingTime || assignment.time || assignment.startTime || "",
+  workingHours: assignment.workingHours || (
+    assignment.durationMinutes ? `${Math.round((assignment.durationMinutes / 60) * 10) / 10} hours` : ""
+  ),
+  supervisor: assignment.supervisor || assignment.assignedBy || "",
+  priority: assignment.priority || "Medium",
   category: assignment.category || "",
   requiredStaff: assignment.requiredStaff || 1,
   attendanceStatus: attendance
@@ -371,6 +376,12 @@ exports.assignShift = async (req, res) => {
     if (!employeeTargets.employee) {
       return res.status(404).json({ success: false, message: "Employee not found" });
     }
+    if (employeeTargets.employee.status !== "Active") {
+      return res.status(409).json({
+        success: false,
+        message: `Employee is unavailable because status is ${employeeTargets.employee.status || "Inactive"}`,
+      });
+    }
     if (!dateKey) {
       return res.status(400).json({ success: false, message: "date is required" });
     }
@@ -390,6 +401,16 @@ exports.assignShift = async (req, res) => {
         success: false,
         message: "Cannot assign shifts for previous dates",
       });
+    }
+    if (employeeTargets.employee.joiningDate) {
+      const joiningDate = new Date(employeeTargets.employee.joiningDate);
+      joiningDate.setHours(0, 0, 0, 0);
+      if (selectedDate < joiningDate) {
+        return res.status(400).json({
+          success: false,
+          message: "Cannot assign duty before the employee joining date",
+        });
+      }
     }
 
     const leave = await getLeaveBlock(employeeTargets, dateKey);
@@ -440,6 +461,11 @@ exports.assignShift = async (req, res) => {
       conflict: false,
       notes: clean(req.body.notes),
       assignedBy: clean(req.body.assignedBy) || "Admin",
+      supervisor: clean(req.body.supervisor || req.body.assignedBy) || "Admin",
+      priority: ["Low", "Medium", "High", "Urgent"].includes(req.body.priority)
+        ? req.body.priority
+        : "Medium",
+      workingHours: clean(req.body.workingHours) || `${Math.round((durationMinutes / 60) * 10) / 10} hours`,
       durationMinutes,
       status: "Pending",
     });
@@ -472,4 +498,3 @@ exports.deleteAssignment = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
-

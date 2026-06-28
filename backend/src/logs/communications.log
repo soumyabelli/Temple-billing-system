@@ -571,3 +571,16 @@ Thank you!
 To: 6362210340
 Message: Prasadam order confirmed! Item: Panchamrit Prasadam. Qty: 1. Ready soon! -Temple
 
+[2026-06-27T09:46:21.457Z] EMAIL
+To: devo@gmail.com
+Subject: Donation Receipt
+Donation Receipt
+Amount: ₹501
+Category: Annadanam
+Transaction ID: SIM_TXN_1782553581079
+Thank you for your donation!
+
+[2026-06-27T09:46:21.459Z] SMS
+To: 9740265462
+Message: Donation received! Amount: ₹501. Transaction ID: SIM_TXN_1782553581079. Thank you! -Temple
+

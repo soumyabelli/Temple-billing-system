@@ -3,19 +3,64 @@ import { motion } from "framer-motion";
 import { FiSearch, FiFilter, FiUpload, FiPlus } from "react-icons/fi";
 import { ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell, Tooltip } from "recharts";
 import { useNavigate } from "react-router-dom";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 import SectionCard from "../../../components/admin/employee/SectionCard";
 import EmployeeTable from "../../../components/admin/employee/EmployeeTable";
-import { attendanceTrend, payrollTrend } from "./employeeData";
+import { attendanceTrend } from "./employeeData";
 import { getEmployees, getEmployee, deleteEmployee } from "../../../services/employeeService";
+import { getAdminAttendanceDashboard } from "../../../services/attendanceService";
+import { useAuth } from "../../../context/AuthContext";
+import templeLogo from "../../../assets/logo.png";
 
 const chartColors = ["#7c3aed", "#f5449c", "#38bdf8", "#f59e0b", "#10b981"];
+const roleFilterOptions = ["All", "Priest", "Staff", "Cashier", "Accountant"];
+const statusFilterOptions = ["Active", "On Leave", "Inactive", "Suspended", "Resigned", "Retired"];
+const employmentTypeOptions = ["Full Time", "Part Time", "Contract"];
+
+const emptyFilters = {
+  role: "",
+  department: "",
+  status: "",
+  shift: "",
+  employmentType: "",
+  joiningDate: "",
+  salaryMin: "",
+  salaryMax: "",
+};
+
+const formatDate = (value) => {
+  if (!value) return "-";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString("en-IN");
+};
+
+const formatCurrency = (value) => `₹ ${Number(value || 0).toLocaleString("en-IN")}`;
+
+const matchesRole = (employee, role) => {
+  if (!role || role === "All") return true;
+  return String(employee.role || "").toLowerCase() === role.toLowerCase();
+};
 
 const AllEmployees = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [employees, setEmployees] = useState([]);
-  const [filteredEmployees, setFilteredEmployees] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [filters, setFilters] = useState(emptyFilters);
+  const [showFilters, setShowFilters] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [selectedTab, setSelectedTab] = useState("Profile");
+  const [payrollRoleFilter, setPayrollRoleFilter] = useState("All");
+  const [attendanceFilters, setAttendanceFilters] = useState({
+    role: "All",
+    department: "",
+    month: String(new Date().getMonth() + 1).padStart(2, "0"),
+    year: String(new Date().getFullYear()),
+  });
+  const [departmentRoleFilter, setDepartmentRoleFilter] = useState("All");
+  const [recentRoleFilter, setRecentRoleFilter] = useState("All");
+  const [attendanceDashboard, setAttendanceDashboard] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const fetchEmployees = async () => {
@@ -23,7 +68,6 @@ const AllEmployees = () => {
     try {
       const response = await getEmployees();
       setEmployees(response);
-      setFilteredEmployees(response);
     } catch (error) {
       console.error("Failed to load employees", error);
     } finally {
@@ -36,24 +80,77 @@ const AllEmployees = () => {
   }, []);
 
   useEffect(() => {
-    const query = searchTerm.toLowerCase();
-    setFilteredEmployees(
-      employees.filter((employee) => {
-        const name = employee.name?.toLowerCase() || "";
-        const email = employee.email?.toLowerCase() || "";
-        const role = employee.role?.toLowerCase() || "";
-        const department = employee.department?.toLowerCase() || "";
-        return name.includes(query) || email.includes(query) || role.includes(query) || department.includes(query);
-      })
-    );
-  }, [searchTerm, employees]);
+    let active = true;
+    const loadAttendance = async () => {
+      try {
+        const response = await getAdminAttendanceDashboard(attendanceFilters.month, null, {
+          role: attendanceFilters.role,
+          department: attendanceFilters.department,
+          year: attendanceFilters.year,
+        });
+        if (active) setAttendanceDashboard(response);
+      } catch (error) {
+        if (active) setAttendanceDashboard(null);
+        console.error("Failed to load attendance dashboard", error);
+      }
+    };
+
+    loadAttendance();
+    return () => {
+      active = false;
+    };
+  }, [attendanceFilters]);
+
+  const filterOptions = useMemo(() => {
+    const unique = (field) =>
+      [...new Set(employees.map((employee) => employee[field]).filter(Boolean))].sort();
+    return {
+      departments: unique("department"),
+      shifts: [...new Set(employees.flatMap((employee) => [
+        employee.currentDuty?.shift,
+        employee.defaultShift,
+        employee.shift,
+      ]).filter(Boolean))].sort(),
+    };
+  }, [employees]);
+
+  const filteredEmployees = useMemo(() => {
+    const query = searchTerm.toLowerCase().trim();
+    return employees.filter((employee) => {
+      const searchable = [
+        employee.employeeId,
+        employee.name,
+        employee.email,
+        employee.phone,
+        employee.department,
+        employee.role,
+      ].join(" ").toLowerCase();
+      const shift = employee.currentDuty?.shift || employee.defaultShift || employee.shift || "";
+      const salary = Number(employee.salary || 0);
+      const joiningDate = employee.joiningDate ? new Date(employee.joiningDate).toISOString().slice(0, 10) : "";
+
+      return (
+        (!query || searchable.includes(query)) &&
+        (!filters.role || matchesRole(employee, filters.role)) &&
+        (!filters.department || employee.department === filters.department) &&
+        (!filters.status || employee.status === filters.status) &&
+        (!filters.shift || shift === filters.shift) &&
+        (!filters.employmentType || employee.employmentType === filters.employmentType) &&
+        (!filters.joiningDate || joiningDate === filters.joiningDate) &&
+        (!filters.salaryMin || salary >= Number(filters.salaryMin)) &&
+        (!filters.salaryMax || salary <= Number(filters.salaryMax))
+      );
+    });
+  }, [employees, filters, searchTerm]);
 
   const handleDeleteEmployee = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this employee?")) return;
+    if (!window.confirm("Mark this employee as Inactive? Existing attendance, payroll and leave records will be preserved.")) return;
     try {
-      await deleteEmployee(id);
-      setEmployees((current) => current.filter((employee) => employee._id !== id));
-      setSelectedEmployee((current) => (current?._id === id ? null : current));
+      const response = await deleteEmployee(id, "Inactive");
+      setEmployees((current) => current.map((employee) => (
+        employee._id === id ? response.employee || { ...employee, status: "Inactive" } : employee
+      )));
+      setSelectedEmployee((current) => (current?._id === id ? response.employee || { ...current, status: "Inactive" } : current));
     } catch (error) {
       console.error("Delete failed", error);
     }
@@ -62,70 +159,192 @@ const AllEmployees = () => {
   const handleViewEmployee = async (employee) => {
     try {
       const latestEmployee = await getEmployee(employee._id);
+      setSelectedTab("Profile");
       setSelectedEmployee(latestEmployee);
     } catch (error) {
       console.error("Failed to load employee details", error);
+      setSelectedTab("Profile");
       setSelectedEmployee(employee);
     }
   };
 
   const handleExport = () => {
+    if (user?.role !== "admin") {
+      alert("Only Admin can export employee reports.");
+      return;
+    }
     if (!filteredEmployees.length) return;
 
-    const headers = [
-      "Name",
-      "Email",
-      "Role",
-      "Department",
-      "Contact",
-      "Shift",
-      "Status",
-      "Joining Date",
-      "Salary",
-      "Employment Type",
-    ];
+    const generatedAt = new Date();
+    const generatedLabel = generatedAt.toLocaleString("en-IN");
+    const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const appliedFilters = [
+      filters.role && `Role: ${filters.role}`,
+      filters.department && `Department: ${filters.department}`,
+      filters.status && `Status: ${filters.status}`,
+      filters.shift && `Shift: ${filters.shift}`,
+      filters.employmentType && `Employment Type: ${filters.employmentType}`,
+      filters.joiningDate && `Joining Date: ${formatDate(filters.joiningDate)}`,
+      filters.salaryMin && `Salary From: ${formatCurrency(filters.salaryMin)}`,
+      filters.salaryMax && `Salary To: ${formatCurrency(filters.salaryMax)}`,
+      searchTerm && `Search: ${searchTerm}`,
+    ].filter(Boolean);
+    const summaryCounts = {
+      total: filteredEmployees.length,
+      active: filteredEmployees.filter((employee) => employee.status === "Active").length,
+      onLeave: filteredEmployees.filter((employee) => employee.status === "On Leave").length,
+      suspended: filteredEmployees.filter((employee) => employee.status === "Suspended").length,
+      resigned: filteredEmployees.filter((employee) => employee.status === "Resigned").length,
+    };
 
-    const csvRows = [
-      headers.join(","),
-      ...filteredEmployees.map((employee) => {
-        const row = [
-          employee.name || "",
-          employee.email || "",
-          employee.role || "",
-          employee.department || "",
-          employee.phone || employee.emergencyContact || "",
-          employee.shift || "",
-          employee.status || "Active",
-          employee.joiningDate || "",
-          employee.salary || "",
-          employee.employmentType || "",
-        ]
-          .map((cell) => `"${String(cell).replace(/"/g, '""')}"`)
-          .join(",");
-        return row;
-      }),
-    ].join("\n");
+    doc.setFillColor(35, 27, 61);
+    doc.rect(0, 0, pageWidth, 92, "F");
+    try {
+      doc.addImage(templeLogo, "PNG", 40, 22, 48, 48);
+    } catch (_) {}
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(18);
+    doc.text("Sri Shanti Mahadev Mandir", 104, 34);
+    doc.setFontSize(14);
+    doc.text("Employee Management Report", 104, 56);
+    doc.setFontSize(9);
+    doc.text(`Generated: ${generatedLabel}`, 104, 74);
+    doc.text(`Generated By: ${user?.name || "Admin"}`, pageWidth - 190, 74);
 
-    const blob = new Blob([csvRows], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", `temple-employees-${new Date().toISOString().slice(0, 10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    doc.setTextColor(30, 41, 59);
+    doc.setFontSize(11);
+    doc.text("Applied Filters", 40, 122);
+    doc.setFontSize(9);
+    doc.text(appliedFilters.length ? appliedFilters.join("   |   ") : "Filters: All Employees", 40, 140, {
+      maxWidth: pageWidth - 80,
+    });
+
+    autoTable(doc, {
+      startY: 164,
+      margin: { left: 40, right: 40 },
+      head: [["Total Employees", "Active Employees", "On Leave", "Suspended", "Resigned"]],
+      body: [[summaryCounts.total, summaryCounts.active, summaryCounts.onLeave, summaryCounts.suspended, summaryCounts.resigned]],
+      theme: "grid",
+      styles: { fontSize: 9, cellPadding: 7, halign: "center" },
+      headStyles: { fillColor: [245, 158, 11], textColor: [15, 23, 42] },
+    });
+
+    autoTable(doc, {
+      startY: doc.lastAutoTable.finalY + 22,
+      margin: { left: 24, right: 24 },
+      head: [[
+        "Employee ID",
+        "Photo",
+        "Employee Name",
+        "Role",
+        "Department",
+        "Phone",
+        "Email",
+        "Shift",
+        "Joining Date",
+        "Employment Type",
+        "Salary",
+        "Status",
+      ]],
+      body: filteredEmployees.map((employee) => [
+        employee.employeeId || employee._id || "-",
+        employee.photo ? "Uploaded" : "Default",
+        employee.name || "-",
+        employee.role || "-",
+        employee.department || "-",
+        employee.phone || employee.emergencyContact || "-",
+        employee.email || "-",
+        employee.currentDuty?.shift || employee.defaultShift || employee.shift || "-",
+        formatDate(employee.joiningDate),
+        employee.employmentType || "-",
+        formatCurrency(employee.salary),
+        employee.status || "Active",
+      ]),
+      theme: "grid",
+      styles: { fontSize: 7, cellPadding: 4, overflow: "linebreak", valign: "middle" },
+      headStyles: { fillColor: [35, 27, 61], textColor: [255, 255, 255], fontStyle: "bold" },
+      alternateRowStyles: { fillColor: [248, 250, 252] },
+      columnStyles: {
+        0: { cellWidth: 52 },
+        1: { cellWidth: 34 },
+        2: { cellWidth: 65 },
+        5: { cellWidth: 54 },
+        6: { cellWidth: 76 },
+        10: { halign: "right" },
+      },
+      didDrawPage: (data) => {
+        const pageHeight = doc.internal.pageSize.getHeight();
+        doc.setFontSize(8);
+        doc.setTextColor(100, 116, 139);
+        doc.text("Sri Shanti Mahadev Mandir", 40, pageHeight - 28);
+        doc.text("Employee Management Report", pageWidth / 2, pageHeight - 28, { align: "center" });
+        doc.text(`Generated on ${generatedLabel}`, 40, pageHeight - 14);
+      },
+    });
+
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let page = 1; page <= pageCount; page += 1) {
+      doc.setPage(page);
+      doc.setFontSize(8);
+      doc.setTextColor(100, 116, 139);
+      doc.text(`Page ${page} of ${pageCount}`, pageWidth - 40, doc.internal.pageSize.getHeight() - 14, { align: "right" });
+    }
+
+    doc.save(`employee-management-report-${generatedAt.toISOString().slice(0, 10)}.pdf`);
   };
 
+  const attendanceChartData = useMemo(() => {
+    const timeline = attendanceDashboard?.timeline || [];
+    if (timeline.length > 0) {
+      return timeline.slice(-7).map((item) => ({
+        month: item.date,
+        value: item.attendancePercent || 0,
+      }));
+    }
+
+    return attendanceTrend.map((item) => ({
+      month: item.day,
+      value: item.value,
+    }));
+  }, [attendanceDashboard]);
+
+  const payrollTrendData = useMemo(() => {
+    const scope = payrollRoleFilter === "All"
+      ? employees
+      : employees.filter((employee) => matchesRole(employee, payrollRoleFilter));
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const currentYear = new Date().getFullYear();
+
+    return months.map((month, index) => {
+      const monthNumber = index + 1;
+      const salary = scope.reduce((total, employee) => {
+        if (!employee.salary) return total;
+        if (!employee.joiningDate) return total + Number(employee.salary);
+        const joiningDate = new Date(employee.joiningDate);
+        if (Number.isNaN(joiningDate.getTime())) return total;
+        const joinedYear = joiningDate.getFullYear();
+        const joinedMonth = joiningDate.getMonth() + 1;
+        if (joinedYear > currentYear) return total;
+        if (joinedYear === currentYear && joinedMonth > monthNumber) return total;
+        return total + Number(employee.salary);
+      }, 0);
+      return { month, salary };
+    });
+  }, [employees, payrollRoleFilter]);
+
   const departmentStrength = useMemo(() => {
-    const counts = employees.reduce((total, employee) => {
+    const scope = departmentRoleFilter === "All"
+      ? employees
+      : employees.filter((employee) => matchesRole(employee, departmentRoleFilter));
+    const counts = scope.reduce((total, employee) => {
       const department = employee.department || "Unassigned";
       total[department] = (total[department] || 0) + 1;
       return total;
     }, {});
 
     return Object.entries(counts).map(([department, value]) => ({ department, value }));
-  }, [employees]);
+  }, [employees, departmentRoleFilter]);
 
   const distributionData = useMemo(() => {
     const counts = employees.reduce((total, employee) => {
@@ -138,7 +357,11 @@ const AllEmployees = () => {
   }, [employees]);
 
   const recentJoinings = useMemo(() => {
-    return employees
+    const scope = recentRoleFilter === "All"
+      ? employees
+      : employees.filter((employee) => matchesRole(employee, recentRoleFilter));
+
+    return scope
       .filter((employee) => employee.joiningDate)
       .slice()
       .sort((a, b) => new Date(b.joiningDate) - new Date(a.joiningDate))
@@ -152,7 +375,7 @@ const AllEmployees = () => {
           year: "numeric",
         }),
       }));
-  }, [employees]);
+  }, [employees, recentRoleFilter]);
 
   const upcomingBirthdays = useMemo(() => {
     const today = new Date();
@@ -233,17 +456,49 @@ const AllEmployees = () => {
         ))}
       </div>
 
-      <SectionCard title="Employee roster" subtitle="Search employees, filter by status, or export to Excel." topRight={<div className="flex flex-wrap items-center gap-3">
+      <SectionCard title="Employee roster" subtitle="Search employees, filter by status, or export a PDF report." topRight={<div className="flex flex-wrap items-center gap-3">
           <div className="inline-flex items-center gap-2 rounded-full bg-slate-100/90 px-4 py-2 text-slate-600 shadow-sm">
             <FiSearch /> <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} type="text" placeholder="Search employees..." className="w-48 bg-transparent text-sm outline-none" />
           </div>
-          <button className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-lg hover:bg-slate-800 transition">
+          <button onClick={() => setShowFilters((current) => !current)} className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-lg hover:bg-slate-800 transition">
             <FiFilter /> Filters
           </button>
           <button onClick={handleExport} className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-white px-4 py-2 text-sm font-semibold text-amber-600 shadow-sm hover:bg-amber-50 transition">
             <FiUpload /> Export
           </button>
         </div>}>
+        {showFilters && (
+          <div className="mb-5 grid gap-3 rounded-[28px] border border-slate-200 bg-slate-50 p-4 md:grid-cols-2 xl:grid-cols-4">
+            <select value={filters.role} onChange={(e) => setFilters((prev) => ({ ...prev, role: e.target.value }))} className="rounded-3xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none">
+              <option value="">Role</option>
+              {roleFilterOptions.filter((role) => role !== "All").map((role) => <option key={role}>{role}</option>)}
+            </select>
+            <select value={filters.department} onChange={(e) => setFilters((prev) => ({ ...prev, department: e.target.value }))} className="rounded-3xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none">
+              <option value="">Department</option>
+              {filterOptions.departments.map((department) => <option key={department}>{department}</option>)}
+            </select>
+            <select value={filters.status} onChange={(e) => setFilters((prev) => ({ ...prev, status: e.target.value }))} className="rounded-3xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none">
+              <option value="">Status</option>
+              {statusFilterOptions.map((status) => <option key={status}>{status}</option>)}
+            </select>
+            <select value={filters.shift} onChange={(e) => setFilters((prev) => ({ ...prev, shift: e.target.value }))} className="rounded-3xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none">
+              <option value="">Shift</option>
+              {filterOptions.shifts.map((shift) => <option key={shift}>{shift}</option>)}
+            </select>
+            <select value={filters.employmentType} onChange={(e) => setFilters((prev) => ({ ...prev, employmentType: e.target.value }))} className="rounded-3xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none">
+              <option value="">Employment Type</option>
+              {employmentTypeOptions.map((type) => <option key={type}>{type}</option>)}
+            </select>
+            <input type="date" value={filters.joiningDate} onChange={(e) => setFilters((prev) => ({ ...prev, joiningDate: e.target.value }))} className="rounded-3xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none" />
+            <input type="number" min="0" value={filters.salaryMin} onChange={(e) => setFilters((prev) => ({ ...prev, salaryMin: e.target.value }))} placeholder="Salary Min" className="rounded-3xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none" />
+            <div className="flex gap-2">
+              <input type="number" min="0" value={filters.salaryMax} onChange={(e) => setFilters((prev) => ({ ...prev, salaryMax: e.target.value }))} placeholder="Salary Max" className="min-w-0 flex-1 rounded-3xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none" />
+              <button type="button" onClick={() => setFilters(emptyFilters)} className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600">
+                Clear
+              </button>
+            </div>
+          </div>
+        )}
         <EmployeeTable employees={filteredEmployees} onView={handleViewEmployee} onDelete={handleDeleteEmployee} loading={loading} />
       </SectionCard>
 
@@ -273,15 +528,30 @@ const AllEmployees = () => {
             <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
               <p className="text-sm text-slate-500">Department</p>
               <p className="mt-2 text-lg font-semibold text-slate-900">{selectedEmployee.department || "-"}</p>
-              <p className="mt-1 text-sm text-slate-600">Shift: {selectedEmployee.shift || "-"}</p>
+              <p className="mt-1 text-sm text-slate-600">Shift: {selectedEmployee.currentDuty?.shift || selectedEmployee.defaultShift || selectedEmployee.shift || "-"}</p>
             </div>
             <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
               <p className="text-sm text-slate-500">Contact</p>
               <p className="mt-2 text-lg font-semibold text-slate-900">{selectedEmployee.phone || selectedEmployee.emergencyContact || "-"}</p>
-              <p className="mt-1 text-sm text-slate-600">Joined: {selectedEmployee.joiningDate || new Date(selectedEmployee.createdAt).toLocaleDateString()}</p>
+              <p className="mt-1 text-sm text-slate-600">Joined: {formatDate(selectedEmployee.joiningDate || selectedEmployee.createdAt)}</p>
             </div>
           </div>
 
+          <div className="mt-5 flex flex-wrap gap-2">
+            {["Profile", "Attendance", "Leave History", "Payroll", "Performance", "Duty History"].map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => setSelectedTab(tab)}
+                className={`rounded-full px-4 py-2 text-sm font-semibold transition ${selectedTab === tab ? "bg-slate-900 text-white" : "border border-slate-200 bg-white text-slate-600"}`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+
+          {selectedTab === "Profile" && (
+          <>
           <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             <div className="rounded-3xl border border-slate-200 bg-white p-4">
               <p className="text-sm text-slate-500">Email</p>
@@ -313,11 +583,11 @@ const AllEmployees = () => {
             </div>
             <div className="rounded-3xl border border-slate-200 bg-white p-4">
               <p className="text-sm text-slate-500">Salary</p>
-              <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.salary || "-"}</p>
+              <p className="mt-1 font-semibold text-slate-900">{formatCurrency(selectedEmployee.salary)}</p>
             </div>
             <div className="rounded-3xl border border-slate-200 bg-white p-4">
-              <p className="text-sm text-slate-500">Permissions</p>
-              <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.permissions || "-"}</p>
+              <p className="text-sm text-slate-500">Current Duty</p>
+              <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.currentDuty?.dutyName || selectedEmployee.defaultDuty || "-"}</p>
             </div>
             <div className="rounded-3xl border border-slate-200 bg-white p-4">
               <p className="text-sm text-slate-500">Default Shift</p>
@@ -329,11 +599,31 @@ const AllEmployees = () => {
             </div>
             <div className="rounded-3xl border border-slate-200 bg-white p-4">
               <p className="text-sm text-slate-500">Duty Location</p>
-              <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.dutyLocation || "-"}</p>
+              <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.currentDuty?.dutyLocation || selectedEmployee.dutyLocation || "-"}</p>
             </div>
             <div className="rounded-3xl border border-slate-200 bg-white p-4">
-              <p className="text-sm text-slate-500">Document URL</p>
-              <p className="mt-1 break-words font-semibold text-slate-900">{selectedEmployee.documentUrl || "-"}</p>
+              <p className="text-sm text-slate-500">Attendance Status</p>
+              <p className="mt-1 break-words font-semibold text-slate-900">{selectedEmployee.attendanceStatus || "Not Marked"}</p>
+            </div>
+            <div className="rounded-3xl border border-slate-200 bg-white p-4">
+              <p className="text-sm text-slate-500">Leave Balance</p>
+              <p className="mt-1 break-words font-semibold text-slate-900">{selectedEmployee.leaveBalance ?? 0} days</p>
+            </div>
+            <div className="rounded-3xl border border-slate-200 bg-white p-4">
+              <p className="text-sm text-slate-500">Created Date</p>
+              <p className="mt-1 break-words font-semibold text-slate-900">{formatDate(selectedEmployee.createdAt)}</p>
+            </div>
+            <div className="rounded-3xl border border-slate-200 bg-white p-4">
+              <p className="text-sm text-slate-500">Updated Date</p>
+              <p className="mt-1 break-words font-semibold text-slate-900">{formatDate(selectedEmployee.updatedAt)}</p>
+            </div>
+            <div className="rounded-3xl border border-slate-200 bg-white p-4">
+              <p className="text-sm text-slate-500">Created By</p>
+              <p className="mt-1 break-words font-semibold text-slate-900">{selectedEmployee.createdBy || "Admin"}</p>
+            </div>
+            <div className="rounded-3xl border border-slate-200 bg-white p-4">
+              <p className="text-sm text-slate-500">Last Login</p>
+              <p className="mt-1 break-words font-semibold text-slate-900">{formatDate(selectedEmployee.lastLogin)}</p>
             </div>
           </div>
 
@@ -341,15 +631,66 @@ const AllEmployees = () => {
             <p className="text-sm text-slate-500">Address</p>
             <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.address || "-"}</p>
           </div>
+          </>
+          )}
+
+          {selectedTab !== "Profile" && (
+            <div className="mt-4 rounded-3xl border border-slate-200 bg-white p-4">
+              {selectedTab === "Attendance" && (
+                <DetailRows rows={selectedEmployee.details?.attendance || []} empty="No attendance records found." getKey={(row) => row._id || row.id} render={(row) => `${formatDate(row.dateKey)} - ${row.status || "Pending"} - ${row.checkIn || "--"} to ${row.checkOut || "--"}`} />
+              )}
+              {selectedTab === "Leave History" && (
+                <DetailRows rows={selectedEmployee.details?.leaveHistory || []} empty="No leave history found." getKey={(row) => row._id || row.id} render={(row) => `${row.leaveType || "Leave"} - ${formatDate(row.fromDate)} to ${formatDate(row.toDate)} - ${row.status}`} />
+              )}
+              {selectedTab === "Payroll" && (
+                <DetailRows rows={[selectedEmployee.details?.payroll || {}]} empty="No payroll details found." getKey={() => "payroll"} render={(row) => `Monthly Salary: ${formatCurrency(row.monthlySalary || selectedEmployee.salary)} - ${row.employmentType || selectedEmployee.employmentType || "-"} - ${row.status || "Active"}`} />
+              )}
+              {selectedTab === "Performance" && (
+                <DetailRows rows={selectedEmployee.details?.performance || []} empty="No performance records found." getKey={(row, index) => row._id || index} render={(row) => `${row.metric || "Performance"} - ${row.rating || "-"}`} />
+              )}
+              {selectedTab === "Duty History" && (
+                <DetailRows rows={selectedEmployee.details?.dutyHistory || []} empty="No duty history found." getKey={(row) => row._id || row.id} render={(row) => `${row.dutyName || row.duty || "-"} - ${row.dutyArea || row.area || "-"} - ${formatDate(row.dueDate || row.dateKey)}`} />
+              )}
+            </div>
+          )}
         </SectionCard>
       )}
 
       <div className="grid gap-5 xl:grid-cols-[1fr_360px]">
         <div className="space-y-5">
           <div className="grid gap-5 lg:grid-cols-2">
-            <SectionCard title="Attendance Summary" subtitle="Daily employee attendance at a glance." className="h-full">
+            <SectionCard
+              title="Attendance Summary"
+              subtitle="Daily employee attendance at a glance."
+              className="h-full"
+              topRight={
+                <div className="flex flex-wrap items-center gap-2">
+                  <select value={attendanceFilters.role} onChange={(e) => setAttendanceFilters((prev) => ({ ...prev, role: e.target.value }))} className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs outline-none">
+                    <option value="All">All Roles</option>
+                    {roleFilterOptions.filter((role) => role !== "All").map((role) => <option key={role}>{role}</option>)}
+                  </select>
+                  <select value={attendanceFilters.department} onChange={(e) => setAttendanceFilters((prev) => ({ ...prev, department: e.target.value }))} className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs outline-none">
+                    <option value="">All Departments</option>
+                    {filterOptions.departments.map((department) => <option key={department}>{department}</option>)}
+                  </select>
+                  <select value={attendanceFilters.month} onChange={(e) => setAttendanceFilters((prev) => ({ ...prev, month: e.target.value }))} className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs outline-none">
+                    {Array.from({ length: 12 }, (_, index) => {
+                      const monthNumber = String(index + 1).padStart(2, "0");
+                      const label = new Date(2026, index, 1).toLocaleDateString("en-IN", { month: "short" });
+                      return <option key={monthNumber} value={monthNumber}>{label}</option>;
+                    })}
+                  </select>
+                  <select value={attendanceFilters.year} onChange={(e) => setAttendanceFilters((prev) => ({ ...prev, year: e.target.value }))} className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs outline-none">
+                    {Array.from({ length: 5 }, (_, index) => {
+                      const year = String(new Date().getFullYear() - index);
+                      return <option key={year} value={year}>{year}</option>;
+                    })}
+                  </select>
+                </div>
+              }
+            >
               <ResponsiveContainer width="100%" height={220}>
-                <AreaChart data={attendanceTrend} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                <AreaChart data={attendanceChartData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="attendanceGradient" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.8} />
@@ -361,7 +702,16 @@ const AllEmployees = () => {
                 </AreaChart>
               </ResponsiveContainer>
             </SectionCard>
-            <SectionCard title="Department Strength" subtitle="Team distribution across temple departments." className="h-full">
+            <SectionCard
+              title="Department Strength"
+              subtitle="Team distribution across temple departments."
+              className="h-full"
+              topRight={
+                <select value={departmentRoleFilter} onChange={(e) => setDepartmentRoleFilter(e.target.value)} className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs outline-none">
+                  {roleFilterOptions.map((role) => <option key={role}>{role}</option>)}
+                </select>
+              }
+            >
               <div className="space-y-4">
                 {departmentStrength.map((dept) => (
                   <div key={dept.department} className="space-y-2">
@@ -378,9 +728,18 @@ const AllEmployees = () => {
             </SectionCard>
           </div>
 
-          <SectionCard title="Payroll Trends" subtitle="Monthly salary spend and growth." className="h-full">
+          <SectionCard
+            title="Payroll Trends"
+            subtitle="Monthly salary spend and growth."
+            className="h-full"
+            topRight={
+              <select value={payrollRoleFilter} onChange={(e) => setPayrollRoleFilter(e.target.value)} className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs outline-none">
+                {roleFilterOptions.map((role) => <option key={role}>{role}</option>)}
+              </select>
+            }
+          >
             <ResponsiveContainer width="100%" height={260}>
-              <AreaChart data={payrollTrend} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+              <AreaChart data={payrollTrendData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="payrollGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#eab308" stopOpacity={0.8} />
@@ -395,7 +754,16 @@ const AllEmployees = () => {
         </div>
 
         <div className="space-y-5">
-          <SectionCard title="Recent Joinings" subtitle="Newest additions to the temple team." className="overflow-hidden">
+          <SectionCard
+            title="Recent Joinings"
+            subtitle="Newest additions to the temple team."
+            className="overflow-hidden"
+            topRight={
+              <select value={recentRoleFilter} onChange={(e) => setRecentRoleFilter(e.target.value)} className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs outline-none">
+                {roleFilterOptions.map((role) => <option key={role}>{role}</option>)}
+              </select>
+            }
+          >
             <div className="space-y-4">
               {recentJoinings.map((item) => (
                 <div key={item.name} className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
@@ -441,6 +809,22 @@ const AllEmployees = () => {
           </SectionCard>
         </div>
       </div>
+    </div>
+  );
+};
+
+const DetailRows = ({ rows, empty, getKey, render }) => {
+  if (!rows.length) {
+    return <p className="text-sm text-slate-500">{empty}</p>;
+  }
+
+  return (
+    <div className="space-y-3">
+      {rows.slice(0, 8).map((row, index) => (
+        <div key={getKey(row, index)} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-800">
+          {render(row, index)}
+        </div>
+      ))}
     </div>
   );
 };

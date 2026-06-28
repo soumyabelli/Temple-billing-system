@@ -42,6 +42,7 @@ import PriestNotifications from "./PriestNotifications";
 import PriestProfile from "./PriestProfile";
 import PriestSettings from "./PriestSettings";
 import PriestInventory from "./PriestInventory";
+import priestAvatar from "../../assets/logo.png";
 
 const API_BASE = "http://localhost:5000/api";
 
@@ -1053,9 +1054,12 @@ const PriestDashboard = () => {
       <div className={`rounded-2xl p-6 border transition-colors flex flex-col items-center text-center ${darkMode ? "bg-[#1f2937] border-slate-700 text-slate-100" : "bg-white border-[#ece8e1] text-[#1d1b19]"
         }`}>
         <img
-          src="https://i.pravatar.cc/150?img=68"
+          src={user?.photo || priestAvatar}
           alt="Priest Avatar"
           className="w-28 h-28 rounded-2xl object-cover border-4 border-orange-500 shadow-md"
+          onError={(e) => {
+            e.currentTarget.src = priestAvatar;
+          }}
         />
         <h3 className="text-xl font-bold mt-4">{user?.name || "Sri Ramakrishna Shastri"}</h3>
         <p className="text-sm text-orange-500 font-semibold mt-1">{user?.role === "priest" ? "Chief Priest (Archaka)" : user?.role || "Priest"}</p>

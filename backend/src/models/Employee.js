@@ -1,6 +1,29 @@
 const mongoose = require("mongoose");
 
 const employeeSchema = new mongoose.Schema({
+  employeeId: {
+    type: String,
+    unique: true,
+    sparse: true,
+    index: true,
+    trim: true,
+  },
+
+  username: {
+    type: String,
+    unique: true,
+    sparse: true,
+    index: true,
+    lowercase: true,
+    trim: true,
+  },
+
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    default: null,
+  },
+
   name: {
     type: String,
     required: true,
@@ -95,21 +118,41 @@ const employeeSchema = new mongoose.Schema({
     type: String,
   },
 
-  permissions: {
-    type: String,
+  currentDuty: {
+    dutyName: { type: String, default: "", trim: true },
+    shift: { type: String, default: "", trim: true },
+    dutyLocation: { type: String, default: "", trim: true },
+    reportingTime: { type: String, default: "", trim: true },
+    workingHours: { type: String, default: "", trim: true },
+    supervisor: { type: String, default: "", trim: true },
+    priority: {
+      type: String,
+      enum: ["Low", "Medium", "High", "Urgent"],
+      default: "Medium",
+    },
   },
 
   photo: {
     type: String,
-  },
-
-  documentUrl: {
-    type: String,
+    default: "",
   },
 
   status: {
     type: String,
+    enum: ["Active", "On Leave", "Inactive", "Suspended", "Resigned", "Retired"],
     default: "Active",
+  },
+
+  attendanceStatus: {
+    type: String,
+    default: "Not Marked",
+    trim: true,
+  },
+
+  leaveBalance: {
+    type: Number,
+    default: 0,
+    min: 0,
   },
 
   experience: {
@@ -134,11 +177,29 @@ const employeeSchema = new mongoose.Schema({
     type: String,
   },
 
-  createdAt: {
-    type: Date,
-    default: Date.now,
+  createdBy: {
+    type: String,
+    default: "Admin",
+    trim: true,
   },
-});
+
+  updatedBy: {
+    type: String,
+    default: "Admin",
+    trim: true,
+  },
+
+  deletedAt: {
+    type: Date,
+    default: null,
+  },
+
+  deletedBy: {
+    type: String,
+    default: "",
+    trim: true,
+  },
+}, { timestamps: true });
 
 module.exports = mongoose.model(
   "Employee",

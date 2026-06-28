@@ -150,7 +150,9 @@ const CashierDashboard = () => {
 
         <div className="sidebar-profile">
           <div className="profile-img-wrapper">
-            <img src="https://i.pravatar.cc/100?img=33" alt="Cashier Avatar" />
+            <div className="grid h-full w-full place-items-center rounded-full bg-orange-50 font-bold text-orange-600">
+              C
+            </div>
             <span className="online-indicator"></span>
           </div>
           <div className="profile-info">
@@ -220,7 +222,9 @@ const CashierDashboard = () => {
             </div>
             <div className="divider"></div>
             <div className="user-dropdown-btn">
-              <img src="https://i.pravatar.cc/100?img=33" alt="Profile" className="user-avatar" />
+              <div className="grid user-avatar place-items-center rounded-full bg-orange-50 font-bold text-orange-600">
+                C
+              </div>
               <div className="user-names">
                 <span className="user-role">Cashier</span>
                 <span className="user-welcome">Welcome!</span>

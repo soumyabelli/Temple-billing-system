@@ -12,16 +12,17 @@ const {
   updateEmployeeProfileByUserId,
   changeEmployeePasswordByUserId,
   deleteEmployee,
-} = require("../controllers/employeeController");
+} = require("../controllers/employeeManagementController");
+const { authenticate, authorizeRoles } = require("../middleware/authMiddleware");
 
-router.post("/create", createEmployee);
+router.post("/create", authenticate, authorizeRoles("admin"), createEmployee);
 router.post("/login", loginEmployee);
-router.get("/profile/:userId", getEmployeeProfileByUserId);
-router.put("/profile/:userId", updateEmployeeProfileByUserId);
-router.put("/profile/:userId/password", changeEmployeePasswordByUserId);
-router.get("/", getEmployees);
-router.get("/:id", getEmployeeById);
-router.put("/:id", updateEmployee);
-router.delete("/:id", deleteEmployee);
+router.get("/profile/:userId", authenticate, getEmployeeProfileByUserId);
+router.put("/profile/:userId", authenticate, updateEmployeeProfileByUserId);
+router.put("/profile/:userId/password", authenticate, changeEmployeePasswordByUserId);
+router.get("/", authenticate, authorizeRoles("admin"), getEmployees);
+router.get("/:id", authenticate, authorizeRoles("admin"), getEmployeeById);
+router.put("/:id", authenticate, authorizeRoles("admin"), updateEmployee);
+router.delete("/:id", authenticate, authorizeRoles("admin"), deleteEmployee);
 
 module.exports = router;
