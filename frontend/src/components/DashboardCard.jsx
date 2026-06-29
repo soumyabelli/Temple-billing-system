@@ -6,6 +6,7 @@
   trendUp = true,
   trendLabel = "from yesterday",
   accent = "bg-orange-100 text-orange-600",
+  hideTrend = false,
 }) => {
   const trendTextColor = trendUp ? "text-green-700" : "text-red-600";
   const trendPrefix = trendUp ? "↑" : "↓";
@@ -20,9 +21,11 @@
         <div className="flex-1">
           <h3 className="text-sm text-gray-500">{title}</h3>
           <h1 className="text-[38px] leading-none font-bold text-[#1f1f1f] mt-2">{amount}</h1>
-          <p className={`mt-2 text-sm font-semibold ${trendTextColor}`}>
-            {trendPrefix} {trend} {trendLabel}
-          </p>
+          {!hideTrend && trend != null && trend !== "" ? (
+            <p className={`mt-2 text-sm font-semibold ${trendTextColor}`}>
+              {trendPrefix} {trend} {trendLabel}
+            </p>
+          ) : null}
         </div>
       </div>
     </div>

@@ -4,7 +4,6 @@ import { FaDonate, FaRupeeSign, FaUsers, FaBoxes } from "react-icons/fa";
 import { MdTempleBuddhist, MdOutlinePayments } from "react-icons/md";
 import AdminLayout from "../../layouts/AdminLayout";
 import DashboardCards from "../../components/dashboard/DashboardCards";
-import RevenueChart from "../../components/dashboard/RevenueChart";
 import DonationChart from "../../components/dashboard/DonationChart";
 import RecentBookings from "../../components/pooja/RecentBookings";
 import LowStock from "../../components/inventory/LowStock";
@@ -18,9 +17,7 @@ import {
   getAdminBookings,
   getAdminDonations,
   getAdminPrasadamOrders,
-  getAdminEvents,
 } from "../../services/adminService";
-import { getShiftDashboard } from "../../services/shiftService";
 import axios from "axios";
 
 const normalizeEmail = (email) => String(email || "").trim().toLowerCase().replace(/@temple\.local$/, "@gmail.com");
@@ -51,11 +48,6 @@ const cardIcons = {
   prasadam: { icon: <FaBoxes />, accent: "bg-sky-100 text-sky-600" },
   pending: { icon: <MdOutlinePayments />, accent: "bg-rose-100 text-rose-600" },
   devotees: { icon: <FaUsers />, accent: "bg-blue-100 text-blue-600" },
-  lowStock: { icon: <FaBoxes />, accent: "bg-red-100 text-red-600" },
-  duty: { icon: <FaUsers />, accent: "bg-emerald-100 text-emerald-600" },
-  extraShift: { icon: <FaUsers />, accent: "bg-purple-100 text-purple-600" },
-  overtime: { icon: <FaRupeeSign />, accent: "bg-orange-100 text-orange-600" },
-  festival: { icon: <MdTempleBuddhist />, accent: "bg-pink-100 text-pink-600" },
 };
 
 const PlaceholderView = ({ title, darkMode }) => (
@@ -73,30 +65,24 @@ const AdminDashboard = () => {
   const [donations, setDonations] = useState([]);
   const [inventoryItems, setInventoryItems] = useState([]);
   const [prasadamOrders, setPrasadamOrders] = useState([]);
-  const [shiftData, setShiftData] = useState(null);
-  const [events, setEvents] = useState([]);
   const navigate = useNavigate();
   const { logoutUser, token } = useAuth();
 
   useEffect(() => {
     const load = async () => {
       try {
-        const [usersRes, bookingsRes, donationsRes, inventoryRes, prasadamRes, shiftRes, eventsRes] = await Promise.all([
+        const [usersRes, bookingsRes, donationsRes, inventoryRes, prasadamRes] = await Promise.all([
           getAdminUsers(token),
           getAdminBookings(),
           getAdminDonations(),
           axios.get("http://localhost:5000/api/admin/inventory-items").catch(() => ({ data: { items: [] } })),
           getAdminPrasadamOrders(),
-          getShiftDashboard().catch(() => null),
-          getAdminEvents().catch(() => ({ events: [] })),
         ]);
         setUsers(usersRes.users || []);
         setBookings(bookingsRes.bookings || []);
         setDonations(donationsRes.donations || []);
         setInventoryItems(inventoryRes.data?.items || []);
         setPrasadamOrders(prasadamRes.orders || []);
-        setShiftData(shiftRes);
-        setEvents(eventsRes.events || []);
       } catch (error) {
         console.warn("Unable to load admin data . please try again", error);
       }
@@ -150,8 +136,6 @@ const AdminDashboard = () => {
     const totalRevenue = bookingRevenue + donationRevenue + prasadamRevenue;
 
     const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(today.getDate() - 1);
 
     const sumForDay = (day) => {
       const matchDay = (item) => {
@@ -166,8 +150,6 @@ const AdminDashboard = () => {
     };
 
     const todayCollections = sumForDay(today);
-    const yesterdayCollections = sumForDay(yesterday);
-    const collectionsTrendUp = todayCollections >= yesterdayCollections;
 
     const pendingPayments =
       bookings
@@ -177,164 +159,63 @@ const AdminDashboard = () => {
         .filter((item) => String(item.status || "").toLowerCase() === "pending")
         .reduce((sum, item) => sum + normalizeAmount(item.amount), 0);
 
-    const pendingCount =
-      bookings.filter((item) => item.status === "Pending" || item.paymentStatus === "Pending").length +
-      donations.filter((item) => String(item.status || "").toLowerCase() === "pending").length;
-
-    const devoteeCount = users.filter((user) => String(user.role || "").toLowerCase() === "devotee").length;
-    const lowStockCount = inventoryItems.filter((item) => item.currentStock <= item.minimumStock).length;
-
-    const todayKey = today.toISOString().slice(0, 10);
-    const assignments = shiftData?.assignments || [];
-    const todayAssignments = assignments.filter((item) => item.dateKey === todayKey);
-    const activeDutyCount = todayAssignments.length;
-    const extraShiftCount = todayAssignments.filter((item) =>
-      /overtime|temporary|extra/i.test(item.assignmentType || "")
-    ).length;
-    const overtimeHours = shiftData?.stats?.overtimeHours || 0;
-    const festivalAssignments = assignments.filter(
-      (item) => /festival/i.test(item.assignmentType || "") && item.dateKey >= todayKey
-    ).length;
-    const upcomingFestivals = events.filter((event) => {
-      const eventDate = new Date(event.date);
-      return !Number.isNaN(eventDate.getTime()) && eventDate >= today && event.status !== "Cancelled";
-    }).length;
-
-    const pendingBookings = bookings.filter((item) => item.status === "Pending").length;
-
     return [
       {
         title: "Total Revenues",
         amount: formatRs(totalRevenue),
-        trend: `${bookings.length + donations.length + prasadamOrders.length}`,
-        trendLabel: "total transactions",
-        trendUp: true,
+        hideTrend: true,
         ...cardIcons.revenue,
       },
       {
         title: "Daily Collections",
         amount: formatRs(todayCollections),
-        trend: formatRs(yesterdayCollections),
-        trendLabel: "yesterday",
-        trendUp: collectionsTrendUp,
+        hideTrend: true,
         ...cardIcons.daily,
       },
       {
         title: "Pooja Bookings",
         amount: String(bookings.length),
-        trend: String(pendingBookings),
-        trendLabel: "pending approval",
-        trendUp: pendingBookings === 0,
+        hideTrend: true,
         ...cardIcons.pooja,
       },
       {
         title: "Total Donations",
         amount: formatRs(donationRevenue),
-        trend: String(donations.length),
-        trendLabel: "donation records",
-        trendUp: true,
+        hideTrend: true,
         ...cardIcons.donation,
       },
       {
         title: "Prasadam Sales",
         amount: formatRs(prasadamRevenue),
-        trend: String(prasadamOrders.length),
-        trendLabel: "orders placed",
-        trendUp: true,
+        hideTrend: true,
         ...cardIcons.prasadam,
       },
       {
         title: "Pending Payments",
         amount: formatRs(pendingPayments),
-        trend: String(pendingCount),
-        trendLabel: "awaiting payment",
-        trendUp: pendingCount === 0,
+        hideTrend: true,
         ...cardIcons.pending,
       },
       {
         title: "Total Devotees",
-        amount: String(devoteeCount),
-        trend: "Registered",
-        trendLabel: "devotee accounts",
-        trendUp: true,
+        amount: String(devoteeUsers.length),
+        hideTrend: true,
         ...cardIcons.devotees,
       },
-      {
-        title: "Low Stock Items",
-        amount: String(lowStockCount),
-        trend: lowStockCount > 0 ? "Requires attention" : "All stocked",
-        trendLabel: "",
-        trendUp: lowStockCount === 0,
-        ...cardIcons.lowStock,
-      },
-      {
-        title: "Active Duty Assignments",
-        amount: String(activeDutyCount),
-        trend: "Today",
-        trendLabel: "scheduled duties",
-        trendUp: true,
-        ...cardIcons.duty,
-      },
-      {
-        title: "Extra Shift Assignments",
-        amount: String(extraShiftCount),
-        trend: "Today",
-        trendLabel: "overtime / temp shifts",
-        trendUp: true,
-        ...cardIcons.extraShift,
-      },
-      {
-        title: "Overtime Hours",
-        amount: `${overtimeHours} hrs`,
-        trend: "This week",
-        trendLabel: "from shift records",
-        trendUp: true,
-        ...cardIcons.overtime,
-      },
-      {
-        title: "Festival Assignments",
-        amount: String(festivalAssignments || upcomingFestivals),
-        trend: "Upcoming",
-        trendLabel: "festival duties / events",
-        trendUp: true,
-        ...cardIcons.festival,
-      },
     ];
-  }, [bookings, donations, prasadamOrders, users, inventoryItems, shiftData, events]);
-
-  const monthlyRevenue = useMemo(() => {
-    const months = [];
-    const now = new Date();
-    for (let index = 5; index >= 0; index -= 1) {
-      const date = new Date(now.getFullYear(), now.getMonth() - index, 1);
-      months.push({
-        month: date.toLocaleString("default", { month: "short" }),
-        year: date.getFullYear(),
-        monthIndex: date.getMonth(),
-      });
-    }
-
-    return months.map(({ month, year, monthIndex }) => {
-      const inMonth = (item) => {
-        const date = getItemDate(item);
-        return date && date.getFullYear() === year && date.getMonth() === monthIndex;
-      };
-      const value =
-        bookings.filter(inMonth).reduce((sum, item) => sum + normalizeAmount(item.amount), 0) +
-        donations.filter(inMonth).reduce((sum, item) => sum + normalizeAmount(item.amount), 0) +
-        prasadamOrders.filter(inMonth).reduce((sum, item) => sum + normalizeAmount(item.amount), 0);
-      return { month, value };
-    });
-  }, [bookings, donations, prasadamOrders]);
+  }, [bookings, donations, prasadamOrders, devoteeUsers]);
 
   const donationSources = useMemo(() => {
     if (!donations.length) return [];
     const methodTotals = {};
+    const methodCounts = {};
+
     donations.forEach((donation) => {
       const method = donation.paymentMethod || "Other";
       methodTotals[method] = (methodTotals[method] || 0) + normalizeAmount(donation.amount);
+      methodCounts[method] = (methodCounts[method] || 0) + 1;
     });
-    const total = Object.values(methodTotals).reduce((sum, value) => sum + value, 0);
+
     const colors = {
       UPI: "bg-violet-500",
       Cash: "bg-orange-400",
@@ -345,13 +226,16 @@ const AdminDashboard = () => {
       Cheque: "bg-sky-500",
       Other: "bg-gray-400",
     };
+
     return Object.entries(methodTotals)
       .map(([label, amount]) => ({
         label,
-        value: total ? Math.round((amount / total) * 100) : 0,
+        amount,
+        count: methodCounts[label] || 0,
+        value: 0,
         color: colors[label] || "bg-gray-400",
       }))
-      .sort((left, right) => right.value - left.value);
+      .sort((left, right) => right.count - left.count || right.amount - left.amount);
   }, [donations]);
 
   const recentBookings = useMemo(
@@ -378,15 +262,11 @@ const AdminDashboard = () => {
 
                 <DashboardCards cards={dynamicStatCards} />
 
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mt-4">
-                  <div className={`rounded-2xl border p-4 ${darkMode ? "bg-[#1f2937] border-[#334155]" : "bg-white border-[#ece8e1]"}`}>
-                    <h3 className={`text-xl font-bold ${darkMode ? "text-slate-100" : "text-[#1d1b19]"}`}>Monthly Revenue</h3>
-                    <RevenueChart data={monthlyRevenue} />
-                  </div>
+                <div className="mt-4">
                   <div className={`rounded-2xl border p-4 ${darkMode ? "bg-[#1f2937] border-[#334155]" : "bg-white border-[#ece8e1]"}`}>
                     <h3 className={`text-xl font-bold ${darkMode ? "text-slate-100" : "text-[#1d1b19]"}`}>Donation Sources</h3>
                     {donationSources.length ? (
-                      <DonationChart sources={donationSources} />
+                      <DonationChart sources={donationSources} showCounts />
                     ) : (
                       <p className="mt-6 text-sm text-gray-500">No donation records yet.</p>
                     )}

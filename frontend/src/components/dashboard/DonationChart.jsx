@@ -5,22 +5,33 @@ const defaultDonationSources = [
   { label: "UPI", value: 10, color: "bg-violet-500" },
 ];
 
-const DonationChart = ({ sources = [] }) => {
+const DonationChart = ({ sources = [], showCounts = false }) => {
   const donationSources = sources.length ? sources : defaultDonationSources;
+  const maxCount = Math.max(1, ...donationSources.map((source) => Number(source.count || 0)));
 
   return (
     <div className="space-y-4 mt-6">
-      {donationSources.map((source) => (
-        <div key={source.label}>
-          <div className="flex justify-between text-sm mb-1">
-            <span className="text-gray-600">{source.label}</span>
-            <span className="font-semibold text-gray-700">{source.value}%</span>
+      {donationSources.map((source) => {
+        const barWidth = showCounts
+          ? `${Math.max(4, (Number(source.count || 0) / maxCount) * 100)}%`
+          : `${source.value}%`;
+
+        return (
+          <div key={source.label}>
+            <div className="flex justify-between text-sm mb-1">
+              <span className="text-gray-600">{source.label}</span>
+              <span className="font-semibold text-gray-700">
+                {showCounts
+                  ? `${Number(source.count || 0)} · Rs ${Number(source.amount || 0).toLocaleString("en-IN")}`
+                  : `${source.value}%`}
+              </span>
+            </div>
+            <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
+              <div className={`h-3 rounded-full ${source.color}`} style={{ width: barWidth }} />
+            </div>
           </div>
-          <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
-            <div className={`h-3 rounded-full ${source.color}`} style={{ width: `${source.value}%` }} />
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 };
