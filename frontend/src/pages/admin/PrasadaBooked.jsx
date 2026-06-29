@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { getAdminPrasadamOrders, updateAdminPrasadamOrderStatus } from "../../services/adminPrasadamOrdersService";
+import { deleteAdminPrasadamOrder, getAdminPrasadamOrders, updateAdminPrasadamOrderStatus } from "../../services/adminPrasadamOrdersService";
 
 const formatCurrency = (value) => `₹ ${Number(value || 0).toLocaleString("en-IN")}`;
 
@@ -16,11 +16,12 @@ const formatDateTime = (value) => {
   });
 };
 
-const STATUS_OPTIONS = ["Pending", "Approved", "Processing", "Ready for Pickup", "Completed", "Cancelled"];
+const STATUS_OPTIONS = ["Pending", "Approved", "Rejected", "Processing", "Ready for Pickup", "Completed", "Cancelled"];
 
 const statusClassMap = {
   Pending: "bg-[#fef3c7] text-[#92400e]",
   Approved: "bg-[#dbeafe] text-[#1d4ed8]",
+  Rejected: "bg-[#fee2e2] text-[#b91c1c]",
   Processing: "bg-[#e0e7ff] text-[#3730a3]",
   "Ready for Pickup": "bg-[#d1fae5] text-[#166534]",
   Completed: "bg-[#d1fae5] text-[#166534]",
@@ -40,6 +41,7 @@ const PrasadaBooked = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [updatingId, setUpdatingId] = useState("");
+  const [deletingId, setDeletingId] = useState("");
 
   const loadOrders = useCallback(async () => {
     setLoading(true);
@@ -85,6 +87,21 @@ const PrasadaBooked = () => {
       setError(updateError.response?.data?.message || "Failed to update order status.");
     } finally {
       setUpdatingId("");
+    }
+  };
+
+  const handleDelete = async (orderId) => {
+    const confirmed = window.confirm("Delete this order permanently? This should only be used to remove test data.");
+    if (!confirmed) return;
+    setDeletingId(orderId);
+    setError("");
+    try {
+      await deleteAdminPrasadamOrder(orderId);
+      await loadOrders();
+    } catch (deleteError) {
+      setError(deleteError.response?.data?.message || "Failed to delete order.");
+    } finally {
+      setDeletingId("");
     }
   };
 
@@ -210,18 +227,28 @@ const PrasadaBooked = () => {
                       </td>
                       <td className="px-4 py-4">{formatDateTime(order.createdAt)}</td>
                       <td className="px-4 py-4">
-                        <select
-                          value={STATUS_OPTIONS.includes(status) ? status : "Pending"}
-                          disabled={updatingId === orderId}
-                          onChange={(e) => handleStatusChange(orderId, e.target.value)}
-                          className="rounded-lg border border-[#cbd5e1] px-2 py-1 text-xs outline-none focus:border-[#2563eb]"
-                        >
-                          {STATUS_OPTIONS.map((option) => (
-                            <option key={option} value={option}>
-                              {option}
-                            </option>
-                          ))}
-                        </select>
+                        <div className="flex flex-col gap-2">
+                          <select
+                            value={STATUS_OPTIONS.includes(status) ? status : "Pending"}
+                            disabled={updatingId === orderId || deletingId === orderId}
+                            onChange={(e) => handleStatusChange(orderId, e.target.value)}
+                            className="rounded-lg border border-[#cbd5e1] px-2 py-1 text-xs outline-none focus:border-[#2563eb]"
+                          >
+                            {STATUS_OPTIONS.map((option) => (
+                              <option key={option} value={option}>
+                                {option}
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            type="button"
+                            disabled={deletingId === orderId || updatingId === orderId}
+                            onClick={() => handleDelete(orderId)}
+                            className="rounded-lg border border-[#fecaca] bg-[#fff1f2] px-2 py-1 text-xs font-semibold text-[#b91c1c] hover:bg-[#ffe4e6] disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {deletingId === orderId ? "Deleting..." : "Delete"}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

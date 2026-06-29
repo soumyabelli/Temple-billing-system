@@ -107,12 +107,12 @@ export const createDonation = async (payload) => {
 };
 
 export const fetchPrasadamOrders = async () => {
-  const response = await axios.get(`${API_BASE}/devotee/prasadam-orders`);
+  const response = await axios.get(`${API_BASE}/devotee/prasadam-orders`, { params: { channel: "cashier" } });
   return response.data?.orders || [];
 };
 
 export const createPrasadamOrder = async (payload) => {
-  const response = await axios.post(`${API_BASE}/devotee/prasadam-orders`, payload);
+  const response = await axios.post(`${API_BASE}/devotee/prasadam-orders`, { ...(payload || {}), channel: "cashier" });
   return response.data?.order || null;
 };
 

@@ -92,6 +92,7 @@ const AddEmployee = () => {
   const [step, setStep] = useState(0);
   const [form, setForm] = useState(initialForm);
   const [message, setMessage] = useState(null);
+  const [errors, setErrors] = useState({});
   const [isSaving, setIsSaving] = useState(false);
   const [credentials, setCredentials] = useState(null);
 
@@ -139,83 +140,71 @@ const AddEmployee = () => {
   const handleChange = (field) => (event) => {
     const value = field === "photo" ? event.target.files[0] : event.target.value;
     setForm((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => ({ ...prev, [field]: null }));
   };
 
   const handleNext = () => {
     // Validate current step before advancing
+    const newErrors = {};
     if (step === 0) {
-      if (!form.name.trim()) return setMessage({ type: "error", text: "Employee name is required." });
+      if (!form.name.trim()) newErrors.name = "Employee name is required.";
       if (!form.email.trim() || !isValidEmail(form.email))
-        return setMessage({ type: "error", text: "Please enter a valid email address." });
+        newErrors.email = "Please enter a valid email address.";
       if (!form.phone.trim() || !isValidPhone(form.phone))
-        return setMessage({ type: "error", text: "Please enter a valid phone number (10 digits)." });
-      if (!form.emergencyContact ||!isValidPhone(form.emergencyContact)) {
-        return setMessage({ type: "error", text: "Enter valid emergency contact number.",});}
-      if (!/^[0-9]{12}$/.test(form.aadhar)) {
-        return setMessage({ type: "error", text: "Aadhaar number must be 12 digits.",});}
-      if (!form.dob ||!isValidDate(form.dob) ||!isPastOrToday(form.dob)) {
-          return setMessage({ type: "error", text: "Please enter a valid date of birth.",});
-       }
-      if (!isAdult(form.dob)) {
-        return setMessage({ type: "error", text: "Employees must be at least 18 years old.",});
+        newErrors.phone = "Please enter a valid phone number (10 digits).";
+      if (!form.emergencyContact || !isValidPhone(form.emergencyContact))
+        newErrors.emergencyContact = "Enter valid emergency contact number.";
+      if (!/^[0-9]{12}$/.test(form.aadhar))
+        newErrors.aadhar = "Aadhaar number must be 12 digits.";
+      if (!form.dob || !isValidDate(form.dob) || !isPastOrToday(form.dob)) {
+        newErrors.dob = "Please enter a valid date of birth.";
+      } else if (!isAdult(form.dob)) {
+        newErrors.dob = "Employees must be at least 18 years old.";
       }
-      if (form.photo && form.photo.size > 5 * 1024 * 1024) {
-        return setMessage({ type: "error", text: "Profile photo must be 5 MB or smaller." });
+      if (form.address && /^\d+$/.test(form.address.trim())) {
+        newErrors.address = "Address cannot consist of only numbers.";
+      }
+      if (form.photo) {
+        if (form.photo.size > 5 * 1024 * 1024) {
+          newErrors.photo = "Profile photo must be 5 MB or smaller.";
+        } else if (!form.photo.type.startsWith('image/')) {
+          newErrors.photo = "Please upload a valid image file.";
+        }
       }
     }
     if (step === 1) {
-  if (!form.salary || Number(form.salary) <= 0) {
-    return setMessage({
-      type: "error",
-      text: "Salary must be greater than 0.",
-    });
-  }
-
-  if (!form.joiningDate) {
-    return setMessage({
-      type: "error",
-      text: "Joining Date is required, Please put the joining date.",
-    });
-  }
-
-  const dobDate = new Date(form.dob);
-const joiningDate = new Date(form.joiningDate);
-
-const eighteenthBirthday = new Date(dobDate);
-
-eighteenthBirthday.setFullYear(
-  eighteenthBirthday.getFullYear() + 18
-);
-
-if (joiningDate < eighteenthBirthday) {
-  return setMessage({
-    type: "error",
-    text:
-      "Joining Date must be after employee turns 18 years old.",
-  });
-}
-
-  if (joiningDate > new Date()) {
-    return setMessage({
-      type: "error",
-      text: "Joining Date cannot be a future date.",
-    });
-  }
-
-  if (!form.department) {
-    return setMessage({
-      type: "error",
-      text: "Please select a department.",
-    });
-  }
-
-  if (!form.defaultDuty) {
-    return setMessage({
-      type: "error",
-      text: "Please select a default duty.",
-    });
-  }
-}
+      if (!form.salary || Number(form.salary) <= 0) {
+        newErrors.salary = "Salary must be greater than 0.";
+      }
+      if (!form.joiningDate) {
+        newErrors.joiningDate = "Joining Date is required, Please put the joining date.";
+      } else {
+        const dobDate = new Date(form.dob);
+        const joiningDate = new Date(form.joiningDate);
+        const eighteenthBirthday = new Date(dobDate);
+        eighteenthBirthday.setFullYear(eighteenthBirthday.getFullYear() + 18);
+        
+        if (joiningDate < eighteenthBirthday) {
+          newErrors.joiningDate = "Joining Date must be after employee turns 18 years old.";
+        } else if (joiningDate > new Date()) {
+          newErrors.joiningDate = "Joining Date cannot be a future date.";
+        }
+      }
+      
+      if (!form.department) {
+        newErrors.department = "Please select a department.";
+      }
+      if (!form.defaultDuty) {
+        newErrors.defaultDuty = "Please select a default duty.";
+      }
+    }
+    
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+    
+    setErrors({});
     setMessage(null);
     setStep((prev) => prev + 1);
   };
@@ -355,9 +344,10 @@ if (joiningDate < eighteenthBirthday) {
                     value={form.name}
                     onChange={handleChange("name")}
                     placeholder="e.g., Ramesh Kumar"
-                    className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition"
+                    className={`w-full rounded-3xl border ${errors.name ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition`}
                     required
                   />
+                  {errors.name && <p className="text-rose-500 text-xs mt-1">{errors.name}</p>}
                 </label>
 
                 {/* Email */}
@@ -368,9 +358,10 @@ if (joiningDate < eighteenthBirthday) {
                     value={form.email}
                     onChange={handleChange("email")}
                     placeholder="employee@temple.org"
-                    className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition"
+                    className={`w-full rounded-3xl border ${errors.email ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition`}
                     required
                   />
+                  {errors.email && <p className="text-rose-500 text-xs mt-1">{errors.email}</p>}
                 </label>
 
                 {/* Phone Number */}
@@ -381,9 +372,10 @@ if (joiningDate < eighteenthBirthday) {
                     value={form.phone}
                     onChange={handleChange("phone")}
                     placeholder="+91 90000 00000"
-                    className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition"
+                    className={`w-full rounded-3xl border ${errors.phone ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition`}
                     required
                   />
+                  {errors.phone && <p className="text-rose-500 text-xs mt-1">{errors.phone}</p>}
                 </label>
 
                 {/* Gender */}
@@ -392,12 +384,13 @@ if (joiningDate < eighteenthBirthday) {
                   <select
                     value={form.gender}
                     onChange={handleChange("gender")}
-                    className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition"
+                    className={`w-full rounded-3xl border ${errors.gender ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition`}
                   >
                     <option>Male</option>
                     <option>Female</option>
                     <option>Other</option>
                   </select>
+                  {errors.gender && <p className="text-rose-500 text-xs mt-1">{errors.gender}</p>}
                 </label>
 
                 {/* Date of Birth */}
@@ -416,7 +409,9 @@ if (joiningDate < eighteenthBirthday) {
                     .toISOString()
                     .split("T")[0]
                     }
+                    className={`w-full rounded-3xl border ${errors.dob ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition`}
                   />
+                  {errors.dob && <p className="text-rose-500 text-xs mt-1">{errors.dob}</p>}
                 </label>
 
                 {/*Emergency Contact*/}
@@ -427,8 +422,9 @@ if (joiningDate < eighteenthBirthday) {
                     value={form.emergencyContact}
                     onChange={handleChange("emergencyContact")}
                     placeholder="Emergency Contact Number"
-                    className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3"
+                    className={`w-full rounded-3xl border ${errors.emergencyContact ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3`}
                   />
+                  {errors.emergencyContact && <p className="text-rose-500 text-xs mt-1">{errors.emergencyContact}</p>}
                 </label>
 
                 {/* Aadhar Number */}
@@ -440,8 +436,9 @@ if (joiningDate < eighteenthBirthday) {
                     value={form.aadhar}
                     onChange={handleChange("aadhar")}
                     placeholder="123456789012"
-                    className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3"
+                    className={`w-full rounded-3xl border ${errors.aadhar ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3`}
                   />
+                  {errors.aadhar && <p className="text-rose-500 text-xs mt-1">{errors.aadhar}</p>}
                 </label>
 
                 {/* Address */}
@@ -452,14 +449,15 @@ if (joiningDate < eighteenthBirthday) {
                     onChange={handleChange("address")}
                     rows={3}
                     placeholder="Full residential address"
-                    className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition"
+                    className={`w-full rounded-3xl border ${errors.address ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition`}
                   />
+                  {errors.address && <p className="text-rose-500 text-xs mt-1">{errors.address}</p>}
                 </label>
 
                 {/* Photo Upload */}
                 <label className="block space-y-2 text-sm text-slate-700 md:col-span-2">
                   Profile Photo
-                  <div className="flex items-center gap-4 rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-4">
+                  <div className={`flex items-center gap-4 rounded-3xl border ${errors.photo ? "border-rose-500 bg-rose-50" : "border-dashed border-slate-300 bg-slate-50"} p-4`}>
                     {photoPreview && (
                       <img
                         src={photoPreview}
@@ -482,6 +480,7 @@ if (joiningDate < eighteenthBirthday) {
                     </label>
                     <span className="text-sm text-slate-500">PNG, JPG up to 5 MB</span>
                   </div>
+                  {errors.photo && <p className="text-rose-500 text-xs mt-1">{errors.photo}</p>}
                 </label>
               </div>
             )}
@@ -495,7 +494,7 @@ if (joiningDate < eighteenthBirthday) {
                   <select
                     value={form.role}
                     onChange={handleChange("role")}
-                    className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition"
+                    className={`w-full rounded-3xl border ${errors.role ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition`}
                   >
                     {employeeRoles.map((r) => (
                       <option key={r.value} value={r.value}>
@@ -503,6 +502,7 @@ if (joiningDate < eighteenthBirthday) {
                       </option>
                     ))}
                   </select>
+                  {errors.role && <p className="text-rose-500 text-xs mt-1">{errors.role}</p>}
                 </label>
 
                 {/* Department — auto-updates when role changes */}
@@ -511,7 +511,7 @@ if (joiningDate < eighteenthBirthday) {
                   <select
                     value={form.department}
                     onChange={handleChange("department")}
-                    className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition"
+                    className={`w-full rounded-3xl border ${errors.department ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition`}
                   >
                     {departmentList.map((dept) => (
                       <option key={dept} value={dept}>
@@ -519,7 +519,11 @@ if (joiningDate < eighteenthBirthday) {
                       </option>
                     ))}
                   </select>
-                  <p className="text-xs text-slate-400 mt-1">Auto-loaded based on selected role</p>
+                  {errors.department ? (
+                    <p className="text-rose-500 text-xs mt-1">{errors.department}</p>
+                  ) : (
+                    <p className="text-xs text-slate-400 mt-1">Auto-loaded based on selected role</p>
+                  )}
                 </label>
 
                 {/* Employee Type */}
@@ -528,12 +532,13 @@ if (joiningDate < eighteenthBirthday) {
                   <select
                     value={form.employeeType}
                     onChange={handleChange("employeeType")}
-                    className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3"
+                    className={`w-full rounded-3xl border ${errors.employeeType ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3`}
                   >
                   <option value="Full Time">Full Time</option>
                   <option value="Part Time">Part Time</option>
                   <option value="Contract">Contract</option>
                   </select>
+                  {errors.employeeType && <p className="text-rose-500 text-xs mt-1">{errors.employeeType}</p>}
                 </label>
 
                 {/* Salary */}
@@ -545,8 +550,9 @@ if (joiningDate < eighteenthBirthday) {
                     value={form.salary}
                     onChange={handleChange("salary")}
                     placeholder="25000"
-                    className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3"
+                    className={`w-full rounded-3xl border ${errors.salary ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3`}
                   />
+                  {errors.salary && <p className="text-rose-500 text-xs mt-1">{errors.salary}</p>}
                 </label>
 
                 {/* Joining Date */}
@@ -568,8 +574,9 @@ if (joiningDate < eighteenthBirthday) {
       : ""
   }
   max={new Date().toISOString().split("T")[0]}
-  className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3"
+  className={`w-full rounded-3xl border ${errors.joiningDate ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3`}
 />
+                  {errors.joiningDate && <p className="text-rose-500 text-xs mt-1">{errors.joiningDate}</p>}
                 </label>
 
                 {/* Default Shift */}
@@ -578,7 +585,7 @@ if (joiningDate < eighteenthBirthday) {
                   <select
                     value={form.defaultShift}
                     onChange={handleChange("defaultShift")}
-                    className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition"
+                    className={`w-full rounded-3xl border ${errors.defaultShift ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition`}
                   >
                     {shiftOptions.map((s) => (
                       <option key={s} value={s}>
@@ -586,6 +593,7 @@ if (joiningDate < eighteenthBirthday) {
                       </option>
                     ))}
                   </select>
+                  {errors.defaultShift && <p className="text-rose-500 text-xs mt-1">{errors.defaultShift}</p>}
                 </label>
 
                 {/* Default Duty — auto-updates when department changes */}
@@ -594,7 +602,7 @@ if (joiningDate < eighteenthBirthday) {
                   <select
                     value={form.defaultDuty}
                     onChange={handleChange("defaultDuty")}
-                    className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition"
+                    className={`w-full rounded-3xl border ${errors.defaultDuty ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition`}
                   >
                     {dutyList.map((duty) => (
                       <option key={duty} value={duty}>
@@ -603,7 +611,11 @@ if (joiningDate < eighteenthBirthday) {
                     ))}
                     {dutyList.length === 0 && <option value="">No duties configured</option>}
                   </select>
-                  <p className="text-xs text-slate-400 mt-1">Auto-loaded based on selected department</p>
+                  {errors.defaultDuty ? (
+                    <p className="text-rose-500 text-xs mt-1">{errors.defaultDuty}</p>
+                  ) : (
+                    <p className="text-xs text-slate-400 mt-1">Auto-loaded based on selected department</p>
+                  )}
                 </label>
 
                 {/* Duty Location */}
@@ -612,7 +624,7 @@ if (joiningDate < eighteenthBirthday) {
                   <select
                     value={form.dutyLocation}
                     onChange={handleChange("dutyLocation")}
-                    className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition"
+                    className={`w-full rounded-3xl border ${errors.dutyLocation ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition`}
                   >
                     {dutyLocations.map((loc) => (
                       <option key={loc} value={loc}>
@@ -620,6 +632,7 @@ if (joiningDate < eighteenthBirthday) {
                       </option>
                     ))}
                   </select>
+                  {errors.dutyLocation && <p className="text-rose-500 text-xs mt-1">{errors.dutyLocation}</p>}
                 </label>
 
                 {/* Auto-assignment info banner */}

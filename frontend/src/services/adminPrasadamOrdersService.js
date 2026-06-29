@@ -36,3 +36,7 @@ export const updateAdminPrasadamOrderStatus = async ({ id, status, adminReason =
   return response.data;
 };
 
+export const deleteAdminPrasadamOrder = async (id) => {
+  const response = await axios.delete(`${API_BASE}/admin/prasadam-orders/${id}`);
+  return response.data;
+};

@@ -649,3 +649,94 @@ Thank you for your donation!
 To: 9945650664
 Message: Donation received! Amount: ₹501. Transaction ID: SIM_TXN_1782706044896. Thank you! -Temple
 
+[2026-06-29T05:48:17.088Z] EMAIL
+To: milt@gmail.com
+Subject: Pooja Booking Confirmation
+Pooja Booking Confirmation
+Service: Abhisheka
+Date & Time: 2026-07-02T11:18
+Amount: ₹801
+Thank you!
+
+[2026-06-29T05:48:17.124Z] SMS
+To: 9945650664
+Message: Pooja booking confirmed! Service: Abhisheka on 2026-07-02T11:18. Amount: ₹801. -Temple
+
+[2026-06-29T05:48:26.644Z] EMAIL
+To: milt@gmail.com
+Subject: Donation Receipt
+Donation Receipt
+Amount: ₹501
+Category: Annadanam
+Transaction ID: SIM_TXN_1782712106455
+Thank you for your donation!
+
+[2026-06-29T05:48:26.649Z] SMS
+To: 9945650664
+Message: Donation received! Amount: ₹501. Transaction ID: SIM_TXN_1782712106455. Thank you! -Temple
+
+[2026-06-29T05:48:39.018Z] EMAIL
+To: milt@gmail.com
+Subject: Donation Receipt
+Donation Receipt
+Amount: ₹501
+Category: General
+Transaction ID: SIM_TXN_1782712118811
+Thank you for your donation!
+
+[2026-06-29T05:48:39.021Z] SMS
+To: 9945650664
+Message: Donation received! Amount: ₹501. Transaction ID: SIM_TXN_1782712118811. Thank you! -Temple
+
+[2026-06-29T07:00:36.872Z] EMAIL
+To: asha@gmail.com
+Subject: Pooja Booking Confirmation
+Pooja Booking Confirmation
+Service: Special Homa
+Date & Time: 2026-07-03T12:30
+Amount: ₹1501
+Thank you!
+
+[2026-06-29T07:00:36.916Z] SMS
+To: 9449913987
+Message: Pooja booking confirmed! Service: Special Homa on 2026-07-03T12:30. Amount: ₹1501. -Temple
+
+[2026-06-29T07:07:08.185Z] EMAIL
+To: asha@gmail.com
+Subject: Pooja Booking Confirmation
+Pooja Booking Confirmation
+Service: Maha Lakshmi Pooja
+Date & Time: 2026-06-30T13:35
+Amount: ₹2201
+Thank you!
+
+[2026-06-29T07:07:08.192Z] SMS
+To: 9449913987
+Message: Pooja booking confirmed! Service: Maha Lakshmi Pooja on 2026-06-30T13:35. Amount: ₹2201. -Temple
+
+[2026-06-29T07:16:07.968Z] EMAIL
+To: asha@gmail.com
+Subject: Donation Receipt
+Donation Receipt
+Amount: ₹967579
+Category: Festival Donation
+Transaction ID: SIM_TXN_1782717367740
+Thank you for your donation!
+
+[2026-06-29T07:16:07.971Z] SMS
+To: 9449913987
+Message: Donation received! Amount: ₹967579. Transaction ID: SIM_TXN_1782717367740. Thank you! -Temple
+
+[2026-06-29T07:17:15.079Z] EMAIL
+To: asha@gmail.com
+Subject: Prasadam Order Confirmation
+Prasadam Order Confirmed
+Item: Pulihora Prasadam
+Quantity: 7
+Amount: ₹847
+Thank you!
+
+[2026-06-29T07:17:15.081Z] SMS
+To: 9449913987
+Message: Prasadam order confirmed! Item: Pulihora Prasadam. Qty: 7. Ready soon! -Temple
+

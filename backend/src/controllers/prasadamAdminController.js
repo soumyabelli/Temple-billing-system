@@ -1,5 +1,6 @@
 const PrasadamOrder = require("../models/PrasadamOrder");
 const Prasadam = require("../models/Prasadam");
+const Bill = require("../models/Bill");
 const { createStaffNotification } = require("../utils/notificationService");
 
 const clean = (v) => String(v || "").trim();
@@ -7,33 +8,48 @@ const clean = (v) => String(v || "").trim();
 const ALLOWED_ORDER_STATUSES = [
   "Pending",
   "Approved",
+  "Rejected",
   "Processing",
   "Ready for Pickup",
   "Completed",
   "Cancelled",
 ];
 
-const mapToModelStatus = (incoming) => {
+const mapToModelStatuses = (incoming) => {
   switch (incoming) {
     case "Pending":
-      return "Placed";
+      return ["Pending", "Placed"];
     case "Approved":
-      return "Placed";
+      return ["Approved"];
+    case "Rejected":
+      return ["Rejected"];
     case "Processing":
-      return "Preparing";
+      return ["Processing", "Preparing"];
     case "Ready for Pickup":
-      return "Ready";
+      return ["Ready for Pickup", "Ready"];
     case "Completed":
-      return "Delivered";
+      return ["Completed", "Delivered"];
     case "Cancelled":
-      return "Cancelled";
+      return ["Cancelled"];
     default:
-      return null;
+      return [];
   }
 };
 
 const mapFromModelStatus = (modelStatus) => {
   switch (modelStatus) {
+    case "Pending":
+      return "Pending";
+    case "Approved":
+      return "Approved";
+    case "Rejected":
+      return "Rejected";
+    case "Processing":
+      return "Processing";
+    case "Ready for Pickup":
+      return "Ready for Pickup";
+    case "Completed":
+      return "Completed";
     case "Placed":
       return "Pending";
     case "Preparing":
@@ -74,11 +90,10 @@ exports.getAdminPrasadamOrders = async (req, res) => {
 
     const q = clean(search).toLowerCase();
 
-    let modelStatusFilter = null;
+    let statusFilter = [];
     const normalizedStatus = clean(status);
     if (normalizedStatus) {
-      const mapped = mapToModelStatus(normalizedStatus);
-      if (mapped) modelStatusFilter = mapped;
+      statusFilter = mapToModelStatuses(normalizedStatus);
     }
 
     const dateFilter = {};
@@ -90,9 +105,11 @@ exports.getAdminPrasadamOrders = async (req, res) => {
       dateFilter.$lte = ed;
     }
 
-    const mongoQuery = {};
-    if (modelStatusFilter) mongoQuery.status = modelStatusFilter;
-    if (Object.keys(dateFilter).length) mongoQuery.createdAt = dateFilter;
+    const mongoQuery = { $and: [{ $or: [{ channel: "devotee" }, { channel: { $exists: false } }] }] };
+    if (statusFilter.length) {
+      mongoQuery.$and.push(statusFilter.length === 1 ? { status: statusFilter[0] } : { status: { $in: statusFilter } });
+    }
+    if (Object.keys(dateFilter).length) mongoQuery.$and.push({ createdAt: dateFilter });
 
     if (q) {
       mongoQuery.$or = [
@@ -158,7 +175,8 @@ exports.updateAdminPrasadamOrderStatus = async (req, res) => {
       return res.status(404).json({ success: false, message: "Order not found" });
     }
 
-    const modelStatus = mapToModelStatus(incoming);
+    const mappedStatuses = mapToModelStatuses(incoming);
+    const modelStatus = mappedStatuses[0];
     if (!modelStatus) {
       return res.status(400).json({ success: false, message: "Invalid status mapping" });
     }
@@ -183,3 +201,21 @@ exports.updateAdminPrasadamOrderStatus = async (req, res) => {
   }
 };
 
+exports.deleteAdminPrasadamOrder = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const order = await PrasadamOrder.findById(id);
+    if (!order) {
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
+
+    await Promise.all([
+      PrasadamOrder.deleteOne({ _id: id }),
+      Bill.deleteMany({ sourceId: String(id) }),
+    ]);
+
+    return res.json({ success: true });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};

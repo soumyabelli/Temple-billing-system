@@ -87,17 +87,16 @@ const generateEmployeeIdentity = async () => {
 
   while (sequence < 100000) {
     const employeeId = `${prefix}${String(sequence).padStart(4, "0")}`;
-    const username = `emp${year}${String(sequence).padStart(4, "0")}`.toLowerCase();
-    const exists = await Employee.exists({ $or: [{ employeeId }, { username }] });
-    if (!exists) return { employeeId, username };
+    const exists = await Employee.exists({ employeeId });
+    if (!exists) return { employeeId };
     sequence += 1;
   }
   throw new Error("Unable to generate employee identity.");
 };
 
 const generateTemporaryPassword = () => {
-  const random = crypto.randomBytes(8).toString("base64url").replace(/[^A-Za-z0-9]/g, "");
-  return `Tm${random.slice(0, 7)}9!`;
+  const randomStr = crypto.randomBytes(3).toString("hex");
+  return `Temp@${randomStr}`;
 };
 
 const validateCoreEmployee = (payload, existingEmployee = null) => {
@@ -186,7 +185,8 @@ exports.createEmployee = async (req, res) => {
       return res.status(400).json({ message: "Aadhaar number already exists." });
     }
 
-    const { employeeId, username } = await generateEmployeeIdentity();
+    const { employeeId } = await generateEmployeeIdentity();
+    const username = email;
     const temporaryPassword = generateTemporaryPassword();
     const hashedPassword = await bcrypt.hash(temporaryPassword, 10);
     const actorName = await getActorName(req);

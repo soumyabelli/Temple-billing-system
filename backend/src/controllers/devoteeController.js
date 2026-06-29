@@ -769,9 +769,26 @@ const createNotification = async (req, res) => {
 const getPrasadamOrders = async (req, res) => {
   try {
     const email = normalizeEmail(req.query.email);
-    const orders = email
-      ? await PrasadamOrder.find(buildEmailLookup("email", email)).sort({ createdAt: -1 })
-      : await PrasadamOrder.find().sort({ createdAt: -1 });
+    const normalizedChannel = String(req.query.channel || "")
+      .trim()
+      .toLowerCase();
+    const channel = normalizedChannel === "cashier" ? "cashier" : normalizedChannel === "devotee" ? "devotee" : "";
+
+    const conditions = [];
+
+    if (email) {
+      const user = await User.findOne(buildEmailLookup("email", email)).select("_id").lean();
+      const emailOr = [buildEmailLookup("email", email)];
+      if (user?._id) emailOr.push({ devoteeId: user._id });
+      conditions.push({ $or: emailOr });
+      conditions.push({ $or: [{ channel: "devotee" }, { channel: { $exists: false } }] });
+    } else if (channel) {
+      conditions.push({ channel });
+    }
+
+    const mongoQuery = conditions.length ? { $and: conditions } : {};
+
+    const orders = await PrasadamOrder.find(mongoQuery).sort({ createdAt: -1 });
     return res.status(200).json({ orders: orders.map((order) => normalizeOrderEmails(order.toObject ? order.toObject() : order)) });
   } catch (error) {
     return res.status(500).json({ error: "Failed to load prasadam orders." });
@@ -780,7 +797,7 @@ const getPrasadamOrders = async (req, res) => {
 
 const createPrasadamOrder = async (req, res) => {
   try {
-    const { devoteeName, email, phone, itemName, quantity, paymentMethod, devoteeId } = req.body;
+    const { devoteeName, email, phone, itemName, quantity, paymentMethod, devoteeId, channel } = req.body;
     const normalizedOrderEmail = normalizeEmail(email);
     if (!devoteeName || !itemName) {
       return res.status(400).json({ error: "devoteeName and itemName are required." });
@@ -804,8 +821,21 @@ const createPrasadamOrder = async (req, res) => {
     const unitPrice = prasadamItem.price;
     const totalAmount = unitPrice * normalizedQty;
 
+    const normalizedChannel = String(channel || "")
+      .trim()
+      .toLowerCase();
+    const resolvedChannel = normalizedChannel === "cashier" ? "cashier" : "devotee";
+    const orderStatus = resolvedChannel === "cashier" ? "Placed" : "Pending";
+
+    let resolvedDevoteeId = devoteeId || undefined;
+    if (!resolvedDevoteeId && normalizedOrderEmail) {
+      const user = await User.findOne(buildEmailLookup("email", normalizedOrderEmail)).select("_id").lean();
+      if (user?._id) resolvedDevoteeId = user._id;
+    }
+
     const order = await PrasadamOrder.create({
-      devoteeId: devoteeId || undefined,
+      channel: resolvedChannel,
+      devoteeId: resolvedDevoteeId,
       devoteeName,
       email: normalizedOrderEmail || undefined,
       phone: phone || undefined,
@@ -814,7 +844,7 @@ const createPrasadamOrder = async (req, res) => {
       unitPrice,
       amount: totalAmount,
       paymentMethod: paymentMethod || "UPI",
-      status: "Placed",
+      status: orderStatus,
     });
 
     await createLedgerBill({
@@ -850,7 +880,7 @@ const createPrasadamOrder = async (req, res) => {
         item: itemName,
         quantity: normalizedQty,
         amount: totalAmount,
-        status: "Placed",
+        status: orderStatus,
       });
     }
 

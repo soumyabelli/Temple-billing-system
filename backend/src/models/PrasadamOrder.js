@@ -2,6 +2,12 @@ const mongoose = require("mongoose");
 
 const prasadamOrderSchema = new mongoose.Schema(
   {
+    channel: {
+      type: String,
+      enum: ["devotee", "cashier"],
+      default: "devotee",
+      index: true,
+    },
     devoteeId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -19,7 +25,23 @@ const prasadamOrderSchema = new mongoose.Schema(
       enum: ["UPI", "Cash", "Card", "Bank Transfer", "Net Banking", "Debit Card", "Credit Card"],
       default: "UPI",
     },
-    status: { type: String, enum: ["Placed", "Preparing", "Ready", "Delivered", "Cancelled"], default: "Placed" },
+    status: {
+      type: String,
+      enum: [
+        "Pending",
+        "Approved",
+        "Rejected",
+        "Processing",
+        "Ready for Pickup",
+        "Completed",
+        "Cancelled",
+        "Placed",
+        "Preparing",
+        "Ready",
+        "Delivered",
+      ],
+      default: "Pending",
+    },
   },
   { timestamps: true }
 );

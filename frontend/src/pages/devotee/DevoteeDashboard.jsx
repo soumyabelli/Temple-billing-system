@@ -85,6 +85,38 @@ const countUnreadNotifications = (notifications = []) => {
   return notifications.filter((n) => !n.read).length;
 };
 
+const normalizePrasadamStatus = (status) => {
+  switch (status) {
+    case "Placed":
+      return "Pending";
+    case "Preparing":
+      return "Processing";
+    case "Ready":
+      return "Ready for Pickup";
+    case "Delivered":
+      return "Completed";
+    default:
+      return status || "Pending";
+  }
+};
+
+const getPrasadamStatusTone = (status) => {
+  const normalized = normalizePrasadamStatus(status);
+  if (normalized === "Cancelled") return "bg-[#fde8e8] text-[#a12525]";
+  if (normalized === "Rejected") return "bg-[#fde8e8] text-[#a12525]";
+  if (normalized === "Pending") return "bg-[#faefcf] text-[#ce7a0f]";
+  if (normalized === "Approved") return "bg-[#e6f0ff] text-[#3058d6]";
+  if (normalized === "Processing") return "bg-[#eef4ff] text-[#234ea5]";
+  if (normalized === "Ready for Pickup") return "bg-[#edf7ee] text-[#16853f]";
+  if (normalized === "Completed") return "bg-[#edf7ee] text-[#16853f]";
+  return "bg-[#edf7ee] text-[#16853f]";
+};
+
+const canCancelPrasadamOrder = (status) => {
+  const normalized = normalizePrasadamStatus(status);
+  return !["Cancelled", "Completed", "Rejected"].includes(normalized);
+};
+
 const glassCard =
   "rounded-[28px] border border-white/45 bg-white/60 p-5 shadow-[0_28px_80px_rgba(115,83,27,0.12)] backdrop-blur-xl";
 const glassSection =
@@ -1800,8 +1832,10 @@ const DevoteeDashboard = () => {
                     <p className="mt-1 text-sm text-[#5d5d5d]">Qty: {item.quantity} | Payment: {item.paymentMethod || "UPI"}</p>
                     <p className="mt-3 text-lg font-bold">{formatCurrency(item.amount)}</p>
                     <div className="mt-3 flex items-center gap-2">
-                      <span className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${item.status === "Cancelled" ? "bg-[#fde8e8] text-[#a12525]" : "bg-[#edf7ee] text-[#16853f]"}`}>{item.status}</span>
-                      {item.status !== "Cancelled" && (
+                      <span className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${getPrasadamStatusTone(item.status)}`}>
+                        {normalizePrasadamStatus(item.status)}
+                      </span>
+                      {canCancelPrasadamOrder(item.status) && (
                         <button type="button" onClick={() => handleCancelPrasadam(item._id)} className="rounded-lg bg-[#f26037] px-3 py-1 text-xs font-semibold text-white">Cancel</button>
                       )}
                     </div>
@@ -1872,7 +1906,7 @@ const DevoteeDashboard = () => {
       transaction: `${o.itemName}${o.quantity ? ` x${o.quantity}` : ""}`,
       date: o.createdAt ? new Date(o.createdAt).toLocaleDateString() : "",
       amount: o.amount,
-      status: o.status || "Placed",
+      status: normalizePrasadamStatus(o.status),
     }));
 
     return (
@@ -1894,9 +1928,11 @@ const DevoteeDashboard = () => {
                   <td className="px-5 py-3 font-semibold">{row.transaction}</td>
                   <td className="px-5 py-3 text-sm text-[#3f3f3f]">{row.date}</td>
                   <td className="px-5 py-3 font-semibold">{formatCurrency(row.amount)}</td>
-                  <td className="px-5 py-3 text-[#16853f]">{row.status}</td>
                   <td className="px-5 py-3">
-                    {row.status !== "Cancelled" ? (
+                    <span className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${getPrasadamStatusTone(row.status)}`}>{row.status}</span>
+                  </td>
+                  <td className="px-5 py-3">
+                    {canCancelPrasadamOrder(row.status) ? (
                       <button
                         type="button"
                         onClick={() => handleCancelPrasadam(row._id)}
@@ -1905,7 +1941,7 @@ const DevoteeDashboard = () => {
                         Cancel
                       </button>
                     ) : (
-                      <span className="text-xs font-semibold text-[#a12525]">Cancelled</span>
+                      <span className="text-xs font-semibold text-[#a12525]">{row.status}</span>
                     )}
                   </td>
                 </tr>

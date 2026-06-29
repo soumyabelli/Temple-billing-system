@@ -3,6 +3,7 @@ const {
   getAdminPrasadamOrders,
   getAdminPrasadamOrderById,
   updateAdminPrasadamOrderStatus,
+  deleteAdminPrasadamOrder,
 } = require("../controllers/prasadamAdminController");
 
 const router = express.Router();
@@ -16,5 +17,6 @@ router.get("/prasadam-orders/:id", getAdminPrasadamOrderById);
 // PUT /api/admin/prasadam-orders/:id/status
 router.put("/prasadam-orders/:id/status", updateAdminPrasadamOrderStatus);
 
-module.exports = router;
+router.delete("/prasadam-orders/:id", deleteAdminPrasadamOrder);
 
+module.exports = router;
