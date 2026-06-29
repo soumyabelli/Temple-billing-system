@@ -32,6 +32,12 @@ export const sidebarItems = [
     path: "/admin/donations",
   },
   { title: "Billing & Payments", icon: MdOutlinePayments, path: "/admin/billing" },
+  {
+    title: "Prasada",
+    icon: FaBoxes,
+    path: "/admin/prasada/booked",
+    subItems: [{ title: "Prasada Booked", path: "/admin/prasada/booked" }],
+  },
   { title: "Prasadam & Inventory", icon: FaBoxes, path: "/admin/inventory" },
   {
     title: "Employee Management",

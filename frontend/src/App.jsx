@@ -36,6 +36,7 @@ import SettingsManagement from "./pages/admin/SettingsManagement";
 import FestivalsEventsManagement from "./pages/admin/FestivalsEventsManagement";
 import BillingManagement from "./pages/admin/BillingManagement";
 import InventoryManagement from "./pages/admin/InventoryManagement";
+import PrasadaBooked from "./pages/admin/PrasadaBooked";
 import NotificationsCenter from "./pages/admin/NotificationsCenter";
 import AdminLayout from "./layouts/AdminLayout";
 
@@ -183,6 +184,16 @@ function App() {
           <ProtectedRoute allowedRoles={["admin"]}>
             <AdminLayout>
               <InventoryManagement />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/prasada/booked"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminLayout>
+              <PrasadaBooked />
             </AdminLayout>
           </ProtectedRoute>
         }
