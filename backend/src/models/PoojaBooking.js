@@ -53,25 +53,17 @@ const poojaBookingSchema = new mongoose.Schema(
 );
 
 // Pre-validate hook to generate bookingNumber
-poojaBookingSchema.pre("validate", async function (next) {
-  if (!this.bookingNumber) {
-    try {
-      const lastBooking = await this.constructor.findOne({}, {}, { sort: { createdAt: -1 } });
-      let nextNumber = 1001;
-      
-      if (lastBooking && lastBooking.bookingNumber) {
-        const lastNumberStr = lastBooking.bookingNumber.replace("PB", "");
-        const lastNumber = parseInt(lastNumberStr, 10);
-        if (!isNaN(lastNumber)) {
-          nextNumber = lastNumber + 1;
-        }
-      }
-      this.bookingNumber = `PB${nextNumber}`;
-    } catch (err) {
-      return next(err);
-    }
+poojaBookingSchema.pre("validate", async function () {
+  if (this.bookingNumber) return;
+
+  const lastBooking = await this.constructor.findOne({}, {}, { sort: { createdAt: -1 } });
+  let nextNumber = 1001;
+
+  if (lastBooking?.bookingNumber) {
+    const lastNumber = parseInt(lastBooking.bookingNumber.replace("PB", ""), 10);
+    if (!Number.isNaN(lastNumber)) nextNumber = lastNumber + 1;
   }
-  next();
+  this.bookingNumber = `PB${nextNumber}`;
 });
 
 module.exports = mongoose.model("PoojaBooking", poojaBookingSchema);

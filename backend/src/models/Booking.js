@@ -82,21 +82,16 @@ const bookingSchema = new mongoose.Schema(
 );
 
 // Auto-generate bookingNumber before save if not set
-bookingSchema.pre("save", async function (next) {
-  if (!this.bookingNumber) {
-    try {
-      const last = await this.constructor.findOne({}, { bookingNumber: 1 }, { sort: { createdAt: -1 } });
-      let nextNum = 1001;
-      if (last && last.bookingNumber) {
-        const parsed = parseInt(last.bookingNumber.replace(/^PB/i, ""), 10);
-        if (!isNaN(parsed)) nextNum = parsed + 1;
-      }
-      this.bookingNumber = `PB${nextNum}`;
-    } catch (err) {
-      return next(err);
-    }
+bookingSchema.pre("save", async function () {
+  if (this.bookingNumber) return;
+
+  const last = await this.constructor.findOne({}, { bookingNumber: 1 }, { sort: { createdAt: -1 } });
+  let nextNum = 1001;
+  if (last?.bookingNumber) {
+    const parsed = parseInt(last.bookingNumber.replace(/^PB/i, ""), 10);
+    if (!Number.isNaN(parsed)) nextNum = parsed + 1;
   }
-  next();
+  this.bookingNumber = `PB${nextNum}`;
 });
 
 module.exports = mongoose.model("Booking", bookingSchema);

@@ -610,3 +610,42 @@ Thank you!
 To: 9945650664
 Message: Prasadam order confirmed! Item: Laddu Prasadam. Qty: 1. Ready soon! -Temple
 
+[2026-06-29T04:06:02.416Z] EMAIL
+To: test@example.com
+Subject: Pooja Booking Confirmation
+Pooja Booking Confirmation
+Service: Ganesh Pooja
+Date & Time: 2026-07-01T10:00:00
+Amount: ₹500
+Thank you!
+
+[2026-06-29T04:06:02.459Z] SMS
+To: 9876543210
+Message: Pooja booking confirmed! Service: Ganesh Pooja on 2026-07-01T10:00:00. Amount: ₹500. -Temple
+
+[2026-06-29T04:06:56.306Z] EMAIL
+To: milt@gmail.com
+Subject: Pooja Booking Confirmation
+Pooja Booking Confirmation
+Service: Abhisheka
+Date & Time: 2026-06-30T09:33
+Amount: ₹801
+Thank you!
+
+[2026-06-29T04:06:56.313Z] SMS
+To: 9945650664
+Message: Pooja booking confirmed! Service: Abhisheka on 2026-06-30T09:33. Amount: ₹801. -Temple
+
+[2026-06-29T04:07:25.089Z] EMAIL
+To: milt@gmail.com
+Subject: Donation Receipt
+Donation Receipt
+Amount: ₹501
+Category: Annadanam
+Transaction ID: SIM_TXN_1782706044896
+Thank you for your donation!
+
+[2026-06-29T04:07:25.092Z] SMS
+To: 9945650664
+Message: Donation received! Amount: ₹501. Transaction ID: SIM_TXN_1782706044896. Thank you! -Temple
+
