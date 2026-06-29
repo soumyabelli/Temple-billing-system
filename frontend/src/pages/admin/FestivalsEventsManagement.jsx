@@ -84,6 +84,21 @@ const FestivalsEventsManagement = () => {
       return;
     }
 
+    const selectedDate = new Date(date);
+    if (Number.isNaN(selectedDate.getTime())) {
+      alert("Please enter a valid festival date.");
+      return;
+    }
+
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    selectedDate.setHours(0, 0, 0, 0);
+
+    if (selectedDate < todayStart) {
+      alert("Festival date must be today or a future date.");
+      return;
+    }
+
     setIsLoading(true);
     try {
       const payload = { title, date, location, description, imageUrl: imageUrl || undefined };
@@ -145,19 +160,32 @@ const FestivalsEventsManagement = () => {
     alert(`${action} - feature coming soon.`);
   };
 
-  // pick the next upcoming festival (date-only comparison so events scheduled today are included)
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
+  const upcomingCount = (festivalRows || []).filter((event) => {
+    if (!event?.date) return false;
+    const eventDate = new Date(event.date);
+    if (Number.isNaN(eventDate.getTime())) return false;
+    eventDate.setHours(0, 0, 0, 0);
+    return eventDate >= todayStart && !["Completed", "Cancelled"].includes(event.status);
+  }).length;
+
   const eventsWithDate = (festivalRows || [])
-    .filter((e) => e && e.date)
-    .map((e) => ({ ...e, date: new Date(e.date) }))
-    .sort((a, b) => a.date - b.date);
-  const upcomingFestival = eventsWithDate.find((e) => e.date >= todayStart) || eventsWithDate[0] || null;
+    .filter((event) => event?.date)
+    .map((event) => ({ ...event, date: new Date(event.date) }))
+    .filter((event) => !Number.isNaN(event.date.getTime()))
+    .sort((left, right) => left.date - right.date);
+  const upcomingFestival =
+    eventsWithDate.find(
+      (event) =>
+        event.date >= todayStart && !["Completed", "Cancelled"].includes(event.status)
+    ) || null;
+
   const stats = [
     {
       title: "Upcoming Festivals",
-      value: overview.currentMonthFestivals ?? overview.upcomingFestivals ?? 0,
-      note: `${overview.currentMonthFestivals ?? 0} this month`,
+      value: overview.upcomingFestivals ?? upcomingCount ?? 0,
+      note: `${overview.upcomingFestivals ?? upcomingCount ?? 0} scheduled ahead`,
       icon: MdOutlineEvent,
       iconTone: "bg-[#fff3e6] text-[#ff8b00]",
     },

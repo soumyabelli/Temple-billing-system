@@ -382,12 +382,31 @@ const getEvents = async (req, res) => {
   }
 };
 
+const validateFestivalDate = (dateValue) => {
+  const parsedDate = new Date(dateValue);
+  if (Number.isNaN(parsedDate.getTime())) {
+    return "Invalid festival date.";
+  }
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  parsedDate.setHours(0, 0, 0, 0);
+  if (parsedDate < todayStart) {
+    return "Festival date must be today or a future date.";
+  }
+  return null;
+};
+
 const createEvent = async (req, res) => {
   try {
     const { title, date, location, description, imageUrl, slots, registrations, collection, status } = req.body;
 
     if (!title || !date || !location) {
       return res.status(400).json({ error: "title, date and location are required." });
+    }
+
+    const dateError = validateFestivalDate(date);
+    if (dateError) {
+      return res.status(400).json({ error: dateError });
     }
 
     const eventData = {
@@ -437,7 +456,10 @@ const getFestivalOverview = async (req, res) => {
     todayStart.setHours(0, 0, 0, 0);
     const tomorrowStart = new Date(todayStart);
     tomorrowStart.setDate(tomorrowStart.getDate() + 1);
-    const upcomingFestivals = await Event.countDocuments({ date: { $gte: todayStart }, status: { $in: ["Upcoming", "Active"] } });
+    const upcomingFestivals = await Event.countDocuments({
+      date: { $gte: todayStart },
+      status: { $nin: ["Completed", "Cancelled"] },
+    });
     const todaysEvents = await Event.countDocuments({ date: { $gte: todayStart, $lt: tomorrowStart } });
 
     // Current month range
@@ -540,7 +562,13 @@ const updateEvent = async (req, res) => {
     if (!event) return res.status(404).json({ error: "Event not found." });
 
     if (title && String(title).trim()) event.title = String(title).trim();
-    if (date) event.date = new Date(date);
+    if (date) {
+      const dateError = validateFestivalDate(date);
+      if (dateError) {
+        return res.status(400).json({ error: dateError });
+      }
+      event.date = new Date(date);
+    }
     if (location && String(location).trim()) event.location = String(location).trim();
     if (description != null) event.description = String(description || "").trim();
     if (imageUrl != null) event.image = imageUrl || undefined;
