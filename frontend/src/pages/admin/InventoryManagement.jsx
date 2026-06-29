@@ -300,7 +300,7 @@ const RejectReasonModal = ({ request, onClose, onReject }) => {
 const InventoryManagement = () => {
   const { user } = useAuth();
 
-  // Tabs: "items" | "requests" | "logs"
+  // Tabs: "items" | "requests"
   const [activeTab, setActiveTab] = useState("items");
 
   // Inventory Items state
@@ -321,10 +321,6 @@ const InventoryManagement = () => {
   const [inventorySearch, setInventorySearch] = useState("");
   const [rejectingRequest, setRejectingRequest] = useState(null);
   const [restockingItem, setRestockingItem] = useState(null);
-
-  // Inventory Logs state
-  const [inventoryLogs, setInventoryLogs] = useState([]);
-  const [logsLoading, setLogsLoading] = useState(true);
 
   // ── Fetch inventory items ──
   const fetchInventoryItems = async () => {
@@ -354,23 +350,9 @@ const InventoryManagement = () => {
     }
   };
 
-  // ── Fetch inventory logs ──
-  const fetchInventoryLogs = async () => {
-    setLogsLoading(true);
-    try {
-      const response = await axios.get(`${API_BASE}/admin/inventory-logs`);
-      setInventoryLogs(Array.isArray(response.data?.logs) ? response.data.logs : []);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLogsLoading(false);
-    }
-  };
-
   useEffect(() => {
     fetchInventoryItems();
     fetchInventoryRequests();
-    fetchInventoryLogs();
   }, []);
 
   // ── Computed summaries ──
@@ -447,7 +429,6 @@ const InventoryManagement = () => {
       await axios.post(`${API_BASE}/admin/inventory-items`, formData);
     }
     await fetchInventoryItems();
-    fetchInventoryLogs();
     setEditingItem(null);
   };
 
@@ -456,7 +437,6 @@ const InventoryManagement = () => {
     try {
       await axios.post(`${API_BASE}/admin/inventory/restock/${itemId}`, { quantityAdded });
       await fetchInventoryItems();
-      fetchInventoryLogs();
     } catch (err) {
       setItemsError(err.response?.data?.message || "Failed to restock item.");
     }
@@ -473,7 +453,7 @@ const InventoryManagement = () => {
         adminReason,
         reviewedBy: user?.name || "Admin",
       });
-      await Promise.all([fetchInventoryRequests(), fetchInventoryItems(), fetchInventoryLogs()]);
+      await Promise.all([fetchInventoryRequests(), fetchInventoryItems()]);
     } catch (error) {
       setRequestError(error.response?.data?.message || "Failed to update inventory request status.");
     } finally {
@@ -627,22 +607,6 @@ const InventoryManagement = () => {
                 {requestSummary.pending}
               </span>
             )}
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("logs")}
-            style={{
-              padding: "14px 24px",
-              fontWeight: 700,
-              fontSize: "14px",
-              border: "none",
-              background: "transparent",
-              cursor: "pointer",
-              borderBottom: activeTab === "logs" ? "3px solid #2563eb" : "3px solid transparent",
-              color: activeTab === "logs" ? "#2563eb" : "#64748b",
-            }}
-          >
-            📄 Inventory Logs
           </button>
         </div>
 
@@ -903,73 +867,6 @@ const InventoryManagement = () => {
                             ) : (
                               <span className="text-sm text-[#475569]">—</span>
                             )}
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* ─────── LOGS TAB ─────── */}
-        {activeTab === "logs" && (
-          <div className="p-6">
-            <h2 className="text-2xl font-bold text-[#111827]">Inventory Logs</h2>
-            <p className="mt-1 text-sm text-[#64748b]">Track additions, updates, consumptions, and restocks.</p>
-
-            <div className="mt-6 overflow-x-auto">
-              <table className="min-w-full text-left text-sm text-[#334155]">
-                <thead className="border-b border-[#e2e8f0] text-[#475569]">
-                  <tr>
-                    <th className="px-4 py-3">Date</th>
-                    <th className="px-4 py-3">Item</th>
-                    <th className="px-4 py-3">Action</th>
-                    <th className="px-4 py-3">Quantity</th>
-                    <th className="px-4 py-3">Old Stock</th>
-                    <th className="px-4 py-3">New Stock</th>
-                    <th className="px-4 py-3">User</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {logsLoading ? (
-                    <tr><td colSpan="7" className="px-4 py-6 text-center text-sm text-[#64748b]">Loading logs…</td></tr>
-                  ) : inventoryLogs.length === 0 ? (
-                    <tr><td colSpan="7" className="px-4 py-6 text-center text-sm text-[#64748b]">No logs found.</td></tr>
-                  ) : (
-                    inventoryLogs.map((log, index) => {
-                      const logId = log?._id || log?.id;
-                      return (
-                        <tr key={logId || index} className="border-b border-[#f1f5f9] hover:bg-[#f8fafc]">
-                          <td className="px-4 py-4 text-[#64748b]">
-                            {new Date(log?.date).toLocaleString("en-IN", {
-                              day: "2-digit",
-                              month: "short",
-                              year: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </td>
-                          <td className="px-4 py-4 font-semibold text-[#0f172a]">{log?.item?.name || "Unknown"}</td>
-                          <td className="px-4 py-4">
-                            <span className={`rounded-full px-3 py-1 text-xs font-semibold ${log?.action === "Added" ? "bg-[#d1fae5] text-[#166534]" :
-                              log?.action === "Updated" ? "bg-[#e0e7ff] text-[#3730a3]" :
-                                log?.action === "Consumed" ? "bg-[#fee2e2] text-[#b91c1c]" :
-                                  "bg-[#fef3c7] text-[#92400e]"
-                              }`}>
-                              {log?.action}
-                            </span>
-                          </td>
-                          <td className="px-4 py-4 font-bold">{log?.quantity}</td>
-                          <td className="px-4 py-4 text-[#64748b]">{log?.oldStock} → <span className="font-bold text-[#0f172a]">{log?.newStock}</span></td>
-                          <td className="px-4 py-4 text-[#64748b]">
-                            <div>
-                              <span className="font-semibold">{log?.user?.name || "System"}</span>
-                              <br />
-                              <span className="text-xs text-slate-500">{log?.user?.role || "Admin"}</span>
-                            </div>
                           </td>
                         </tr>
                       );
