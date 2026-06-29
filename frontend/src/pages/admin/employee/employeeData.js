@@ -200,7 +200,13 @@ export const employeeRoles = [
   { value: "staff", label: "Staff" },
   { value: "admin", label: "Admin" },
 ];
-export const shiftOptions = ["Early Morning", "Morning", "Day", "Evening", "Night"];
+export const shiftOptions = [
+  "Early Morning (04:00 AM - 10:00 AM)",
+  "Morning (06:00 AM - 02:00 PM)",
+  "Day (09:00 AM - 05:00 PM)",
+  "Evening (02:00 PM - 10:00 PM)",
+  "Night (10:00 PM - 06:00 AM)"
+];
 export const empTypes = ["Full-time", "Part-time", "Contract", "Temporary"];
 
 export const leaveRequests = [
