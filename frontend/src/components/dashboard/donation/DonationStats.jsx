@@ -1,4 +1,4 @@
-import { FaDonate, FaRupeeSign, FaUsers, FaHandHoldingHeart } from "react-icons/fa";
+import { FaDonate, FaUsers, FaHandHoldingHeart } from "react-icons/fa";
 
 const DonationStats = ({ stats = {} }) => {
   const displayStats = [
@@ -20,16 +20,10 @@ const DonationStats = ({ stats = {} }) => {
       icon: <FaHandHoldingHeart />,
       accent: "from-emerald-500 to-teal-400",
     },
-    {
-      title: "Pending Donations",
-      value: stats.pending ?? 0,
-      icon: <FaRupeeSign />,
-      accent: "from-amber-500 to-orange-400",
-    },
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {displayStats.map((item, index) => (
         <div
           key={index}
