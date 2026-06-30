@@ -307,7 +307,7 @@ const DevoteeDashboard = () => {
     []
   );
 
-  const paymentMethods = ["UPI", "Cash", "Card", "Bank Transfer", "Net Banking"];
+  const paymentMethods = ["UPI", "Card", "Bank Transfer", "Net Banking"];
 
   const minBookingDatetime = useMemo(() => {
     const d = new Date(currentDateTime || new Date());
@@ -376,6 +376,27 @@ const DevoteeDashboard = () => {
     ],
     [upcomingBookings.length, bookingsData.length, totalDonations, prasadamOrdersCount]
   );
+
+  const displayCategories = useMemo(() => {
+    if (selectedEventId) {
+      const selectedEvent = eventsData.find((e) => e._id === selectedEventId);
+      if (selectedEvent && selectedEvent.title) {
+        return [selectedEvent.title];
+      }
+    }
+    return donationCategories;
+  }, [selectedEventId, eventsData, donationCategories]);
+
+  useEffect(() => {
+    if (selectedEventId) {
+      const selectedEvent = eventsData.find((e) => e._id === selectedEventId);
+      if (selectedEvent && selectedEvent.title) {
+        setDonationCategory(selectedEvent.title);
+      }
+    } else {
+      setDonationCategory(donationCategories[0] || "General");
+    }
+  }, [selectedEventId, eventsData, donationCategories]);
 
   useEffect(() => {
     const loadDevoteeData = async () => {
@@ -1699,7 +1720,7 @@ const DevoteeDashboard = () => {
                   onChange={(e) => setDonationCategory(e.target.value)}
                   className={glassInput}
                 >
-                  {donationCategories.map((category) => (
+                  {displayCategories.map((category) => (
                     <option key={category} value={category}>
                       {category}
                     </option>
@@ -1821,7 +1842,6 @@ const DevoteeDashboard = () => {
                 <input type="number" min="1" className={glassInput} value={prasadamForm.quantity} onChange={(e) => setPrasadamForm((prev) => ({ ...prev, quantity: Number(e.target.value) }))} placeholder="Quantity" />
                 <select className={glassInput} value={prasadamForm.paymentMethod} onChange={(e) => setPrasadamForm((prev) => ({ ...prev, paymentMethod: e.target.value }))}>
                   <option value="UPI">UPI</option>
-                  <option value="Cash">Cash</option>
                   <option value="Card">Card</option>
                   <option value="Net Banking">Net Banking</option>
                 </select>

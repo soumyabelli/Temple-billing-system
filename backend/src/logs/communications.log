@@ -795,3 +795,8 @@ To: soumya2880@gmail.com
 Subject: Reset Your Temple Account Password
 Please click the following link to reset your account password: http://localhost:5173/forgot-password?token=d16aa6f12bfab36575ca3573a4e776cab3c39883d2621f7e&email=soumya2880@gmail.com
 
+[2026-06-30T08:11:58.536Z] EMAIL
+To: bellisoumya@gmail.com
+Subject: Verify Your Temple Devotee Registration
+Please click the following link to verify your email and complete devotee registration: http://localhost:5000/api/auth/verify-registration?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiU291bSIsImVtYWlsIjoiYmVsbGlzb3VteWFAZ21haWwuY29tIiwicGhvbmUiOiI3Njc2Nzk4OTE0IiwiYWRkcmVzcyI6IlVkdXBpIiwicGxhY2UiOiJVZHVwaSIsInBhc3N3b3JkIjoiJDJiJDEwJEt2NEdYNncyUHVMVnczQ2ZuM2g1TU9vUE0xOHNNUHAuQmtlb0xvMHlGc2x4WndqTjlxMkhlIiwicm9sZSI6ImRldm90ZWUiLCJpYXQiOjE3ODI4MDcxMTQsImV4cCI6MTc4MjgwODAxNH0.wKQmInHJmHH7iGBGJcEHxOUKi1YiSl2qqHjXjQDGXdo
+
