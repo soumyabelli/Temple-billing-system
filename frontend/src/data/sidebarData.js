@@ -53,7 +53,7 @@ export const sidebarItems = [
       { title: "Duty & Shift Management", path: "/admin/employees/shifts" },
     ],
   },
-  { title: "Festivals & Events", icon: FaCalendarAlt, path: "/admin/events" },
+  { title: "Events", icon: FaCalendarAlt, path: "/admin/events" },
   { title: "Feedback & Complaints", icon: MdFeedback, path: "/admin/feedback" },
   { title: "Notifications", icon: MdNotifications, path: "/admin/notifications" },
   { title: "Reports & Analytics", icon: HiDocumentReport, path: "/admin/reports" },

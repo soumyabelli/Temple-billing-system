@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import axios from "axios";
 import {
   MdCalendarMonth,
   MdOutlineCalendarToday,
@@ -56,6 +57,22 @@ const PoojaManagement = () => {
       setTypeMessage("Please enter a valid name and price.");
       return;
     }
+
+    const existingPooja = getPoojaTypes().find((t) => t.name === (editingType || name));
+    const isPriceChanged = existingPooja ? existingPooja.price !== price : true;
+
+    if (isPriceChanged) {
+      axios.post("http://localhost:5000/api/devotee/notifications", {
+        title: existingPooja ? `Pooja Price Updated: ${name}` : `New Pooja Service: ${name}`,
+        message: existingPooja
+          ? `The price of ${name} Pooja has been updated to Rs ${price.toLocaleString()}.`
+          : `A new Pooja service "${name}" is now available for Rs ${price.toLocaleString()}.`,
+        category: "pooja",
+        audienceRole: "devotee",
+        broadcast: true,
+      }).catch((err) => console.error("Failed to broadcast pooja price change notification:", err));
+    }
+
     const updated = savePoojaTypes([
       ...getPoojaTypes().filter((type) => type.name !== (editingType || name)),
       { name, price },

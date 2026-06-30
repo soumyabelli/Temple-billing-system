@@ -18,4 +18,4 @@ const startServer = async () => {
 
 startServer();
 
-// Touch to force nodemon restart after changing default devotee prasadam status to Placed
+// Touch to force nodemon restart after adding devotee event/price change notification hooks

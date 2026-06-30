@@ -27,7 +27,7 @@ import { FaRegCalendarAlt } from "react-icons/fa";
 // recent registrations and monthly revenue charts removed per request
 
 const quickActions = [
-  { title: "Add Festival", icon: MdCalendarMonth, tone: "bg-[#fff7ea] text-[#e58a0a]" },
+  { title: "Add Event", icon: MdCalendarMonth, tone: "bg-[#fff7ea] text-[#e58a0a]" },
   { title: "Send Notification", icon: MdCampaign, tone: "bg-[#f2f0ff] text-[#6f61d3]" },
 ];
 
@@ -86,7 +86,7 @@ const FestivalsEventsManagement = () => {
 
     const selectedDate = new Date(date);
     if (Number.isNaN(selectedDate.getTime())) {
-      alert("Please enter a valid festival date.");
+      alert("Please enter a valid event date.");
       return;
     }
 
@@ -95,7 +95,7 @@ const FestivalsEventsManagement = () => {
     selectedDate.setHours(0, 0, 0, 0);
 
     if (selectedDate < todayStart) {
-      alert("Festival date must be today or a future date.");
+      alert("Event date must be today or a future date.");
       return;
     }
 
@@ -104,10 +104,10 @@ const FestivalsEventsManagement = () => {
       const payload = { title, date, location, description, imageUrl: imageUrl || undefined };
       if (isEditing && editingId) {
         await axios.patch(`http://localhost:5000/api/devotee/events/${editingId}`, payload);
-        alert("Festival updated successfully.");
+        alert("Event updated successfully.");
       } else {
         await axios.post("http://localhost:5000/api/devotee/events", payload);
-        alert("Festival Added Successfully!");
+        alert("Event Added Successfully!");
       }
 
       await fetchEvents();
@@ -124,7 +124,7 @@ const FestivalsEventsManagement = () => {
       setEditingId(null);
     } catch (error) {
       console.log(error);
-      alert("Error adding festival: " + (error.response?.data?.error || error.message));
+      alert("Error saving event: " + (error.response?.data?.error || error.message));
     } finally {
       setIsLoading(false);
     }
@@ -142,7 +142,7 @@ const FestivalsEventsManagement = () => {
   };
 
   const handleQuickAction = async (action) => {
-    if (action === "Add Festival") return setShowModal(true);
+    if (action === "Add Event") return setShowModal(true);
 
     if (action === "Send Notification") {
       const message = window.prompt("Enter notification message:");
@@ -158,6 +158,38 @@ const FestivalsEventsManagement = () => {
     }
 
     alert(`${action} - feature coming soon.`);
+  };
+
+  const handlePostponeEvent = async (id, newDate) => {
+    try {
+      setIsLoading(true);
+      const eventToPostpone = festivalRows.find(r => r._id === id);
+      const title = eventToPostpone ? eventToPostpone.title : "Event";
+      
+      // Update event date on backend
+      await axios.patch(`http://localhost:5000/api/devotee/events/${id}`, {
+        date: newDate,
+        status: "Upcoming"
+      });
+
+      // Send broadcast notification to devotees
+      await axios.post("http://localhost:5000/api/devotee/notifications", {
+        title: `Event Postponed: ${title}`,
+        message: `The event "${title}" has been postponed to ${new Date(newDate).toLocaleDateString()}.`,
+        category: "event",
+        audienceRole: "devotee",
+        broadcast: true
+      });
+
+      alert("Event postponed successfully & devotees notified!");
+      await fetchEvents();
+      await fetchOverview();
+    } catch (error) {
+      console.error(error);
+      alert("Error postponing event: " + (error.response?.data?.error || error.message));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const todayStart = new Date();
@@ -209,8 +241,8 @@ const FestivalsEventsManagement = () => {
     <div className="mt-5 space-y-4 pb-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-[46px] leading-tight font-bold text-[#17151f]">Festivals & Events</h1>
-          <p className="mt-1 text-[20px] text-[#5c6675]">Manage temple festivals, event schedules, cultural programs, and celebrations.</p>
+          <h1 className="text-[46px] leading-tight font-bold text-[#17151f]">Temple Events</h1>
+          <p className="mt-1 text-[20px] text-[#5c6675]">Manage temple events, schedules, cultural programs, and celebrations.</p>
         </div>
         <div className="inline-flex h-11 items-center gap-2 rounded-xl border border-[#ece8e1] bg-white px-4 text-[20px] text-[#7b4a1f]">
           <MdCalendarMonth size={21} />
@@ -228,7 +260,7 @@ const FestivalsEventsManagement = () => {
                   <Icon size={36} />
                 </div>
                 <div>
-                  <p className="text-[29px] font-semibold text-[#1f2530]">{card.title}</p>
+                  <p className="text-[29px] font-semibold text-[#1f2530]">{card.title.replace("Festivals", "Events")}</p>
                   <p className="text-[54px] leading-none font-bold text-[#1c2230]">{card.value}</p>
                   <p className="mt-1 text-[25px] text-[#2f9f2f]">Up {card.note}</p>
                 </div>
@@ -241,25 +273,25 @@ const FestivalsEventsManagement = () => {
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[2.25fr_1.1fr]">
         <div className="rounded-2xl border border-[#ece8e1] bg-white p-4">
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <h2 className="text-[40px] font-bold text-[#17151f]">Festival Schedule</h2>
+            <h2 className="text-[40px] font-bold text-[#17151f]">Event Schedule</h2>
             <div className="flex items-center gap-2">
               <button className="inline-flex h-11 items-center gap-2 rounded-xl border border-[#ece8e1] px-4 text-[18px] text-[#4f5866]">
                 <MdOutlineFilterAlt size={18} /> Filter
               </button>
-              <button onClick={() => setShowModal(true)} className="inline-flex h-11 items-center gap-2 rounded-xl bg-[#ff8b00] px-4 text-[18px] font-semibold text-white hover:bg-[#ec7f00]" > + Add Festival </button>
+              <button onClick={() => setShowModal(true)} className="inline-flex h-11 items-center gap-2 rounded-xl bg-[#ff8b00] px-4 text-[18px] font-semibold text-white hover:bg-[#ec7f00]" > + Add Event </button>
             </div>
           </div>
 
           <div className="mb-4 flex h-11 items-center gap-2 rounded-xl border border-[#ece8e1] bg-[#faf9f7] px-3 text-[#8b93a0]">
             <MdOutlineSearch size={20} />
-            <input className="w-full bg-transparent text-[17px] text-[#202632] outline-none" placeholder="Search festival or event..." />
+            <input className="w-full bg-transparent text-[17px] text-[#202632] outline-none" placeholder="Search event..." />
           </div>
 
           <div className="overflow-auto rounded-xl border border-[#f1ede6]">
             <table className="w-full min-w-[980px] text-[17px]">
               <thead className="bg-[#f8f6f2] text-[#2a3140]">
                 <tr>
-                  <th className="px-3 py-3 text-left font-semibold">Festival</th>
+                  <th className="px-3 py-3 text-left font-semibold">Event</th>
                   <th className="px-3 py-3 text-left font-semibold">Date</th>
                   <th className="px-3 py-3 text-left font-semibold">Venue</th>
                   {/* Slots and Registrations columns removed per request */}
@@ -291,7 +323,7 @@ const FestivalsEventsManagement = () => {
 
               <td className="px-3 py-3">
                 <div className="flex items-center gap-2">
-                  <button onClick={() => setViewEvent(row)} className="inline-flex h-8 w-10 items-center justify-center rounded-lg border border-[#ece8e1] bg-[#faf7f2] text-[#7b5324]">
+                  <button onClick={() => setViewEvent(row)} className="inline-flex h-8 w-10 items-center justify-center rounded-lg border border-[#ece8e1] bg-[#faf7f2] text-[#7b5324]" title="View Details">
                     <MdOutlineRemoveRedEye />
                   </button>
 
@@ -305,8 +337,21 @@ const FestivalsEventsManagement = () => {
                     setImagePreview(row.image || null);
                     setImageUrl(row.image || "");
                     setShowModal(true);
-                  }} className="inline-flex h-8 w-10 items-center justify-center rounded-lg border border-[#ece8e1] bg-[#faf7f2] text-[#7b5324]">
+                  }} className="inline-flex h-8 w-10 items-center justify-center rounded-lg border border-[#ece8e1] bg-[#faf7f2] text-[#7b5324]" title="Edit Event">
                     <MdOutlineEdit />
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      const newDateStr = window.prompt("Enter new Date to postpone the event (YYYY-MM-DD):", row.date ? new Date(row.date).toISOString().slice(0, 10) : "");
+                      if (newDateStr) {
+                        handlePostponeEvent(row._id, newDateStr);
+                      }
+                    }}
+                    title="Postpone Event"
+                    className="inline-flex h-8 px-2 items-center justify-center rounded-lg border border-[#ece8e1] bg-[#faf7f2] text-[#d97706] text-xs font-semibold hover:bg-orange-50"
+                  >
+                    Postpone
                   </button>
                 </div>
               </td>
@@ -319,7 +364,7 @@ const FestivalsEventsManagement = () => {
 
         <div className="space-y-4">
           <div className="rounded-2xl border border-[#ece8e1] bg-white p-4">
-            <h3 className="text-[40px] font-bold text-[#17151f]">Upcoming Festival</h3>
+            <h3 className="text-[40px] font-bold text-[#17151f]">Upcoming Event</h3>
             {upcomingFestival ? (
               <>
                 <img src={upcomingFestival.image || "https://images.unsplash.com/photo-1532664189809-02133fee698d?auto=format&fit=crop&w=1300&q=80"} alt={upcomingFestival.title} className="mt-3 h-[168px] w-full rounded-xl object-cover" />
@@ -336,7 +381,7 @@ const FestivalsEventsManagement = () => {
                 </div>
               </>
             ) : (
-              <div className="mt-3 text-[18px] text-[#5c6675]">No upcoming festival scheduled.</div>
+              <div className="mt-3 text-[18px] text-[#5c6675]">No upcoming event scheduled.</div>
             )}
           </div>
 
@@ -366,12 +411,12 @@ const FestivalsEventsManagement = () => {
         <span className="font-medium text-[#8b5b2d]">Sacred Event Management Portal</span>
       </div>
 
-      {/* Add Festival Modal */}
+      {/* Add Event Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="w-full max-w-md rounded-2xl border border-[#ece8e1] bg-white p-6 shadow-2xl">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-[28px] font-bold text-[#17151f]">Add New Festival</h2>
+              <h2 className="text-[28px] font-bold text-[#17151f]">{isEditing ? "Edit Event" : "Add New Event"}</h2>
               <button
                 onClick={() => setShowModal(false)}
                 className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[#ece8e1] bg-[#faf7f2] text-[#7b5324] hover:bg-[#f0ebe3]"
@@ -382,7 +427,7 @@ const FestivalsEventsManagement = () => {
 
             <div className="space-y-4">
               <div>
-                <label className="block text-[16px] font-semibold text-[#17151f] mb-2">Festival Name *</label>
+                <label className="block text-[16px] font-semibold text-[#17151f] mb-2">Event Name *</label>
                 <input
                   type="text"
                   value={title}
@@ -444,7 +489,7 @@ const FestivalsEventsManagement = () => {
                   disabled={isLoading}
                   className="flex-1 rounded-xl bg-[#ff8b00] px-4 py-2.5 text-[16px] font-semibold text-white hover:bg-[#ec7f00] disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  {isLoading ? "Adding..." : "Add Festival"}
+                  {isLoading ? "Saving..." : (isEditing ? "Save Changes" : "Add Event")}
                 </button>
               </div>
             </div>

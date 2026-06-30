@@ -308,12 +308,18 @@ const getNotifications = async (req, res) => {
       const userId = user?._id?.toString?.() || user?.id;
       if (userId) filters.push({ audienceId: userId });
 
-      const notifications = await Notification.find({ $or: filters }).sort({ createdAt: -1 });
+      const notifications = await Notification.find({
+        $or: filters,
+        category: { $in: ["festival", "event", "pooja", "prasada"] }
+      }).sort({ createdAt: -1 });
       return res.status(200).json({ notifications });
     }
 
     // No email: return only public devotee broadcasts, not staff/admin/internal notifications.
-    const notifications = await Notification.find({ audienceRole: "devotee" }).sort({ createdAt: -1 });
+    const notifications = await Notification.find({
+      audienceRole: "devotee",
+      category: { $in: ["festival", "event", "pooja", "prasada"] }
+    }).sort({ createdAt: -1 });
     return res.status(200).json({ notifications });
   } catch (error) {
     return res.status(500).json({ error: "Failed to load notifications." });
@@ -428,6 +434,13 @@ const createEvent = async (req, res) => {
       title: "Festival Announcement",
       message: `${title} has been scheduled at ${location}.`,
       category: "festival",
+    });
+
+    await createBroadcastNotifications({
+      title: `New Event: ${title}`,
+      message: `A new temple event "${title}" has been scheduled on ${new Date(date).toLocaleDateString()} at ${location}.`,
+      category: "festival",
+      role: "devotee",
     });
 
     return res.status(201).json({ event });

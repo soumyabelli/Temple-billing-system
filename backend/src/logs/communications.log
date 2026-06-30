@@ -870,3 +870,42 @@ Thank you!
 To: 7676798914
 Message: Prasadam order confirmed! Item: Laddu Prasadam. Qty: 5. Ready soon! -Temple
 
+[2026-06-30T09:18:55.228Z] EMAIL
+To: bellisoumya@gmail.com
+Subject: Pooja Booking Confirmation
+Pooja Booking Confirmation
+Service: Abhisheka
+Date & Time: 2026-07-02T02:46
+Amount: ₹801
+Thank you!
+
+[2026-06-30T09:18:55.234Z] SMS
+To: 7676798914
+Message: Pooja booking confirmed! Service: Abhisheka on 2026-07-02T02:46. Amount: ₹801. -Temple
+
+[2026-06-30T09:19:54.075Z] EMAIL
+To: bellisoumya@gmail.com
+Subject: Donation Receipt
+Donation Receipt
+Amount: ₹50908
+Category: Sponsorship
+Transaction ID: SIM_TXN_1782811190704
+Thank you for your donation!
+
+[2026-06-30T09:19:54.106Z] SMS
+To: 7676798914
+Message: Donation received! Amount: ₹50908. Transaction ID: SIM_TXN_1782811190704. Thank you! -Temple
+
+[2026-06-30T09:20:22.641Z] EMAIL
+To: bellisoumya@gmail.com
+Subject: Donation Receipt
+Donation Receipt
+Amount: ₹501
+Category: Maha shivaraatri
+Transaction ID: SIM_TXN_1782811219353
+Thank you for your donation!
+
+[2026-06-30T09:20:22.662Z] SMS
+To: 7676798914
+Message: Donation received! Amount: ₹501. Transaction ID: SIM_TXN_1782811219353. Thank you! -Temple
+

@@ -30,6 +30,18 @@ const createPrasadam = async (req, res) => {
       minimumStock: Number(minimumStock) || 0,
     });
 
+    try {
+      const { createBroadcastNotifications } = require("../utils/notificationService");
+      await createBroadcastNotifications({
+        title: `New Prasadam Available: ${newPrasadam.name}`,
+        message: `Prasadam "${newPrasadam.name}" is now available for purchase for Rs ${newPrasadam.price.toLocaleString("en-IN")}.`,
+        category: "prasada",
+        role: "devotee",
+      });
+    } catch (err) {
+      console.warn("Failed to create devotee notification for new prasadam", err);
+    }
+
     return res.status(201).json({ success: true, item: newPrasadam });
   } catch (error) {
     if (error.code === 11000) {
@@ -51,9 +63,27 @@ const updatePrasadam = async (req, res) => {
     if (availableQuantity !== undefined) updatePayload.availableQuantity = Number(availableQuantity);
     if (minimumStock !== undefined) updatePayload.minimumStock = Number(minimumStock);
 
-    const item = await Prasadam.findByIdAndUpdate(id, updatePayload, { new: true });
-    if (!item) {
+    const oldItem = await Prasadam.findById(id);
+    if (!oldItem) {
       return res.status(404).json({ success: false, message: "Prasadam not found." });
+    }
+
+    const priceChanged = price !== undefined && Number(price) !== oldItem.price;
+
+    const item = await Prasadam.findByIdAndUpdate(id, updatePayload, { new: true });
+
+    if (priceChanged) {
+      try {
+        const { createBroadcastNotifications } = require("../utils/notificationService");
+        await createBroadcastNotifications({
+          title: `Prasadam Price Updated: ${item.name}`,
+          message: `The price of ${item.name} has been updated to Rs ${item.price.toLocaleString("en-IN")}.`,
+          category: "prasada",
+          role: "devotee",
+        });
+      } catch (err) {
+        console.warn("Failed to create devotee notification for prasadam price change", err);
+      }
     }
 
     if (item.availableQuantity <= item.minimumStock) {
