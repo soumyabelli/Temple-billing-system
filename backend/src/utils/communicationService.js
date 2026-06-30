@@ -7,16 +7,47 @@
 // Mock implementations for demonstration
 // In production, replace with actual provider integrations
 
+let transporter = null;
+const initTransporter = () => {
+  if (transporter) return transporter;
+  try {
+    const nodemailer = require("nodemailer");
+    if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+      transporter = nodemailer.createTransport({
+        service: process.env.EMAIL_SERVICE || "gmail",
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+        },
+        tls: {
+          rejectUnauthorized: false,
+        },
+      });
+      console.log("Real NodeMailer SMTP transporter initialized successfully.");
+    }
+  } catch (error) {
+    console.error("Failed to initialize real email transporter:", error.message);
+  }
+  return transporter;
+};
+
 const sendEmail = async ({ to, subject, html, text }) => {
   try {
-    // TODO: Integrate with actual email service (SendGrid, Nodemailer, etc.)
-    // Example with nodemailer:
-    // const transporter = nodemailer.createTransport({...});
-    // await transporter.sendMail({ to, subject, html, text });
-
-    console.log(`📧 Email sent to ${to}`);
-    console.log(`Subject: ${subject}`);
-    console.log(`Message: ${text || html}`);
+    const mailTransporter = initTransporter();
+    if (mailTransporter) {
+      await mailTransporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to,
+        subject,
+        html,
+        text,
+      });
+      console.log(`📧 Real Email sent to ${to}`);
+    } else {
+      console.log(`📧 (Mock) Email sent to ${to}`);
+      console.log(`Subject: ${subject}`);
+      console.log(`Message: ${text || html}`);
+    }
 
     // Log to file for testing
     const fs = require("fs");

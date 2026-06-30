@@ -626,6 +626,30 @@ const updateProfile = async (req, res) => {
     const normalizedCurrentEmail = normalizeEmail(currentEmail);
     const normalizedUpdatedEmail = normalizeEmail(email);
 
+    // Validate email format
+    if (email) {
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      if (!emailRegex.test(normalizedUpdatedEmail)) {
+        return res.status(400).json({ error: "Please provide a valid email address." });
+      }
+    }
+
+    // Validate phone number: strictly 10 digits
+    if (phone) {
+      const cleanedPhone = String(phone).trim();
+      if (!/^[0-9]{10}$/.test(cleanedPhone)) {
+        return res.status(400).json({ error: "Phone number must be strictly 10 digits (numbers only)." });
+      }
+    }
+
+    // Validate place: characters and spaces only
+    if (place) {
+      const cleanedPlace = String(place).trim();
+      if (!/^[a-zA-Z\s]+$/.test(cleanedPlace)) {
+        return res.status(400).json({ error: "Place/City must contain characters only." });
+      }
+    }
+
     let user;
     const getYear = (dateVal) => {
       if (!dateVal) return "2025";

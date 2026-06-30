@@ -164,7 +164,10 @@ export const markNotificationRead = async (notificationId) => {
 };
 
 export const registerDevotee = async (payload) => {
-  const response = await axios.post(`${API_BASE}/auth/register`, payload);
+  const token = localStorage.getItem("token");
+  const response = await axios.post(`${API_BASE}/auth/register`, payload, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
   return response.data || null;
 };
 

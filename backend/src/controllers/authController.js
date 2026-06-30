@@ -50,6 +50,18 @@ const findUserByEmail = async (email) => {
   return findFileUserByEmail(normalizedEmail);
 };
 
+const findUserByPhone = async (phone) => {
+  const trimmedPhone = String(phone || "").trim();
+  if (!trimmedPhone) return null;
+
+  if (isDbConnected()) {
+    return User.findOne({ phone: trimmedPhone });
+  }
+
+  const users = await getAllFileUsers();
+  return users.find((user) => String(user.phone || "").trim() === trimmedPhone) || null;
+};
+
 
 
 
@@ -75,15 +87,104 @@ const findUserById = async (id) => {
   return findFileUserById(id);
 };
 
-const registerUser = async (req, res) => {
+const htmlTemplate = (title, message, isSuccess) => `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>${title}</title>
+  <style>
+    body {
+      background: linear-gradient(135deg, #fef3c7, #ffedd5, #fef08a);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+    .card {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      border-radius: 24px;
+      padding: 40px;
+      max-width: 480px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(120, 50, 0, 0.12);
+    }
+    .icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+    }
+    h1 {
+      color: #7c2d12;
+      font-size: 28px;
+      margin: 0 0 10px 0;
+    }
+    p {
+      color: #451a03;
+      font-size: 16px;
+      line-height: 1.6;
+      margin: 0 0 30px 0;
+    }
+    .btn {
+      display: inline-block;
+      background: linear-gradient(to right, #ea580c, #d97706);
+      color: #fff;
+      text-decoration: none;
+      font-weight: bold;
+      padding: 14px 28px;
+      border-radius: 12px;
+      transition: all 0.2s;
+      box-shadow: 0 10px 20px rgba(234, 88, 12, 0.2);
+    }
+    .btn:hover {
+      opacity: 0.95;
+      transform: translateY(-1px);
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">${isSuccess ? "✅" : "❌"}</div>
+    <h1>${title}</h1>
+    <p>${message}</p>
+    <a href="http://localhost:5173/" class="btn">Go to Login</a>
+  </div>
+</body>
+</html>
+`;
+
+const sendVerificationLink = async (req, res) => {
   try {
     const { name, email, password, confirmPassword, phone, address, place, role } = req.body;
     const normalizedEmail = normalizeDevoteeEmail(email);
-    const normalizedRole = String(role || "").toLowerCase().trim();
+    const normalizedRole = String(role || "devotee").toLowerCase().trim();
 
     // Validate required fields
-    if (!name || !email || !password || !confirmPassword || !phone) {
-      return res.status(400).json({ message: "Name, email, password, confirm password, and phone number are required" });
+    if (!name || !email || !password || !confirmPassword || !phone || !place || !address) {
+      return res.status(400).json({ message: "Name, email, phone number, place/city, address, password, and confirm password are required" });
+    }
+
+    // Validate email format
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(normalizedEmail)) {
+      return res.status(400).json({ message: "Please provide a valid email address" });
+    }
+
+    // Validate phone number: strictly 10 digits
+    const cleanedPhone = phone.trim();
+    if (!/^[0-9]{10}$/.test(cleanedPhone)) {
+      return res.status(400).json({ message: "Phone number must be strictly 10 digits (numbers only)" });
+    }
+
+    // Validate place: characters and spaces only
+    const cleanedPlace = place.trim();
+    if (!/^[a-zA-Z\s]+$/.test(cleanedPlace)) {
+      return res.status(400).json({ message: "Place/City must contain characters only" });
     }
 
     // Validate passwords match
@@ -96,23 +197,197 @@ const registerUser = async (req, res) => {
       return res.status(400).json({ message: "Password must be at least 6 characters long" });
     }
 
-    if (normalizedRole !== "devotee") {
-      return res.status(403).json({ message: "Only devotee can self-register. Other roles are admin-assigned." });
+    const existingUser = await findUserByEmail(normalizedEmail);
+    if (existingUser) {
+      return res.status(400).json({ message: "User already exists with this email" });
+    }
+
+    const existingUserByPhone = await findUserByPhone(cleanedPhone);
+    if (existingUserByPhone) {
+      return res.status(400).json({ message: "User already exists with this phone number" });
+    }
+
+    // Hash password now so we don't send raw passwords in JWT token
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create a verification token valid for 15 minutes
+    const token = jwt.sign(
+      {
+        name: name.trim(),
+        email: normalizedEmail,
+        phone: cleanedPhone,
+        address: address.trim(),
+        place: cleanedPlace,
+        password: hashedPassword,
+        role: normalizedRole,
+      },
+      process.env.JWT_SECRET || "dev-secret",
+      { expiresIn: "15m" }
+    );
+
+    const verificationLink = `http://localhost:5000/api/auth/verify-registration?token=${token}`;
+
+    const { sendEmail } = require("../utils/communicationService");
+
+    const emailResult = await sendEmail({
+      to: normalizedEmail,
+      subject: "Verify Your Temple Devotee Registration",
+      text: `Please click the following link to verify your email and complete devotee registration: ${verificationLink}`,
+      html: `
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #451a03; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #ffedd5; border-radius: 16px; background-color: #fffbeb;">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <span style="font-size: 40px;">🙏</span>
+            <h2 style="color: #7c2d12; margin: 10px 0 0 0; font-size: 24px;">Temple Devotee Registration</h2>
+          </div>
+          <p>Dear <strong>${name.trim()}</strong>,</p>
+          <p>Thank you for registering. Please click the button below to verify your email address and complete your devotee registration:</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${verificationLink}" style="background: linear-gradient(to right, #ea580c, #d97706); color: white; padding: 14px 30px; text-decoration: none; font-weight: bold; border-radius: 12px; box-shadow: 0 5px 15px rgba(234,88,12,0.3); display: inline-block;">Verify Email & Register</a>
+          </div>
+          <p style="font-size: 13px; color: #78350f; text-align: center; margin-top: 35px; border-top: 1px solid #ffedd5; padding-top: 15px;">
+            This link is valid for <strong>15 minutes</strong>. If you did not request this, please ignore this email.
+          </p>
+        </div>
+      `
+    });
+
+    if (emailResult && emailResult.success === false) {
+      return res.status(500).json({ message: `Failed to send verification link: ${emailResult.error}` });
+    }
+
+    return res.status(200).json({ message: "Verification link sent successfully to your email. Please check your inbox." });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+const verifyRegistration = async (req, res) => {
+  try {
+    const { token } = req.query;
+    if (!token) {
+      return res.status(400).send(htmlTemplate("Verification Failed", "Verification token is missing.", false));
+    }
+
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET || "dev-secret");
+    } catch (err) {
+      return res.status(400).send(htmlTemplate("Verification Failed", "Verification link is invalid or has expired. Please register again.", false));
+    }
+
+    const { name, email, phone, address, place, password, role } = decoded;
+
+    // Check if user already registered in the meantime
+    const existingUser = await findUserByEmail(email);
+    if (existingUser) {
+      return res.status(400).send(htmlTemplate("Already Verified", "User with this email is already registered.", false));
+    }
+
+    const existingUserByPhone = await findUserByPhone(phone);
+    if (existingUserByPhone) {
+      return res.status(400).send(htmlTemplate("Already Verified", "User with this phone number is already registered.", false));
+    }
+
+    const user = await createUserRecord({
+      name,
+      email,
+      phone,
+      address,
+      place,
+      password, // Already hashed in sendVerificationLink
+      role,
+    });
+
+    // Notify cashier role about new devotee registration
+    createStaffNotification({
+      title: "🙏 New Devotee Registered",
+      message: `Devotee "${name}" (${phone}) has verified their email and registered successfully.`,
+      audienceRole: "cashier",
+      category: "registration",
+    }).catch(() => {});
+
+    return res.status(201).send(htmlTemplate("Verification Successful", "Your email has been verified and registration is complete! You can now log in.", true));
+  } catch (error) {
+    return res.status(500).send(htmlTemplate("Verification Failed", error.message, false));
+  }
+};
+
+const registerUser = async (req, res) => {
+  try {
+    const { name, email, password, confirmPassword, phone, address, place, role } = req.body;
+    const normalizedEmail = normalizeDevoteeEmail(email);
+    const normalizedRole = String(role || "").toLowerCase().trim();
+
+    // Verify authorized context (Cashier or Admin only can use this endpoint directly)
+    let isAuthorized = false;
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      const token = authHeader.split(" ")[1];
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || "dev-secret");
+        if (decoded && ["admin", "cashier", "accountant", "staff"].includes(decoded.role)) {
+          isAuthorized = true;
+        }
+      } catch (err) {
+        // invalid token
+      }
+    }
+
+    if (!isAuthorized) {
+      return res.status(403).json({ message: "Direct devotee registration is not allowed. Please use the verification link." });
+    }
+
+    // Validate required fields
+    if (!name || !email || !password || !confirmPassword || !phone || !place || !address) {
+      return res.status(400).json({ message: "Name, email, phone number, place/city, address, password, and confirm password are required" });
+    }
+
+    // Validate email format
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(normalizedEmail)) {
+      return res.status(400).json({ message: "Please provide a valid email address" });
+    }
+
+    // Validate phone number: strictly 10 digits
+    const cleanedPhone = phone.trim();
+    if (!/^[0-9]{10}$/.test(cleanedPhone)) {
+      return res.status(400).json({ message: "Phone number must be strictly 10 digits (numbers only)" });
+    }
+
+    // Validate place: characters and spaces only
+    const cleanedPlace = place.trim();
+    if (!/^[a-zA-Z\s]+$/.test(cleanedPlace)) {
+      return res.status(400).json({ message: "Place/City must contain characters only" });
+    }
+
+    // Validate passwords match
+    if (password !== confirmPassword) {
+      return res.status(400).json({ message: "Passwords do not match" });
+    }
+
+    // Validate password length
+    if (password.length < 6) {
+      return res.status(400).json({ message: "Password must be at least 6 characters long" });
     }
 
     const existingUser = await findUserByEmail(normalizedEmail);
     if (existingUser) {
-      return res.status(400).json({ message: "User already exists" });
+      return res.status(400).json({ message: "User already exists with this email" });
+    }
+
+    const existingUserByPhone = await findUserByPhone(cleanedPhone);
+    if (existingUserByPhone) {
+      return res.status(400).json({ message: "User already exists with this phone number" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await createUserRecord({
-      name,
+      name: name.trim(),
       email: normalizedEmail,
-      phone: phone.trim(),
-      address: address ? address.trim() : "",
-      place: place ? place.trim() : "",
+      phone: cleanedPhone,
+      address: address.trim(),
+      place: cleanedPlace,
       password: hashedPassword,
       role: normalizedRole,
     });
@@ -120,7 +395,7 @@ const registerUser = async (req, res) => {
     // Notify cashier role about new devotee registration
     createStaffNotification({
       title: "🙏 New Devotee Registered",
-      message: `Devotee "${name}" (${phone}) has been registered successfully and can now log in.`,
+      message: `Devotee "${name}" (${cleanedPhone}) has been registered successfully and can now log in.`,
       audienceRole: "cashier",
       category: "registration",
     }).catch(() => {});
@@ -236,6 +511,12 @@ const createUserByAdmin = async (req, res) => {
       return res.status(400).json({ message: "Name, email, password and role are required" });
     }
 
+    // Validate email format
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(normalizedEmail)) {
+      return res.status(400).json({ message: "Please provide a valid email address" });
+    }
+
     if (!ALLOWED_ROLES.includes(normalizedRole) || normalizedRole === "devotee") {
       return res.status(400).json({ message: "Admin can assign only non-devotee roles" });
     }
@@ -320,10 +601,37 @@ const forgotPassword = async (req, res) => {
     const resetPasswordExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
     await updateUserRecord(user._id?.toString?.() || user.id, { resetPasswordToken: resetToken, resetPasswordExpiresAt });
 
+    const resetLink = `http://localhost:5173/forgot-password?token=${resetToken}&email=${normalizedEmail}`;
+    const { sendEmail } = require("../utils/communicationService");
+
+    const emailResult = await sendEmail({
+      to: normalizedEmail,
+      subject: "Reset Your Temple Account Password",
+      text: `Please click the following link to reset your account password: ${resetLink}`,
+      html: `
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #451a03; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #ffedd5; border-radius: 16px; background-color: #fffbeb;">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <span style="font-size: 40px;">🔑</span>
+            <h2 style="color: #7c2d12; margin: 10px 0 0 0; font-size: 24px;">Password Reset Request</h2>
+          </div>
+          <p>Dear Devotee,</p>
+          <p>We received a request to reset your password. Please click the button below to set a new password for your account:</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${resetLink}" style="background: linear-gradient(to right, #ea580c, #d97706); color: white; padding: 14px 30px; text-decoration: none; font-weight: bold; border-radius: 12px; box-shadow: 0 5px 15px rgba(234,88,12,0.3); display: inline-block;">Reset Password</a>
+          </div>
+          <p style="font-size: 13px; color: #78350f; text-align: center; margin-top: 35px; border-top: 1px solid #ffedd5; padding-top: 15px;">
+            This password reset link is valid for <strong>15 minutes</strong>. If you did not request a password reset, please ignore this email.
+          </p>
+        </div>
+      `
+    });
+
+    if (emailResult && emailResult.success === false) {
+      return res.status(500).json({ message: `Failed to send reset link email: ${emailResult.error}` });
+    }
+
     return res.status(200).json({
-      message: "Reset token generated",
-      resetToken,
-      expiresAt: resetPasswordExpiresAt.toISOString(),
+      message: "Password reset link sent successfully to your email. Please check your inbox.",
     });
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -407,6 +715,8 @@ const googleLogin = async (req, res) => {
 
 module.exports = {
   registerUser,
+  sendVerificationLink,
+  verifyRegistration,
   loginUser,
   createUserByAdmin,
   getUsersForAdmin,

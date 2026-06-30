@@ -17,3 +17,5 @@ const startServer = async () => {
 };
 
 startServer();
+
+// Touch to force nodemon restart after implementing forgot password email link

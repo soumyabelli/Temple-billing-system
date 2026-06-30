@@ -55,13 +55,25 @@ const DevoateeProfileComponent = () => {
   const validateForm = () => {
     const newErrors = {};
     if (!profile.name?.trim()) newErrors.name = "Name is required";
-    if (!profile.email?.trim()) newErrors.email = "Email is required";
-    if (!profile.phone?.trim()) newErrors.phone = "Phone is required";
-    if (!/^\d{10}$/.test(profile.phone?.replace(/\D/g, ""))) {
-      newErrors.phone = "Phone must be 10 digits";
+    if (!profile.email?.trim()) {
+      newErrors.email = "Email is required";
+    } else {
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      if (!emailRegex.test(profile.email?.trim())) {
+        newErrors.email = "Please enter a valid email address (e.g. devotee@gmail.com)";
+      }
+    }
+    if (!profile.phone?.trim()) {
+      newErrors.phone = "Phone is required";
+    } else if (!/^[0-9]{10}$/.test(profile.phone?.trim())) {
+      newErrors.phone = "Phone must be exactly 10 digits (numbers only)";
     }
     if (!profile.address?.trim()) newErrors.address = "Address is required";
-    if (!profile.place?.trim()) newErrors.place = "Place/City is required";
+    if (!profile.place?.trim()) {
+      newErrors.place = "Place/City is required";
+    } else if (!/^[a-zA-Z\s]+$/.test(profile.place?.trim())) {
+      newErrors.place = "Place/City must contain characters/letters and spaces only";
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;

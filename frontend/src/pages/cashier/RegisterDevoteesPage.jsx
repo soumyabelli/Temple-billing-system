@@ -35,8 +35,24 @@ const RegisterDevoteesPage = () => {
     event.preventDefault();
     setMessage("");
 
-    if (!form.name.trim() || !form.email.trim() || !form.phone.trim() || !form.password || !form.confirmPassword) {
-      setMessage("Please enter the devotee name, email, phone and password.");
+    if (!form.name.trim() || !form.email.trim() || !form.phone.trim() || !form.place.trim() || !form.address.trim() || !form.password || !form.confirmPassword) {
+      setMessage("Please fill all required fields (Name, Email, Phone, Place/City, Address, Password).");
+      return;
+    }
+
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(form.email.trim())) {
+      setMessage("Please enter a valid email address.");
+      return;
+    }
+
+    if (!/^[0-9]{10}$/.test(form.phone.trim())) {
+      setMessage("Phone number must be exactly 10 digits (numbers only).");
+      return;
+    }
+
+    if (!/^[a-zA-Z\s]+$/.test(form.place.trim())) {
+      setMessage("Place/City must contain characters/letters and spaces only.");
       return;
     }
 

@@ -1,9 +1,10 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { forgotPassword, resetPassword } from "../services/authService";
 
 const ForgotPasswordPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -11,7 +12,17 @@ const ForgotPasswordPage = () => {
   const [resetToken, setResetToken] = useState("");
   const [newPassword, setNewPassword] = useState("");
 
-  const [phase, setPhase] = useState("request"); // request | reset
+  const [phase, setPhase] = useState("request"); // request | link-sent | reset
+
+  useEffect(() => {
+    const tokenParam = searchParams.get("token");
+    const emailParam = searchParams.get("email");
+    if (tokenParam && emailParam) {
+      setResetToken(tokenParam);
+      setEmail(emailParam);
+      setPhase("reset");
+    }
+  }, [searchParams]);
 
   const handleRequestToken = async (e) => {
     e.preventDefault();
@@ -23,11 +34,10 @@ const ForgotPasswordPage = () => {
     try {
       setIsLoading(true);
       const res = await forgotPassword(email);
-      setResetToken(res.resetToken);
-      setPhase("reset");
-      alert(`Reset token generated. (Token shown for demo): ${res.resetToken}`);
+      alert(res.message || "Password reset link sent successfully to your email.");
+      setPhase("link-sent");
     } catch (error) {
-      alert(error.response?.data?.message || "Failed to generate reset token");
+      alert(error.response?.data?.message || "Failed to send reset link email");
     } finally {
       setIsLoading(false);
     }
@@ -62,11 +72,15 @@ const ForgotPasswordPage = () => {
         <div className="text-center mb-6">
           <h1 className="text-3xl font-extrabold text-amber-900">Forgot Password</h1>
           <p className="text-amber-800/90 mt-2">
-            {phase === "request" ? "Enter your email to get a reset token." : "Set your new password using the token."}
+            {phase === "request"
+              ? "Enter your email to get a reset link."
+              : phase === "link-sent"
+              ? "Reset link dispatched."
+              : "Set your new password."}
           </p>
         </div>
 
-        {phase === "request" ? (
+        {phase === "request" && (
           <form onSubmit={handleRequestToken} className="space-y-4">
             <div>
               <label className="block mb-2 text-sm font-semibold text-amber-900">Email</label>
@@ -85,7 +99,7 @@ const ForgotPasswordPage = () => {
               disabled={isLoading}
               className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 transition-all duration-300 text-white px-5 py-3.5 rounded-xl font-bold shadow-xl"
             >
-              {isLoading ? "Generating..." : "Get Reset Token"}
+              {isLoading ? "Sending link..." : "Send Reset Link"}
             </button>
 
             <button
@@ -96,18 +110,47 @@ const ForgotPasswordPage = () => {
               Back to Login
             </button>
           </form>
-        ) : (
+        )}
+
+        {phase === "link-sent" && (
+          <div className="text-center space-y-6">
+            <div className="text-5xl">📧</div>
+            <p className="text-amber-950 font-medium">
+              We have sent a secure password reset link to:<br />
+              <strong className="text-orange-700">{email}</strong>
+              <br /><br />
+              Please check your inbox and click the link to configure your new password.
+            </p>
+            <button
+              onClick={() => navigate("/")}
+              className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-5 py-3.5 rounded-xl font-bold shadow-xl transition-all"
+            >
+              Back to Login
+            </button>
+          </div>
+        )}
+
+        {phase === "reset" && (
           <form onSubmit={handleReset} className="space-y-4">
+            <div>
+              <label className="block mb-2 text-sm font-semibold text-amber-900">Email Address</label>
+              <input
+                type="text"
+                value={email}
+                disabled
+                className="w-full rounded-xl border border-white/40 bg-gray-100 p-3.5 outline-none text-gray-500 cursor-not-allowed"
+              />
+            </div>
+
             <div>
               <label className="block mb-2 text-sm font-semibold text-amber-900">Reset Token</label>
               <input
                 type="text"
                 value={resetToken}
-                onChange={(e) => setResetToken(e.target.value)}
-                required
-                className="w-full rounded-xl border border-white/70 bg-white/80 p-3.5 outline-none focus:ring-2 focus:ring-amber-400"
+                disabled
+                className="w-full rounded-xl border border-white/40 bg-gray-100 p-3.5 outline-none text-gray-500 cursor-not-allowed"
               />
-              <p className="text-xs text-amber-900/80 mt-2">Token is shown for demo because backend currently returns it in response.</p>
+              <p className="text-xs text-amber-900/60 mt-1">Verified via secure link.</p>
             </div>
 
             <div>
@@ -126,7 +169,7 @@ const ForgotPasswordPage = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-gradient-to-r from-orange-700 to-amber-600 hover:from-orange-800 hover:to-amber-700 transition-all duration-300 text-white px-5 py-3.5 rounded-xl font-bold shadow-xl"
+              className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 transition-all duration-300 text-white px-5 py-3.5 rounded-xl font-bold shadow-xl"
             >
               {isLoading ? "Resetting..." : "Reset Password"}
             </button>

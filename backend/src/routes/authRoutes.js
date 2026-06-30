@@ -1,6 +1,8 @@
 const express = require("express");
 const {
   registerUser,
+  sendVerificationLink,
+  verifyRegistration,
   loginUser,
   createUserByAdmin,
   changePassword,
@@ -13,6 +15,8 @@ const { authenticate, authorizeRoles } = require("../middleware/authMiddleware")
 
 const router = express.Router();
 
+router.post("/send-verification-link", sendVerificationLink);
+router.get("/verify-registration", verifyRegistration);
 router.post("/register", registerUser);
 router.post("/login", loginUser);
 router.post("/google-login", googleLogin);

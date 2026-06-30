@@ -36,6 +36,12 @@ const MemberManagement = () => {
       return;
     }
 
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(formData.email.trim())) {
+      setMessage({ type: "error", text: "Please enter a valid email address." });
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       await createUserByAdmin(formData, token);

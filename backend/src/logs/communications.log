@@ -740,3 +740,53 @@ Thank you!
 To: 9449913987
 Message: Prasadam order confirmed! Item: Pulihora Prasadam. Qty: 7. Ready soon! -Temple
 
+[2026-06-30T05:21:20.583Z] EMAIL
+To: ganga.mca2002@gmail.com
+Subject: Your Devotee Registration OTP
+Your OTP for devotee registration is: 679242. It is valid for 5 minutes.
+
+[2026-06-30T05:24:11.238Z] EMAIL
+To: ganga.mca2002@gmail.com
+Subject: Your Devotee Registration OTP
+Your OTP for devotee registration is: 701283. It is valid for 5 minutes.
+
+[2026-06-30T05:26:53.860Z] EMAIL
+To: ganga.mca2002@gmail.com
+Subject: Your Devotee Registration OTP
+Your OTP for devotee registration is: 330838. It is valid for 5 minutes.
+
+[2026-06-30T05:33:48.282Z] EMAIL
+To: ganga.mca2002@gmail.com
+Subject: Your Devotee Registration OTP
+Your OTP for devotee registration is: 583018. It is valid for 5 minutes.
+
+[2026-06-30T05:35:16.160Z] EMAIL
+To: ganga.mca2002@gmail.com
+Subject: Your Devotee Registration OTP
+Your OTP for devotee registration is: 773466. It is valid for 5 minutes.
+
+[2026-06-30T05:36:44.811Z] EMAIL
+To: ganga.mca2002@gmail.com
+Subject: Your Devotee Registration OTP
+Your OTP for devotee registration is: 627472. It is valid for 5 minutes.
+
+[2026-06-30T05:56:47.197Z] EMAIL
+To: ganga.mca2002@gmail.com
+Subject: Your Devotee Registration OTP
+Your OTP for devotee registration is: 281704. It is valid for 5 minutes.
+
+[2026-06-30T06:01:11.082Z] EMAIL
+To: sonu.mca2026@gmail.com
+Subject: Your Devotee Registration OTP
+Your OTP for devotee registration is: 441047. It is valid for 5 minutes.
+
+[2026-06-30T06:23:44.529Z] EMAIL
+To: sonu.mca2026@gmail.com
+Subject: Verify Your Temple Devotee Registration
+Please click the following link to verify your email and complete devotee registration: http://localhost:5000/api/auth/verify-registration?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoibWFoaSIsImVtYWlsIjoic29udS5tY2EyMDI2QGdtYWlsLmNvbSIsInBob25lIjoiOTg3NjU0MzIxMiIsImFkZHJlc3MiOiJ0ZW1wbGUgcm9hZCB1ZHVwaSIsInBsYWNlIjoidWR1cGkiLCJwYXNzd29yZCI6IiQyYiQxMCR1TTBYUjFKQi9zS3paVEhXbWZDNUV1WHlHbnBvamY1YWd6OVgvTm5WRnQvTUFVRVpGR09RLiIsInJvbGUiOiJkZXZvdGVlIiwiaWF0IjoxNzgyODAwNjE5LCJleHAiOjE3ODI4MDE1MTl9.jWkE7F7N7JLkM6A7DH8GnatgxKObbZSevtogenu2r-c
+
+[2026-06-30T06:33:04.359Z] EMAIL
+To: soumya2880@gmail.com
+Subject: Verify Your Temple Devotee Registration
+Please click the following link to verify your email and complete devotee registration: http://localhost:5000/api/auth/verify-registration?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoic291bXlhIiwiZW1haWwiOiJzb3VteWEyODgwQGdtYWlsLmNvbSIsInBob25lIjoiOTk1MzUyMzYzNCIsImFkZHJlc3MiOiJ1ZHVwaSIsInBsYWNlIjoidWR1cGkiLCJwYXNzd29yZCI6IiQyYiQxMCRTZmdwMHdnVmx4N3VWeHBVZGJxVXpPZk4xYkFwZkNGMmhFNG5jb0VVMmNJQUhGd1p5WHUuYSIsInJvbGUiOiJkZXZvdGVlIiwiaWF0IjoxNzgyODAxMTgxLCJleHAiOjE3ODI4MDIwODF9.LvwvaRT0hBqwcKDSK8xf7EqxZdTEIfB_g8T27RSRTrY
+

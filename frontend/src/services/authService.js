@@ -7,6 +7,11 @@ export const register = async (formData) => {
   return response.data;
 };
 
+export const sendVerificationLink = async (formData) => {
+  const response = await axios.post(`${API_BASE}/send-verification-link`, formData);
+  return response.data;
+};
+
 export const login = async (credentials) => {
   const response = await axios.post(`${API_BASE}/login`, credentials);
   return response.data;
