@@ -447,64 +447,19 @@ const PoojaManagement = () => {
                     <th className="px-4 py-3 text-left font-semibold">Date</th>
                     <th className="px-4 py-3 text-left font-semibold">Slot</th>
                     <th className="px-4 py-3 text-left font-semibold">Amount</th>
-                    <th className="px-4 py-3 text-left font-semibold">Status</th>
-                    <th className="px-4 py-3 text-left font-semibold">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredBookings.map((row) => {
-                    const isPast = row.raw.datetime ? new Date(row.raw.datetime) < new Date() : false;
-                    return (
-                      <tr key={row.id} className="border-t border-[#f0ece6] text-[#2f3645]">
-                        <td className="px-4 py-3">{row.id}</td>
-                        <td className="px-4 py-3 font-medium">{row.devotee}</td>
-                        <td className="px-4 py-3">{row.pooja}</td>
-                        <td className="px-4 py-3">{row.date}</td>
-                        <td className="px-4 py-3">{row.slot}</td>
-                        <td className="px-4 py-3 font-semibold">{formatCurrency(row.amount)}</td>
-                        <td className="px-4 py-3">
-                          <span className={`rounded-lg px-2.5 py-1 text-[13px] font-semibold ${statusTheme[row.status] || statusTheme.Pending}`}>
-                            {row.status}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            {(row.status === "Pending" || row.status === "Booked" || !row.status) && (
-                              <>
-                                <button
-                                  type="button"
-                                  disabled={isPast}
-                                  title={isPast ? "Booking date has already passed." : ""}
-                                  onClick={() => handleStatusChange(row.raw._id, "Approved")}
-                                  className="rounded bg-green-100 px-2 py-1 text-xs font-semibold text-green-700 disabled:opacity-40 disabled:cursor-not-allowed"
-                                >
-                                  Approve
-                                </button>
-                                <button
-                                  type="button"
-                                  disabled={isPast}
-                                  title={isPast ? "Booking date has already passed." : ""}
-                                  onClick={() => handleStatusChange(row.raw._id, "Rejected")}
-                                  className="rounded bg-rose-100 px-2 py-1 text-xs font-semibold text-rose-700 disabled:opacity-40 disabled:cursor-not-allowed"
-                                >
-                                  Reject
-                                </button>
-                              </>
-                            )}
-                            {(row.status === "Assigned" || row.status === "In Progress") && (
-                              <button
-                                type="button"
-                                onClick={() => setViewingBooking(row.raw)}
-                                className="rounded bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-700 hover:bg-blue-200"
-                              >
-                                View
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {filteredBookings.map((row) => (
+                    <tr key={row.id} className="border-t border-[#f0ece6] text-[#2f3645]">
+                      <td className="px-4 py-3">{row.id}</td>
+                      <td className="px-4 py-3 font-medium">{row.devotee}</td>
+                      <td className="px-4 py-3">{row.pooja}</td>
+                      <td className="px-4 py-3">{row.date}</td>
+                      <td className="px-4 py-3">{row.slot}</td>
+                      <td className="px-4 py-3 font-semibold">{formatCurrency(row.amount)}</td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>

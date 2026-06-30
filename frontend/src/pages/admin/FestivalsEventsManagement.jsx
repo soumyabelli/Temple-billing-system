@@ -29,6 +29,7 @@ import { FaRegCalendarAlt } from "react-icons/fa";
 const quickActions = [
   { title: "Add Event", icon: MdCalendarMonth, tone: "bg-[#fff7ea] text-[#e58a0a]" },
   { title: "Send Notification", icon: MdCampaign, tone: "bg-[#f2f0ff] text-[#6f61d3]" },
+  { title: "Send Invitation", icon: MdOutlineEvent, tone: "bg-[#e8f6e8] text-[#2e8e2e]" },
 ];
 
 const statusClass = {
@@ -54,6 +55,11 @@ const FestivalsEventsManagement = () => {
   const [imageUrl, setImageUrl] = useState("");
   const [imagePreview, setImagePreview] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [showInvitationModal, setShowInvitationModal] = useState(false);
+  const [invitationTitle, setInvitationTitle] = useState("");
+  const [invitationMessage, setInvitationMessage] = useState("");
+  const [invitationFile, setInvitationFile] = useState("");
+  const [invitationFileName, setInvitationFileName] = useState("");
 
   useEffect(() => {
     fetchEvents();
@@ -144,6 +150,11 @@ const FestivalsEventsManagement = () => {
   const handleQuickAction = async (action) => {
     if (action === "Add Event") return setShowModal(true);
 
+    if (action === "Send Invitation") {
+      setShowInvitationModal(true);
+      return;
+    }
+
     if (action === "Send Notification") {
       const message = window.prompt("Enter notification message:");
       if (!message) return;
@@ -160,7 +171,7 @@ const FestivalsEventsManagement = () => {
     alert(`${action} - feature coming soon.`);
   };
 
-  const handlePostponeEvent = async (id, newDate) => {
+  const handlePostponeEvent = async (id, newDate, newDay) => {
     try {
       setIsLoading(true);
       const eventToPostpone = festivalRows.find(r => r._id === id);
@@ -175,7 +186,7 @@ const FestivalsEventsManagement = () => {
       // Send broadcast notification to devotees
       await axios.post("http://localhost:5000/api/devotee/notifications", {
         title: `Event Postponed: ${title}`,
-        message: `The event "${title}" has been postponed to ${new Date(newDate).toLocaleDateString()}.`,
+        message: `The event "${title}" has been postponed to ${new Date(newDate).toLocaleDateString()} (${newDay}).`,
         category: "event",
         audienceRole: "devotee",
         broadcast: true
@@ -190,6 +201,46 @@ const FestivalsEventsManagement = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSendInvitation = async () => {
+    if (!invitationTitle.trim() || !invitationMessage.trim()) {
+      alert("Please fill in the title and message fields.");
+      return;
+    }
+    setIsLoading(true);
+    try {
+      await axios.post("http://localhost:5000/api/devotee/notifications", {
+        title: invitationTitle,
+        message: invitationMessage,
+        category: "event",
+        audienceRole: "devotee",
+        broadcast: true,
+        attachment: invitationFile || undefined
+      });
+      alert("Invitation sent successfully to all registered devotees!");
+      setInvitationTitle("");
+      setInvitationMessage("");
+      setInvitationFile("");
+      setInvitationFileName("");
+      setShowInvitationModal(false);
+    } catch (error) {
+      console.error(error);
+      alert("Error sending invitation: " + (error.response?.data?.error || error.message));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleInvitationFileChange = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    setInvitationFileName(file.name);
+    const reader = new FileReader();
+    reader.onload = () => {
+      setInvitationFile(reader.result);
+    };
+    reader.readAsDataURL(file);
   };
 
   const todayStart = new Date();
@@ -345,7 +396,16 @@ const FestivalsEventsManagement = () => {
                     onClick={() => {
                       const newDateStr = window.prompt("Enter new Date to postpone the event (YYYY-MM-DD):", row.date ? new Date(row.date).toISOString().slice(0, 10) : "");
                       if (newDateStr) {
-                        handlePostponeEvent(row._id, newDateStr);
+                        const parsedDate = new Date(newDateStr);
+                        if (!Number.isNaN(parsedDate.getTime())) {
+                          const autoDay = parsedDate.toLocaleDateString("en-US", { weekday: 'long' });
+                          const newDayStr = window.prompt("Confirm or enter the Day of the week:", autoDay);
+                          if (newDayStr) {
+                            handlePostponeEvent(row._id, newDateStr, newDayStr);
+                          }
+                        } else {
+                          alert("Invalid date format.");
+                        }
                       }
                     }}
                     title="Postpone Event"
@@ -529,6 +589,73 @@ const FestivalsEventsManagement = () => {
                   setImageUrl(viewEvent.image || "");
                   setShowModal(true);
                 }} className="rounded-xl bg-[#ff8b00] px-4 py-2 text-white">Edit Event</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Send Invitation Modal */}
+      {showInvitationModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="w-full max-w-md rounded-2xl border border-[#ece8e1] bg-white p-6 shadow-2xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-[28px] font-bold text-[#17151f]">Send Invitation</h2>
+              <button
+                onClick={() => setShowInvitationModal(false)}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[#ece8e1] bg-[#faf7f2] text-[#7b5324] hover:bg-[#f0ebe3]"
+              >
+                <MdClose size={20} />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-[16px] font-semibold text-[#17151f] mb-2">Invitation Title *</label>
+                <input
+                  type="text"
+                  value={invitationTitle}
+                  onChange={(e) => setInvitationTitle(e.target.value)}
+                  placeholder="e.g., Brahmotsavam Invitation Card"
+                  className="w-full rounded-xl border border-[#ece8e1] bg-[#faf9f7] px-4 py-2.5 text-[16px] text-[#202632] outline-none focus:border-[#ff8b00] focus:ring-1 focus:ring-[#ff8b00]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[16px] font-semibold text-[#17151f] mb-2">Invitation Message *</label>
+                <textarea
+                  value={invitationMessage}
+                  onChange={(e) => setInvitationMessage(e.target.value)}
+                  placeholder="Enter details about the event, timings, etc."
+                  rows="3"
+                  className="w-full rounded-xl border border-[#ece8e1] bg-[#faf9f7] px-4 py-2.5 text-[16px] text-[#202632] outline-none focus:border-[#ff8b00] focus:ring-1 focus:ring-[#ff8b00] resize-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[16px] font-semibold text-[#17151f] mb-2">Upload Image or PDF Invitation *</label>
+                <input type="file" accept="image/*,application/pdf" onChange={handleInvitationFileChange} className="w-full text-[15px] text-[#202632]" />
+                {invitationFileName && (
+                  <p className="mt-2 text-sm text-[#2e8e2e]">Selected: {invitationFileName}</p>
+                )}
+                {invitationFile && invitationFile.startsWith("data:image/") && (
+                  <img src={invitationFile} alt="invitation preview" className="mt-3 h-28 w-full rounded-md object-cover" />
+                )}
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={() => setShowInvitationModal(false)}
+                  className="flex-1 rounded-xl border border-[#ece8e1] bg-[#faf9f7] px-4 py-2.5 text-[16px] font-semibold text-[#4f5866] hover:bg-[#f0ebe3]"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSendInvitation}
+                  disabled={isLoading}
+                  className="flex-1 rounded-xl bg-[#ff8b00] px-4 py-2.5 text-[16px] font-semibold text-white hover:bg-[#ec7f00] disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {isLoading ? "Sending..." : "Send Invitation"}
+                </button>
               </div>
             </div>
           </div>

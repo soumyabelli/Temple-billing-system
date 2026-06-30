@@ -82,7 +82,7 @@ const createBooking = async (req, res) => {
   try {
     const { devoteeName, devoteeEmail, devoteePhone, service, datetime, amount, contactNumber, notes, devoteeId, eventId, paymentMethod } = req.body;
     const normalizedDevoteeEmail = normalizeEmail(devoteeEmail);
-    const bookingStatus = "Pending";
+    const bookingStatus = "Confirmed";
 
     if (!devoteeName || !service || !datetime || amount == null) {
       return res.status(400).json({ error: "Missing required booking fields." });
@@ -135,8 +135,8 @@ const createBooking = async (req, res) => {
 
     // Send notification to database
     await Notification.create({
-      title: "Booking Submitted",
-      message: `Your ${service} booking is pending approval.`,
+      title: "Booking Confirmed",
+      message: `Your ${service} booking has been confirmed successfully.`,
       audienceEmail: normalizedDevoteeEmail || undefined,
       category: "booking",
     });

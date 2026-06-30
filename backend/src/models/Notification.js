@@ -13,6 +13,7 @@ const notificationSchema = new mongoose.Schema(
     viewedAt: { type: Date, default: null },
     read: { type: Boolean, default: false },
     readAt: { type: Date, default: null },
+    attachment: { type: String },
   },
   { timestamps: true }
 );

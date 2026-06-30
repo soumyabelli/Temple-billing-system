@@ -1407,7 +1407,6 @@ const DevoteeDashboard = () => {
                   <th className="px-5 py-3">Pooja / Service</th>
                   <th className="px-5 py-3">Date & Time</th>
                   <th className="px-5 py-3">Amount</th>
-                  <th className="px-5 py-3">Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -1417,11 +1416,6 @@ const DevoteeDashboard = () => {
                       <td className="px-5 py-3 text-sm font-medium text-[#1f1f1f]">{row.service}</td>
                       <td className="px-5 py-3 text-sm text-[#3f3f3f]">{formatDateTimeDisplay(row.datetime)}</td>
                       <td className="px-5 py-3 text-sm font-bold text-[#1b7f77]">{formatCurrency(row.amount)}</td>
-                      <td className="px-5 py-3">
-                        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${row.status === "Confirmed" ? "bg-[#def5e5] text-[#16853f]" : "bg-[#faefcf] text-[#ce7a0f]"}`}>
-                          {row.status}
-                        </span>
-                      </td>
                     </tr>
                   ))
                 ) : (
@@ -1644,7 +1638,7 @@ const DevoteeDashboard = () => {
                 <th className="px-5 py-3">Date & Time</th>
                 <th className="px-5 py-3">Amount</th>
                 <th className="px-5 py-3">Status</th>
-                <th className="px-5 py-3">Receipt</th>
+                <th className="px-5 py-3">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -1654,11 +1648,6 @@ const DevoteeDashboard = () => {
                     <td className="px-5 py-3 font-semibold">{row.service}</td>
                     <td className="px-5 py-3">{formatDateTimeDisplay(row.datetime)}</td>
                     <td className="px-5 py-3">{formatCurrency(row.amount)}</td>
-                    <td className="px-5 py-3">
-                      <span className={`rounded-full px-3 py-1 text-sm font-semibold ${row.status === "Confirmed" ? "bg-[#def5e5] text-[#16853f]" : "bg-[#faefcf] text-[#ce7a0f]"}`}>
-                        {row.status}
-                      </span>
-                    </td>
                     <td className="px-5 py-3 text-[#af6317]">
                       <button type="button" onClick={() => handleReceiptDownload(row, "booking")} className="font-semibold">
                         Download
@@ -2293,8 +2282,8 @@ const DevoteeDashboard = () => {
                     }}
                     className={`group relative flex items-start gap-4 rounded-2xl border p-5 transition-all duration-300 cursor-pointer ${
                       !item.read
-                        ? "border-[#ffdcb1] bg-gradient-to-r from-[#fffbf4] to-[#fff6e8] shadow-[0_8px_20px_rgba(255,159,0,0.06)]"
-                        : "border-[#f1ece1] bg-white/40 hover:bg-white/70"
+                        ? "border-[#fecdd3] bg-[#fff0f3] shadow-[0_8px_20px_rgba(244,63,94,0.06)]"
+                        : "border-[#e5e7eb] bg-white hover:bg-[#fafafa]"
                     }`}
                   >
                     <div className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl shadow-sm ${style.color}`}>
@@ -2313,10 +2302,26 @@ const DevoteeDashboard = () => {
                           {item.message}
                         </p>
                       )}
+                      {item.attachment && (
+                        <div className="mt-3">
+                          {item.attachment.startsWith("data:image/") ? (
+                            <img src={item.attachment} alt="Invitation" className="max-h-60 rounded-lg object-contain border border-[#ececec]" />
+                          ) : (
+                            <a
+                              href={item.attachment}
+                              download={`Invitation-${item.title.replace(/\s+/g, "_")}.pdf`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="inline-flex items-center gap-2 rounded-xl bg-[#1b7f77] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#166353]"
+                            >
+                              📄 Download PDF Invitation
+                            </a>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {!item.read && (
-                      <span className="absolute right-4 top-4 h-2.5 w-2.5 rounded-full bg-[#ff8f00] ring-4 ring-[#ff8f00]/20 animate-pulse"></span>
+                      <span className="absolute right-4 top-4 h-2.5 w-2.5 rounded-full bg-[#f43f5e] ring-4 ring-[#f43f5e]/20 animate-pulse"></span>
                     )}
                   </div>
                 );
