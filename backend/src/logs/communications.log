@@ -818,3 +818,29 @@ Thank you!
 To: 9953523634
 Message: Prasadam order confirmed! Item: Laddu Prasadam. Qty: 1. Ready soon! -Temple
 
+[2026-06-30T08:58:01.618Z] EMAIL
+To: soumya2880@gmail.com
+Subject: Prasadam Order Confirmation
+Prasadam Order Confirmed
+Item: Pulihora Prasadam
+Quantity: 5
+Amount: ₹605
+Thank you!
+
+[2026-06-30T08:58:01.632Z] SMS
+To: 9953523634
+Message: Prasadam order confirmed! Item: Pulihora Prasadam. Qty: 5. Ready soon! -Temple
+
+[2026-06-30T09:04:47.014Z] EMAIL
+To: soumya2880@gmail.com
+Subject: Donation Receipt
+Donation Receipt
+Amount: ₹501
+Category: Nagara panchami
+Transaction ID: SIM_TXN_1782810283378
+Thank you for your donation!
+
+[2026-06-30T09:04:47.040Z] SMS
+To: 9953523634
+Message: Donation received! Amount: ₹501. Transaction ID: SIM_TXN_1782810283378. Thank you! -Temple
+

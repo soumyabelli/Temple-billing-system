@@ -671,6 +671,9 @@ const DevoteeDashboard = () => {
       return;
     }
 
+    const isConfirmed = window.confirm("Once paid, there is no return of money (non-refundable). Do you want to confirm booking?");
+    if (!isConfirmed) return;
+
     setBookingLoading(true);
     try {
       const payload = {
@@ -732,6 +735,9 @@ const DevoteeDashboard = () => {
       setDonationError("Please enter a valid contact number for the donation.");
       return;
     }
+
+    const isConfirmed = window.confirm("Once paid, there is no return of money (non-refundable). Do you want to confirm donation?");
+    if (!isConfirmed) return;
 
     setDonationLoading(true);
 
@@ -1195,6 +1201,9 @@ const DevoteeDashboard = () => {
 
   const handlePrasadamSubmit = async () => {
     setPrasadamMessage("");
+    const isConfirmed = window.confirm("Once paid, there is no return of money (non-refundable). Do you want to confirm order?");
+    if (!isConfirmed) return;
+
     try {
       await createPrasadamOrder({
         devoteeName: profileData.name,
