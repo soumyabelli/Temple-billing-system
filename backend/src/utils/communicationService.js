@@ -12,12 +12,16 @@ const initTransporter = () => {
   if (transporter) return transporter;
   try {
     const nodemailer = require("nodemailer");
-    if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+    const emailUser = process.env.EMAIL_USER || "ganga.mca2002@gmail.com";
+    const emailPass = process.env.EMAIL_PASS || "qawd ofst qnve vhjj";
+    const emailService = process.env.EMAIL_SERVICE || "gmail";
+
+    if (emailUser && emailPass) {
       transporter = nodemailer.createTransport({
-        service: process.env.EMAIL_SERVICE || "gmail",
+        service: emailService,
         auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
+          user: emailUser,
+          pass: emailPass,
         },
         tls: {
           rejectUnauthorized: false,
@@ -35,8 +39,9 @@ const sendEmail = async ({ to, subject, html, text }) => {
   try {
     const mailTransporter = initTransporter();
     if (mailTransporter) {
+      const fromEmail = process.env.EMAIL_USER || "ganga.mca2002@gmail.com";
       await mailTransporter.sendMail({
-        from: process.env.EMAIL_USER,
+        from: fromEmail,
         to,
         subject,
         html,

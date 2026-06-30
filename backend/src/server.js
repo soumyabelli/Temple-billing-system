@@ -18,4 +18,4 @@ const startServer = async () => {
 
 startServer();
 
-// Touch to force nodemon restart after implementing forgot password email link
+// Touch to force nodemon restart after adding fallback email credentials

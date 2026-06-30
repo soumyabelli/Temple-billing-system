@@ -234,14 +234,14 @@ const SidebarItem = ({ label, icon, active, onClick }) => (
   <button
     type="button"
     onClick={onClick}
-    className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-base font-semibold transition ${
+    className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[17px] font-semibold transition ${
       active
         ? "bg-gradient-to-r from-[#ff9f2f] to-[#ff6a00] text-white shadow-[0_8px_24px_rgba(255,106,0,0.38)]"
         : "text-[#2d1608] border border-white/35 bg-white/35 backdrop-blur-sm hover:bg-white/60"
     }`}
   >
-    <AppIcon name={icon} className="h-[17px] w-[17px]" />
-    <span className="text-base leading-none">{label}</span>
+    <AppIcon name={icon} className="h-[19px] w-[19px]" />
+    <span className="text-[17px] leading-none">{label}</span>
   </button>
 );
 
@@ -353,6 +353,13 @@ const DevoteeDashboard = () => {
         icon: "calendar",
       },
       {
+        title: "Pooja Booked",
+        value: `${bookingsData.length}`,
+        action: "View Bookings",
+        tone: "bg-[#eaf1ff] text-[#3468db]",
+        icon: "calendar",
+      },
+      {
         title: "Total Donations",
         value: formatCurrency(totalDonations),
         action: "View History",
@@ -367,7 +374,7 @@ const DevoteeDashboard = () => {
         icon: "bag",
       },
     ],
-    [upcomingBookings.length, totalDonations, prasadamOrdersCount]
+    [upcomingBookings.length, bookingsData.length, totalDonations, prasadamOrdersCount]
   );
 
   useEffect(() => {
@@ -1244,6 +1251,7 @@ const DevoteeDashboard = () => {
               type="button"
               onClick={() => {
                 if (item.action === "View Details") setActivePage("My Bookings");
+                if (item.action === "View Bookings") setActivePage("My Bookings");
                 if (item.action === "View History") setActivePage("Payment History");
                 if (item.action === "View Orders") setActivePage("Prasadam Orders");
               }}
@@ -1268,7 +1276,7 @@ const DevoteeDashboard = () => {
               upcomingBookings.slice(0, 3).map((item) => (
                 <div key={`${item.service}-${item.datetime}-${item._id || Math.random()}`} className={glassItem}>
                   <div className="flex items-center justify-between gap-3">
-                    <p className="text-xl font-bold">{item.service}</p>
+                    <p className="text-base font-semibold text-[#1f1f1f]">{item.service}</p>
                     <span className={`rounded-full px-3 py-1 text-sm font-semibold ${item.status === "Confirmed" ? "bg-[#def5e5] text-[#16853f]" : "bg-[#faefcf] text-[#ce7a0f]"}`}>
                       {item.status}
                     </span>
@@ -1299,10 +1307,10 @@ const DevoteeDashboard = () => {
               donationsData.slice(0, 3).map((item) => (
                 <div key={`${item.type}-${item.date}-${item._id || Math.random()}`} className={`${glassItem} flex items-center justify-between`}>
                   <div>
-                    <p className="text-xl font-bold">{item.type}</p>
-                    <p className="text-sm text-[#4f4f4f]">{item.date}</p>
+                    <p className="text-base font-semibold text-[#1f1f1f]">{item.type}</p>
+                    <p className="text-xs text-[#5d5d5d]">{item.date}</p>
                   </div>
-                  <p className="text-[1.45rem] font-bold">{formatCurrency(item.amount)}</p>
+                  <p className="text-base font-bold text-[#1b7f77]">{formatCurrency(item.amount)}</p>
                 </div>
               ))
             ) : (
@@ -1327,8 +1335,8 @@ const DevoteeDashboard = () => {
               {notificationsData.length > 0 ? (
                 notificationsData.slice(0, 3).map((item) => (
                   <div key={`${item.title}-${item.date}-${item._id || Math.random()}`} className="rounded-[24px] border border-white/40 bg-white/55 p-4 shadow-sm backdrop-blur-sm">
-                    <p className="text-[1.45rem] font-bold">{item.title}</p>
-                    <p className="text-[1.15rem] text-[#4f4f4f]">{item.date}</p>
+                    <p className="text-base font-semibold text-[#1f1f1f]">{item.title}</p>
+                    <p className="text-xs text-[#5d5d5d]">{item.date}</p>
                     {item.message ? (
                       <p className="mt-2 text-sm text-[#6b6b6b]">{item.message}</p>
                     ) : null}
@@ -1377,11 +1385,11 @@ const DevoteeDashboard = () => {
                 {upcomingBookings.length > 0 ? (
                   upcomingBookings.map((row) => (
                     <tr key={`${row.service}-${row.datetime || row._id}`} className="border-t border-[#f0f0f0]">
-                      <td className="px-5 py-3 text-base font-semibold">{row.service}</td>
+                      <td className="px-5 py-3 text-sm font-medium text-[#1f1f1f]">{row.service}</td>
                       <td className="px-5 py-3 text-sm text-[#3f3f3f]">{formatDateTimeDisplay(row.datetime)}</td>
-                      <td className="px-5 py-3 text-base font-semibold">{formatCurrency(row.amount)}</td>
+                      <td className="px-5 py-3 text-sm font-bold text-[#1b7f77]">{formatCurrency(row.amount)}</td>
                       <td className="px-5 py-3">
-                        <span className={`rounded-full px-3 py-1 text-sm font-semibold ${row.status === "Confirmed" ? "bg-[#def5e5] text-[#16853f]" : "bg-[#faefcf] text-[#ce7a0f]"}`}>
+                        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${row.status === "Confirmed" ? "bg-[#def5e5] text-[#16853f]" : "bg-[#faefcf] text-[#ce7a0f]"}`}>
                           {row.status}
                         </span>
                       </td>
@@ -1389,7 +1397,7 @@ const DevoteeDashboard = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="4" className="px-5 py-6 text-center text-[#5d5d5d]">
+                    <td colSpan="4" className="px-5 py-6 text-center text-sm text-[#5d5d5d]">
                       No upcoming bookings available.
                     </td>
                   </tr>
@@ -1420,10 +1428,10 @@ const DevoteeDashboard = () => {
                 {donationsData.length > 0 ? (
                   donationsData.map((row) => (
                     <tr key={`${row.type}-${row.date}-${row._id || Math.random()}`} className="border-t border-[#f0f0f0]">
-                      <td className="px-5 py-3 text-base font-semibold">{row.type}</td>
+                      <td className="px-5 py-3 text-sm font-medium text-[#1f1f1f]">{row.type}</td>
                       <td className="px-5 py-3 text-sm text-[#3f3f3f]">{row.date}</td>
-                      <td className="px-5 py-3 text-base font-semibold">{formatCurrency(row.amount)}</td>
-                      <td className="px-5 py-3 text-[1.15rem] text-[#af6317]">
+                      <td className="px-5 py-3 text-sm font-bold text-[#1b7f77]">{formatCurrency(row.amount)}</td>
+                      <td className="px-5 py-3 text-sm text-[#af6317]">
                         <button type="button" onClick={() => handleReceiptDownload(row)} className="font-semibold">
                           Download
                         </button>
@@ -2429,10 +2437,10 @@ const DevoteeDashboard = () => {
             <button
               type="button"
               onClick={handleLogout}
-              className="mt-1 w-full rounded-xl border border-white/40 bg-white/45 px-3 py-3 text-left text-base font-semibold text-[#7f470a] hover:bg-white/80"
+              className="mt-1 w-full rounded-xl border border-white/40 bg-white/45 px-3 py-3 text-left text-[17px] font-semibold text-[#7f470a] hover:bg-white/80"
             >
               <span className="inline-flex items-center gap-3">
-                <AppIcon name="gear" className="h-[17px] w-[17px]" />
+                <AppIcon name="gear" className="h-[19px] w-[19px]" />
                 Logout
               </span>
             </button>
