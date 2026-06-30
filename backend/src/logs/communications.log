@@ -909,3 +909,8 @@ Thank you for your donation!
 To: 7676798914
 Message: Donation received! Amount: ₹501. Transaction ID: SIM_TXN_1782811219353. Thank you! -Temple
 
+[2026-06-30T12:40:28.002Z] EMAIL
+To: kulalveda23@gmail.com
+Subject: Verify Your Temple Devotee Registration
+Please click the following link to verify your email and complete devotee registration: http://localhost:5000/api/auth/verify-registration?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiRGVlcHRoaSBTLiBLdWxhbCIsImVtYWlsIjoia3VsYWx2ZWRhMjNAZ21haWwuY29tIiwicGhvbmUiOiI3MjU5MTU2OTQ2IiwiYWRkcmVzcyI6IlVkdXBpIiwicGxhY2UiOiJVZHVwaSIsInBhc3N3b3JkIjoiJDJiJDEwJHdTaTRxVHA5VGpYMU4yeGI4eUdZb3VvZnZyY0pNemV3YW55Q3VIaEtZQ21oWVhiOTg3bGl1Iiwicm9sZSI6ImRldm90ZWUiLCJpYXQiOjE3ODI4MjMyMjcsImV4cCI6MTc4MjgyNDEyN30.MaftfPTx8ME7dAYmssqjtUQBTB93JP_Z-C_kLuYhSfg
+
