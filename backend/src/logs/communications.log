@@ -844,3 +844,29 @@ Thank you for your donation!
 To: 9953523634
 Message: Donation received! Amount: ₹501. Transaction ID: SIM_TXN_1782810283378. Thank you! -Temple
 
+[2026-06-30T09:10:03.284Z] EMAIL
+To: bellisoumya@gmail.com
+Subject: Pooja Booking Confirmation
+Pooja Booking Confirmation
+Service: Abhisheka
+Date & Time: 2026-07-03T03:39
+Amount: ₹801
+Thank you!
+
+[2026-06-30T09:10:03.289Z] SMS
+To: 7676798914
+Message: Pooja booking confirmed! Service: Abhisheka on 2026-07-03T03:39. Amount: ₹801. -Temple
+
+[2026-06-30T09:10:18.935Z] EMAIL
+To: bellisoumya@gmail.com
+Subject: Prasadam Order Confirmation
+Prasadam Order Confirmed
+Item: Laddu Prasadam
+Quantity: 5
+Amount: ₹755
+Thank you!
+
+[2026-06-30T09:10:18.942Z] SMS
+To: 7676798914
+Message: Prasadam order confirmed! Item: Laddu Prasadam. Qty: 5. Ready soon! -Temple
+
