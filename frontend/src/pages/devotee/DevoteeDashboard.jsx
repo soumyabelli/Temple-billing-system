@@ -113,8 +113,7 @@ const getPrasadamStatusTone = (status) => {
 };
 
 const canCancelPrasadamOrder = (status) => {
-  const normalized = normalizePrasadamStatus(status);
-  return !["Cancelled", "Completed", "Rejected"].includes(normalized);
+  return false;
 };
 
 const glassCard =
@@ -550,7 +549,7 @@ const DevoteeDashboard = () => {
         setEventsData((eventsRes.events || []).map((event) => ({ ...event, formattedDate: event.date ? new Date(event.date).toLocaleDateString() : event.date || "" })));
         setNotificationsData(formatNotifications(notificationsRes.notifications || []));
 
-        setDonationSuccess("Donation recorded successfully. Your receipt is available in Receipts.");
+        setDonationSuccess("Donation recorded successfully! Thank you. Please note: This payment is final and non-refundable. Your receipt is available in Receipts.");
         setDonationCategory("General");
         setDonationAmount(501);
         setDonationMethod("UPI");
@@ -610,7 +609,7 @@ const DevoteeDashboard = () => {
             setEventsData((eventsRes.events || []).map((event) => ({ ...event, formattedDate: event.date ? new Date(event.date).toLocaleDateString() : event.date || "" })));
             setNotificationsData(formatNotifications(notificationsRes.notifications || []));
 
-            setDonationSuccess("Donation recorded successfully. Your receipt is available in Receipts.");
+            setDonationSuccess("Donation recorded successfully! Thank you. Please note: This payment is final and non-refundable. Your receipt is available in Receipts.");
             setDonationCategory("General");
             setDonationAmount(501);
             setDonationMethod("UPI");
@@ -710,7 +709,7 @@ const DevoteeDashboard = () => {
       setBookingContact("");
       setBookingNotes("");
       setBookingPaymentMethod("UPI");
-      setBookingSuccess("Pooja booking submitted successfully. It is now pending approval.");
+      setBookingSuccess("Booking successful! Your order has been placed and payment is confirmed. Please note: This payment is final and non-refundable.");
       setActivePage("My Bookings");
     } catch (error) {
       console.warn("Unable to create booking", error);
@@ -770,7 +769,7 @@ const DevoteeDashboard = () => {
         );
         setEventsData((eventsRes.events || []).map((event) => ({ ...event, formattedDate: event.date ? new Date(event.date).toLocaleDateString() : event.date || "" })));
         setNotificationsData(formatNotifications(notificationsRes.notifications || []));
-        setDonationSuccess("Donation recorded successfully. Your receipt is available in Receipts.");
+        setDonationSuccess("Donation recorded successfully! Thank you. Please note: This payment is final and non-refundable. Your receipt is available in Receipts.");
         setDonationCategory("General");
         setDonationAmount(501);
         setDonationMethod("UPI");
@@ -826,7 +825,7 @@ const DevoteeDashboard = () => {
         setEventsData((eventsRes.events || []).map((event) => ({ ...event, formattedDate: event.date ? new Date(event.date).toLocaleDateString() : event.date || "" })));
         setNotificationsData(formatNotifications(notificationsRes.notifications || []));
 
-        setDonationSuccess("Donation recorded successfully. Your receipt is available in Receipts.");
+        setDonationSuccess("Donation recorded successfully! Thank you. Please note: This payment is final and non-refundable. Your receipt is available in Receipts.");
         setDonationCategory("General");
         setDonationAmount(501);
         setDonationMethod("UPI");
@@ -886,7 +885,7 @@ const DevoteeDashboard = () => {
             setEventsData((eventsRes.events || []).map((event) => ({ ...event, formattedDate: event.date ? new Date(event.date).toLocaleDateString() : event.date || "" })));
             setNotificationsData(formatNotifications(notificationsRes.notifications || []));
 
-            setDonationSuccess("Donation recorded successfully. Your receipt is available in Receipts.");
+            setDonationSuccess("Donation recorded successfully! Thank you. Please note: This payment is final and non-refundable. Your receipt is available in Receipts.");
             setDonationCategory("General");
             setDonationAmount(501);
             setDonationMethod("UPI");
@@ -1212,7 +1211,7 @@ const DevoteeDashboard = () => {
         quantity: 1,
         paymentMethod: "UPI",
       });
-      setPrasadamMessage("Prasadam order placed successfully.");
+      setPrasadamMessage("Prasadam order placed successfully! Payment is confirmed. Please note: This payment is final and non-refundable.");
     } catch (error) {
       setPrasadamMessage(error?.response?.data?.error || "Unable to place prasadam order.");
     }
@@ -1570,11 +1569,18 @@ const DevoteeDashboard = () => {
             >
               {bookingLoading ? "Booking..." : "Book Pooja"}
             </button>
+            <button
+              type="button"
+              onClick={() => setActivePage("My Bookings")}
+              className="mt-2 w-full text-center text-sm font-semibold text-[#1b7f77] hover:underline bg-transparent border-0"
+            >
+              View Bookings History
+            </button>
             {bookingError ? (
-              <p className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{bookingError}</p>
+              <p className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 mt-2">{bookingError}</p>
             ) : null}
             {bookingSuccess ? (
-              <p className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">{bookingSuccess}</p>
+              <p className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700 mt-2">{bookingSuccess}</p>
             ) : null}
           </div>
 
@@ -1788,6 +1794,16 @@ const DevoteeDashboard = () => {
               >
                 {donationLoading ? "Processing donation..." : "Donate Now"}
               </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setActivePage("Payment History");
+                  setHistoryTab("Donations");
+                }}
+                className="mt-2 w-full text-center text-sm font-semibold text-[#b46a13] hover:underline bg-transparent border-0"
+              >
+                View Donation History
+              </button>
             </div>
           </div>
 
@@ -1845,9 +1861,19 @@ const DevoteeDashboard = () => {
                   <option value="Card">Card</option>
                   <option value="Net Banking">Net Banking</option>
                 </select>
-                <div className="rounded-[24px] bg-[#fff7e7] px-4 py-3 text-sm font-semibold text-[#8b5a0a]">Total: {formatCurrency(totalPrice)}</div>
+                 <div className="rounded-[24px] bg-[#fff7e7] px-4 py-3 text-sm font-semibold text-[#8b5a0a]">Total: {formatCurrency(totalPrice)}</div>
                 <button type="button" onClick={handlePrasadamSubmit} className={glassButton}>Pay & Place Order</button>
-                {prasadamMessage && <p className="text-sm text-[#1b7f77]">{prasadamMessage}</p>}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActivePage("Payment History");
+                    setHistoryTab("Prasadam");
+                  }}
+                  className="mt-2 w-full text-center text-sm font-semibold text-[#b46a13] hover:underline bg-transparent border-0"
+                >
+                  View Prasadam Orders History
+                </button>
+                {prasadamMessage && <p className="text-sm text-[#1b7f77] mt-2">{prasadamMessage}</p>}
               </div>
             </div>
 
@@ -2198,60 +2224,131 @@ const DevoteeDashboard = () => {
     );
   };
 
-  const renderNotifications = () => (
-    <div className="space-y-6">
-      <div className={`${glassCard}`}>
-        <h2 className="text-[2rem] font-bold">Notifications</h2>
-        <div className="mt-6 space-y-4">
-          {notificationsData.length > 0 ? (
-            notificationsData.map((item) => (
-              <div 
-                key={`${item.title}-${item.date}-${item._id || Math.random()}`} 
-                className={`${glassItem} cursor-pointer transition hover:bg-white/70 ${!item.read ? 'border-l-4 border-l-[#e4262c] bg-white/65' : 'bg-white/55'}`}
-                onClick={() => {
-                  // Mark as read when clicked
-                  if (!item.read && item._id) {
-                    markNotificationAsRead(item._id)
-                      .then(() => {
-                        // Update local state
-                        setNotificationsData((prev) =>
-                          prev.map((n) =>
-                            n._id === item._id ? { ...n, read: true, readAt: new Date() } : n
-                          )
-                        );
-                      })
-                      .catch((err) => console.error("Failed to mark notification as read:", err));
-                  }
-                }}
+  const handleMarkAllRead = async () => {
+    const unread = notificationsData.filter((n) => !n.read && n._id);
+    if (unread.length === 0) return;
+    try {
+      await Promise.all(unread.map((n) => markNotificationAsRead(n._id)));
+      setNotificationsData((prev) =>
+        prev.map((n) => ({ ...n, read: true, readAt: new Date() }))
+      );
+    } catch (err) {
+      console.error("Failed to mark all notifications as read:", err);
+    }
+  };
+
+  const renderNotifications = () => {
+    const unread = notificationsData.filter((n) => !n.read);
+
+    const getNotificationStyle = (title) => {
+      const t = String(title || "").toLowerCase();
+      if (t.includes("booking") || t.includes("pooja")) {
+        return {
+          icon: "calendar",
+          color: "bg-[#eaf1ff] text-[#3468db]",
+        };
+      }
+      if (t.includes("donation") || t.includes("received") || t.includes("payment")) {
+        return {
+          icon: "heart",
+          color: "bg-[#edf7ee] text-[#16853f]",
+        };
+      }
+      if (t.includes("feedback") || t.includes("reply") || t.includes("support")) {
+        return {
+          icon: "gear",
+          color: "bg-[#fcf0e4] text-[#cf7c2b]",
+        };
+      }
+      return {
+        icon: "bell",
+        color: "bg-[#f1f1f1] text-[#6b6b6b]",
+      };
+    };
+
+    return (
+      <div className="space-y-6">
+        <div className={`${glassCard}`}>
+          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#f3ebde]/80 pb-4">
+            <div>
+              <h2 className="text-[2.2rem] font-bold text-[#2d1b08]">Notifications</h2>
+              <p className="mt-1 text-sm text-[#665e55]">Stay updated with your temple activities, bookings, and donations.</p>
+            </div>
+            {unread.length > 0 && (
+              <button
+                type="button"
+                onClick={handleMarkAllRead}
+                className="rounded-full bg-[#1b7f77]/10 px-4 py-2 text-sm font-semibold text-[#1b7f77] transition hover:bg-[#1b7f77] hover:text-white"
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <p className={`text-xl font-semibold ${!item.read ? 'text-[#e4262c]' : 'text-[#1f1f1f]'}`}>
-                      {item.title}
-                      {!item.read && <span className="ml-2 inline-block h-2 w-2 rounded-full bg-[#e4262c]"></span>}
-                    </p>
-                    <p className="mt-1 text-sm text-[#5d5d5d]">{item.date}</p>
-                    {item.message ? (
-                      <p className="mt-2 text-sm text-[#6b6b6b]">{item.message}</p>
-                    ) : null}
-                  </div>
-                  {!item.read && (
-                    <div className="flex-shrink-0 rounded-full bg-[#e4262c] p-1">
-                      <svg className="h-4 w-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.707-10.707a1 1 0 00-1.414-1.414L9 9.586 7.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
+                Mark all as read
+              </button>
+            )}
+          </div>
+
+          <div className="mt-6 space-y-4">
+            {notificationsData.length > 0 ? (
+              notificationsData.map((item) => {
+                const style = getNotificationStyle(item.title);
+                return (
+                  <div
+                    key={`${item.title}-${item.date}-${item._id || Math.random()}`}
+                    onClick={() => {
+                      if (!item.read && item._id) {
+                        markNotificationAsRead(item._id)
+                          .then(() => {
+                            setNotificationsData((prev) =>
+                              prev.map((n) =>
+                                n._id === item._id ? { ...n, read: true, readAt: new Date() } : n
+                              )
+                            );
+                          })
+                          .catch((err) => console.error("Failed to mark notification as read:", err));
+                      }
+                    }}
+                    className={`group relative flex items-start gap-4 rounded-2xl border p-5 transition-all duration-300 cursor-pointer ${
+                      !item.read
+                        ? "border-[#ffdcb1] bg-gradient-to-r from-[#fffbf4] to-[#fff6e8] shadow-[0_8px_20px_rgba(255,159,0,0.06)]"
+                        : "border-[#f1ece1] bg-white/40 hover:bg-white/70"
+                    }`}
+                  >
+                    <div className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl shadow-sm ${style.color}`}>
+                      <AppIcon name={style.icon} className="h-5 w-5" />
                     </div>
-                  )}
+
+                    <div className="flex-1">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p className={`text-base font-bold transition group-hover:text-[#bc6c10] ${!item.read ? "text-[#3f2711]" : "text-[#5c564f]"}`}>
+                          {item.title}
+                        </p>
+                        <span className="text-xs text-[#8c857b] font-medium">{item.date}</span>
+                      </div>
+                      {item.message && (
+                        <p className={`mt-2 text-sm leading-relaxed ${!item.read ? "text-[#5d4f3f]" : "text-[#797268]"}`}>
+                          {item.message}
+                        </p>
+                      )}
+                    </div>
+
+                    {!item.read && (
+                      <span className="absolute right-4 top-4 h-2.5 w-2.5 rounded-full bg-[#ff8f00] ring-4 ring-[#ff8f00]/20 animate-pulse"></span>
+                    )}
+                  </div>
+                );
+              })
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="rounded-full bg-[#fcf9f5] p-4 text-[#8d6925]/40 mb-4">
+                  <AppIcon name="bell" className="h-12 w-12" />
                 </div>
+                <p className="text-base font-semibold text-[#5c544d]">No notifications yet</p>
+                <p className="text-sm text-[#8c847b] mt-1">We will notify you when something happens.</p>
               </div>
-            ))
-          ) : (
-            <div className={`${glassItem} text-[#5d5d5d]`}>No notifications available.</div>
-          )}
+            )}
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderProfile = () => {
     const displayValue = (v) => {
