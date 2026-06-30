@@ -18,4 +18,4 @@ const startServer = async () => {
 
 startServer();
 
-// Touch to force nodemon restart after adding fallback email credentials
+// Touch to force nodemon restart after changing default devotee prasadam status to Placed

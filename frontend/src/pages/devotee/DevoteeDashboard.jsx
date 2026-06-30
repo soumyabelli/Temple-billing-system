@@ -1845,7 +1845,7 @@ const DevoteeDashboard = () => {
       <div className="space-y-6">
         <div className={`${glassCard}`}>
           <h2 className="text-[2rem] font-bold">Prasadam Orders</h2>
-          <div className="mt-6 grid gap-6 lg:grid-cols-[1.1fr_1fr]">
+          <div className="mt-6 max-w-2xl mx-auto">
             <div className={glassSection}>
               <h3 className="text-xl font-semibold">Order Prasadam</h3>
               <div className="mt-4 grid gap-3">
@@ -1875,29 +1875,6 @@ const DevoteeDashboard = () => {
                 </button>
                 {prasadamMessage && <p className="text-sm text-[#1b7f77] mt-2">{prasadamMessage}</p>}
               </div>
-            </div>
-
-            <div className="grid gap-4">
-              {prasadamOrders.length > 0 ? (
-                prasadamOrders.map((item) => (
-                  <div key={item._id} className={glassItem}>
-                    <p className="text-xl font-semibold">{item.itemName}</p>
-                    <p className="mt-2 text-sm text-[#5d5d5d]">Order date: {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : ""}</p>
-                    <p className="mt-1 text-sm text-[#5d5d5d]">Qty: {item.quantity} | Payment: {item.paymentMethod || "UPI"}</p>
-                    <p className="mt-3 text-lg font-bold">{formatCurrency(item.amount)}</p>
-                    <div className="mt-3 flex items-center gap-2">
-                      <span className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${getPrasadamStatusTone(item.status)}`}>
-                        {normalizePrasadamStatus(item.status)}
-                      </span>
-                      {canCancelPrasadamOrder(item.status) && (
-                        <button type="button" onClick={() => handleCancelPrasadam(item._id)} className="rounded-lg bg-[#f26037] px-3 py-1 text-xs font-semibold text-white">Cancel</button>
-                      )}
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className={`${glassItem} text-[#5d5d5d]`}>No prasadam orders available.</div>
-              )}
             </div>
           </div>
         </div>

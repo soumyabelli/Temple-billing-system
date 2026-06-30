@@ -805,3 +805,16 @@ To: kulalveda23@gmail.com
 Subject: Verify Your Temple Devotee Registration
 Please click the following link to verify your email and complete devotee registration: http://localhost:5000/api/auth/verify-registration?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiRGVlcHRoaSBTIEt1bGFsIiwiZW1haWwiOiJrdWxhbHZlZGEyM0BnbWFpbC5jb20iLCJwaG9uZSI6IjcyNTkxNTY5NDYiLCJhZGRyZXNzIjoiQWxldm9vciIsInBsYWNlIjoiVWR1cGkiLCJwYXNzd29yZCI6IiQyYiQxMCRXanNTUVJsaWIzOUpRWU9hbnc0d0J1MGU0M3Fzb05FWDZoR05Cb1M4NVQxN0hXZElONUFDaSIsInJvbGUiOiJkZXZvdGVlIiwiaWF0IjoxNzgyODA4NTMyLCJleHAiOjE3ODI4MDk0MzJ9.dn2A6Ldvww2-eW5k9iOp7S1MCzLe7ZufrswhnTy3oo0
 
+[2026-06-30T08:50:01.698Z] EMAIL
+To: soumya2880@gmail.com
+Subject: Prasadam Order Confirmation
+Prasadam Order Confirmed
+Item: Laddu Prasadam
+Quantity: 1
+Amount: ₹151
+Thank you!
+
+[2026-06-30T08:50:01.716Z] SMS
+To: 9953523634
+Message: Prasadam order confirmed! Item: Laddu Prasadam. Qty: 1. Ready soon! -Temple
+

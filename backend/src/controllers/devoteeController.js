@@ -849,7 +849,7 @@ const createPrasadamOrder = async (req, res) => {
       .trim()
       .toLowerCase();
     const resolvedChannel = normalizedChannel === "cashier" ? "cashier" : "devotee";
-    const orderStatus = resolvedChannel === "cashier" ? "Placed" : "Pending";
+    const orderStatus = "Placed";
 
     let resolvedDevoteeId = devoteeId || undefined;
     if (!resolvedDevoteeId && normalizedOrderEmail) {
