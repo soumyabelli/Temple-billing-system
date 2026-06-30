@@ -10,6 +10,7 @@ import {
 } from "react-icons/fa";
 import {
   FiBell,
+  FiBox,
   FiCalendar,
   FiChevronDown,
   FiChevronLeft,
@@ -22,6 +23,7 @@ import {
   FiUser,
 } from "react-icons/fi";
 import { MdTempleHindu } from "react-icons/md";
+import { TbChecklist } from "react-icons/tb";
 
 import { useAuth } from "../../context/AuthContext";
 import { getStaffAttendanceDashboard, markAttendance } from "../../services/attendanceService";
@@ -146,12 +148,12 @@ const fallbackCalendar = {
 
 const navSections = [
   { label: "Overview", icon: FiHome, path: "/staff" },
-  { label: "My Duties", icon: FiUser, path: "/staff?section=duties" },
-  { label: "Pooja Support", icon: FiFileText, path: "/staff?section=poojaSupport" },
+  { label: "My Duties", icon: TbChecklist, path: "/staff?section=duties" },
+  { label: "Pooja Support", icon: MdTempleHindu, path: "/staff?section=poojaSupport" },
   { label: "Attendance", icon: FaCalendarCheck, path: "/staff/attendance", active: true },
   { label: "Leave Requests", icon: FiFileText, path: "/staff?section=leaveRequests" },
+  { label: "Inventory Requests", icon: FiBox, path: "/staff?section=inventory" },
   { label: "Apply Leave", icon: FiCalendar, path: "/staff?section=applyLeave" },
-  { label: "Inventory Requests", icon: FiFileText, path: "/staff?section=inventoryRequests" },
   { label: "Notifications", icon: FiBell, path: "/staff?section=notifications" },
   { label: "Profile", icon: FiSettings, path: "/staff?section=profile" },
 ];
