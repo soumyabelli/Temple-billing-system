@@ -149,7 +149,6 @@ const fallbackCalendar = {
 const navSections = [
   { label: "Overview", icon: FiHome, path: "/staff" },
   { label: "My Duties", icon: TbChecklist, path: "/staff?section=duties" },
-  { label: "Pooja Support", icon: MdTempleHindu, path: "/staff?section=poojaSupport" },
   { label: "Attendance", icon: FaCalendarCheck, path: "/staff/attendance", active: true },
   { label: "Leave Requests", icon: FiFileText, path: "/staff?section=leaveRequests" },
   { label: "Inventory Requests", icon: FiBox, path: "/staff?section=inventory" },
