@@ -55,11 +55,7 @@ const LoginForm = () => {
       }
 
       loginUser({ token: res.token, user: res.user });
-      if (selectedRole && selectedRole !== userRole) {
-        alert(`Logged in as ${userRole}. Selected role was ${selectedRole}.`);
-      } else {
-        alert(`Login Successful as ${userRole}`);
-      }
+      alert(`Login Successful as ${userRole}`);
       navigate(`/${userRole}`);
     } catch (error) {
       setErrorMessage(error.response?.data?.message || "Login failed. Please check server and credentials.");

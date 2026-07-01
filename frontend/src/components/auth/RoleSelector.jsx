@@ -4,12 +4,10 @@ const RoleSelector = ({ selectedRole, setSelectedRole }) => {
 
   const roles = [
     "admin",
-    "accountant",
-    "cashier",
-    "priest",
     "staff",
     "devotee",
   ];
+
 
   return (
     <div className="grid grid-cols-3 gap-4">

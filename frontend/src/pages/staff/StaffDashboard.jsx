@@ -404,8 +404,11 @@ const StaffDashboard = () => {
       });
   }, [tasks, filteredStatus, searchQuery]);
 
+  const todayDuty = latestDuties.length > 0 ? latestDuties[0] : null;
 
-
+  const timelineItems = useMemo(() => {
+    return tasks.slice().sort(sortTasksByDateTime);
+  }, [tasks]);
   useEffect(() => {
     if (selectedTask) {
       setDetailStatus(selectedTask.status || "Pending");
@@ -960,31 +963,16 @@ const StaffDashboard = () => {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-              <div>
-                <label htmlFor="statusFilter">Status</label>
-                <select
-                  id="statusFilter"
-                  value={filteredStatus}
-                  onChange={(e) => setFilteredStatus(e.target.value)}
-                >
-                  <option value="all">All Statuses</option>
-                  {TASK_STATUSES.map((status) => (
-                    <option key={status} value={status}>
-                      {status}
-                    </option>
-                  ))}
-                </select>
-              </div>
+
               <button type="button" className="export-btn" onClick={() => {
                 const rows = [
-                  ["Shift", "Duty Name", "Area", "Time", "Assigned By", "Status", "Description"],
+                  ["Shift", "Duty Name", "Area", "Time", "Assigned By", "Description"],
                   ...filteredDuties.map((task) => [
                     task.shiftName || "",
                     task.dutyName || task.title || task.duty || "",
                     task.dutyArea || task.area || task.description || "",
                     task.reportingTime || task.time || "",
                     task.assignedBy || "",
-                    task.status || "",
                     task.description || task.area || "",
                   ]),
                 ];
@@ -1038,7 +1026,6 @@ const StaffDashboard = () => {
                         <th>Duty</th>
                         <th>Area</th>
                         <th>Time</th>
-                        <th>Status</th>
                         <th>Assigned By</th>
                       </tr>
                     </thead>
@@ -1071,11 +1058,6 @@ const StaffDashboard = () => {
                             <td>{task.dutyName || task.title || task.duty}</td>
                             <td>{task.dutyArea || task.area || task.description}</td>
                             <td>{task.reportingTime || task.time || "-"}</td>
-                            <td>
-                              <span className={`status-chip ${statusClassMap[task.status] || ""}`}>
-                                {task.status}
-                              </span>
-                            </td>
                             <td>{task.assignedBy}</td>
                           </tr>
                         ))
@@ -1099,7 +1081,6 @@ const StaffDashboard = () => {
                             <p className="duty-title">{task.shiftName || task.title || task.duty}</p>
                             <p className="duty-meta">{task.dutyName || task.area || task.description || "General duty"}</p>
                           </div>
-                          <span className={`status-chip ${statusClassMap[task.status] || ""}`}>{task.status}</span>
                         </div>
                       ))
                     )}
@@ -1130,10 +1111,6 @@ const StaffDashboard = () => {
                       <strong>{selectedTask.reportingTime || selectedTask.time || "-"}</strong>
                     </div>
                     <div className="detail-row">
-                      <span>Assignment Status</span>
-                      <strong>{selectedTask.attendanceStatus || selectedTask.status || "Pending"}</strong>
-                    </div>
-                    <div className="detail-row">
                       <span>Assigned By</span>
                       <strong>{selectedTask.assignedBy || "Admin"}</strong>
                     </div>
@@ -1141,29 +1118,6 @@ const StaffDashboard = () => {
                       <span>Description</span>
                       <p>{selectedTask.description || selectedTask.area || "No additional details."}</p>
                     </div>
-                    <div className="detail-row status-update-row">
-                      <label htmlFor="detailStatus">Status</label>
-                      <select
-                        id="detailStatus"
-                        value={detailStatus}
-                        onChange={(e) => setDetailStatus(e.target.value)}
-                        disabled={updatingTaskId === selectedTask._id}
-                      >
-                        {TASK_STATUSES.map((status) => (
-                          <option key={status} value={status}>
-                            {status}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <button
-                      type="button"
-                      className="status-update-button"
-                      onClick={() => handleTaskStatusChange(selectedTask._id, detailStatus)}
-                      disabled={updatingTaskId === selectedTask._id}
-                    >
-                      Update Status
-                    </button>
                   </div>
                 ) : (
                   <div className="empty-cell">Select a duty to view details.</div>
