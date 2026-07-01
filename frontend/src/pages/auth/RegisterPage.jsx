@@ -18,6 +18,7 @@ const RegisterPage = () => {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [linkSent, setLinkSent] = useState(false);
+  const [verificationUrl, setVerificationUrl] = useState("");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -75,6 +76,9 @@ const RegisterPage = () => {
     try {
       const res = await sendVerificationLink(formData);
       alert(res.message || "Verification link sent successfully to your email.");
+      if (res.verificationLink) {
+        setVerificationUrl(res.verificationLink);
+      }
       setLinkSent(true);
     } catch (error) {
       alert(error.response?.data?.message || "Failed to send verification link. Please check your email and try again.");
@@ -98,6 +102,22 @@ const RegisterPage = () => {
             <br /><br />
             Please open your inbox and click the verification link to complete your devotee registration.
           </p>
+          {verificationUrl && (
+            <div className="mt-4 p-5 bg-amber-50/80 border border-amber-200/60 rounded-2xl text-left mb-8 shadow-sm">
+              <p className="text-sm font-semibold text-amber-900 mb-2 flex items-center gap-1.5">
+                <span>🧑‍💻</span> Development Mode Bypass:
+              </p>
+              <p className="text-xs text-amber-800/90 leading-relaxed mb-4">
+                Since you are running the project locally, click the button below to complete the registration directly without needing to retrieve the email:
+              </p>
+              <a
+                href={verificationUrl}
+                className="block w-full text-center bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white text-sm font-bold py-3 px-4 rounded-xl shadow-md transition-all duration-200"
+              >
+                Verify & Register Instantly
+              </a>
+            </div>
+          )}
           <button
             onClick={() => navigate("/")}
             className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-5 py-3.5 rounded-xl font-bold shadow-xl transition-all"

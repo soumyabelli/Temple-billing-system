@@ -255,7 +255,10 @@ const sendVerificationLink = async (req, res) => {
       return res.status(500).json({ message: `Failed to send verification link: ${emailResult.error}` });
     }
 
-    return res.status(200).json({ message: "Verification link sent successfully to your email. Please check your inbox." });
+    return res.status(200).json({
+      message: "Verification link sent successfully to your email. Please check your inbox.",
+      verificationLink: verificationLink
+    });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
