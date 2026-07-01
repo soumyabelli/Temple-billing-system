@@ -9,6 +9,7 @@ const Leave = require("../models/Leave");
 const Task = require("../models/Task");
 const Notification = require("../models/Notification");
 const { canLoginForStatus, getRoleAccess } = require("../utils/employeeAccess");
+const { sendEmail } = require("../utils/communicationService");
 
 const ALLOWED_AUTH_ROLES = ["admin", "accountant", "cashier", "priest", "staff"];
 const EMPLOYEE_STATUSES = ["Active", "On Leave", "Inactive", "Suspended", "Resigned", "Retired"];
@@ -242,6 +243,12 @@ exports.createEmployee = async (req, res) => {
       audienceRole: "admin",
       category: "employee",
     });
+
+    await sendEmail({
+      to: email,
+      subject: "Welcome to Sri Shanti Mahadev Mandir - Your Account Details",
+      text: `Hello ${createdEmployee.name},\n\nYour employee profile has been successfully created.\n\nHere are your login credentials:\nEmployee ID: ${employeeId}\nUsername (Email): ${username}\nTemporary Password: ${temporaryPassword}\n\nPlease login using these credentials. You will be required to change your password upon your first login.\n\nBest regards,\nTemple Admin`,
+    }).catch(err => console.error("Failed to send welcome email:", err.message));
 
     return res.status(201).json({
       message: "Employee and login account created successfully.",

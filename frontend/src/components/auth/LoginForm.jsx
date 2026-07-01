@@ -48,9 +48,9 @@ const LoginForm = () => {
       }
 
       if (res.user?.mustChangePassword && userRole !== "devotee") {
-        loginUser({ token: res.token, user: res.user });
-        alert("First login detected. You are logged in, but please change your password soon.");
-        navigate(`/${userRole}`);
+        setPasswordResetToken(res.token);
+        setCurrentPassword(formData.password);
+        alert("First login detected. You must change your password to continue.");
         return;
       }
 

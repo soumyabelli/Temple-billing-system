@@ -658,9 +658,9 @@ const AddEmployee = () => {
                   </div>
                   <p className="text-xs text-slate-400">Email entered in Step 1 will be used as login</p>
                 </label>
-                <div className="rounded-3xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-800 md:col-span-2">
-                  Employee ID, username, login account, and temporary password will be generated automatically after Save Employee.
-                </div>
+                    <div className="rounded-3xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-800 md:col-span-2">
+                      Employee ID, username, and temporary password will be generated and sent to the employee's email automatically after Save Employee.
+                    </div>
 
                 {/* Summary Review */}
                 <div className="md:col-span-2 rounded-3xl border border-slate-200 bg-slate-50 p-5 space-y-3">
@@ -790,6 +790,9 @@ const AddEmployee = () => {
               <InfoRow label="Gender" value={form.gender} />
               <InfoRow label="Date of Birth" value={form.dob || "—"} />
               <div className="border-t border-slate-200 pt-3 space-y-3">
+                <InfoRow label="Employee ID" value="Auto-generated" highlight />
+                <InfoRow label="Username" value="Auto-generated" highlight />
+                <InfoRow label="Temporary Password" value="Auto-generated & Emailed" highlight />
                 <InfoRow label="Department" value={form.department || "—"} highlight />
                 <InfoRow label="Default Shift" value={form.defaultShift} highlight />
                 <InfoRow label="Default Duty" value={form.defaultDuty || "—"} highlight />
@@ -811,21 +814,13 @@ const AddEmployee = () => {
       {credentials && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/40 px-4">
           <div className="w-full max-w-md rounded-[28px] border border-slate-200 bg-white p-6 shadow-2xl">
-            <p className="text-sm uppercase tracking-[0.2em] text-emerald-600">Employee Created</p>
-            <h3 className="mt-2 text-2xl font-bold text-slate-900">Login credentials</h3>
-            <div className="mt-5 space-y-3 rounded-3xl bg-slate-50 p-4 text-sm">
-              <InfoRow label="Employee ID" value={credentials.employeeId} highlight />
-              <InfoRow label="Username" value={credentials.username} highlight />
-              <InfoRow label="Temporary Password" value={credentials.temporaryPassword} highlight />
+            <p className="text-sm uppercase tracking-[0.2em] text-emerald-600">Success</p>
+            <h3 className="mt-2 text-2xl font-bold text-slate-900">Employee Created</h3>
+            <div className="mt-5 space-y-3 rounded-3xl bg-slate-50 p-4 text-sm text-slate-700">
+              <p>The employee profile for <strong>{form.name}</strong> has been created successfully.</p>
+              <p>The login credentials (including their temporary password) have been sent to <strong>{form.email}</strong>.</p>
             </div>
             <div className="mt-5 flex flex-wrap justify-end gap-3">
-              <button
-                type="button"
-                onClick={copyCredentials}
-                className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900"
-              >
-                <FiCopy /> Copy Credentials
-              </button>
               <button
                 type="button"
                 onClick={() => navigate("/admin/employees")}
