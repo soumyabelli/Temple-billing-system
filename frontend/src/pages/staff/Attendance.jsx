@@ -586,68 +586,7 @@ const Attendance = () => {
     "Awaiting assignment";
 
   return (
-    <div className="staff-dashboard-page staff-attendance-page">
-      <aside className="staff-sidebar">
-        <div className="staff-brand">
-          <div className="brand-icon">
-            <MdTempleHindu />
-          </div>
-          <div>
-            <h2>Sri Shanti</h2>
-            <p>Mahadev Mandir</p>
-          </div>
-        </div>
-
-        <nav className="staff-nav">
-          {navSections.map((item) => {
-            const Icon = item.icon;
-            const isActive = item.active || item.path === "/staff/attendance";
-            return (
-              <button
-                key={item.label}
-                type="button"
-                className={isActive ? "nav-item active" : "nav-item"}
-                onClick={() => navigate(item.path)}
-              >
-                <Icon />
-                {item.label}
-              </button>
-            );
-          })}
-          <button type="button" className="nav-item" onClick={handleLogout}>
-            <FiLogOut />
-            Logout
-          </button>
-        </nav>
-      </aside>
-
-      <main className="staff-main attendance-main">
-        <header className="staff-header attendance-header">
-          <div>
-            <h1>My Attendance</h1>
-            <p>View your attendance records and summary.</p>
-          </div>
-
-          <div className="header-right attendance-header-right">
-            <span className="header-date">
-              <FiCalendar />
-              {headerDate}
-            </span>
-
-            <button type="button" className="notif-button" aria-label="Notifications">
-              <FiBell />
-              <span>4</span>
-            </button>
-
-            <div className="attendance-user-chip">
-              <span className="attendance-user-avatar">{initials}</span>
-              <span className="attendance-user-meta">
-                <strong>{displayName}</strong>
-                <span>{roleLabel}</span>
-              </span>
-            </div>
-          </div>
-        </header>
+    <div className="attendance-main staff-attendance-page">
 
         {error ? <div className="staff-error">{error}</div> : null}
         {loading ? <div className="staff-loading">Loading attendance data...</div> : null}
@@ -970,7 +909,6 @@ const Attendance = () => {
             </div>
           </div>
         ) : null}
-      </main>
     </div>
   );
 };

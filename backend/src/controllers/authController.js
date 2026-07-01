@@ -477,8 +477,21 @@ const loginUser = async (req, res) => {
       await user.save();
     }
 
-    if (normalizedRole && user.role !== normalizedRole) {
-      return issueAuthResponse(res, user, `Login successful as '${user.role}'. Selected role '${normalizedRole}' was ignored.`);
+    if (normalizedRole) {
+      const isStaffInternalRole = ["staff", "accountant", "cashier", "priest"].includes(user.role);
+      
+      let isRoleValid = false;
+      if (normalizedRole === "staff" && isStaffInternalRole) {
+        isRoleValid = true;
+      } else if (normalizedRole === user.role) {
+        isRoleValid = true;
+      }
+
+      if (!isRoleValid) {
+        return res.status(403).json({
+          message: "Please select correct role.",
+        });
+      }
     }
 
     return issueAuthResponse(res, user);

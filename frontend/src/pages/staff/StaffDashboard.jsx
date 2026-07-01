@@ -27,6 +27,7 @@ import {
   updateEmployeeProfile,
 } from "../../services/employeeService";
 import Notifications from "./Notifications";
+import Attendance from "./Attendance";
 import "./StaffDashboard.css";
 
 const API_BASE = "http://localhost:5000/api";
@@ -364,7 +365,7 @@ const StaffDashboard = () => {
   }, [fetchUnreadCount]);
 
   useEffect(() => {
-    const validSections = new Set(["dashboard", "duties", "leaveRequests", "applyLeave", "notifications", "profile", "inventory"]);
+    const validSections = new Set(["dashboard", "duties", "attendance", "leaveRequests", "applyLeave", "notifications", "profile", "inventory"]);
     if (sectionFromQuery && validSections.has(sectionFromQuery)) {
       setActiveSection(sectionFromQuery);
     } else if (location.pathname === "/staff" && !sectionFromQuery) {
@@ -700,7 +701,7 @@ const StaffDashboard = () => {
           <button
             type="button"
             className={activeSection === "attendance" ? "nav-item active" : "nav-item"}
-            onClick={() => navigate("/staff/attendance")}
+            onClick={() => setActiveSection("attendance")}
           >
             <FaCalendarCheck /> Attendance
           </button>
@@ -1671,6 +1672,10 @@ const StaffDashboard = () => {
             onUnreadCountChange={setNotificationUnreadCount}
             onQuickAction={(section) => setActiveSection(section)}
           />
+        ) : null}
+
+        {!loading && activeSection === "attendance" ? (
+          <Attendance />
         ) : null}
 
         {!loading && activeSection === "applyLeave" ? (

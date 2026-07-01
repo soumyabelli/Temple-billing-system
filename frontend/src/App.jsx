@@ -66,7 +66,7 @@ import RegisterPage from "./pages/auth/RegisterPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import LandingPage from "./pages/LandingPage";
 
-import Attendance from "./pages/staff/Attendance";
+
 
 function App() {
   return (
@@ -603,14 +603,7 @@ function App() {
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/staff/attendance"
-        element={
-          <ProtectedRoute allowedRoles={["staff"]}>
-            <Attendance />
-          </ProtectedRoute>
-        }
-      />
+      
 
       {/* DEVOTEE */}
       <Route
