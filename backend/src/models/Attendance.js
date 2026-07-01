@@ -134,6 +134,46 @@ const attendanceSchema = new mongoose.Schema(
       default: "",
       trim: true,
     },
+    latitude: {
+      type: Number,
+      default: null,
+    },
+    longitude: {
+      type: Number,
+      default: null,
+    },
+    locationVerified: {
+      type: Boolean,
+      default: false,
+    },
+    faceVerified: {
+      type: Boolean,
+      default: false,
+    },
+    distanceFromTemple: {
+      type: Number,
+      default: null,
+    },
+    deviceInfo: {
+      type: String,
+      default: "",
+    },
+    browser: {
+      type: String,
+      default: "",
+    },
+    ipAddress: {
+      type: String,
+      default: "",
+    },
+    checkInPhoto: {
+      type: String,
+      default: "",
+    },
+    checkOutPhoto: {
+      type: String,
+      default: "",
+    },
   },
   { timestamps: true }
 );

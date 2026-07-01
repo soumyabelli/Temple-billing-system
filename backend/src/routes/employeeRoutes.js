@@ -12,6 +12,7 @@ const {
   updateEmployeeProfileByUserId,
   changeEmployeePasswordByUserId,
   deleteEmployee,
+  registerFace,
 } = require("../controllers/employeeManagementController");
 const { authenticate, authorizeRoles } = require("../middleware/authMiddleware");
 
@@ -23,6 +24,7 @@ router.put("/profile/:userId/password", authenticate, changeEmployeePasswordByUs
 router.get("/", authenticate, authorizeRoles("admin"), getEmployees);
 router.get("/:id", authenticate, authorizeRoles("admin"), getEmployeeById);
 router.put("/:id", authenticate, authorizeRoles("admin"), updateEmployee);
+router.put("/:id/register-face", authenticate, authorizeRoles("admin"), registerFace);
 router.delete("/:id", authenticate, authorizeRoles("admin"), deleteEmployee);
 
 module.exports = router;

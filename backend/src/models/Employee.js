@@ -137,6 +137,21 @@ const employeeSchema = new mongoose.Schema({
     default: "",
   },
 
+  profilePhoto: {
+    type: String,
+    default: "",
+  },
+
+  faceRegistered: {
+    type: Boolean,
+    default: false,
+  },
+
+  faceDescriptor: {
+    type: [Number],
+    default: [],
+  },
+
   status: {
     type: String,
     enum: ["Active", "On Leave", "Inactive", "Suspended", "Resigned", "Retired"],

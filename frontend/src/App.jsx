@@ -29,6 +29,7 @@ import Payroll from "./pages/admin/employee/Payroll";
 import LeaveManagement from "./pages/admin/employee/LeaveManagement";
 import Performance from "./pages/admin/employee/Performance";
 import ShiftManagement from "./pages/admin/employee/ShiftManagement";
+import AttendanceSettings from "./pages/admin/employee/AttendanceSettings";
 import PoojaManagement from "./pages/admin/PoojaManagement";
 import AllBookings from "./pages/admin/AllBookings";
 import FeedbackManagement from "./pages/admin/FeedbackManagement";
@@ -391,6 +392,17 @@ function App() {
         }
       />
 
+      <Route
+        path="/admin/employees/settings"
+        element={
+          <ProtectedRoute
+            element={<AdminLayout />}
+            allowedRoles={["admin"]}
+          >
+            <AttendanceSettings />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/admin/employees"
         element={

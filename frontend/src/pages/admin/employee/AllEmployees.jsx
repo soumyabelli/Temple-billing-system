@@ -7,6 +7,7 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import SectionCard from "../../../components/admin/employee/SectionCard";
 import EmployeeTable from "../../../components/admin/employee/EmployeeTable";
+import FaceRegistration from "../../../components/admin/employee/FaceRegistration";
 import { attendanceTrend } from "./employeeData";
 import { getEmployees, getEmployee, deleteEmployee } from "../../../services/employeeService";
 import { getAdminAttendanceDashboard } from "../../../services/attendanceService";
@@ -538,7 +539,7 @@ const AllEmployees = () => {
           </div>
 
           <div className="mt-5 flex flex-wrap gap-2">
-            {["Profile", "Attendance", "Leave History", "Payroll", "Performance", "Duty History"].map((tab) => (
+            {["Profile", "Attendance", "Leave History", "Payroll", "Performance", "Duty History", "Face Registration"].map((tab) => (
               <button
                 key={tab}
                 type="button"
@@ -634,7 +635,19 @@ const AllEmployees = () => {
           </>
           )}
 
-          {selectedTab !== "Profile" && (
+          {selectedTab === "Face Registration" && (
+            <div className="mt-4">
+              <FaceRegistration 
+                employee={selectedEmployee} 
+                onComplete={(updatedEmployee) => {
+                  setSelectedEmployee(updatedEmployee);
+                  setEmployees((current) => current.map((emp) => emp._id === updatedEmployee._id ? updatedEmployee : emp));
+                }}
+              />
+            </div>
+          )}
+
+          {selectedTab !== "Profile" && selectedTab !== "Face Registration" && (
             <div className="mt-4 rounded-3xl border border-slate-200 bg-white p-4">
               {selectedTab === "Attendance" && (
                 <DetailRows rows={selectedEmployee.details?.attendance || []} empty="No attendance records found." getKey={(row) => row._id || row.id} render={(row) => `${formatDate(row.dateKey)} - ${row.status || "Pending"} - ${row.checkIn || "--"} to ${row.checkOut || "--"}`} />

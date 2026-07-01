@@ -600,3 +600,39 @@ exports.deleteEmployee = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
+
+exports.registerFace = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { faceDescriptor, profilePhoto } = req.body;
+    
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid employee ID." });
+    }
+    
+    if (!faceDescriptor || !Array.isArray(faceDescriptor)) {
+      return res.status(400).json({ message: "Valid face descriptor array is required." });
+    }
+    
+    const employee = await Employee.findById(id);
+    if (!employee) {
+      return res.status(404).json({ message: "Employee not found." });
+    }
+    
+    employee.faceDescriptor = faceDescriptor;
+    employee.faceRegistered = true;
+    if (profilePhoto) {
+      employee.profilePhoto = profilePhoto;
+    }
+    
+    await employee.save();
+    
+    return res.status(200).json({ 
+      success: true, 
+      message: "Face registered successfully.",
+      employee: sanitizeEmployee(employee)
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};

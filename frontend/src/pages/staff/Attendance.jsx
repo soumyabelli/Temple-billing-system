@@ -26,7 +26,8 @@ import { MdTempleHindu } from "react-icons/md";
 import { TbChecklist } from "react-icons/tb";
 
 import { useAuth } from "../../context/AuthContext";
-import { getStaffAttendanceDashboard, markAttendance } from "../../services/attendanceService";
+import { getStaffAttendanceDashboard } from "../../services/attendanceService";
+import StaffAttendanceFlow from "./StaffAttendanceFlow";
 import "./StaffDashboard.css";
 import "./Attendance.css";
 
@@ -429,6 +430,7 @@ const Attendance = () => {
   const [loading, setLoading] = useState(true);
   const [savingAction, setSavingAction] = useState(false);
   const [attendanceDialogOpen, setAttendanceDialogOpen] = useState(false);
+  const [showAttendanceFlow, setShowAttendanceFlow] = useState(false);
   const [error, setError] = useState("");
 
   const displayName = dashboard?.staff?.name || user?.name || "Ramesh Kumar";
@@ -486,26 +488,10 @@ const Attendance = () => {
     navigate("/login");
   };
 
-  const handleMarkAttendance = async () => {
+  const handleMarkAttendance = () => {
     if (!staffId) return;
-
-    const action = canCheckOut ? "check-out" : "check-in";
-
-    try {
-      setSavingAction(true);
-      await markAttendance({
-        staffId,
-        staffName: displayName,
-        staffEmail,
-        action,
-      });
-      setAttendanceDialogOpen(false);
-      await loadAttendance();
-    } catch (requestError) {
-      setError(requestError.response?.data?.message || "Failed to update attendance");
-    } finally {
-      setSavingAction(false);
-    }
+    setAttendanceDialogOpen(false);
+    setShowAttendanceFlow(true);
   };
 
   const handleQuickAction = async (actionKey) => {
@@ -903,12 +889,30 @@ const Attendance = () => {
                   : attendanceCompleted
                   ? "Attendance is already completed for today."
                   : canCheckOut
-                    ? "You can check out now."
-                    : "Use this panel to mark your daily attendance."}
+                    ? "You can check out now. Face and location verification will be required."
+                    : "Use this panel to mark your daily attendance. Face and location verification will be required."}
               </p>
             </div>
           </div>
         ) : null}
+
+        {showAttendanceFlow && (
+          <div className="attendance-modal-backdrop" role="presentation">
+             <div className="bg-white rounded-3xl overflow-hidden shadow-2xl relative w-full max-w-lg">
+                <StaffAttendanceFlow 
+                  staffId={staffId}
+                  staffName={displayName}
+                  staffEmail={staffEmail}
+                  action={canCheckOut ? "check-out" : "check-in"}
+                  onComplete={() => {
+                     setShowAttendanceFlow(false);
+                     loadAttendance();
+                  }}
+                  onCancel={() => setShowAttendanceFlow(false)}
+                />
+             </div>
+          </div>
+        )}
     </div>
   );
 };

@@ -5,11 +5,32 @@ const Leave = require("../models/Leave");
 const Shift = require("../models/Shift");
 const Task = require("../models/Task");
 const User = require("../models/User");
+const AttendanceSetting = require("../models/AttendanceSetting");
 const { createNotification, createStaffNotification } = require("../utils/notificationService");
 const { canMarkAttendanceForStatus } = require("../utils/employeeAccess");
 
 const ATTENDANCE_STATUSES = ["Present", "Absent", "Late", "Half Day", "Leave"];
 const CHECK_IN_LATE_TIME = { hour: 9, minute: 30 };
+
+function getHaversineDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371e3;
+  const p1 = lat1 * Math.PI/180;
+  const p2 = lat2 * Math.PI/180;
+  const dp = (lat2-lat1) * Math.PI/180;
+  const dl = (lon2-lon1) * Math.PI/180;
+  const a = Math.sin(dp/2) * Math.sin(dp/2) + Math.cos(p1) * Math.cos(p2) * Math.sin(dl/2) * Math.sin(dl/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c; 
+}
+
+function getEuclideanDistance(desc1, desc2) {
+  if (!desc1 || !desc2 || desc1.length !== desc2.length) return Infinity;
+  let sum = 0;
+  for (let i = 0; i < desc1.length; i++) {
+    sum += Math.pow(desc1[i] - desc2[i], 2);
+  }
+  return Math.sqrt(sum);
+}
 
 const clean = (value) => String(value || "").trim();
 const normalizeEmail = (value) => clean(value).toLowerCase();
@@ -1179,7 +1200,11 @@ exports.getAdminAttendanceDashboard = async (req, res) => {
 
 exports.markAttendance = async (req, res) => {
   try {
-    const { staffId, staffName, staffEmail, action } = req.body;
+    const { 
+      staffId, staffName, staffEmail, action,
+      faceDescriptor, latitude, longitude,
+      browser, ipAddress, deviceInfo, photo
+    } = req.body;
     const normalizedAction = clean(action).toLowerCase();
 
     if (!clean(staffId)) {
@@ -1204,7 +1229,7 @@ exports.markAttendance = async (req, res) => {
     if (todayLeave) {
       return res.status(409).json({
         success: false,
-        message: "You are on approved leave today",
+        message: "You are on approved leave today. Attendance cannot be marked.",
       });
     }
 
@@ -1212,6 +1237,11 @@ exports.markAttendance = async (req, res) => {
     if (!employee) {
       return res.status(404).json({ success: false, message: "Employee profile not found" });
     }
+    
+    if (!employee.faceRegistered || !employee.faceDescriptor || !employee.faceDescriptor.length) {
+      return res.status(403).json({ success: false, message: "No registered face found. Please contact the administrator to register your face." });
+    }
+
     if (!canMarkAttendanceForStatus(employee.status)) {
       return res.status(403).json({
         success: false,
@@ -1246,7 +1276,31 @@ exports.markAttendance = async (req, res) => {
     if (!hasDefaultShift && !hasDutyAssignment && !hasTemporaryAssignment) {
       return res.status(403).json({
         success: false,
-        message: "No duty assigned for today. Please contact admin for duty assignment.",
+        message: "No shift assigned for today.",
+      });
+    }
+
+    let settings = await AttendanceSetting.findOne();
+    if (!settings) settings = await AttendanceSetting.create({});
+
+    let faceVerified = false;
+    let locationVerified = false;
+    let distanceFromTemple = null;
+
+    if (faceDescriptor && Array.isArray(faceDescriptor)) {
+      const distance = getEuclideanDistance(employee.faceDescriptor, faceDescriptor);
+      if (distance < 0.5) faceVerified = true;
+    }
+
+    if (latitude !== undefined && longitude !== undefined && latitude !== null && longitude !== null) {
+      distanceFromTemple = getHaversineDistance(latitude, longitude, settings.templeLatitude, settings.templeLongitude);
+      if (distanceFromTemple <= settings.allowedRadius) locationVerified = true;
+    }
+
+    if (!faceVerified || !locationVerified) {
+      return res.status(403).json({
+        success: false,
+        message: !faceVerified ? "Face does not match. Attendance cannot be marked." : "You are outside temple premises. Attendance cannot be marked."
       });
     }
 
@@ -1272,7 +1326,7 @@ exports.markAttendance = async (req, res) => {
             shift: dailyContext.shiftName,
           });
       const checkInMinutes = now.getHours() * 60 + now.getMinutes();
-      const isLate = checkInMinutes > shiftStartMinutes;
+      const isLate = checkInMinutes > (shiftStartMinutes + settings.lateThreshold);
 
       const payload = {
         staffId: staff.staffId,
@@ -1296,8 +1350,17 @@ exports.markAttendance = async (req, res) => {
         isOvertime: isOvertime,
         overtimeMinutes: 0,
         overtimeHours: "--",
-        source: "manual",
+        source: "biometric",
         isLateCheckIn: isLate,
+        latitude,
+        longitude,
+        distanceFromTemple,
+        locationVerified,
+        faceVerified,
+        deviceInfo,
+        browser,
+        ipAddress,
+        checkInPhoto: photo || "",
       };
 
       attendance = attendance
@@ -1351,11 +1414,10 @@ exports.markAttendance = async (req, res) => {
     attendance.checkOutAt = now;
     attendance.workingMinutes = workingMinutes;
     attendance.workingHours = formatWorkingHours(workingMinutes);
+    if (photo) {
+      attendance.checkOutPhoto = photo;
+    }
 
-    // Calculate attendance status based on temple rules: working hours
-    // ≥ 6 Hours: Present
-    // 4 - 5.99 Hours: Half Day
-    // < 4 Hours: Absent
     if (workingHours >= 6) {
       attendance.status = "Present";
     } else if (workingHours >= 4 && workingHours < 6) {
@@ -1364,9 +1426,7 @@ exports.markAttendance = async (req, res) => {
       attendance.status = "Absent";
     }
 
-    // Calculate overtime if employee has both default shift and temporary assignment
     if (attendance.isOvertime) {
-      // Standard working hours (e.g., 8 hours = 480 minutes)
       const standardWorkingMinutes = 480;
       const overtimeMinutes = Math.max(0, workingMinutes - standardWorkingMinutes);
       attendance.overtimeMinutes = overtimeMinutes;

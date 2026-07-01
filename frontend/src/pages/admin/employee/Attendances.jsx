@@ -4,6 +4,7 @@ import { FiCalendar, FiClock, FiDownload, FiEdit2, FiSave, FiUsers } from "react
 import { FaCalendarCheck, FaRegTimesCircle, FaUserClock } from "react-icons/fa";
 
 import SectionCard from "../../../components/admin/employee/SectionCard";
+import AttendanceDetailsModal from "../../../components/admin/employee/AttendanceDetailsModal";
 import { getAdminAttendanceDashboard, updateAttendance } from "../../../services/attendanceService";
 import { getAdminEmployees } from "../../../services/adminService";
 
@@ -64,6 +65,7 @@ const Attendances = () => {
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState("");
   const [editingRecord, setEditingRecord] = useState(null);
+  const [viewingDetailsRecord, setViewingDetailsRecord] = useState(null);
   const [correctionForm, setCorrectionForm] = useState({
     checkIn: "",
     checkOut: "",
@@ -668,13 +670,22 @@ const Attendances = () => {
                       </span>
                     </td>
                     <td className="px-4 py-4">
-                      <button
-                        type="button"
-                        onClick={() => openCorrection(record)}
-                        className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
-                      >
-                        <FiEdit2 /> Correct
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setViewingDetailsRecord(record)}
+                          className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-sky-700 transition hover:bg-sky-50"
+                        >
+                          Details
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openCorrection(record)}
+                          className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+                        >
+                          <FiEdit2 /> Correct
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -735,13 +746,22 @@ const Attendances = () => {
                       </span>
                     </td>
                     <td className="px-4 py-4">
-                      <button
-                        type="button"
-                        onClick={() => openCorrection(record)}
-                        className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
-                      >
-                        <FiEdit2 /> Correct
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setViewingDetailsRecord(record)}
+                          className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-sky-700 transition hover:bg-sky-50"
+                        >
+                          Details
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openCorrection(record)}
+                          className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+                        >
+                          <FiEdit2 /> Correct
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -902,6 +922,13 @@ const Attendances = () => {
           </div>
         </SectionCard>
       ) : null}
+
+      {viewingDetailsRecord && (
+        <AttendanceDetailsModal
+          record={viewingDetailsRecord}
+          onClose={() => setViewingDetailsRecord(null)}
+        />
+      )}
     </div>
   );
 };
