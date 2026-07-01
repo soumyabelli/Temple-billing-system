@@ -142,9 +142,8 @@ const RegisterPage = () => {
                 name="name"
                 placeholder="Enter your full name"
                 value={formData.name}
-                className={`w-full rounded-xl border ${
-                  errors.name ? "border-red-500" : "border-white/70"
-                } bg-white/80 p-3.5 outline-none focus:ring-2 focus:ring-amber-400`}
+                className={`w-full rounded-xl border ${errors.name ? "border-red-500" : "border-white/70"
+                  } bg-white/80 p-3.5 outline-none focus:ring-2 focus:ring-amber-400`}
                 onChange={handleChange}
               />
               {errors.name && <p className="text-red-600 text-sm mt-1">{errors.name}</p>}
@@ -158,9 +157,8 @@ const RegisterPage = () => {
                 name="email"
                 placeholder="Enter your email"
                 value={formData.email}
-                className={`w-full rounded-xl border ${
-                  errors.email ? "border-red-500" : "border-white/70"
-                } bg-white/80 p-3.5 outline-none focus:ring-2 focus:ring-amber-400`}
+                className={`w-full rounded-xl border ${errors.email ? "border-red-500" : "border-white/70"
+                  } bg-white/80 p-3.5 outline-none focus:ring-2 focus:ring-amber-400`}
                 onChange={handleChange}
               />
               {errors.email && <p className="text-red-600 text-sm mt-1">{errors.email}</p>}
@@ -174,9 +172,8 @@ const RegisterPage = () => {
                 name="phone"
                 placeholder="Enter 10-digit phone number"
                 value={formData.phone}
-                className={`w-full rounded-xl border ${
-                  errors.phone ? "border-red-500" : "border-white/70"
-                } bg-white/80 p-3.5 outline-none focus:ring-2 focus:ring-amber-400`}
+                className={`w-full rounded-xl border ${errors.phone ? "border-red-500" : "border-white/70"
+                  } bg-white/80 p-3.5 outline-none focus:ring-2 focus:ring-amber-400`}
                 onChange={handleChange}
               />
               {errors.phone && <p className="text-red-600 text-sm mt-1">{errors.phone}</p>}
@@ -190,9 +187,8 @@ const RegisterPage = () => {
                 name="place"
                 placeholder="Enter your city/place"
                 value={formData.place}
-                className={`w-full rounded-xl border ${
-                  errors.place ? "border-red-500" : "border-white/70"
-                } bg-white/80 p-3.5 outline-none focus:ring-2 focus:ring-amber-400`}
+                className={`w-full rounded-xl border ${errors.place ? "border-red-500" : "border-white/70"
+                  } bg-white/80 p-3.5 outline-none focus:ring-2 focus:ring-amber-400`}
                 onChange={handleChange}
               />
               {errors.place && <p className="text-red-600 text-sm mt-1">{errors.place}</p>}
@@ -206,9 +202,8 @@ const RegisterPage = () => {
                 placeholder="Enter your complete address"
                 value={formData.address}
                 rows="3"
-                className={`w-full rounded-xl border ${
-                  errors.address ? "border-red-500" : "border-white/70"
-                } bg-white/80 p-3.5 outline-none focus:ring-2 focus:ring-amber-400 resize-none`}
+                className={`w-full rounded-xl border ${errors.address ? "border-red-500" : "border-white/70"
+                  } bg-white/80 p-3.5 outline-none focus:ring-2 focus:ring-amber-400 resize-none`}
                 onChange={handleChange}
               />
               {errors.address && <p className="text-red-600 text-sm mt-1">{errors.address}</p>}
@@ -222,9 +217,8 @@ const RegisterPage = () => {
                 name="password"
                 placeholder="Minimum 6 characters"
                 value={formData.password}
-                className={`w-full rounded-xl border ${
-                  errors.password ? "border-red-500" : "border-white/70"
-                } bg-white/80 p-3.5 outline-none focus:ring-2 focus:ring-amber-400`}
+                className={`w-full rounded-xl border ${errors.password ? "border-red-500" : "border-white/70"
+                  } bg-white/80 p-3.5 outline-none focus:ring-2 focus:ring-amber-400`}
                 onChange={handleChange}
               />
               {errors.password && <p className="text-red-600 text-sm mt-1">{errors.password}</p>}
@@ -238,9 +232,8 @@ const RegisterPage = () => {
                 name="confirmPassword"
                 placeholder="Re-enter your password"
                 value={formData.confirmPassword}
-                className={`w-full rounded-xl border ${
-                  errors.confirmPassword ? "border-red-500" : "border-white/70"
-                } bg-white/80 p-3.5 outline-none focus:ring-2 focus:ring-amber-400`}
+                className={`w-full rounded-xl border ${errors.confirmPassword ? "border-red-500" : "border-white/70"
+                  } bg-white/80 p-3.5 outline-none focus:ring-2 focus:ring-amber-400`}
                 onChange={handleChange}
               />
               {errors.confirmPassword && <p className="text-red-600 text-sm mt-1">{errors.confirmPassword}</p>}

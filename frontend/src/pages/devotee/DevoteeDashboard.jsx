@@ -115,9 +115,9 @@ const canCancelPrasadamOrder = (status) => {
 };
 
 const glassCard =
-  "rounded-[28px] border border-white/45 bg-white/60 p-5 shadow-[0_28px_80px_rgba(115,83,27,0.12)] backdrop-blur-xl";
+  "rounded-[28px] border border-white/50 bg-white/35 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.06)] backdrop-blur-lg";
 const glassSection =
-  "rounded-[28px] border border-white/40 bg-white/55 p-5 shadow-[0_22px_60px_rgba(104,78,30,0.10)] backdrop-blur-xl";
+  "rounded-[28px] border border-white/45 bg-white/25 p-5 shadow-[0_15px_40px_rgba(0,0,0,0.04)] backdrop-blur-lg";
 const glassInput =
   "w-full rounded-[24px] border border-white/70 bg-white/75 px-4 py-3 text-base text-[#4f3f26] outline-none shadow-sm shadow-[#d9c8a1]/40 backdrop-blur-sm";
 const glassButton =
@@ -125,7 +125,7 @@ const glassButton =
 const glassButtonSoft =
   "rounded-[24px] bg-[#fff3d8] px-5 py-3 text-sm font-semibold text-[#7f4b11] shadow-[0_8px_22px_rgba(128,88,40,0.14)] transition hover:bg-[#ffe4b4]";
 const glassItem =
-  "rounded-[26px] border border-white/35 bg-white/55 p-4 shadow-sm backdrop-blur-sm";
+  "rounded-[26px] border border-white/40 bg-white/20 p-4 shadow-sm backdrop-blur-md";
 
 const AppIcon = ({ name, className = "h-5 w-5" }) => {
   const base = "fill-none stroke-current stroke-2";
@@ -231,14 +231,14 @@ const SidebarItem = ({ label, icon, active, onClick }) => (
   <button
     type="button"
     onClick={onClick}
-    className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[17px] font-semibold transition ${
+    className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[20px] font-semibold transition ${
       active
         ? "bg-gradient-to-r from-[#ff9f2f] to-[#ff6a00] text-white shadow-[0_8px_24px_rgba(255,106,0,0.38)]"
         : "text-[#2d1608] border border-white/35 bg-white/35 backdrop-blur-sm hover:bg-white/60"
     }`}
   >
-    <AppIcon name={icon} className="h-[19px] w-[19px]" />
-    <span className="text-[17px] leading-none">{label}</span>
+    <AppIcon name={icon} className="h-[21px] w-[21px]" />
+    <span className="text-[20px] leading-none">{label}</span>
   </button>
 );
 
@@ -359,33 +359,68 @@ const DevoteeDashboard = () => {
         title: "Upcoming Bookings",
         value: `${upcomingBookings.length}`,
         action: "View Details",
-        tone: "bg-[#f2ecff] text-[#6b3df0]",
+        tone: "bg-purple-500/15 text-purple-700",
+        cardStyle: "border-purple-500/30 bg-purple-500/5 text-[#58219c]",
         icon: "calendar",
       },
       {
         title: "Pooja Booked",
         value: `${bookingsData.length}`,
         action: "View Bookings",
-        tone: "bg-[#eaf1ff] text-[#3468db]",
+        tone: "bg-blue-500/15 text-blue-700",
+        cardStyle: "border-blue-500/30 bg-blue-500/5 text-[#1e40af]",
         icon: "calendar",
       },
       {
         title: "Total Donations",
         value: formatCurrency(totalDonations),
         action: "View History",
-        tone: "bg-[#edf7ee] text-[#2f8d42]",
+        tone: "bg-emerald-500/15 text-emerald-700",
+        cardStyle: "border-emerald-500/30 bg-emerald-500/5 text-[#065f46]",
         icon: "heart",
       },
       {
         title: "Prasadam Orders",
         value: `${prasadamOrdersCount}`,
         action: "View Orders",
-        tone: "bg-[#ffefea] text-[#f26037]",
+        tone: "bg-orange-500/15 text-orange-700",
+        cardStyle: "border-orange-500/30 bg-orange-500/5 text-[#9a3412]",
         icon: "bag",
       },
     ],
     [upcomingBookings.length, bookingsData.length, totalDonations, prasadamOrdersCount]
   );
+
+  const upcomingFestival = useMemo(() => {
+    if (!eventsData || eventsData.length === 0) {
+      return {
+        title: "Ganesh Chaturthi 2026",
+        dateDisplay: "07 September 2026",
+      };
+    }
+
+    const now = Date.now();
+    // Filter events in the future
+    const futureEvents = eventsData
+      .filter((e) => e.date && new Date(e.date).getTime() >= now)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    if (futureEvents.length > 0) {
+      const nextEv = futureEvents[0];
+      return {
+        title: nextEv.title || nextEv.name,
+        dateDisplay: nextEv.formattedDate || new Date(nextEv.date).toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" }),
+      };
+    }
+
+    // Fallback to the latest event
+    const sorted = [...eventsData].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    const latestEv = sorted[0];
+    return {
+      title: latestEv.title || latestEv.name,
+      dateDisplay: latestEv.formattedDate || new Date(latestEv.date).toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" }),
+    };
+  }, [eventsData]);
 
   const displayCategories = useMemo(() => {
     if (selectedEventId) {
@@ -1357,7 +1392,7 @@ const DevoteeDashboard = () => {
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {stats.map((item) => (
-          <article key={item.title} className={glassItem}>
+          <article key={item.title} className={`rounded-[26px] border ${item.cardStyle} p-4 shadow-sm backdrop-blur-md`}>
             <div className="mb-4 flex items-center gap-4">
               <IconCircle className={item.tone} icon={item.icon} />
               <p className="text-[1.06rem] text-[#383838]">{item.title}</p>
@@ -1369,7 +1404,10 @@ const DevoteeDashboard = () => {
                 if (item.action === "View Details") setActivePage("My Bookings");
                 if (item.action === "View Bookings") setActivePage("My Bookings");
                 if (item.action === "View History") setActivePage("Receipts");
-                if (item.action === "View Orders") setActivePage("Prasadam Orders");
+                if (item.action === "View Orders") {
+                  setActivePage("Book Pooja");
+                  setBookingTab("Prasadam");
+                }
               }}
               className="mt-4 bg-transparent p-0 text-base font-semibold text-[#bc630f]"
             >
@@ -1393,9 +1431,6 @@ const DevoteeDashboard = () => {
                 <div key={`${item.service}-${item.datetime}-${item._id || Math.random()}`} className={glassItem}>
                   <div className="flex items-center justify-between gap-3">
                     <p className="text-base font-semibold text-[#1f1f1f]">{item.service}</p>
-                    <span className={`rounded-full px-3 py-1 text-sm font-semibold ${item.status === "Confirmed" ? "bg-[#def5e5] text-[#16853f]" : "bg-[#faefcf] text-[#ce7a0f]"}`}>
-                      {item.status}
-                    </span>
                   </div>
                   <p className="mt-1 text-sm text-[#4f4f4f]">{formatDateTimeDisplay(item.datetime)}</p>
                 </div>
@@ -1465,105 +1500,23 @@ const DevoteeDashboard = () => {
         </article>
       </section>
 
-      <section className="relative mt-4 overflow-hidden rounded-2xl">
+      <section className="relative mt-4 overflow-hidden rounded-2xl shadow-lg pb-4">
         <img src={templeImage} alt="Festival banner" className="h-36 w-full object-cover sm:h-40" />
         <div className="absolute inset-0 bg-gradient-to-r from-[#261009]/85 via-[#51220d]/55 to-transparent"></div>
         <div className="absolute inset-0 flex items-center justify-between px-7 text-white">
           <div>
-            <p className="text-sm uppercase tracking-wide text-[#ffd56e]">Upcoming Festival</p>
-            <h3 className="text-[2.35rem] font-extrabold leading-tight">Brahmotsavam 2025</h3>
-            <p className="text-[1.35rem]">20 May 2025 - 28 May 2025</p>
+            <p className="text-xs sm:text-sm uppercase tracking-wider text-[#ffd56e] font-bold">Upcoming Festival</p>
+            <h3 className="text-xl sm:text-[2.2rem] font-extrabold leading-tight mt-1">{upcomingFestival.title}</h3>
+            <p className="text-sm sm:text-[1.25rem] mt-1 text-[#f3e8ff]">{upcomingFestival.dateDisplay}</p>
           </div>
           <button
             type="button"
             onClick={() => setActivePage("Festival Events")}
-            className="rounded-xl border border-white/60 bg-white/20 px-5 py-2 text-lg font-semibold text-white backdrop-blur-sm"
+            className="rounded-xl border border-white/60 bg-white/20 px-4 py-2 text-sm sm:text-lg font-semibold text-white backdrop-blur-sm hover:bg-white/30 transition"
           >
             View Details
           </button>
         </div>
-      </section>
-
-      <section className="mt-4 grid gap-4 pb-8 xl:grid-cols-2">
-        <article className={glassSection}>
-          <h2 className="px-5 py-4 text-[2rem] font-bold">My Recent Bookings</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[650px]">
-              <thead className="bg-[#fafafa] text-left text-sm text-[#575757]">
-                <tr>
-                  <th className="px-5 py-3">Pooja / Service</th>
-                  <th className="px-5 py-3">Date & Time</th>
-                  <th className="px-5 py-3">Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                {upcomingBookings.length > 0 ? (
-                  upcomingBookings.map((row) => (
-                    <tr key={`${row.service}-${row.datetime || row._id}`} className="border-t border-[#f0f0f0]">
-                      <td className="px-5 py-3 text-sm font-medium text-[#1f1f1f]">{row.service}</td>
-                      <td className="px-5 py-3 text-sm text-[#3f3f3f]">{formatDateTimeDisplay(row.datetime)}</td>
-                      <td className="px-5 py-3 text-sm font-bold text-[#1b7f77]">{formatCurrency(row.amount)}</td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="4" className="px-5 py-6 text-center text-sm text-[#5d5d5d]">
-                      No upcoming bookings available.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-          <div className="px-5 py-4 text-right">
-            <button type="button" onClick={() => setActivePage("My Bookings")} className="rounded-xl bg-[#1b7f77] px-5 py-2 text-base font-semibold text-white">
-              View All Bookings
-            </button>
-          </div>
-        </article>
-
-        <article className={glassSection}>
-          <h2 className="px-5 py-4 text-[2rem] font-bold">Donation History</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[650px]">
-              <thead className="bg-[#fafafa] text-left text-sm text-[#575757]">
-                <tr>
-                  <th className="px-5 py-3">Type</th>
-                  <th className="px-5 py-3">Date</th>
-                  <th className="px-5 py-3">Amount</th>
-                  <th className="px-5 py-3">Receipt</th>
-                </tr>
-              </thead>
-              <tbody>
-                {donationsData.length > 0 ? (
-                  donationsData.map((row) => (
-                    <tr key={`${row.type}-${row.date}-${row._id || Math.random()}`} className="border-t border-[#f0f0f0]">
-                      <td className="px-5 py-3 text-sm font-medium text-[#1f1f1f]">{row.type}</td>
-                      <td className="px-5 py-3 text-sm text-[#3f3f3f]">{row.date}</td>
-                      <td className="px-5 py-3 text-sm font-bold text-[#1b7f77]">{formatCurrency(row.amount)}</td>
-                      <td className="px-5 py-3 text-sm text-[#af6317]">
-                        <button type="button" onClick={() => handleReceiptDownload(row)} className="font-semibold">
-                          Download
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="4" className="px-5 py-6 text-center text-[#5d5d5d]">
-                      No donations available.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-          <div className="px-5 py-4 text-right">
-            <button type="button" onClick={() => setActivePage("Receipts")} className="rounded-xl bg-[#1b7f77] px-5 py-2 text-base font-semibold text-white">
-              View All Donations
-            </button>
-          </div>
-        </article>
       </section>
     </>
   );
@@ -2349,38 +2302,40 @@ const DevoteeDashboard = () => {
     const bookingItems = bookingsData.map(b => ({
       ...b,
       type: "Pooja Booking",
-      dateKey: b.datetime || b.createdAt,
+      dateKey: b.createdAt || b.datetime,
       dateDisplay: formatDateDisplay(b.datetime || b.createdAt),
       oneLineSummary: `Pooja Booking: ${b.service || "Booking"}`,
       receiptId: buildReceiptId("PB", b),
       downloadType: "booking",
       amount: b.amount,
     }));
-
+ 
     const donationItems = donationsData.map(d => ({
       ...d,
       type: "Donation",
-      dateKey: d.date || d.createdAt,
+      dateKey: d.createdAt || d.date,
       dateDisplay: formatDateDisplay(d.date || d.createdAt),
       oneLineSummary: `Donation: ${d.category || d.type || "General"}`,
       receiptId: buildReceiptId("DN", d),
       downloadType: "donation",
       amount: d.amount,
     }));
-
+ 
     const prasadamItems = prasadamOrders.map(p => ({
       ...p,
       type: "Prasadam Order",
-      dateKey: p.createdAt,
-      dateDisplay: formatDateDisplay(p.createdAt),
+      dateKey: p.createdAt || p.date,
+      dateDisplay: formatDateDisplay(p.createdAt || p.date),
       oneLineSummary: `Prasadam: ${p.itemName} (Qty: ${p.quantity || 1})`,
       receiptId: p.orderNumber || buildReceiptId("PR", p),
       downloadType: "prasadam",
       amount: p.amount,
     }));
-
+ 
     const allReceipts = [...bookingItems, ...donationItems, ...prasadamItems].sort((a, b) => {
-      return new Date(b.dateKey) - new Date(a.dateKey);
+      const timeB = b.dateKey ? new Date(b.dateKey).getTime() : 0;
+      const timeA = a.dateKey ? new Date(a.dateKey).getTime() : 0;
+      return timeB - timeA;
     });
 
     const displayedReceipts = showAllReceipts ? allReceipts : allReceipts.slice(0, 5);
@@ -2994,10 +2949,10 @@ const DevoteeDashboard = () => {
             <button
               type="button"
               onClick={handleLogout}
-              className="mt-1 w-full rounded-xl border border-white/40 bg-white/45 px-3 py-3 text-left text-[17px] font-semibold text-[#7f470a] hover:bg-white/80"
+              className="mt-1 w-full rounded-xl border border-white/40 bg-white/45 px-3 py-3 text-left text-[20px] font-semibold text-[#7f470a] hover:bg-white/80"
             >
               <span className="inline-flex items-center gap-3">
-                <AppIcon name="gear" className="h-[19px] w-[19px]" />
+                <AppIcon name="gear" className="h-[21px] w-[21px]" />
                 Logout
               </span>
             </button>
@@ -3005,7 +2960,7 @@ const DevoteeDashboard = () => {
         </aside>
 
         <main className="flex-1 px-3 py-3 sm:px-5 sm:py-5 lg:px-8">
-          <header className="rounded-2xl border border-white/65 bg-white/82 px-5 py-4 shadow-[0_12px_30px_rgba(80,40,10,0.12)] backdrop-blur-md">
+          <header className="rounded-2xl border border-white/60 bg-white/40 px-5 py-4 shadow-[0_12px_30px_rgba(80,40,10,0.06)] backdrop-blur-md">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="flex min-w-[360px] flex-1 items-center gap-4">
                 <button type="button" className="hidden text-[#8d551f] lg:block">
@@ -3054,8 +3009,8 @@ const DevoteeDashboard = () => {
               </div>
             </div>
           </header>
-
-          <div className="mt-4 rounded-2xl border border-white/70 bg-white/85 p-3 shadow-[0_10px_30px_rgba(80,40,10,0.1)] backdrop-blur-sm md:p-4">
+ 
+          <div className="mt-4 rounded-2xl border border-white/60 bg-white/35 p-3 shadow-[0_10px_30px_rgba(80,40,10,0.04)] backdrop-blur-md md:p-4">
             {renderContent()}
           </div>
         </main>
