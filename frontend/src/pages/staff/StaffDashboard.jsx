@@ -404,7 +404,7 @@ const StaffDashboard = () => {
       });
   }, [tasks, filteredStatus, searchQuery]);
 
-  
+
 
   useEffect(() => {
     if (selectedTask) {
