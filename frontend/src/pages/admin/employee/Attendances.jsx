@@ -369,12 +369,12 @@ const Attendances = () => {
     return dashboard?.overview?.length
       ? dashboard.overview
       : [
-          { label: "Total Employees", value: "0", tone: "info" },
-          { label: "Present Today", value: "0", tone: "success" },
-          { label: "Absent Today", value: "0", tone: "danger" },
-          { label: "On Leave", value: "0", tone: "warning" },
-          { label: "Late Check-in", value: "0", tone: "accent" },
-        ];
+        { label: "Total Employees", value: "0", tone: "info" },
+        { label: "Present Today", value: "0", tone: "success" },
+        { label: "Absent Today", value: "0", tone: "danger" },
+        { label: "On Leave", value: "0", tone: "warning" },
+        { label: "Late Check-in", value: "0", tone: "accent" },
+      ];
   }, [dashboard]);
 
   return (
@@ -505,8 +505,7 @@ const Attendances = () => {
             >
               <div className="flex items-start gap-4">
                 <div
-                  className={`flex h-12 w-12 items-center justify-center rounded-2xl ${
-                    tone === "success"
+                  className={`flex h-12 w-12 items-center justify-center rounded-2xl ${tone === "success"
                       ? "bg-emerald-100 text-emerald-600"
                       : tone === "danger"
                         ? "bg-rose-100 text-rose-600"
@@ -515,7 +514,7 @@ const Attendances = () => {
                           : tone === "accent"
                             ? "bg-violet-100 text-violet-600"
                             : "bg-blue-100 text-blue-600"
-                  }`}
+                    }`}
                 >
                   <Icon className="text-xl" />
                 </div>
@@ -792,13 +791,10 @@ const Attendances = () => {
                 key={`${day.dateKey}-${idx}`}
                 type="button"
                 onClick={() => setSelectedCalDate(day.dateKey)}
-                className={`rounded-2xl border text-left p-2.5 transition flex flex-col justify-between ${
-                  day.muted ? "bg-slate-50 opacity-40" : "bg-white"
-                } ${
-                  day.today ? "ring-2 ring-amber-400 border-amber-400" : "border-slate-200"
-                } ${
-                  selectedCalDate === day.dateKey ? "border-slate-800 ring-2 ring-slate-800" : ""
-                } hover:bg-slate-50`}
+                className={`rounded-2xl border text-left p-2.5 transition flex flex-col justify-between ${day.muted ? "bg-slate-50 opacity-40" : "bg-white"
+                  } ${day.today ? "ring-2 ring-amber-400 border-amber-400" : "border-slate-200"
+                  } ${selectedCalDate === day.dateKey ? "border-slate-800 ring-2 ring-slate-800" : ""
+                  } hover:bg-slate-50`}
               >
                 <span className="text-sm font-bold text-slate-800 mb-1">{day.day}</span>
                 <div className="w-full text-[9px] font-bold space-y-0.5">
