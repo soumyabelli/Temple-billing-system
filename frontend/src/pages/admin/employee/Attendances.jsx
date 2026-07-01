@@ -506,14 +506,14 @@ const Attendances = () => {
               <div className="flex items-start gap-4">
                 <div
                   className={`flex h-12 w-12 items-center justify-center rounded-2xl ${tone === "success"
-                      ? "bg-emerald-100 text-emerald-600"
-                      : tone === "danger"
-                        ? "bg-rose-100 text-rose-600"
-                        : tone === "warning"
-                          ? "bg-amber-100 text-amber-600"
-                          : tone === "accent"
-                            ? "bg-violet-100 text-violet-600"
-                            : "bg-blue-100 text-blue-600"
+                    ? "bg-emerald-100 text-emerald-600"
+                    : tone === "danger"
+                      ? "bg-rose-100 text-rose-600"
+                      : tone === "warning"
+                        ? "bg-amber-100 text-amber-600"
+                        : tone === "accent"
+                          ? "bg-violet-100 text-violet-600"
+                          : "bg-blue-100 text-blue-600"
                     }`}
                 >
                   <Icon className="text-xl" />
