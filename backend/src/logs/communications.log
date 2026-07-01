@@ -927,6 +927,11 @@ Thank you for your donation!
 To: 6362210340
 Message: Donation received! Amount: ₹2000. Transaction ID: SIM_TXN_1782834463195. Thank you! -Temple
 
+[2026-07-01T04:19:09.789Z] EMAIL
+To: deepthi.mca.2024@pim.ac.in
+Subject: Verify Your Temple Devotee Registration
+Please click the following link to verify your email and complete devotee registration: http://localhost:5000/api/auth/verify-registration?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiRGVlcHRoaSBTLiBLdWxhbCIsImVtYWlsIjoiZGVlcHRoaS5tY2EuMjAyNEBwaW0uYWMuaW4iLCJwaG9uZSI6IjcyNTkxNTY5NDYiLCJhZGRyZXNzIjoiVWR1cGkiLCJwbGFjZSI6IlVkdXBpIiwicGFzc3dvcmQiOiIkMmIkMTAkMGt1Ty5VTy8zWDBVaHpwM0dtREVOdXdWSlVndFVtU3RlYjQuR05xanYzeWxlZWZ0SEM0aVMiLCJyb2xlIjoiZGV2b3RlZSIsImlhdCI6MTc4Mjg3OTU0NiwiZXhwIjoxNzgyODgwNDQ2fQ.hbp_Z8GxAlqQQ6fMlDsd3bpPYFmExtbqe_mO2Qa789w
+
 [2026-07-01T04:21:33.094Z] EMAIL
 To: bellisoumya@gmail.com
 Subject: Pooja Booking Confirmation
@@ -952,4 +957,30 @@ Thank you!
 [2026-07-01T04:26:23.837Z] SMS
 To: 7676798914
 Message: Pooja booking confirmed! Service: Satyanarayana Puja on 2026-07-05T09:59. Amount: ₹1201. -Temple
+
+[2026-07-01T04:30:47.544Z] EMAIL
+To: deepthi.mca.2024@pim.ac.in
+Subject: Pooja Booking Confirmation
+Pooja Booking Confirmation
+Service: Archana
+Date & Time: 2026-07-10T10:00
+Amount: ₹110
+Thank you!
+
+[2026-07-01T04:30:47.549Z] SMS
+To: 7259156946
+Message: Pooja booking confirmed! Service: Archana on 2026-07-10T10:00. Amount: ₹110. -Temple
+
+[2026-07-01T04:34:57.698Z] EMAIL
+To: deepthi.mca.2024@pim.ac.in
+Subject: Prasadam Order Confirmation
+Prasadam Order Confirmed
+Item: Laddu Prasadam
+Quantity: 2
+Amount: ₹302
+Thank you!
+
+[2026-07-01T04:34:57.701Z] SMS
+To: 8618001961
+Message: Prasadam order confirmed! Item: Laddu Prasadam. Qty: 2. Ready soon! -Temple
 
