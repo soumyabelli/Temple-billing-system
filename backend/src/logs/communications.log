@@ -927,3 +927,29 @@ Thank you for your donation!
 To: 6362210340
 Message: Donation received! Amount: ₹2000. Transaction ID: SIM_TXN_1782834463195. Thank you! -Temple
 
+[2026-07-01T04:21:33.094Z] EMAIL
+To: bellisoumya@gmail.com
+Subject: Pooja Booking Confirmation
+Pooja Booking Confirmation
+Service: Abhisheka
+Date & Time: 2026-08-01T10:00
+Amount: ₹2000
+Thank you!
+
+[2026-07-01T04:21:33.096Z] SMS
+To: 7676798914
+Message: Pooja booking confirmed! Service: Abhisheka on 2026-08-01T10:00. Amount: ₹2000. -Temple
+
+[2026-07-01T04:26:23.825Z] EMAIL
+To: bellisoumya@gmail.com
+Subject: Pooja Booking Confirmation
+Pooja Booking Confirmation
+Service: Satyanarayana Puja
+Date & Time: 2026-07-05T09:59
+Amount: ₹1201
+Thank you!
+
+[2026-07-01T04:26:23.837Z] SMS
+To: 7676798914
+Message: Pooja booking confirmed! Service: Satyanarayana Puja on 2026-07-05T09:59. Amount: ₹1201. -Temple
+

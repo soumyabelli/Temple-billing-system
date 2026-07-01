@@ -9,6 +9,9 @@ const Prasadam = require("../models/Prasadam");
 const Bill = require("../models/Bill");
 const { isDbConnected } = require("../config/db");
 const fileUserStore = require("../store/fileUserStore");
+const fileBookingStore = require("../store/fileBookingStore");
+const fileDonationStore = require("../store/fileDonationStore");
+const fileNotificationStore = require("../store/fileNotificationStore");
 const crypto = require("crypto");
 const Razorpay = require("razorpay");
 const { createStaffBroadcastNotifications, createBroadcastNotifications, createStaffNotification } = require("../utils/notificationService");
@@ -69,9 +72,14 @@ const createLedgerBill = async ({
 const getBookings = async (req, res) => {
   try {
     const email = normalizeEmail(req.query.email);
-    const bookings = email
-      ? await Booking.find(buildEmailLookup("devoteeEmail", email)).sort({ createdAt: -1 })
-      : await Booking.find().sort({ createdAt: -1 });
+    let bookings;
+    if (isDbConnected()) {
+      bookings = email
+        ? await Booking.find(buildEmailLookup("devoteeEmail", email)).sort({ createdAt: -1 })
+        : await Booking.find().sort({ createdAt: -1 });
+    } else {
+      bookings = await fileBookingStore.findBookings({ devoteeEmail: email });
+    }
     return res.status(200).json({ bookings: bookings.map((booking) => normalizeBookingEmails(booking.toObject ? booking.toObject() : booking)) });
   } catch (error) {
     return res.status(500).json({ error: "Failed to load bookings." });
@@ -106,7 +114,8 @@ const createBooking = async (req, res) => {
       return res.status(400).json({ error: "Invalid payment method." });
     }
 
-    const booking = await Booking.create({
+    let booking;
+    const bookingPayload = {
       devoteeId: devoteeId || undefined,
       eventId: eventId || undefined,
       devoteeName,
@@ -119,7 +128,13 @@ const createBooking = async (req, res) => {
       status: bookingStatus,
       contactNumber,
       notes,
-    });
+    };
+
+    if (isDbConnected()) {
+      booking = await Booking.create(bookingPayload);
+    } else {
+      booking = await fileBookingStore.createBooking(bookingPayload);
+    }
 
     await createLedgerBill({
       devoteeName,
@@ -133,13 +148,13 @@ const createBooking = async (req, res) => {
       status: booking.status === "Confirmed" ? "Paid" : "Pending",
     });
 
-    // Send notification to database
-    await Notification.create({
+    // Send notification
+    await createStaffNotification({
       title: "Booking Confirmed",
       message: `Your ${service} booking has been confirmed successfully.`,
       audienceEmail: normalizedDevoteeEmail || undefined,
       category: "booking",
-    });
+    }).catch(() => {});
 
     // Also notify the cashier role
     await createStaffNotification({
@@ -163,11 +178,17 @@ const createBooking = async (req, res) => {
     // If this booking is linked to an event and already confirmed, update event aggregates
     if (eventId && booking.status === "Confirmed") {
       try {
-        await Event.findByIdAndUpdate(String(eventId), {
-          $inc: { registrations: 1, collection: Number(amount) || 0 },
-        });
-        booking.counted = true;
-        await booking.save();
+        if (isDbConnected()) {
+          await Event.findByIdAndUpdate(String(eventId), {
+            $inc: { registrations: 1, collection: Number(amount) || 0 },
+          });
+          booking.counted = true;
+          await booking.save();
+        } else {
+          // Local/Mock file fallback for event
+          booking.counted = true;
+          await fileBookingStore.findByIdAndUpdate(booking._id, { counted: true });
+        }
       } catch (err) {
         console.error("Failed to update event aggregates for booking:", err);
       }
@@ -183,9 +204,14 @@ const createBooking = async (req, res) => {
 const getDonations = async (req, res) => {
   try {
     const email = normalizeEmail(req.query.email);
-    const donations = email
-      ? await Donation.find(buildEmailLookup("donorEmail", email)).sort({ createdAt: -1 })
-      : await Donation.find().sort({ createdAt: -1 });
+    let donations;
+    if (isDbConnected()) {
+      donations = email
+        ? await Donation.find(buildEmailLookup("donorEmail", email)).sort({ createdAt: -1 })
+        : await Donation.find().sort({ createdAt: -1 });
+    } else {
+      donations = await fileDonationStore.findDonations({ donorEmail: email });
+    }
     return res.status(200).json({ donations: donations.map((donation) => normalizeDonationEmails(donation.toObject ? donation.toObject() : donation)) });
   } catch (error) {
     return res.status(500).json({ error: "Failed to load donations." });
@@ -222,7 +248,8 @@ const createDonation = async (req, res) => {
       return res.status(400).json({ error: "Please provide a valid contact number." });
     }
 
-    const donation = await Donation.create({
+    let donation;
+    const donationPayload = {
       donorName: donorName.trim(),
       donorEmail: normalizedDonorEmail || undefined,
       donorPhone: donorPhone || contactNumber,
@@ -235,7 +262,13 @@ const createDonation = async (req, res) => {
       status: "Completed",
       eventId: eventId || undefined,
       donatedBy: donatedBy || undefined,
-    });
+    };
+
+    if (isDbConnected()) {
+      donation = await Donation.create(donationPayload);
+    } else {
+      donation = await fileDonationStore.createDonation(donationPayload);
+    }
 
     await createLedgerBill({
       devoteeName: donorName.trim(),
@@ -249,11 +282,11 @@ const createDonation = async (req, res) => {
       status: "Paid",
     });
 
-    await Notification.create({
+    await createStaffNotification({
       title: "Donation Received",
       message: `${donorName.trim()} donated INR ${numericAmount} for ${category}.`,
       audienceEmail: normalizedDonorEmail || undefined,
-    });
+    }).catch(() => {});
 
     // Also notify the cashier role
     await createStaffNotification({
@@ -270,13 +303,15 @@ const createDonation = async (req, res) => {
         amount: numericAmount,
         category,
         transactionId: transactionId || "N/A",
-      });
+      }).catch((err) => console.warn("Failed to send donation receipt:", err.message));
     }
 
     // If donation is linked to an event, increment the event's collection
     if (eventId) {
       try {
-        await Event.findByIdAndUpdate(String(eventId), { $inc: { collection: numericAmount } });
+        if (isDbConnected()) {
+          await Event.findByIdAndUpdate(String(eventId), { $inc: { collection: numericAmount } });
+        }
       } catch (err) {
         console.error("Failed to update event collection for donation:", err);
       }
@@ -291,36 +326,37 @@ const createDonation = async (req, res) => {
 const getNotifications = async (req, res) => {
   try {
     const email = normalizeEmail(req.query.email);
-    const filters = [{ audienceRole: "devotee" }];
+    
+    if (isDbConnected()) {
+      const filters = [{ audienceRole: "devotee" }];
+      
+      // If email is provided, return only this devotee's notifications plus explicit devotee broadcasts.
+      if (email) {
+        let user = await User.findOne(buildEmailLookup("email", email)).select("_id role");
+        const emailFilter = buildEmailLookup("audienceEmail", email);
+        if (emailFilter) filters.push(emailFilter);
 
-    // If email is provided, return only this devotee's notifications plus explicit devotee broadcasts.
-    if (email) {
-      let user = null;
-      if (isDbConnected()) {
-        user = await User.findOne(buildEmailLookup("email", email)).select("_id role");
-      } else {
-        user = await fileUserStore.findUserByEmail(email);
+        const userId = user?._id?.toString?.() || user?.id;
+        if (userId) filters.push({ audienceId: userId });
+
+        const notifications = await Notification.find({
+          $or: filters,
+          category: { $in: ["festival", "event", "pooja", "prasada"] }
+        }).sort({ createdAt: -1 });
+        return res.status(200).json({ notifications });
       }
 
-      const emailFilter = buildEmailLookup("audienceEmail", email);
-      if (emailFilter) filters.push(emailFilter);
-
-      const userId = user?._id?.toString?.() || user?.id;
-      if (userId) filters.push({ audienceId: userId });
-
+      // No email: return only public devotee broadcasts
       const notifications = await Notification.find({
-        $or: filters,
+        audienceRole: "devotee",
         category: { $in: ["festival", "event", "pooja", "prasada"] }
       }).sort({ createdAt: -1 });
       return res.status(200).json({ notifications });
+    } else {
+      // Offline/Local file fallback
+      const notifications = await fileNotificationStore.findNotifications({ audienceEmail: email });
+      return res.status(200).json({ notifications });
     }
-
-    // No email: return only public devotee broadcasts, not staff/admin/internal notifications.
-    const notifications = await Notification.find({
-      audienceRole: "devotee",
-      category: { $in: ["festival", "event", "pooja", "prasada"] }
-    }).sort({ createdAt: -1 });
-    return res.status(200).json({ notifications });
   } catch (error) {
     return res.status(500).json({ error: "Failed to load notifications." });
   }

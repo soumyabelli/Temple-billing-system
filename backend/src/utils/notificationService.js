@@ -2,6 +2,9 @@ const Notification = require("../models/Notification");
 const Employee = require("../models/Employee");
 const User = require("../models/User");
 
+const { isDbConnected } = require("../config/db");
+const fileNotificationStore = require("../store/fileNotificationStore");
+
 const normalizeEmail = (email) => String(email || "").trim().toLowerCase();
 
 const createNotification = async ({
@@ -14,7 +17,7 @@ const createNotification = async ({
 }) => {
   if (!title || !message) return null;
 
-  return Notification.create({
+  const data = {
     title: String(title).trim(),
     message: String(message).trim(),
     audienceId: audienceId ? String(audienceId).trim() : undefined,
@@ -22,7 +25,13 @@ const createNotification = async ({
     audienceRole: audienceRole ? String(audienceRole).trim().toLowerCase() : undefined,
     category: category ? String(category).trim() : undefined,
     read: false,
-  });
+  };
+
+  if (isDbConnected()) {
+    return Notification.create(data);
+  }
+
+  return fileNotificationStore.createNotification(data);
 };
 
 const createStaffNotification = (payload) =>
