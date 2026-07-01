@@ -29,8 +29,6 @@ const menuItems = [
   { label: "Book Pooja", icon: "book" },
   { label: "My Bookings", icon: "calendar" },
   { label: "Donations", icon: "heart" },
-  { label: "Prasadam Orders", icon: "bag" },
-  { label: "Payment History", icon: "wallet" },
   { label: "Receipts", icon: "receipt" },
   { label: "Festival Events", icon: "temple" },
   { label: "Notifications", icon: "bell" },
@@ -272,6 +270,19 @@ const DevoteeDashboard = () => {
   const [bookingError, setBookingError] = useState("");
   const [bookingSuccess, setBookingSuccess] = useState("");
   const [bookingPaymentMethod, setBookingPaymentMethod] = useState("UPI");
+  const [showAllReceipts, setShowAllReceipts] = useState(false);
+  const [showAllBookings, setShowAllBookings] = useState(false);
+  const [showAllDonations, setShowAllDonations] = useState(false);
+  const [viewingReceipt, setViewingReceipt] = useState(null);
+  const [bookingTab, setBookingTab] = useState("Pooja");
+  const [roomType, setRoomType] = useState("Standard Non-AC Room");
+  const [roomCheckIn, setRoomCheckIn] = useState("");
+  const [roomCheckOut, setRoomCheckOut] = useState("");
+  const [roomAmount, setRoomAmount] = useState(500);
+  const [roomPaymentMethod, setRoomPaymentMethod] = useState("UPI");
+  const [roomLoading, setRoomLoading] = useState(false);
+  const [roomSuccess, setRoomSuccess] = useState("");
+  const [roomError, setRoomError] = useState("");
   const [donationCategories, setDonationCategories] = useState(getDonationTypes());
   const [donationCategory, setDonationCategory] = useState(getDonationTypes()[0] || "General");
   const [supportRequests, setSupportRequests] = useState([]);
@@ -556,7 +567,7 @@ const DevoteeDashboard = () => {
         setDonationContact("");
         setDonationNotes("");
         setSelectedEventId(null);
-        setActivePage("Payment History");
+        setActivePage("Receipts");
         return;
       }
 
@@ -616,7 +627,7 @@ const DevoteeDashboard = () => {
             setDonationContact("");
             setDonationNotes("");
             setSelectedEventId(null);
-            setActivePage("Payment History");
+            setActivePage("Receipts");
           } catch (err) {
             setDonationError(err?.response?.data?.error || "Payment verification failed.");
             console.warn("verify handler error", err);
@@ -722,6 +733,82 @@ const DevoteeDashboard = () => {
     }
   };
 
+  const handleRoomSubmit = async () => {
+    setRoomError("");
+    setRoomSuccess("");
+
+    if (!roomCheckIn || !roomCheckOut) {
+      setRoomError("Please select check-in and check-out dates.");
+      return;
+    }
+
+    const checkInDate = new Date(roomCheckIn);
+    const checkOutDate = new Date(roomCheckOut);
+
+    if (Number.isNaN(checkInDate.getTime()) || checkInDate.getTime() <= Date.now()) {
+      setRoomError("Check-in date/time must be in the future.");
+      return;
+    }
+
+    if (Number.isNaN(checkOutDate.getTime()) || checkOutDate.getTime() <= checkInDate.getTime()) {
+      setRoomError("Check-out date/time must be after check-in date/time.");
+      return;
+    }
+
+    // Calculate number of days
+    const diffMs = checkOutDate.getTime() - checkInDate.getTime();
+    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24)) || 1;
+    const finalAmount = roomAmount * diffDays;
+
+    const isConfirmed = window.confirm(`Room Booking Total: ${formatCurrency(finalAmount)} for ${diffDays} day(s). Once paid, it is non-refundable. Do you want to proceed?`);
+    if (!isConfirmed) return;
+
+    setRoomLoading(true);
+    try {
+      const activeEmail = String(profileData.email || user?.email || "").trim().toLowerCase();
+      const activeName = String(profileData.name || user?.name || "").trim();
+      const activePhone = String(profileData.phone || "").trim();
+
+      const payload = {
+        devoteeName: activeName,
+        devoteeEmail: activeEmail,
+        devoteePhone: activePhone || undefined,
+        service: `Room Booking: ${roomType}`,
+        datetime: roomCheckIn,
+        amount: finalAmount,
+        paymentMethod: roomPaymentMethod,
+        notes: `Check-in: ${formatDateTimeDisplay(roomCheckIn)} | Check-out: ${formatDateTimeDisplay(roomCheckOut)}`,
+      };
+
+      const bookingRes = await createDevoteeBooking(payload);
+      const createdBooking = bookingRes?.booking;
+      if (createdBooking?._id) {
+        setBookingsData((prev) => [createdBooking, ...prev.filter((booking) => booking._id !== createdBooking._id)]);
+      }
+
+      try {
+        const [bookingsRes, notificationsRes] = await Promise.all([
+          getDevoteeBookings(activeEmail),
+          getDevoteeNotifications(activeEmail),
+        ]);
+        setBookingsData(bookingsRes.bookings || []);
+        setNotificationsData(formatNotifications(notificationsRes.notifications || []));
+      } catch (refreshError) {
+        console.warn("Unable to refresh bookings after create", refreshError);
+      }
+
+      setRoomSuccess(`Room booking successful! Room Type: ${roomType} for ${diffDays} day(s). Amount paid: ${formatCurrency(finalAmount)}.`);
+      setRoomCheckIn("");
+      setRoomCheckOut("");
+      setActivePage("My Bookings");
+    } catch (error) {
+      console.warn("Unable to create room booking", error);
+      setRoomError(error?.response?.data?.error || "Unable to create room booking. Please try again.");
+    } finally {
+      setRoomLoading(false);
+    }
+  };
+
   const handleDonationSubmit = async () => {
     setDonationError("");
     setDonationSuccess("");
@@ -782,7 +869,7 @@ const DevoteeDashboard = () => {
         setDonationContact("");
         setDonationNotes("");
         setSelectedEventId(null);
-        setActivePage("Payment History");
+        setActivePage("Receipts");
         return;
       }
 
@@ -838,7 +925,7 @@ const DevoteeDashboard = () => {
         setDonationContact("");
         setDonationNotes("");
         setSelectedEventId(null);
-        setActivePage("Payment History");
+        setActivePage("Receipts");
         return;
       }
 
@@ -898,7 +985,7 @@ const DevoteeDashboard = () => {
             setDonationContact("");
             setDonationNotes("");
             setSelectedEventId(null);
-            setActivePage("Payment History");
+            setActivePage("Receipts");
           } catch (err) {
             setDonationError(err?.response?.data?.error || "Payment verification failed.");
             console.warn("verify handler error", err);
@@ -1281,7 +1368,7 @@ const DevoteeDashboard = () => {
               onClick={() => {
                 if (item.action === "View Details") setActivePage("My Bookings");
                 if (item.action === "View Bookings") setActivePage("My Bookings");
-                if (item.action === "View History") setActivePage("Payment History");
+                if (item.action === "View History") setActivePage("Receipts");
                 if (item.action === "View Orders") setActivePage("Prasadam Orders");
               }}
               className="mt-4 bg-transparent p-0 text-base font-semibold text-[#bc630f]"
@@ -1327,7 +1414,7 @@ const DevoteeDashboard = () => {
         <article className={`${glassCard}`}>
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-[2rem] font-bold">Recent Donations</h2>
-            <button type="button" onClick={() => setActivePage("Payment History")} className="bg-transparent p-0 text-base font-semibold text-[#bc630f]">
+            <button type="button" onClick={() => setActivePage("Receipts")} className="bg-transparent p-0 text-base font-semibold text-[#bc630f]">
               View All
             </button>
           </div>
@@ -1347,7 +1434,7 @@ const DevoteeDashboard = () => {
             )}
           </div>
           <div className="pt-4 text-right">
-            <button type="button" onClick={() => setActivePage("Payment History")} className="bg-transparent p-0 text-base font-semibold text-[#3058d6]">
+            <button type="button" onClick={() => setActivePage("Receipts")} className="bg-transparent p-0 text-base font-semibold text-[#3058d6]">
               View All Donations
             </button>
           </div>
@@ -1472,7 +1559,7 @@ const DevoteeDashboard = () => {
             </table>
           </div>
           <div className="px-5 py-4 text-right">
-            <button type="button" onClick={() => setActivePage("Payment History")} className="rounded-xl bg-[#1b7f77] px-5 py-2 text-base font-semibold text-white">
+            <button type="button" onClick={() => setActivePage("Receipts")} className="rounded-xl bg-[#1b7f77] px-5 py-2 text-base font-semibold text-white">
               View All Donations
             </button>
           </div>
@@ -1481,193 +1568,410 @@ const DevoteeDashboard = () => {
     </>
   );
 
-  const renderBookPooja = () => (
-    <div className="space-y-6">
-      <div className={`${glassCard}`}>
-        <h2 className="text-[2rem] font-bold">Book Pooja</h2>
-        <p className="mt-2 text-[#4f4f4f]">Choose a service and book your next pooja online. Your new booking will appear under My Bookings.</p>
+  const renderBookPooja = () => {
+    const selectedUnitPrice = prasadamMenu[prasadamForm.itemName] || 0;
+    const totalPrasadamPrice = selectedUnitPrice * (Number(prasadamForm.quantity) || 1);
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-[1.5fr_1fr]">
-          <div className="space-y-5 rounded-[28px] border border-white/45 bg-white/62 p-6 shadow-[0_20px_52px_rgba(113,82,28,0.12)] backdrop-blur-xl">
-            <div>
-              <p className="text-sm uppercase tracking-[0.08em] text-[#8d6925]">Service</p>
-              <select
-                value={bookingService}
-                onChange={(e) => {
-                  const selectedService = e.target.value;
-                  const selectedType = poojaTypes.find((type) => type.name === selectedService);
-                  setBookingService(selectedService);
-                  setBookingAmount(selectedType?.price || 0);
-                }}
-                className={glassInput}
-              >
-                {poojaTypes.map((service) => (
-                  <option key={service.name} value={service.name}>
-                    {service.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+    return (
+      <div className="space-y-6">
+        {/* Three Glassy Tabs at the Top */}
+        <div className="flex gap-2 sm:gap-4 rounded-3xl bg-white/30 border border-white/40 p-2 backdrop-blur-md shadow-sm max-w-xl">
+          <button
+            type="button"
+            onClick={() => setBookingTab("Pooja")}
+            className={`flex-1 py-2.5 px-4 text-xs sm:text-sm font-bold rounded-2xl transition-all duration-200 ${
+              bookingTab === "Pooja"
+                ? "bg-[#1b7f77] text-white shadow-md scale-[1.02]"
+                : "bg-white/40 text-amber-950 hover:bg-white/60"
+            }`}
+          >
+            🌸 Book Pooja
+          </button>
+          <button
+            type="button"
+            onClick={() => setBookingTab("Prasadam")}
+            className={`flex-1 py-2.5 px-4 text-xs sm:text-sm font-bold rounded-2xl transition-all duration-200 ${
+              bookingTab === "Prasadam"
+                ? "bg-[#1b7f77] text-white shadow-md scale-[1.02]"
+                : "bg-white/40 text-amber-950 hover:bg-white/60"
+            }`}
+          >
+            📦 Order Prasada
+          </button>
+          <button
+            type="button"
+            onClick={() => setBookingTab("Room")}
+            className={`flex-1 py-2.5 px-4 text-xs sm:text-sm font-bold rounded-2xl transition-all duration-200 ${
+              bookingTab === "Room"
+                ? "bg-[#1b7f77] text-white shadow-md scale-[1.02]"
+                : "bg-white/40 text-amber-950 hover:bg-white/60"
+            }`}
+          >
+            🏨 Book Room
+          </button>
+        </div>
 
-            <div>
-              <p className="text-sm uppercase tracking-[0.08em] text-[#8d6925]">Date & time</p>
-              <input
-                type="datetime-local"
-                value={bookingDatetime}
-                onChange={(e) => setBookingDatetime(e.target.value)}
-                min={minBookingDatetime}
-                className={glassInput}
-              />
-            </div>
+        {bookingTab === "Pooja" && (
+          <div className={`${glassCard}`}>
+            <h2 className="text-[2rem] font-bold">Book Pooja</h2>
+            <p className="mt-2 text-[#4f4f4f]">Choose a service and book your next pooja online. Your new booking will appear under My Bookings.</p>
 
-            <div>
-              <p className="text-sm uppercase tracking-[0.08em] text-[#8d6925]">Amount</p>
-              <input
-                type="number"
-                min="1"
-                value={bookingAmount}
-                readOnly
-                className={glassInput}
-              />
-            </div>
+            <div className="mt-6 max-w-2xl mx-auto">
+              <div className="space-y-5 rounded-[28px] border border-white/45 bg-white/62 p-6 shadow-[0_20px_52px_rgba(113,82,28,0.12)] backdrop-blur-xl">
+                <div>
+                  <p className="text-sm uppercase tracking-[0.08em] text-[#8d6925]">Service</p>
+                  <select
+                    value={bookingService}
+                    onChange={(e) => {
+                      const selectedService = e.target.value;
+                      const selectedType = poojaTypes.find((type) => type.name === selectedService);
+                      setBookingService(selectedService);
+                      setBookingAmount(selectedType?.price || 0);
+                    }}
+                    className={glassInput}
+                  >
+                    {poojaTypes.map((service) => (
+                      <option key={service.name} value={service.name}>
+                        {service.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-            <div>
-              <p className="text-sm uppercase tracking-[0.08em] text-[#8d6925]">Payment Method</p>
-              <select value={bookingPaymentMethod} onChange={(e) => setBookingPaymentMethod(e.target.value)} className={glassInput}>
-                {paymentMethods.map((m) => (
-                  <option key={m} value={m}>
-                    {m}
-                  </option>
-                ))}
-              </select>
-            </div>
+                <div>
+                  <p className="text-sm uppercase tracking-[0.08em] text-[#8d6925]">Date & time</p>
+                  <input
+                    type="datetime-local"
+                    value={bookingDatetime}
+                    onChange={(e) => setBookingDatetime(e.target.value)}
+                    min={minBookingDatetime}
+                    className={glassInput}
+                  />
+                </div>
 
-            <div>
-              <p className="text-sm uppercase tracking-[0.08em] text-[#8d6925]">Contact number</p>
-              <input
-                type="tel"
-                value={bookingContact}
-                onChange={(e) => setBookingContact(e.target.value)}
-                placeholder="Optional phone number"
-                className={glassInput}
-              />
-            </div>
+                <div>
+                  <p className="text-sm uppercase tracking-[0.08em] text-[#8d6925]">Amount</p>
+                  <input
+                    type="number"
+                    min="1"
+                    value={bookingAmount}
+                    readOnly
+                    className={glassInput}
+                  />
+                </div>
 
-            <div>
-              <p className="text-sm uppercase tracking-[0.08em] text-[#8d6925]">Notes</p>
-              <textarea
-                rows={4}
-                value={bookingNotes}
-                onChange={(e) => setBookingNotes(e.target.value)}
-                placeholder="Any special requests"
-                className={glassInput}
-              />
-            </div>
+                <div>
+                  <p className="text-sm uppercase tracking-[0.08em] text-[#8d6925]">Payment Method</p>
+                  <select value={bookingPaymentMethod} onChange={(e) => setBookingPaymentMethod(e.target.value)} className={glassInput}>
+                    {paymentMethods.map((m) => (
+                      <option key={m} value={m}>
+                        {m}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-            <button
-              type="button"
-              onClick={handleBookingSubmit}
-              disabled={bookingLoading}
-              className="mt-4 w-full rounded-2xl bg-[#1b7f77] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#166353] disabled:cursor-not-allowed disabled:bg-[#9bb8af]"
-            >
-              {bookingLoading ? "Booking..." : "Book Pooja"}
-            </button>
-            <button
-              type="button"
-              onClick={() => setActivePage("My Bookings")}
-              className="mt-2 w-full text-center text-sm font-semibold text-[#1b7f77] hover:underline bg-transparent border-0"
-            >
-              View Bookings History
-            </button>
-            {bookingError ? (
-              <p className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 mt-2">{bookingError}</p>
-            ) : null}
-            {bookingSuccess ? (
-              <p className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700 mt-2">{bookingSuccess}</p>
-            ) : null}
-          </div>
-
-          <div className="space-y-4 rounded-[28px] border border-white/45 bg-white/62 p-6 shadow-[0_20px_52px_rgba(113,82,28,0.12)] backdrop-blur-xl">
-            <h3 className="text-xl font-semibold">Popular Pooja services</h3>
-            <p className="text-sm text-[#5d5d5d]">Select a service to book and check your newest booking immediately in My Bookings.</p>
-            <div className="grid gap-3">
-              {poojaTypes.map((service) => (
                 <button
                   type="button"
-                  key={service.name}
-                  onClick={() => {
-                    setBookingService(service.name);
-                    setBookingAmount(service.price);
-                  }}
-                  className={`w-full rounded-3xl border px-4 py-4 text-left text-sm font-semibold transition ${
-                    bookingService === service.name ? "border-[#bc630f] bg-[#fff5e7] text-[#9b5a1e]" : "border-[#ececec] bg-[#fafafa] text-[#4f4f4f] hover:border-[#bc630f]"
-                  }`}
+                  onClick={handleBookingSubmit}
+                  disabled={bookingLoading}
+                  className="mt-4 w-full rounded-2xl bg-[#1b7f77] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#166353] disabled:cursor-not-allowed disabled:bg-[#9bb8af]"
                 >
-                  <div className="flex items-center justify-between">
-                    <span>{service.name}</span>
-                    <span className="text-sm text-[#7a5d1b]">{formatCurrency(service.price)}</span>
-                  </div>
+                  {bookingLoading ? "Booking..." : "Book Pooja"}
                 </button>
-              ))}
+                <button
+                  type="button"
+                  onClick={() => setActivePage("My Bookings")}
+                  className="mt-2 w-full text-center text-sm font-semibold text-[#1b7f77] hover:underline bg-transparent border-0"
+                >
+                  View Bookings History
+                </button>
+                {bookingError ? (
+                  <p className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 mt-2">{bookingError}</p>
+                ) : null}
+                {bookingSuccess ? (
+                  <p className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700 mt-2">{bookingSuccess}</p>
+                ) : null}
+              </div>
             </div>
-            <div className="rounded-[26px] border border-white/45 bg-white/65 p-4 text-sm text-[#6d5a35] shadow-sm backdrop-blur-sm">
-              <p className="font-semibold">Booking summary</p>
-              <p className="mt-3">Service: {bookingService}</p>
-              <p>Date: {bookingDatetime ? formatDateTimeDisplay(bookingDatetime) : "Not selected"}</p>
-              <p>Amount: {formatCurrency(bookingAmount)}</p>
-              <p>Payment: {bookingPaymentMethod}</p>
+          </div>
+        )}
+
+        {bookingTab === "Prasadam" && (
+          <div className={`${glassCard}`}>
+            <h2 className="text-[2rem] font-bold">Order Prasadam</h2>
+            <p className="mt-2 text-[#4f4f4f]">Select one of the delicious prasadam offerings below to place your order.</p>
+            <div className="mt-6 max-w-2xl mx-auto">
+              <div className={glassSection}>
+                <h3 className="text-xl font-semibold">Order Prasadam Form</h3>
+                <div className="mt-4 grid gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-[#5d5d5d] mb-1">Item Name</label>
+                    <select
+                      className={glassInput}
+                      value={prasadamForm.itemName}
+                      onChange={(e) => setPrasadamForm((prev) => ({ ...prev, itemName: e.target.value }))}
+                    >
+                      {Object.keys(prasadamMenu).map((item) => (
+                        <option key={item} value={item}>{item}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div className="rounded-2xl bg-[#fff8ec] px-4 py-3 text-sm border border-amber-100">
+                    Price: <strong className="text-amber-900">{formatCurrency(selectedUnitPrice)}</strong> each
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-[#5d5d5d] mb-1">Quantity</label>
+                    <input
+                      type="number"
+                      min="1"
+                      className={glassInput}
+                      value={prasadamForm.quantity}
+                      onChange={(e) => setPrasadamForm((prev) => ({ ...prev, quantity: Number(e.target.value) }))}
+                      placeholder="Quantity"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-[#5d5d5d] mb-1">Payment Method</label>
+                    <select
+                      className={glassInput}
+                      value={prasadamForm.paymentMethod}
+                      onChange={(e) => setPrasadamForm((prev) => ({ ...prev, paymentMethod: e.target.value }))}
+                    >
+                      <option value="UPI">UPI</option>
+                      <option value="Card">Card</option>
+                      <option value="Net Banking">Net Banking</option>
+                    </select>
+                  </div>
+
+                  <div className="rounded-2xl bg-[#fff7e7] px-4 py-3 text-sm font-semibold text-[#8b5a0a] border border-amber-200/50">
+                    Total amount: {formatCurrency(totalPrasadamPrice)}
+                  </div>
+                  
+                  <button type="button" onClick={handlePrasadamSubmit} className={glassButton}>Pay & Place Order</button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActivePage("Receipts");
+                      setHistoryTab("Prasadam");
+                    }}
+                    className="mt-2 w-full text-center text-sm font-semibold text-[#1b7f77] hover:underline bg-transparent border-0"
+                  >
+                    View Prasadam Orders History
+                  </button>
+                  {prasadamMessage && <p className="text-sm text-[#1b7f77] mt-2 font-semibold text-center">{prasadamMessage}</p>}
+                </div>
+              </div>
             </div>
+          </div>
+        )}
+
+        {bookingTab === "Room" && (
+          <div className={`${glassCard}`}>
+            <h2 className="text-[2rem] font-bold">Book Guest Room</h2>
+            <p className="mt-2 text-[#4f4f4f]">Rent a comfortable guest room at the temple premises for your visit.</p>
+
+            <div className="mt-6 max-w-2xl mx-auto">
+              <div className={glassSection}>
+                <h3 className="text-xl font-semibold">Room Booking Form</h3>
+                <div className="mt-4 grid gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-[#5d5d5d] mb-1">Room Type</label>
+                    <select
+                      value={roomType}
+                      onChange={(e) => {
+                        const selectedType = e.target.value;
+                        setRoomType(selectedType);
+                        if (selectedType === "Standard Non-AC Room") setRoomAmount(500);
+                        else if (selectedType === "Deluxe AC Room") setRoomAmount(1000);
+                        else if (selectedType === "VIP Suite") setRoomAmount(2500);
+                      }}
+                      className={glassInput}
+                    >
+                      <option value="Standard Non-AC Room">Standard Non-AC Room (Rs 500 / day)</option>
+                      <option value="Deluxe AC Room">Deluxe AC Room (Rs 1,000 / day)</option>
+                      <option value="VIP Suite">VIP Suite (Rs 2,500 / day)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-[#5d5d5d] mb-1">Check-in Date & Time</label>
+                    <input
+                      type="datetime-local"
+                      value={roomCheckIn}
+                      onChange={(e) => setRoomCheckIn(e.target.value)}
+                      className={glassInput}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-[#5d5d5d] mb-1">Check-out Date & Time</label>
+                    <input
+                      type="datetime-local"
+                      value={roomCheckOut}
+                      onChange={(e) => setRoomCheckOut(e.target.value)}
+                      className={glassInput}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-[#5d5d5d] mb-1">Payment Method</label>
+                    <select
+                      value={roomPaymentMethod}
+                      onChange={(e) => setRoomPaymentMethod(e.target.value)}
+                      className={glassInput}
+                    >
+                      <option value="UPI">UPI</option>
+                      <option value="Card">Card</option>
+                      <option value="Net Banking">Net Banking</option>
+                    </select>
+                  </div>
+
+                  {roomCheckIn && roomCheckOut && (() => {
+                    const days = Math.ceil((new Date(roomCheckOut) - new Date(roomCheckIn)) / (1000 * 60 * 60 * 24)) || 1;
+                    if (days > 0) {
+                      return (
+                        <div className="rounded-2xl bg-[#fff7e7] px-4 py-3 text-sm font-semibold text-[#8b5a0a] border border-amber-200/50">
+                          Total Duration: {days} Day(s) | Total Price: {formatCurrency(roomAmount * days)}
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
+
+                  <button
+                    type="button"
+                    onClick={handleRoomSubmit}
+                    disabled={roomLoading}
+                    className={glassButton}
+                  >
+                    {roomLoading ? "Processing room booking..." : "Confirm & Book Room"}
+                  </button>
+
+                  {roomError && (
+                    <p className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 mt-2">{roomError}</p>
+                  )}
+                  {roomSuccess && (
+                    <p className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700 mt-2">{roomSuccess}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderMyBookings = () => {
+    // Combine bookingsData (poojas & rooms) and prasadamOrders
+    const poojaAndRoomBookings = bookingsData.map(b => ({
+      ...b,
+      isPrasadam: false,
+      isRoom: b.service && b.service.toLowerCase().includes("room"),
+      datetimeForSort: b.createdAt ? new Date(b.createdAt).getTime() : (b.datetime ? new Date(b.datetime).getTime() : 0),
+    }));
+
+    const prasadamList = (prasadamOrders || []).map(o => ({
+      ...o,
+      bookingNumber: o.orderNumber || buildReceiptId("PO", o),
+      service: `Prasada Order: ${o.itemName} (x${o.quantity || 1})`,
+      datetime: o.createdAt || o.date,
+      datetimeForSort: o.createdAt ? new Date(o.createdAt).getTime() : (o.date ? new Date(o.date).getTime() : 0),
+      amount: o.amount,
+      status: o.status || "Placed",
+      isPrasadam: true,
+      isRoom: false,
+    }));
+
+    const combinedList = [...poojaAndRoomBookings, ...prasadamList].sort((a, b) => b.datetimeForSort - a.datetimeForSort);
+    const displayedBookings = showAllBookings ? combinedList : combinedList.slice(0, 5);
+
+    return (
+      <div className="space-y-6">
+        <div className={`${glassCard}`}>
+          <div className="flex items-center justify-between">
+            <h2 className="text-[2rem] font-bold">My Bookings</h2>
+            <div className="flex items-center gap-3">
+              {combinedList.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllBookings(!showAllBookings)}
+                  className="rounded-xl bg-[#1b7f77]/10 hover:bg-[#1b7f77]/20 text-[#1b7f77] px-4 py-2 text-sm font-semibold transition"
+                >
+                  {showAllBookings ? "Show Recent 5" : "View All"}
+                </button>
+              )}
+              <button type="button" onClick={() => { setActivePage("Book Pooja"); setBookingTab("Pooja"); }} className="rounded-2xl bg-[#1b7f77] px-4 py-2 text-sm font-semibold text-white">New Booking</button>
+            </div>
+          </div>
+          <div className="mt-6 overflow-x-auto">
+            <table className="w-full min-w-[700px] text-left text-sm text-[#3f3f3f] border-collapse">
+              <thead className="bg-[#fafafa] text-[#575757]">
+                <tr className="border-b border-[#ececec]">
+                  <th className="px-4 py-3">Booking/Order No</th>
+                  <th className="px-4 py-3">Item/Service</th>
+                  <th className="px-4 py-3">Date & Time</th>
+                  <th className="px-4 py-3">Amount</th>
+                  <th className="px-4 py-3 text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {displayedBookings.length > 0 ? (
+                  displayedBookings.map((row) => {
+                    const itemNo = row.bookingNumber || buildReceiptId(row.isPrasadam ? "PO" : "PB", row);
+                    
+                    return (
+                      <tr key={row._id || `${row.service}-${row.datetime}`} className="border-t border-[#f0f0f0] hover:bg-black/5 transition-colors">
+                        <td className="px-4 py-2.5 font-mono text-xs font-semibold text-[#6b6b6b]">{itemNo}</td>
+                        <td className="px-4 py-2.5 font-semibold text-[#1a1a1a]">
+                          {row.isRoom ? (
+                            <span className="flex items-center gap-1.5">
+                              <span>🏨</span> {row.service}
+                            </span>
+                          ) : row.isPrasadam ? (
+                            <span className="flex items-center gap-1.5">
+                              <span>📦</span> {row.service}
+                            </span>
+                          ) : (
+                            <span className="flex items-center gap-1.5">
+                              <span>🌸</span> {row.service}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-2.5 text-[#4f4f4f]">{formatDateTimeDisplay(row.datetime)}</td>
+                        <td className="px-4 py-2.5 font-bold text-[#1b7f77]">{formatCurrency(row.amount)}</td>
+                        <td className="px-4 py-2.5">
+                          <div className="flex justify-center">
+                            <button
+                              type="button"
+                              onClick={() => handleReceiptDownload(row, row.isPrasadam ? "prasadam" : "booking")}
+                              className="rounded-lg bg-[#1b7f77] hover:bg-[#1b7f77]/90 px-3 py-1.5 text-xs font-bold text-white transition shadow-sm"
+                            >
+                              Download
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td colSpan="5" className="px-4 py-5 text-center text-[#5d5d5d]">
+                      No bookings or orders available.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
-    </div>
-  );
-
-  const renderMyBookings = () => (
-    <div className="space-y-6">
-      <div className={`${glassCard}`}>
-        <div className="flex items-center justify-between">
-          <h2 className="text-[2rem] font-bold">My Bookings</h2>
-          <button type="button" onClick={() => setActivePage("Book Pooja")} className="rounded-2xl bg-[#1b7f77] px-4 py-2 text-sm font-semibold text-white">New Booking</button>
-        </div>
-        <div className="mt-6 overflow-x-auto">
-          <table className="w-full min-w-[650px] text-left text-sm text-[#3f3f3f]">
-            <thead className="bg-[#fafafa] text-[#575757]">
-              <tr>
-                <th className="px-5 py-3">Service</th>
-                <th className="px-5 py-3">Date & Time</th>
-                <th className="px-5 py-3">Amount</th>
-                <th className="px-5 py-3">Status</th>
-                <th className="px-5 py-3">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {bookingsData.length > 0 ? (
-                bookingsData.map((row) => (
-                  <tr key={`${row.service}-${row.datetime || row._id}`} className="border-t border-[#f0f0f0]">
-                    <td className="px-5 py-3 font-semibold">{row.service}</td>
-                    <td className="px-5 py-3">{formatDateTimeDisplay(row.datetime)}</td>
-                    <td className="px-5 py-3">{formatCurrency(row.amount)}</td>
-                    <td className="px-5 py-3 text-[#af6317]">
-                      <button type="button" onClick={() => handleReceiptDownload(row, "booking")} className="font-semibold">
-                        Download
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="5" className="px-5 py-6 text-center text-[#5d5d5d]">
-                    No bookings available.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  );
+    );
+  };
 
   const renderDonations = () => (
     <div className="space-y-6">
@@ -1795,7 +2099,7 @@ const DevoteeDashboard = () => {
               <button
                 type="button"
                 onClick={() => {
-                  setActivePage("Payment History");
+                  setActivePage("Receipts");
                   setHistoryTab("Donations");
                 }}
                 className="mt-2 w-full text-center text-sm font-semibold text-[#b46a13] hover:underline bg-transparent border-0"
@@ -1806,7 +2110,18 @@ const DevoteeDashboard = () => {
           </div>
 
           <div className={glassSection}>
-            <h3 className="text-xl font-semibold">Donation History</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-semibold">Donation History</h3>
+              {donationsData.length > 5 && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllDonations(!showAllDonations)}
+                  className="rounded-xl bg-[#1b7f77]/10 hover:bg-[#1b7f77]/20 text-[#1b7f77] px-3 py-1.5 text-xs font-semibold transition"
+                >
+                  {showAllDonations ? "Show Recent 5" : "View All"}
+                </button>
+              )}
+            </div>
             <p className="mt-2 text-sm text-[#5d5d5d]">Your latest donations are stored here and used in payment history and receipts.</p>
             <div className="mt-6 space-y-3">
               {(() => {
@@ -1816,7 +2131,9 @@ const DevoteeDashboard = () => {
 
                 if (!filtered || filtered.length === 0) return <div className={glassItem}>No donations have been recorded yet.</div>;
 
-                return filtered.map((item) => (
+                const displayed = showAllDonations ? filtered : filtered.slice(0, 5);
+
+                return displayed.map((item) => (
                   <div key={`${item._id || Math.random()}`} className="rounded-[26px] border border-white/40 bg-white/55 p-4 shadow-sm backdrop-blur-sm">
                     <div className="flex flex-wrap items-center justify-between gap-4">
                       <div>
@@ -1864,7 +2181,7 @@ const DevoteeDashboard = () => {
                 <button
                   type="button"
                   onClick={() => {
-                    setActivePage("Payment History");
+                    setActivePage("Receipts");
                     setHistoryTab("Prasadam");
                   }}
                   className="mt-2 w-full text-center text-sm font-semibold text-[#b46a13] hover:underline bg-transparent border-0"
@@ -2028,95 +2345,227 @@ const DevoteeDashboard = () => {
       </div>
     </div>
   );
-  const renderReceipts = () => (
-    <div className="space-y-6">
-      <div className={`${glassCard}`}>
-        <h2 className="text-[2rem] font-bold">Receipts</h2>
-        <div className="mt-6 grid gap-6 xl:grid-cols-3">
-          <div className={glassSection}>
-            <h3 className="text-xl font-semibold">Pooja Booking Receipts</h3>
-            <div className="mt-4 space-y-3">
-              {bookingsData.length > 0 ? (
-                bookingsData.map((item) => (
-                  <div key={`${item._id || item.bookingNumber || item.service}`} className={glassItem}>
-                    <div className="flex flex-wrap items-center justify-between gap-4">
-                      <div>
-                        <p className="text-lg font-semibold">{item.service || "Pooja Booking"}</p>
-                        <p className="text-sm text-[#5d5d5d]">{formatDateTimeDisplay(item.datetime)}</p>
-                        <p className="mt-1 text-sm text-[#6b6b6b]">Receipt ID: {buildReceiptId("PB", item)}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-lg font-bold text-[#1b7f77]">{formatCurrency(item.amount)}</p>
-                        <button type="button" onClick={() => handleReceiptDownload(item, "booking")} className="mt-3 rounded-2xl bg-[#1b7f77] px-4 py-2 text-sm font-semibold text-white">
-                          Download PDF
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className={`${glassItem} text-[#5d5d5d]`}>No pooja booking receipts available.</div>
-              )}
-            </div>
-          </div>
+  const renderReceipts = () => {
+    const bookingItems = bookingsData.map(b => ({
+      ...b,
+      type: "Pooja Booking",
+      dateKey: b.datetime || b.createdAt,
+      dateDisplay: formatDateDisplay(b.datetime || b.createdAt),
+      oneLineSummary: `Pooja Booking: ${b.service || "Booking"}`,
+      receiptId: buildReceiptId("PB", b),
+      downloadType: "booking",
+      amount: b.amount,
+    }));
 
-          <div className={glassSection}>
-            <h3 className="text-xl font-semibold">Donation Receipts</h3>
-            <div className="mt-4 space-y-3">
-              {donationsData.length > 0 ? (
-                donationsData.map((item) => (
-                  <div key={`${item._id || Math.random()}`} className={glassItem}>
-                    <div className="flex flex-wrap items-center justify-between gap-4">
-                      <div>
-                        <p className="text-lg font-semibold">{item.category || item.type || "Donation"}</p>
-                        <p className="text-sm text-[#5d5d5d]">{formatDateDisplay(item.date || item.createdAt)}</p>
-                        <p className="mt-1 text-sm text-[#6b6b6b]">Receipt ID: {buildReceiptId("DN", item)}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-lg font-bold text-[#1b7f77]">{formatCurrency(item.amount)}</p>
-                        <button type="button" onClick={() => handleReceiptDownload(item, "donation")} className="mt-3 rounded-2xl bg-[#1b7f77] px-4 py-2 text-sm font-semibold text-white">
-                          Download PDF
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className={`${glassItem} text-[#5d5d5d]`}>No donation receipts available.</div>
-              )}
-            </div>
-          </div>
+    const donationItems = donationsData.map(d => ({
+      ...d,
+      type: "Donation",
+      dateKey: d.date || d.createdAt,
+      dateDisplay: formatDateDisplay(d.date || d.createdAt),
+      oneLineSummary: `Donation: ${d.category || d.type || "General"}`,
+      receiptId: buildReceiptId("DN", d),
+      downloadType: "donation",
+      amount: d.amount,
+    }));
 
-          <div className={glassSection}>
-            <h3 className="text-xl font-semibold">Prasadam Receipts</h3>
-            <div className="mt-4 space-y-3">
-              {prasadamOrders.length > 0 ? (
-                prasadamOrders.map((item) => (
-                  <div key={item._id} className={glassItem}>
-                    <div className="flex flex-wrap items-center justify-between gap-4">
-                      <div>
-                        <p className="text-lg font-semibold">{item.itemName}</p>
-                        <p className="text-sm text-[#5d5d5d]">{formatDateDisplay(item.createdAt)}</p>
-                        <p className="mt-1 text-sm text-[#6b6b6b]">Qty: {item.quantity || 1}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-lg font-bold text-[#1b7f77]">{formatCurrency(item.amount)}</p>
-                        <button type="button" onClick={() => handleReceiptDownload(item, "prasadam")} className="mt-3 rounded-2xl bg-[#1b7f77] px-4 py-2 text-sm font-semibold text-white">
-                          Download PDF
-                        </button>
-                      </div>
+    const prasadamItems = prasadamOrders.map(p => ({
+      ...p,
+      type: "Prasadam Order",
+      dateKey: p.createdAt,
+      dateDisplay: formatDateDisplay(p.createdAt),
+      oneLineSummary: `Prasadam: ${p.itemName} (Qty: ${p.quantity || 1})`,
+      receiptId: p.orderNumber || buildReceiptId("PR", p),
+      downloadType: "prasadam",
+      amount: p.amount,
+    }));
+
+    const allReceipts = [...bookingItems, ...donationItems, ...prasadamItems].sort((a, b) => {
+      return new Date(b.dateKey) - new Date(a.dateKey);
+    });
+
+    const displayedReceipts = showAllReceipts ? allReceipts : allReceipts.slice(0, 5);
+
+    return (
+      <div className="space-y-6">
+        <div className={`${glassCard}`}>
+          <div className="flex items-center justify-between">
+            <h2 className="text-[2rem] font-bold">Receipts</h2>
+            {allReceipts.length > 5 && (
+              <button
+                type="button"
+                onClick={() => setShowAllReceipts(!showAllReceipts)}
+                className="rounded-xl bg-[#1b7f77]/10 hover:bg-[#1b7f77]/20 text-[#1b7f77] px-4 py-2 text-sm font-semibold transition"
+              >
+                {showAllReceipts ? "Show Recent 5" : "View All"}
+              </button>
+            )}
+          </div>
+          
+          <div className="mt-6 space-y-3">
+            {displayedReceipts.length > 0 ? (
+              displayedReceipts.map((item, idx) => (
+                <div key={item._id || idx} className={`${glassItem} p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4`}>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                      <span className="text-base font-semibold text-amber-950 truncate">{item.oneLineSummary}</span>
+                      <span className="text-xs text-amber-700 bg-amber-100/50 px-2 py-0.5 rounded-md font-medium">
+                        {item.dateDisplay}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-xs text-[#6b6b6b]">Receipt ID: {item.receiptId}</p>
+                  </div>
+                  <div className="flex items-center justify-between sm:justify-end gap-4">
+                    <span className="text-lg font-bold text-[#1b7f77]">{formatCurrency(item.amount)}</span>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setViewingReceipt(item)}
+                        className="rounded-xl bg-amber-500 hover:bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white transition shadow-sm"
+                      >
+                        View
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleReceiptDownload(item, item.downloadType)}
+                        className="rounded-xl bg-[#1b7f77] hover:bg-[#1b7f77]/90 px-3 py-1.5 text-xs font-semibold text-white transition shadow-sm"
+                      >
+                        Download PDF
+                      </button>
                     </div>
                   </div>
-                ))
-              ) : (
-                <div className={`${glassItem} text-[#5d5d5d]`}>No prasadam receipts available.</div>
-              )}
-            </div>
+                </div>
+              ))
+            ) : (
+              <div className={`${glassItem} text-[#5d5d5d] p-6 text-center`}>No receipts available.</div>
+            )}
           </div>
         </div>
+
+        {/* Modal/Popup for Details */}
+        {viewingReceipt && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+            <div className="w-full max-w-lg bg-[#fffdfa] rounded-3xl border border-amber-200/50 shadow-2xl p-6 md:p-8 relative max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <span className="text-xs font-bold uppercase tracking-wider text-amber-700 bg-amber-100 px-2.5 py-1 rounded-full">
+                    {viewingReceipt.type}
+                  </span>
+                  <h3 className="text-2xl font-bold mt-2 text-amber-950">Receipt Details</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setViewingReceipt(null)}
+                  className="text-amber-900 hover:text-amber-700 font-bold text-xl p-1"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="space-y-4 border-t border-b border-amber-100 py-6 my-4">
+                <div className="flex justify-between text-sm">
+                  <span className="text-amber-800/80 font-medium">Receipt ID</span>
+                  <span className="font-semibold text-amber-950">{viewingReceipt.receiptId}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-amber-800/80 font-medium">Date</span>
+                  <span className="font-semibold text-amber-950">{viewingReceipt.dateDisplay}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-amber-800/80 font-medium">Service / Category</span>
+                  <span className="font-semibold text-amber-950">
+                    {viewingReceipt.service || viewingReceipt.category || viewingReceipt.itemName || "N/A"}
+                  </span>
+                </div>
+
+                {viewingReceipt.type === "Pooja Booking" && (
+                  <>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-amber-800/80 font-medium">Booking Status</span>
+                      <span className="font-semibold text-[#1b7f77]">{viewingReceipt.status || "Confirmed"}</span>
+                    </div>
+                    {viewingReceipt.contactNumber && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-amber-800/80 font-medium">Contact Number</span>
+                        <span className="font-semibold text-amber-950">{viewingReceipt.contactNumber}</span>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {viewingReceipt.type === "Donation" && (
+                  <>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-amber-800/80 font-medium">Transaction ID</span>
+                      <span className="font-semibold text-amber-950 truncate max-w-[200px]" title={viewingReceipt.transactionId}>
+                        {viewingReceipt.transactionId || "N/A"}
+                      </span>
+                    </div>
+                    {viewingReceipt.donorName && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-amber-800/80 font-medium">Donor Name</span>
+                        <span className="font-semibold text-amber-950">{viewingReceipt.donorName}</span>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {viewingReceipt.type === "Prasadam Order" && (
+                  <>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-amber-800/80 font-medium">Quantity</span>
+                      <span className="font-semibold text-amber-950">{viewingReceipt.quantity || 1}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-amber-800/80 font-medium">Order Status</span>
+                      <span className="font-semibold text-amber-950">{viewingReceipt.status || "Placed"}</span>
+                    </div>
+                  </>
+                )}
+
+                {viewingReceipt.paymentMethod && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-amber-800/80 font-medium">Payment Method</span>
+                    <span className="font-semibold text-amber-950">{viewingReceipt.paymentMethod}</span>
+                  </div>
+                )}
+
+                {viewingReceipt.notes && (
+                  <div className="pt-2 border-t border-amber-50">
+                    <span className="text-xs text-amber-800/60 font-medium block mb-1">Notes</span>
+                    <p className="text-xs text-amber-900 bg-amber-50/50 p-2.5 rounded-lg border border-amber-100/50 leading-relaxed">
+                      {viewingReceipt.notes}
+                    </p>
+                  </div>
+                )}
+
+                <div className="flex justify-between items-center pt-4 border-t border-amber-100">
+                  <span className="text-base font-bold text-amber-950">Total Amount</span>
+                  <span className="text-2xl font-extrabold text-[#1b7f77]">{formatCurrency(viewingReceipt.amount)}</span>
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => handleReceiptDownload(viewingReceipt, viewingReceipt.downloadType)}
+                  className="flex-1 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-md transition-all text-sm"
+                >
+                  Download Receipt PDF
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewingReceipt(null)}
+                  className="flex-1 bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold py-3.5 px-4 rounded-xl transition-all text-sm"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderFestivalEvents = () => {
     const getMyDonationTotalForEvent = (eventId) => {
