@@ -71,3 +71,11 @@ export const getStoredUser = () => {
 };
 
 export const getStoredToken = () => localStorage.getItem("token");
+
+export const getDevoteesForCashier = async () => {
+  const token = getStoredToken();
+  const response = await axios.get("http://localhost:5000/api/auth/cashier/devotees", {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  return response.data;
+};

@@ -125,8 +125,6 @@ const BillingPage = () => {
   return (
     <CashierPageShell
       eyebrow="Billing"
-      title="All temple bills in one ledger"
-      description="The billing register combines pooja bookings, donations, prasadam sales and manual bills so the counter can track every receipt in one place."
       image={templeBg}
       imageAlt="Temple billing register"
       stats={stats}

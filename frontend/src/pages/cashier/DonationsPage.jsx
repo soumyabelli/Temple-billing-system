@@ -204,8 +204,6 @@ export default function DonationsPage() {
   return (
     <CashierPageShell
       eyebrow="Donations"
-      title="Record normal and festival donations at the counter"
-      description="Use admin-defined donation types, attach festival events when needed, and save every donation so it appears in the cashier and admin ledgers."
       image={templeBg}
       imageAlt="Temple donation counter"
       stats={stats}

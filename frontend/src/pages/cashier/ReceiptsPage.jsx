@@ -123,8 +123,6 @@ const ReceiptsPage = () => {
   return (
     <CashierPageShell
       eyebrow="Receipts"
-      title="Split cashier receipts into pooja, donation and prasadam sections"
-      description="Every bill created from the cashier counter appears here with its receipt number, category and payment details."
       image={templeBg}
       imageAlt="Temple receipts ledger"
       stats={stats}

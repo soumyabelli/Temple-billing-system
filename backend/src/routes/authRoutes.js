@@ -25,5 +25,6 @@ router.post("/reset-password", resetPassword);
 router.post("/change-password", authenticate, changePassword);
 router.post("/admin/create-user", authenticate, authorizeRoles("admin"), createUserByAdmin);
 router.get("/admin/users", authenticate, authorizeRoles("admin"), getUsersForAdmin);
+router.get("/cashier/devotees", authenticate, authorizeRoles("admin", "cashier"), require("../controllers/authController").getDevoteesForCashier);
 
 module.exports = router;

@@ -51,7 +51,21 @@ const findUserAndEmployeeByUserId = async (userId) => {
     return { user: linkedUser, employee };
   }
 
-  const employee = await Employee.findOne({ email: user.email });
+  let employee = await Employee.findOne({ email: user.email });
+  if (!employee && ["admin", "priest", "accountant", "cashier", "staff"].includes(user.role)) {
+    const employeeId = "EMP-" + String(user._id).slice(-6).toUpperCase();
+    employee = new Employee({
+      employeeId,
+      userId: user._id,
+      name: user.name,
+      email: user.email,
+      password: user.password,
+      role: user.role,
+      salary: 0,
+      joiningDate: new Date(),
+    });
+    await employee.save();
+  }
   return { user, employee };
 };
 
@@ -452,6 +466,9 @@ exports.updateEmployeeProfileByUserId = async (req, res) => {
     const userUpdates = {};
     if (Object.prototype.hasOwnProperty.call(updateData, "name")) userUpdates.name = updateData.name;
     if (Object.prototype.hasOwnProperty.call(updateData, "email")) userUpdates.email = updateData.email;
+    if (Object.prototype.hasOwnProperty.call(updateData, "photo")) userUpdates.photo = updateData.photo;
+    if (Object.prototype.hasOwnProperty.call(updateData, "phone")) userUpdates.phone = updateData.phone;
+    if (Object.prototype.hasOwnProperty.call(updateData, "address")) userUpdates.address = updateData.address;
     if (Object.keys(userUpdates).length > 0) {
       await User.findByIdAndUpdate(user._id, userUpdates, { new: true });
     }

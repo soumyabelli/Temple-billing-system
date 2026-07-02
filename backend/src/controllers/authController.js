@@ -729,6 +729,23 @@ const googleLogin = async (req, res) => {
   }
 };
 
+const getDevoteesForCashier = async (req, res) => {
+  try {
+    let users = [];
+    if (isDbConnected()) {
+      users = await User.find({ role: "devotee" })
+        .select("-password -resetPasswordToken -resetPasswordExpiresAt")
+        .sort({ createdAt: -1 });
+    } else {
+      users = (await getAllFileUsers()).filter(u => u.role === "devotee");
+    }
+    const sanitizedUsers = users.map(sanitizeUser);
+    return res.status(200).json(sanitizedUsers);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   registerUser,
   sendVerificationLink,
@@ -740,4 +757,5 @@ module.exports = {
   forgotPassword,
   resetPassword,
   googleLogin,
+  getDevoteesForCashier,
 };

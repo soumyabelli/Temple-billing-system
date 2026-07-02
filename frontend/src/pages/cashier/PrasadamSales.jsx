@@ -194,8 +194,6 @@ const PrasadamSales = () => {
   return (
     <CashierPageShell
       eyebrow="Prasadam Sales"
-      title="Sell prasadam items with admin-approved prices"
-      description="Pick the prasadam types added by admin, capture devotee details and store the order history with its bill receipt."
       image={templeBg}
       imageAlt="Temple prasadam sales counter"
       stats={stats}

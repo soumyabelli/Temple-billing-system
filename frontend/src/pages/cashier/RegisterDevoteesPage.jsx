@@ -100,8 +100,6 @@ const RegisterDevoteesPage = () => {
   return (
     <CashierPageShell
       eyebrow="Register Devotees"
-      title="Capture the full devotee profile from the cashier counter"
-      description="Collect the devotee's contact details, address and login credentials, then create the devotee account directly from the cashier desk."
       image={templeBg}
       imageAlt="Temple devotee registration"
       actions={

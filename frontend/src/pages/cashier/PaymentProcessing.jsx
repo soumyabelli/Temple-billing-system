@@ -88,8 +88,6 @@ const PaymentProcessing = () => {
   return (
     <CashierPageShell
       eyebrow="Payments"
-      title="Review payment methods and settlement status"
-      description="See how the cashier ledger is split across cash, UPI, card and bank payments, then open the full billing register when you need to settle a specific receipt."
       image={templeBg}
       imageAlt="Temple payment counter"
       stats={stats}

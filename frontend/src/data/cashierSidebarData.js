@@ -23,7 +23,6 @@ export const cashierSidebarItems = [
   { title: "Register Devotees", icon: FaUsers, path: "/cashier/register-devotees" },
   { title: "Payments", icon: FaCreditCard, path: "/cashier/payments" },
   { title: "Reports", icon: FaChartBar, path: "/cashier/reports" },
-  { title: "Inventory", icon: FaBoxes, path: "/cashier/inventory" },
   { title: "Notifications", icon: FaBell, path: "/cashier/notifications" },
   { title: "Profile", icon: FaUserCircle, path: "/cashier/profile" },
   { title: "Logout", icon: FaSignOutAlt, path: "/login" },

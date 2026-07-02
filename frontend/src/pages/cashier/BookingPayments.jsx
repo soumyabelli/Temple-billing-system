@@ -216,8 +216,6 @@ const BookingPayments = () => {
   return (
     <CashierPageShell
       eyebrow="Pooja Bookings"
-      title="Book temple poojas from the cashier counter"
-      description="Select the pooja services added by admin, capture devotee details, and save the booking history with its bill record in one place."
       image={templeBg}
       imageAlt="Temple pooja booking counter"
       stats={stats}

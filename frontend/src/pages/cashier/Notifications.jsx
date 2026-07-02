@@ -61,8 +61,6 @@ const Notifications = () => {
   return (
     <CashierPageShell
       eyebrow="Notifications"
-      title="Keep cashier alerts and broadcasts in one place"
-      description="Track admin announcements, booking alerts and donation updates, then mark them as read once the cashier has handled them."
       image={templeBg}
       imageAlt="Temple cashier notifications"
       stats={stats}

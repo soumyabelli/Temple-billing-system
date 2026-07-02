@@ -12,8 +12,11 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 import templeBg from "../../assets/temple-bg.jpg";
 import CashierPageShell from "../../components/cashier/CashierPageShell";
+import { getDevoteesForCashier } from "../../services/authService";
 import {
   fetchBookings,
   fetchDonations,
@@ -57,18 +60,20 @@ const CashierDashboardPage = () => {
   const [prasadamOrders, setPrasadamOrders] = useState([]);
   const [bills, setBills] = useState([]);
   const [inventoryItems, setInventoryItems] = useState([]);
+  const [devotees, setDevotees] = useState([]);
 
   useEffect(() => {
     let mounted = true;
     (async () => {
       setLoading(true);
       try {
-        const [bookingRows, donationRows, prasadamRows, billRows, inventoryRows] = await Promise.allSettled([
+        const [bookingRows, donationRows, prasadamRows, billRows, inventoryRows, devoteeRows] = await Promise.allSettled([
           fetchBookings(),
           fetchDonations(),
           fetchPrasadamOrders(),
           fetchBills(),
           fetchInventoryItems(),
+          getDevoteesForCashier(),
         ]);
 
         if (!mounted) return;
@@ -78,6 +83,7 @@ const CashierDashboardPage = () => {
         setPrasadamOrders(prasadamRows.status === "fulfilled" ? prasadamRows.value : []);
         setBills(billRows.status === "fulfilled" ? billRows.value : []);
         setInventoryItems(inventoryRows.status === "fulfilled" ? inventoryRows.value : []);
+        setDevotees(devoteeRows.status === "fulfilled" ? devoteeRows.value : []);
       } finally {
         if (mounted) setLoading(false);
       }
@@ -132,6 +138,179 @@ const CashierDashboardPage = () => {
     [bills]
   );
 
+  const downloadTodayReport = () => {
+    const today = toDateKey(new Date());
+    const todayBills = bills.filter((b) => toDateKey(b.billDate || b.createdAt) === today);
+    const todayBookings = bookings.filter((b) => toDateKey(b.bookingDate || b.createdAt) === today);
+    const todayDonations = donations.filter((d) => toDateKey(d.donationDate || d.createdAt) === today);
+    const todayOrders = prasadamOrders.filter((o) => toDateKey(o.orderDate || o.createdAt) === today);
+    const todayDevotees = devotees.filter((dev) => toDateKey(dev.createdAt) === today);
+
+    const totalAmount = sumBy(todayBills, (b) => b.amount);
+    const totalPooja = sumBy(todayBookings, (b) => b.amount || b.price || 0);
+    const totalDonations = sumBy(todayDonations, (d) => d.amount || 0);
+    const totalPrasadam = sumBy(todayOrders, (o) => o.amount || o.totalPrice || 0);
+
+    const paymentBreakdown = todayBills.reduce((acc, b) => {
+      const mode = b.paymentMode || "Cash";
+      acc[mode] = (acc[mode] || 0) + Number(b.amount || 0);
+      return acc;
+    }, {});
+
+    const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
+    
+    // Header
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(22);
+    doc.setTextColor(242, 140, 24); // Temple Orange
+    doc.text("SRI SHANTI MAHADEV MANDIR", 40, 55);
+    
+    doc.setFontSize(14);
+    doc.setTextColor(51, 65, 85);
+    doc.text("Daily Cashier Report", 40, 78);
+    
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.text(`Date: ${new Date().toLocaleDateString("en-IN")}`, 40, 98);
+    doc.text(`Generated at: ${new Date().toLocaleTimeString("en-IN")}`, 40, 112);
+    
+    // Divider
+    doc.setDrawColor(242, 140, 24);
+    doc.setLineWidth(1.5);
+    doc.line(40, 122, 550, 122);
+
+    // Summary Section
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.text("Financial Summary", 40, 145);
+    
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+    doc.text(`Total Collections: Rs ${totalAmount.toLocaleString("en-IN")}`, 40, 165);
+    doc.text(`- Pooja Bookings Value: Rs ${totalPooja.toLocaleString("en-IN")}`, 60, 180);
+    doc.text(`- Donations Value: Rs ${totalDonations.toLocaleString("en-IN")}`, 60, 195);
+    doc.text(`- Prasadam Sales Value: Rs ${totalPrasadam.toLocaleString("en-IN")}`, 60, 210);
+    
+    let yPos = 230;
+    doc.text("Collections by Payment Mode:", 40, yPos);
+    yPos += 15;
+    Object.entries(paymentBreakdown).forEach(([mode, val]) => {
+      doc.text(`- ${mode}: Rs ${val.toLocaleString("en-IN")}`, 60, yPos);
+      yPos += 15;
+    });
+
+    yPos += 20;
+
+    // 2. Devotees Table
+    if (todayDevotees.length > 0) {
+      if (yPos > 720) { doc.addPage(); yPos = 40; }
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(13);
+      doc.text("Today's Registered Devotees", 40, yPos);
+      yPos += 10;
+      
+      const devoteesData = todayDevotees.map((d) => [
+        d.name || "-",
+        d.email || "-",
+        d.phone || "-",
+        d.address || "-"
+      ]);
+
+      autoTable(doc, {
+        startY: yPos,
+        head: [["Name", "Email", "Phone", "Address"]],
+        body: devoteesData,
+        theme: "striped",
+        headStyles: { fillColor: [242, 140, 24] },
+        styles: { fontSize: 9 }
+      });
+      yPos = doc.lastAutoTable.finalY + 25;
+    }
+
+    // 3. Prasadam Orders Table
+    if (todayOrders.length > 0) {
+      if (yPos > 720) { doc.addPage(); yPos = 40; }
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(13);
+      doc.text("Today's Prasadam Orders", 40, yPos);
+      yPos += 10;
+      
+      const ordersData = todayOrders.map((o) => [
+        o.devoteeName || "Walk-in",
+        o.items?.map((item) => `${item.name} (${item.quantity})`).join(", ") || "-",
+        `Rs ${(o.amount || o.totalPrice || 0).toLocaleString("en-IN")}`,
+        o.paymentMode || "Cash",
+        o.status || "Completed"
+      ]);
+
+      autoTable(doc, {
+        startY: yPos,
+        head: [["Devotee Name", "Items (Qty)", "Total Price", "Payment Mode", "Status"]],
+        body: ordersData,
+        theme: "striped",
+        headStyles: { fillColor: [242, 140, 24] },
+        styles: { fontSize: 9 }
+      });
+      yPos = doc.lastAutoTable.finalY + 25;
+    }
+
+    // 4. Donations Table
+    if (todayDonations.length > 0) {
+      if (yPos > 720) { doc.addPage(); yPos = 40; }
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(13);
+      doc.text("Today's Donations", 40, yPos);
+      yPos += 10;
+      
+      const donationsData = todayDonations.map((d) => [
+        d.devoteeName || d.donorName || "Anonymous",
+        d.donationType || "-",
+        d.festivalEvent || "General",
+        `Rs ${Number(d.amount || 0).toLocaleString("en-IN")}`,
+        d.paymentMode || "Cash"
+      ]);
+
+      autoTable(doc, {
+        startY: yPos,
+        head: [["Donor Name", "Donation Type", "Event", "Amount", "Payment Mode"]],
+        body: donationsData,
+        theme: "striped",
+        headStyles: { fillColor: [16, 163, 74] },
+        styles: { fontSize: 9 }
+      });
+      yPos = doc.lastAutoTable.finalY + 25;
+    }
+
+    // 5. Pooja Bookings Table
+    if (todayBookings.length > 0) {
+      if (yPos > 720) { doc.addPage(); yPos = 40; }
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(13);
+      doc.text("Today's Pooja Bookings", 40, yPos);
+      yPos += 10;
+      
+      const bookingsData = todayBookings.map((b) => [
+        b.devoteeName || "Devotee",
+        b.sevaType || b.poojaName || "-",
+        new Date(b.bookingDate).toLocaleDateString("en-IN"),
+        `Rs ${Number(b.amount || b.price || 0).toLocaleString("en-IN")}`,
+        b.status || "Confirmed"
+      ]);
+
+      autoTable(doc, {
+        startY: yPos,
+        head: [["Devotee Name", "Pooja/Seva", "Booking Date", "Amount", "Status"]],
+        body: bookingsData,
+        theme: "striped",
+        headStyles: { fillColor: [37, 99, 235] },
+        styles: { fontSize: 9 }
+      });
+      yPos = doc.lastAutoTable.finalY + 25;
+    }
+
+    doc.save(`Today_Report_${today}.pdf`);
+  };
+
   const stats = [
     {
       title: "Today's Collection",
@@ -169,6 +348,13 @@ const CashierDashboardPage = () => {
       stats={stats}
       actions={
         <>
+          <button
+            type="button"
+            onClick={downloadTodayReport}
+            className="rounded-full bg-emerald-600 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700"
+          >
+            Download Today's Report
+          </button>
           <button
             type="button"
             onClick={() => navigate("/cashier/billing")}
