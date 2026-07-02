@@ -10,6 +10,7 @@ import {
   shiftOptions,
 } from "./employeeData";
 import { createEmployee } from "../../../services/employeeService";
+import FaceRegistration from "../../../components/admin/employee/FaceRegistration";
 
 const initialForm = {
   // Step 1 – Personal Details
@@ -95,6 +96,8 @@ const AddEmployee = () => {
   const [errors, setErrors] = useState({});
   const [isSaving, setIsSaving] = useState(false);
   const [credentials, setCredentials] = useState(null);
+  const [createdEmployee, setCreatedEmployee] = useState(null);
+  const [showFaceRegistration, setShowFaceRegistration] = useState(false);
 
   // Departments list derived from selected role
   const departmentList = useMemo(() => roleDepartmentMap[form.role] || [], [form.role]);
@@ -255,6 +258,7 @@ const AddEmployee = () => {
 };
       const response = await createEmployee(payload);
       setCredentials(response.credentials);
+      setCreatedEmployee(response.employee);
       setMessage({ type: "success", text: "Employee created successfully. Login credentials are ready." });
       setForm(initialForm);
       localStorage.removeItem(draftKey);
@@ -811,24 +815,55 @@ const AddEmployee = () => {
           </div>
         </SectionCard>
       </div>
-      {credentials && (
+      {credentials && !showFaceRegistration && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/40 px-4">
           <div className="w-full max-w-md rounded-[28px] border border-slate-200 bg-white p-6 shadow-2xl">
             <p className="text-sm uppercase tracking-[0.2em] text-emerald-600">Success</p>
             <h3 className="mt-2 text-2xl font-bold text-slate-900">Employee Created</h3>
             <div className="mt-5 space-y-3 rounded-3xl bg-slate-50 p-4 text-sm text-slate-700">
-              <p>The employee profile for <strong>{form.name}</strong> has been created successfully.</p>
-              <p>The login credentials (including their temporary password) have been sent to <strong>{form.email}</strong>.</p>
+              <p>The employee profile for <strong>{createdEmployee?.name || form.name}</strong> has been created successfully.</p>
+              <p>The login credentials (including their temporary password) have been sent to <strong>{createdEmployee?.email || form.email}</strong>.</p>
             </div>
             <div className="mt-5 flex flex-wrap justify-end gap-3">
               <button
                 type="button"
-                onClick={() => navigate("/admin/employees")}
-                className="rounded-full bg-amber-400 px-5 py-2 text-sm font-semibold text-slate-950"
+                onClick={() => setShowFaceRegistration(true)}
+                className="rounded-full bg-indigo-600 px-5 py-2 text-sm font-semibold text-white shadow hover:bg-indigo-700 transition"
               >
-                Done
+                Register Face Now
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate("/admin/employees")}
+                className="rounded-full bg-amber-400 px-5 py-2 text-sm font-semibold text-slate-950 shadow hover:bg-amber-500 transition"
+              >
+                Finish
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {showFaceRegistration && createdEmployee && (
+        <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto py-10 bg-slate-950/40 px-4">
+          <div className="w-full max-w-2xl rounded-[32px] border border-slate-200 bg-slate-50 p-6 shadow-2xl relative">
+             <div className="mb-4 flex justify-between items-center border-b border-slate-200 pb-4">
+                <div>
+                  <h3 className="text-xl font-bold text-slate-900">Register Employee Face</h3>
+                  <p className="text-sm text-slate-500">Capture face data for attendance verification.</p>
+                </div>
+                <button 
+                  type="button" 
+                  onClick={() => navigate("/admin/employees")} 
+                  className="rounded-full bg-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-300 transition"
+                >
+                  Skip for now
+                </button>
+             </div>
+             <FaceRegistration
+                employee={createdEmployee}
+                onComplete={() => navigate("/admin/employees")}
+             />
           </div>
         </div>
       )}

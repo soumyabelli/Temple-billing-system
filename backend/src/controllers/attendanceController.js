@@ -1289,12 +1289,17 @@ exports.markAttendance = async (req, res) => {
 
     if (faceDescriptor && Array.isArray(faceDescriptor)) {
       const distance = getEuclideanDistance(employee.faceDescriptor, faceDescriptor);
-      if (distance < 0.5) faceVerified = true;
+      console.log(`Face matching distance: ${distance}`);
+      if (distance < 0.6) faceVerified = true;
     }
 
     if (latitude !== undefined && longitude !== undefined && latitude !== null && longitude !== null) {
-      distanceFromTemple = getHaversineDistance(latitude, longitude, settings.templeLatitude, settings.templeLongitude);
-      if (distanceFromTemple <= settings.allowedRadius) locationVerified = true;
+      if (settings.templeLatitude === 0 && settings.templeLongitude === 0) {
+        locationVerified = true;
+      } else {
+        distanceFromTemple = getHaversineDistance(latitude, longitude, settings.templeLatitude, settings.templeLongitude);
+        if (distanceFromTemple <= settings.allowedRadius) locationVerified = true;
+      }
     }
 
     if (!faceVerified || !locationVerified) {

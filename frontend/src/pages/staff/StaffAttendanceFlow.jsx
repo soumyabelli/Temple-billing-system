@@ -213,24 +213,23 @@ const StaffAttendanceFlow = ({ staffId, staffName, staffEmail, action, onComplet
          <p className="text-sm text-slate-600 text-center mb-4">{statusMsg}</p>
          
          {/* Camera View */}
-         <div className="relative w-full aspect-video bg-slate-900 rounded-xl overflow-hidden shadow-inner flex items-center justify-center">
-            {cameraActive ? (
-              <>
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  muted
-                  playsInline
-                  className="w-full h-full object-cover"
-                />
-                <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none" />
-              </>
-            ) : (
-              <div className="text-slate-500 flex flex-col items-center gap-2">
-                 <FiCamera size={32} />
-                 <span>{errorMsg ? "Camera Error" : "Starting Camera..."}</span>
-              </div>
-            )}
+         <div className="relative w-full bg-slate-900 rounded-xl overflow-hidden shadow-inner flex items-center justify-center min-h-[240px]">
+            <>
+              <video
+                ref={videoRef}
+                autoPlay
+                muted
+                playsInline
+                className={`w-full h-auto ${cameraActive ? "block" : "hidden"}`}
+              />
+              <canvas ref={canvasRef} className={`absolute inset-0 w-full h-full pointer-events-none ${cameraActive ? "block" : "hidden"}`} />
+              {!cameraActive && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-500 gap-2">
+                   <FiCamera size={32} />
+                   <span>{errorMsg ? "Camera Error" : "Starting Camera..."}</span>
+                </div>
+              )}
+            </>
             
             {/* Status Overlays */}
             {cameraActive && faceDetected && (

@@ -496,7 +496,12 @@ const Attendance = () => {
 
   const handleQuickAction = async (actionKey) => {
     if (actionKey === "mark-attendance") {
-      setAttendanceDialogOpen(true);
+      const todaySnapshot = dashboard?.today || {};
+      if (todaySnapshot.isOnLeave || attendanceCompleted || (!canCheckIn && !canCheckOut)) {
+        setAttendanceDialogOpen(true);
+      } else {
+        setShowAttendanceFlow(true);
+      }
       return;
     }
 
