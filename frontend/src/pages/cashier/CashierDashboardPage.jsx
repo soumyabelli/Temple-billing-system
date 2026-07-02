@@ -94,16 +94,18 @@ const CashierDashboardPage = () => {
     };
   }, []);
 
+  const todayBills = useMemo(() => bills.filter((bill) => isToday(bill.billDate || bill.createdAt)), [bills]);
+
   const dailySeries = useMemo(() => {
     const days = buildLastDays(7);
     return days.map((day) => ({
       day: day.label,
-      amount: sumBy(bills.filter((bill) => toDateKey(bill.billDate) === day.key), (bill) => bill.amount),
+      amount: sumBy(bills.filter((bill) => toDateKey(bill.billDate || bill.createdAt) === day.key), (bill) => bill.amount),
     }));
   }, [bills]);
 
   const paymentSeries = useMemo(() => {
-    const totals = bills.reduce((acc, bill) => {
+    const totals = todayBills.reduce((acc, bill) => {
       const key = bill.paymentMode || "Cash";
       acc[key] = (acc[key] || 0) + Number(bill.amount || 0);
       return acc;
@@ -114,9 +116,7 @@ const CashierDashboardPage = () => {
       value,
       color: paymentPalette[name] || "#f59e0b",
     }));
-  }, [bills]);
-
-  const todayBills = useMemo(() => bills.filter((bill) => isToday(bill.billDate)), [bills]);
+  }, [todayBills]);
   const pendingBookings = useMemo(() => bookings.filter((booking) => String(booking.status || "Pending") === "Pending"), [bookings]);
   const lowStockItems = useMemo(() => inventoryItems.filter((item) => Number(item.currentStock) < Number(item.minimumStock)), [inventoryItems]);
 
@@ -151,29 +151,35 @@ const CashierDashboardPage = () => {
     const totalDonations = sumBy(todayDonations, (d) => d.amount || 0);
     const totalPrasadam = sumBy(todayOrders, (o) => o.amount || o.totalPrice || 0);
 
-    const paymentBreakdown = todayBills.reduce((acc, b) => {
+    const paymentBreakdown = {
+      "Cash": 0,
+      "UPI": 0,
+      "Card": 0,
+      "Bank Transfer": 0
+    };
+    todayBills.forEach((b) => {
       const mode = b.paymentMode || "Cash";
-      acc[mode] = (acc[mode] || 0) + Number(b.amount || 0);
-      return acc;
-    }, {});
+      const matchedKey = Object.keys(paymentBreakdown).find(k => k.toLowerCase() === mode.toLowerCase()) || "Cash";
+      paymentBreakdown[matchedKey] += Number(b.amount || 0);
+    });
 
     const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
-    
+
     // Header
     doc.setFont("helvetica", "bold");
     doc.setFontSize(22);
     doc.setTextColor(242, 140, 24); // Temple Orange
     doc.text("SRI SHANTI MAHADEV MANDIR", 40, 55);
-    
+
     doc.setFontSize(14);
     doc.setTextColor(51, 65, 85);
     doc.text("Daily Cashier Report", 40, 78);
-    
+
     doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
     doc.text(`Date: ${new Date().toLocaleDateString("en-IN")}`, 40, 98);
     doc.text(`Generated at: ${new Date().toLocaleTimeString("en-IN")}`, 40, 112);
-    
+
     // Divider
     doc.setDrawColor(242, 140, 24);
     doc.setLineWidth(1.5);
@@ -183,23 +189,26 @@ const CashierDashboardPage = () => {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(14);
     doc.text("Financial Summary", 40, 145);
-    
+
     doc.setFont("helvetica", "normal");
     doc.setFontSize(11);
     doc.text(`Total Collections: Rs ${totalAmount.toLocaleString("en-IN")}`, 40, 165);
     doc.text(`- Pooja Bookings Value: Rs ${totalPooja.toLocaleString("en-IN")}`, 60, 180);
     doc.text(`- Donations Value: Rs ${totalDonations.toLocaleString("en-IN")}`, 60, 195);
     doc.text(`- Prasadam Sales Value: Rs ${totalPrasadam.toLocaleString("en-IN")}`, 60, 210);
-    
+
     let yPos = 230;
     doc.text("Collections by Payment Mode:", 40, yPos);
     yPos += 15;
-    Object.entries(paymentBreakdown).forEach(([mode, val]) => {
-      doc.text(`- ${mode}: Rs ${val.toLocaleString("en-IN")}`, 60, yPos);
-      yPos += 15;
-    });
+    doc.text(`- Total Cash Payments: Rs ${paymentBreakdown["Cash"].toLocaleString("en-IN")}`, 60, yPos);
+    yPos += 15;
+    doc.text(`- Total UPI Payments: Rs ${paymentBreakdown["UPI"].toLocaleString("en-IN")}`, 60, yPos);
+    yPos += 15;
+    doc.text(`- Total Card Payments: Rs ${paymentBreakdown["Card"].toLocaleString("en-IN")}`, 60, yPos);
+    yPos += 15;
+    doc.text(`- Total Bank Transfer Payments: Rs ${paymentBreakdown["Bank Transfer"].toLocaleString("en-IN")}`, 60, yPos);
 
-    yPos += 20;
+    yPos += 25;
 
     // 2. Devotees Table
     if (todayDevotees.length > 0) {
@@ -208,7 +217,7 @@ const CashierDashboardPage = () => {
       doc.setFontSize(13);
       doc.text("Today's Registered Devotees", 40, yPos);
       yPos += 10;
-      
+
       const devoteesData = todayDevotees.map((d) => [
         d.name || "-",
         d.email || "-",
@@ -234,7 +243,7 @@ const CashierDashboardPage = () => {
       doc.setFontSize(13);
       doc.text("Today's Prasadam Orders", 40, yPos);
       yPos += 10;
-      
+
       const ordersData = todayOrders.map((o) => [
         o.devoteeName || "Walk-in",
         o.items?.map((item) => `${item.name} (${item.quantity})`).join(", ") || "-",
@@ -261,7 +270,7 @@ const CashierDashboardPage = () => {
       doc.setFontSize(13);
       doc.text("Today's Donations", 40, yPos);
       yPos += 10;
-      
+
       const donationsData = todayDonations.map((d) => [
         d.devoteeName || d.donorName || "Anonymous",
         d.donationType || "-",
@@ -288,7 +297,7 @@ const CashierDashboardPage = () => {
       doc.setFontSize(13);
       doc.text("Today's Pooja Bookings", 40, yPos);
       yPos += 10;
-      
+
       const bookingsData = todayBookings.map((b) => [
         b.devoteeName || "Devotee",
         b.sevaType || b.poojaName || "-",
@@ -306,6 +315,34 @@ const CashierDashboardPage = () => {
         styles: { fontSize: 9 }
       });
       yPos = doc.lastAutoTable.finalY + 25;
+    }
+
+    // 6. Transaction History Table
+    if (todayBills.length > 0) {
+      if (yPos > 720) { doc.addPage(); yPos = 40; }
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(13);
+      doc.text("Today's Transaction History", 40, yPos);
+      yPos += 10;
+
+      const transactionsData = todayBills.map((b, index) => [
+        b.referenceNo || `RC-${String(index + 1).padStart(4, "0")}`,
+        b.devoteeName || "-",
+        b.billType || "Other",
+        b.sevaType || "-",
+        `Rs ${Number(b.amount || 0).toLocaleString("en-IN")}`,
+        b.paymentMode || "Cash",
+        new Date(b.billDate || b.createdAt).toLocaleTimeString("en-IN")
+      ]);
+
+      autoTable(doc, {
+        startY: yPos,
+        head: [["Receipt No", "Devotee Name", "Type", "Service", "Amount", "Mode", "Time"]],
+        body: transactionsData,
+        theme: "striped",
+        headStyles: { fillColor: [51, 65, 85] },
+        styles: { fontSize: 8.5 }
+      });
     }
 
     doc.save(`Today_Report_${today}.pdf`);

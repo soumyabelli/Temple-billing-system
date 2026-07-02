@@ -134,18 +134,6 @@ const PrasadamSales = () => {
         note: `${orders.length} orders stored`,
         tone: "gold",
       },
-      {
-        title: "Delivered",
-        value: orders.filter((order) => (order.status || "Placed") === "Delivered").length,
-        note: "Completed counter pickups",
-        tone: "green",
-      },
-      {
-        title: "Placed",
-        value: orders.filter((order) => (order.status || "Placed") === "Placed").length,
-        note: "Awaiting kitchen prep",
-        tone: "blue",
-      },
     ],
     [orders]
   );
@@ -366,22 +354,7 @@ const PrasadamSales = () => {
             </div>
           </div>
 
-          <div className="mt-4 flex flex-wrap gap-2">
-            {["All", "Placed", "Preparing", "Ready", "Delivered", "Cancelled"].map((status) => (
-              <button
-                key={status}
-                type="button"
-                onClick={() => setStatusFilter(status)}
-                className={`rounded-full border px-3 py-2 text-sm font-semibold transition ${
-                  statusFilter === status
-                    ? "border-[#f28c18] bg-[#fff1df] text-[#8a5200]"
-                    : "border-[#ead7bb] bg-white text-slate-700 hover:bg-[#fff8ef]"
-                }`}
-              >
-                {status}
-              </button>
-            ))}
-          </div>
+
 
           <div className="mt-5 overflow-x-auto">
             <table className="w-full min-w-[900px] text-left text-sm">
