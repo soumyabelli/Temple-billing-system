@@ -285,7 +285,8 @@ const Notifications = ({ staffId, onUnreadCountChange, onQuickAction }) => {
             return (
               <article
                 key={notification._id}
-                className={`notification-card ${notification.read ? "" : "unread"} priority-${notification.priority.tone}`}
+                onClick={() => !notification.read && handleMarkAsRead(notification._id)}
+                className={`notification-card ${notification.read ? "" : "unread"} priority-${notification.priority.tone} ${!notification.read ? "cursor-pointer" : ""}`}
               >
                 <div className={`notification-icon ${notification.type}`}>
                   <PriorityIcon />
@@ -311,19 +312,10 @@ const Notifications = ({ staffId, onUnreadCountChange, onQuickAction }) => {
                 </div>
                 <div className="notification-actions">
                   {action ? (
-                    <button type="button" className="view-action-btn" onClick={() => handleQuickAction(notification)}>
+                    <button type="button" className="view-action-btn" onClick={(e) => { e.stopPropagation(); handleQuickAction(notification); }}>
                       {action.label}
                     </button>
                   ) : null}
-                  <button
-                    type="button"
-                    onClick={() => handleMarkAsRead(notification._id)}
-                    disabled={notification.read || markingId === notification._id}
-                    className="mark-read-btn"
-                  >
-                    <FiCheckCircle />
-                    {notification.read ? "Read" : "Mark as Read"}
-                  </button>
                 </div>
               </article>
             );

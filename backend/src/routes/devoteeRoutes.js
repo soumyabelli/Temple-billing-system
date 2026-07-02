@@ -24,6 +24,7 @@ const {
   cancelPrasadamOrder,
   updateBookingStatus,
   markNotificationAsRead,
+  markSupportRequestAsRead,
 } = require("../controllers/devoteeController");
 
 const router = express.Router();
@@ -49,6 +50,7 @@ router.post("/razorpay/webhook", express.raw({ type: "application/json" }), hand
 router.post("/support", submitSupportRequest);
 router.get("/support", getSupportRequests);
 router.patch("/support/:id", replySupportRequest);
+router.patch("/support/:id/read", markSupportRequestAsRead);
 router.post("/notifications", createNotification);
 router.get("/prasadam-orders", getPrasadamOrders);
 router.post("/prasadam-orders", createPrasadamOrder);

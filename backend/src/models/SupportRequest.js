@@ -12,6 +12,7 @@ const supportRequestSchema = new mongoose.Schema(
       enum: ["Open", "In Progress", "Closed"],
       default: "Open",
     },
+    read: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

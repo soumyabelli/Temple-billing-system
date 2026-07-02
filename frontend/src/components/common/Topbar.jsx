@@ -29,15 +29,29 @@ const Topbar = ({ darkMode, toggleDarkMode, onOpenMobileSidebar }) => {
       }
 
       try {
-        const response = await axios.get(`http://localhost:5000/api/notifications/admin/${adminId}`);
-        const notifications = Array.isArray(response.data) ? response.data : [];
-        setNotificationCount(notifications.filter((item) => !item.read && !item.viewed).length);
+        const [nRes, sRes] = await Promise.all([
+          axios.get(`http://localhost:5000/api/notifications/admin/${adminId}`),
+          axios.get(`http://localhost:5000/api/devotees/support`)
+        ]);
+        const notifications = Array.isArray(nRes.data) ? nRes.data : [];
+        const supportReqs = sRes.data?.requests || [];
+        setNotificationCount(
+          notifications.filter((item) => !item.read && !item.viewed).length +
+          supportReqs.filter((item) => !item.read).length
+        );
       } catch (error) {
-        setNotificationCount(0);
+        console.warn("Failed to load topbar notifications", error);
       }
     };
 
     loadNotifications();
+
+    const handleUpdate = () => {
+      loadNotifications();
+    };
+
+    window.addEventListener("notificationsUpdated", handleUpdate);
+    return () => window.removeEventListener("notificationsUpdated", handleUpdate);
   }, [user]);
 
   return (

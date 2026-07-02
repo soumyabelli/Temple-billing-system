@@ -1300,6 +1300,25 @@ const markNotificationAsRead = async (req, res) => {
   }
 };
 
+const markSupportRequestAsRead = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const supportRequest = await SupportRequest.findByIdAndUpdate(
+      id,
+      { read: true },
+      { new: true }
+    );
+    
+    if (!supportRequest) {
+      return res.status(404).json({ error: "Support request not found." });
+    }
+    
+    return res.status(200).json({ supportRequest });
+  } catch (error) {
+    return res.status(500).json({ error: "Failed to mark support request as read." });
+  }
+};
+
 module.exports = {
   getBookings,
   createBooking,
@@ -1325,4 +1344,5 @@ module.exports = {
   cancelPrasadamOrder,
   updateBookingStatus,
   markNotificationAsRead,
+  markSupportRequestAsRead,
 };
