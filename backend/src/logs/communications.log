@@ -1014,3 +1014,8 @@ Please login using these credentials. You will be required to change your passwo
 Best regards,
 Temple Admin
 
+[2026-07-03T06:33:13.209Z] EMAIL
+To: devotee1@test.com
+Subject: Verify Your Temple Devotee Registration
+Please click the following link to verify your email and complete devotee registration: http://localhost:5000/api/auth/verify-registration?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiRGV2b3RlZSBPbmUiLCJlbWFpbCI6ImRldm90ZWUxQHRlc3QuY29tIiwicGhvbmUiOiI5ODc2NTQzMjEwIiwiYWRkcmVzcyI6IjEyMyBUZW1wbGUgUm9hZCwgQmFuZ2Fsb3JlIiwicGxhY2UiOiJCYW5nYWxvcmUiLCJwYXNzd29yZCI6IiQyYiQxMCRXby5FVXc4a2pKLk82SXRsei4xWlEuM0pyLmxvd21VajN2cGZ2N2V2aElZaGZDc1lIZFNDdSIsInJvbGUiOiJkZXZvdGVlIiwiaWF0IjoxNzgzMDYwMzg2LCJleHAiOjE3ODMwNjEyODZ9.Ka6qJVrXMMgPvGitmFg34JxGec4AxsKuv8XRzIZx-x4
+
