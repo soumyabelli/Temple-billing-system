@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const TASK_STATUSES = ["Pending", "In Progress", "Completed", "Accepted", "Rejected", "Attended"];
+const TASK_STATUSES = ["Pending", "Assigned", "In Progress", "Completed", "Cancelled", "Accepted", "Rejected", "Attended"];
 
 const taskSchema = new mongoose.Schema(
   {
@@ -141,6 +141,11 @@ const taskSchema = new mongoose.Schema(
     conflict: {
       type: Boolean,
       default: false,
+    },
+    reason: {
+      type: String,
+      default: "",
+      trim: true,
     },
     notes: {
       type: String,

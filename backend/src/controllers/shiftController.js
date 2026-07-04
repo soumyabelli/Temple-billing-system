@@ -369,6 +369,8 @@ exports.assignShift = async (req, res) => {
     const dutyName = clean(req.body.dutyName || req.body.title || shift?.shiftName || (isTemporaryShiftChange ? "Temporary Shift Change" : ""));
     const dutyArea = clean(req.body.dutyArea || req.body.area || (isTemporaryShiftChange ? "Temporary Shift" : shift?.category));
     const reportingTime = clean(req.body.reportingTime || shift?.startTime);
+    const status = clean(req.body.status) || "Assigned";
+    const reason = clean(req.body.reason) || "";
 
     if (!shift) {
       return res.status(404).json({ success: false, message: "Shift not found" });
@@ -419,17 +421,32 @@ exports.assignShift = async (req, res) => {
     }
 
     const { start, end, durationMinutes } = normalizeRange(shift.startTime, shift.endTime);
+
+    // Check overlap with default shift
+    const defaultShiftName = employeeTargets.employee.defaultShift || employeeTargets.employee.shift;
+    if (defaultShiftName && !isTemporaryShiftChange) {
+      const defaultShift = await Shift.findOne({ shiftName: defaultShiftName, active: true }).sort({ createdAt: -1 });
+      if (defaultShift && defaultShift.startTime && defaultShift.endTime) {
+        const defaultRange = normalizeRange(defaultShift.startTime, defaultShift.endTime);
+        if (rangesOverlap(defaultRange, { start, end })) {
+          return res.status(409).json({ success: false, message: `Conflict with default shift (${defaultShiftName}: ${defaultShift.startTime} - ${defaultShift.endTime})` });
+        }
+      }
+    }
+
     const conflictingAssignments = await Task.find({
       employeeId: employeeTargets.employee._id.toString(),
       dateKey,
     });
 
-    const hasConflict = conflictingAssignments.some((assignment) =>
-      rangesOverlap(normalizeRange(assignment.startTime, assignment.endTime), { start, end })
-    );
+    const hasConflict = conflictingAssignments.some((assignment) => {
+      // Don't conflict with Cancelled or Rejected tasks
+      if (["Cancelled", "Rejected"].includes(assignment.status)) return false;
+      return rangesOverlap(normalizeRange(assignment.startTime, assignment.endTime), { start, end });
+    });
 
     if (hasConflict) {
-      return res.status(409).json({ success: false, message: "Shift conflict detected" });
+      return res.status(409).json({ success: false, message: "Shift conflict detected with another temporary duty" });
     }
 
     const assignment = await Task.create({
@@ -467,7 +484,8 @@ exports.assignShift = async (req, res) => {
         : "Medium",
       workingHours: clean(req.body.workingHours) || `${Math.round((durationMinutes / 60) * 10) / 10} hours`,
       durationMinutes,
-      status: "Pending",
+      status: status,
+      reason: reason,
     });
 
     await createStaffNotification({

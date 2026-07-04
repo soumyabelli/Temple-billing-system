@@ -36,10 +36,10 @@ const CATEGORIES = [
 ];
 
 const ASSIGNMENT_TYPES = [
-  "Special Duty",
+  "Extra Duty",
   "Festival Duty",
-  "Overtime Duty",
-  "Temporary Shift Change",
+  "Emergency Duty",
+  "Replacement Duty",
 ];
 
 const parseTime = (timeStr) => {
@@ -53,7 +53,14 @@ const parseTime = (timeStr) => {
   };
 };
 
-const getBadgeClass = (status) => {
+const getBadgeClass = (status, type) => {
+  if (status === "Completed") return "bg-green-500/10 text-green-500 border border-green-500/20";
+  if (status === "Cancelled") return "bg-gray-500/10 text-gray-500 border border-gray-500/20";
+  if (type === "Extra Duty") return "bg-blue-500/10 text-blue-500 border border-blue-500/20";
+  if (type === "Festival Duty") return "bg-orange-500/10 text-orange-500 border border-orange-500/20";
+  if (type === "Emergency Duty") return "bg-red-500/10 text-red-500 border border-red-500/20";
+  if (type === "Replacement Duty") return "bg-purple-500/10 text-purple-500 border border-purple-500/20";
+
   switch (status) {
     case "Checked Out":
       return "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20";
@@ -131,12 +138,15 @@ const ShiftManagement = () => {
   const [assignForm, setAssignForm] = useState({
     employeeId: "",
     shiftId: "",
-    assignmentType: "Special Duty",
+    assignmentType: "Extra Duty",
     date: "",
     dutyName: "",
     dutyArea: "",
     notes: "",
     assignedBy: assignedByDefault,
+    priority: "Medium",
+    reason: "",
+    status: "Assigned",
   });
   const [assignError, setAssignError] = useState("");
   const [shiftTypeError, setShiftTypeError] = useState("");
@@ -286,12 +296,15 @@ const ShiftManagement = () => {
     setAssignForm({
       employeeId: "",
       shiftId: "",
-      assignmentType: "Special Duty",
+      assignmentType: "Extra Duty",
       date: "",
       dutyName: "",
       dutyArea: "",
       notes: "",
       assignedBy: assignedByDefault,
+      priority: "Medium",
+      reason: "",
+      status: "Assigned",
     });
     setAssignError("");
     setShowAssignModal(true);
@@ -356,6 +369,9 @@ const ShiftManagement = () => {
         notes: assignForm.notes,
         assignedBy: assignForm.assignedBy.trim() || assignedByDefault,
         reportingTime: selectedShift?.startTime || "",
+        priority: assignForm.priority,
+        reason: assignForm.reason,
+        status: assignForm.status,
       });
       setShowAssignModal(false);
       loadData(weekStart);
@@ -396,8 +412,8 @@ const ShiftManagement = () => {
     <div className="space-y-8">
       {/* 1. Header Banner */}
       <SectionCard
-        title="Duty & Shift Management"
-        subtitle="Schedule temporary shifts and duties for festivals, emergencies, and special events. Default duties are assigned in Employee Management."
+        title="Temporary & Extra Duty Assignment"
+        subtitle="Schedule temporary shifts and duties for festivals, emergencies, and extra work. Default duties are assigned in Employee Management."
         className="bg-gradient-to-r from-[#1e1b4b] via-[#312e81] to-[#4f46e5] text-white border-transparent shadow-2xl shadow-violet-600/10"
         topRight={
           <button
@@ -508,7 +524,7 @@ const ShiftManagement = () => {
                       </div>
 
                       <span className="inline-flex self-start rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-semibold text-slate-600">
-                        {item.assignmentType || "Special Duty"}
+                        {item.assignmentType || "Extra Duty"}
                       </span>
                       
                       <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
@@ -533,8 +549,8 @@ const ShiftManagement = () => {
                         </div>
                       )}
                       
-                      <span className={`text-[9px] font-semibold tracking-wider uppercase inline-block self-start rounded-full px-2 py-0.5 mt-1 border ${getBadgeClass(item.attendanceStatus)}`}>
-                        {item.attendanceStatus}
+                      <span className={`text-[9px] font-semibold tracking-wider uppercase inline-block self-start rounded-full px-2 py-0.5 mt-1 border ${getBadgeClass(item.status || item.attendanceStatus, item.assignmentType)}`}>
+                        {item.status || item.attendanceStatus}
                       </span>
                     </div>
                   ))}
@@ -664,14 +680,14 @@ const ShiftManagement = () => {
                     <div>
                       <p className="font-bold text-slate-800">{a.employeeName}</p>
                       <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mt-0.5">
-                        {a.assignmentType || "Special Duty"}
+                        {a.assignmentType || "Extra Duty"}
                       </p>
                       <p className="text-slate-500 font-medium mt-0.5">{a.shiftName}</p>
                       <p className="text-slate-500 font-medium mt-0.5">{a.dutyName}</p>
                       <p className="text-[10px] text-slate-400 mt-1">{new Date(`${a.dateKey}T00:00:00`).toLocaleDateString("en-IN", { weekday: "short", day: "2-digit", month: "short" })} • {a.reportingTime || a.startTime} • {a.dutyArea}</p>
                     </div>
-                    <span className={`text-[9px] font-bold tracking-wider rounded-full px-2 py-0.5 border ${getBadgeClass(a.attendanceStatus)}`}>
-                      {a.attendanceStatus}
+                    <span className={`text-[9px] font-bold tracking-wider rounded-full px-2 py-0.5 border ${getBadgeClass(a.status || a.attendanceStatus, a.assignmentType)}`}>
+                      {a.status || a.attendanceStatus}
                     </span>
                   </div>
                 ))
@@ -932,6 +948,45 @@ const ShiftManagement = () => {
                   }
                   className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 outline-none font-semibold text-slate-850 transition"
                 />
+              </div>
+
+              <div>
+                <label className="block text-slate-600 font-semibold mb-1.5">Priority</label>
+                <select
+                  value={assignForm.priority}
+                  onChange={(e) => setAssignForm({ ...assignForm, priority: e.target.value })}
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 outline-none font-semibold text-slate-800 transition"
+                >
+                  <option value="Low">Low</option>
+                  <option value="Medium">Medium</option>
+                  <option value="High">High</option>
+                  <option value="Urgent">Urgent</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-slate-600 font-semibold mb-1.5">Reason</label>
+                <input
+                  type="text"
+                  value={assignForm.reason}
+                  onChange={(e) => setAssignForm({ ...assignForm, reason: e.target.value })}
+                  placeholder="e.g. Special Poojas, Sick Cover"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 outline-none font-semibold text-slate-800 transition"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-600 font-semibold mb-1.5">Status</label>
+                <select
+                  value={assignForm.status}
+                  onChange={(e) => setAssignForm({ ...assignForm, status: e.target.value })}
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 outline-none font-semibold text-slate-800 transition"
+                >
+                  <option value="Assigned">Assigned</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Completed">Completed</option>
+                  <option value="Cancelled">Cancelled</option>
+                </select>
               </div>
 
               <div>

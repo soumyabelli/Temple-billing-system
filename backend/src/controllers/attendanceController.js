@@ -130,7 +130,13 @@ const normalizeAssignmentType = (value) => clean(value).toLowerCase();
 
 const isTemporaryShiftAssignment = (task) => {
   const assignmentType = normalizeAssignmentType(task?.assignmentType);
-  return assignmentType.includes("temporary") || assignmentType.includes("shift change");
+  return assignmentType.includes("temporary") || 
+         assignmentType.includes("shift change") ||
+         assignmentType.includes("extra") ||
+         assignmentType.includes("festival") ||
+         assignmentType.includes("emergency") ||
+         assignmentType.includes("replacement") ||
+         assignmentType.includes("special");
 };
 
 const resolveShiftDefinitionFromLookup = (shiftName, shiftLookup) => {

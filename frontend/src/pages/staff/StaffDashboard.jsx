@@ -1022,12 +1022,13 @@ const StaffDashboard = () => {
                   <table className="task-table">
                     <thead>
                       <tr>
-                        <th>Type</th>
+                        <th>Duty Type</th>
                         <th>Shift</th>
                         <th>Duty</th>
                         <th>Area</th>
                         <th>Time</th>
-                        <th>Assigned By</th>
+                        <th>Priority</th>
+                        <th>Status</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1051,15 +1052,31 @@ const StaffDashboard = () => {
                             onClick={() => setSelectedTask(task)}
                           >
                             <td>
-                              <span className="bg-violet-100 text-violet-700 px-2 py-1 rounded text-xs font-semibold">
-                                Temporary
+                              <span className="bg-violet-100 text-violet-700 px-2 py-1 rounded text-[10px] font-semibold tracking-wide uppercase">
+                                {task.assignmentType || "Extra Duty"}
                               </span>
                             </td>
                             <td>{task.shiftName || "-"}</td>
                             <td>{task.dutyName || task.title || task.duty}</td>
                             <td>{task.dutyArea || task.area || task.description}</td>
                             <td>{task.reportingTime || task.time || "-"}</td>
-                            <td>{task.assignedBy}</td>
+                            <td>
+                              <span className={`px-2 py-1 rounded text-[10px] font-semibold ${
+                                task.priority === "Urgent" || task.priority === "High" ? "bg-red-100 text-red-700" :
+                                task.priority === "Low" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"
+                              }`}>
+                                {task.priority || "Medium"}
+                              </span>
+                            </td>
+                            <td>
+                              <span className={`px-2 py-1 rounded text-[10px] font-semibold ${
+                                task.status === "Completed" ? "bg-green-100 text-green-700" :
+                                task.status === "Cancelled" ? "bg-gray-100 text-gray-700" :
+                                "bg-blue-100 text-blue-700"
+                              }`}>
+                                {task.status || "Assigned"}
+                              </span>
+                            </td>
                           </tr>
                         ))
                       )}
@@ -1112,12 +1129,24 @@ const StaffDashboard = () => {
                       <strong>{selectedTask.reportingTime || selectedTask.time || "-"}</strong>
                     </div>
                     <div className="detail-row">
+                      <span>Priority</span>
+                      <strong>{selectedTask.priority || "Medium"}</strong>
+                    </div>
+                    <div className="detail-row">
+                      <span>Status</span>
+                      <strong>{selectedTask.status || "Assigned"}</strong>
+                    </div>
+                    <div className="detail-row">
                       <span>Assigned By</span>
                       <strong>{selectedTask.assignedBy || "Admin"}</strong>
                     </div>
                     <div className="detail-row">
-                      <span>Description</span>
-                      <p>{selectedTask.description || selectedTask.area || "No additional details."}</p>
+                      <span>Reason</span>
+                      <strong>{selectedTask.reason || "-"}</strong>
+                    </div>
+                    <div className="detail-row">
+                      <span>Notes</span>
+                      <p>{selectedTask.notes || selectedTask.description || "No additional notes."}</p>
                     </div>
                   </div>
                 ) : (
