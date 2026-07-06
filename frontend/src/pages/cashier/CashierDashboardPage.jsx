@@ -37,16 +37,23 @@ const paymentPalette = {
   Card: "#2563eb",
   "Bank Transfer": "#f59e0b",
   "Net Banking": "#f97316",
-};
-
-const buildLastDays = (days = 7) => {
+}; const buildDaysRange = (startStr, endStr) => {
   const rows = [];
-  for (let offset = days - 1; offset >= 0; offset -= 1) {
-    const date = new Date();
-    date.setDate(date.getDate() - offset);
+  const start = new Date(startStr);
+  const end = new Date(endStr);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return [];
+
+  // Cap at 31 days to avoid chart overflow
+  let diffDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+  let currentStart = new Date(start);
+  if (diffDays > 31) {
+    currentStart.setDate(end.getDate() - 31);
+  }
+
+  for (let d = new Date(currentStart); d <= end; d.setDate(d.getDate() + 1)) {
     rows.push({
-      key: toDateKey(date),
-      label: date.toLocaleDateString("en-IN", { weekday: "short" }),
+      key: toDateKey(d),
+      label: d.toLocaleDateString("en-IN", { day: "2-digit", month: "short" }),
     });
   }
   return rows;
@@ -61,6 +68,36 @@ const CashierDashboardPage = () => {
   const [bills, setBills] = useState([]);
   const [inventoryItems, setInventoryItems] = useState([]);
   const [devotees, setDevotees] = useState([]);
+
+  const [fromDate, setFromDate] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 7); // Default to last 7 days
+    return toDateKey(d);
+  });
+  const [toDate, setToDate] = useState(() => toDateKey(new Date()));
+  const [dateError, setDateError] = useState("");
+
+  const handleFromDateChange = (val) => {
+    setDateError("");
+    const today = toDateKey(new Date());
+    if (val > today) {
+      setDateError("From date cannot be in the future!");
+      setFromDate(today);
+      return;
+    }
+    setFromDate(val);
+  };
+
+  const handleToDateChange = (val) => {
+    setDateError("");
+    const today = toDateKey(new Date());
+    if (val > today) {
+      setDateError("To date cannot be in the future!");
+      setToDate(today);
+      return;
+    }
+    setToDate(val);
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -94,18 +131,44 @@ const CashierDashboardPage = () => {
     };
   }, []);
 
-  const todayBills = useMemo(() => bills.filter((bill) => isToday(bill.billDate || bill.createdAt)), [bills]);
+  const rangeBills = useMemo(() => {
+    return bills.filter((b) => {
+      const dk = toDateKey(b.billDate || b.createdAt);
+      return (!fromDate || dk >= fromDate) && (!toDate || dk <= toDate);
+    });
+  }, [bills, fromDate, toDate]);
+
+  const rangeBookings = useMemo(() => {
+    return bookings.filter((b) => {
+      const dk = toDateKey(b.bookingDate || b.createdAt);
+      return (!fromDate || dk >= fromDate) && (!toDate || dk <= toDate);
+    });
+  }, [bookings, fromDate, toDate]);
+
+  const rangeDonations = useMemo(() => {
+    return donations.filter((d) => {
+      const dk = toDateKey(d.donationDate || d.createdAt);
+      return (!fromDate || dk >= fromDate) && (!toDate || dk <= toDate);
+    });
+  }, [donations, fromDate, toDate]);
+
+  const rangePrasadamOrders = useMemo(() => {
+    return prasadamOrders.filter((o) => {
+      const dk = toDateKey(o.orderDate || o.createdAt);
+      return (!fromDate || dk >= fromDate) && (!toDate || dk <= toDate);
+    });
+  }, [prasadamOrders, fromDate, toDate]);
 
   const dailySeries = useMemo(() => {
-    const days = buildLastDays(7);
+    const days = buildDaysRange(fromDate, toDate);
     return days.map((day) => ({
       day: day.label,
       amount: sumBy(bills.filter((bill) => toDateKey(bill.billDate || bill.createdAt) === day.key), (bill) => bill.amount),
     }));
-  }, [bills]);
+  }, [bills, fromDate, toDate]);
 
   const paymentSeries = useMemo(() => {
-    const totals = todayBills.reduce((acc, bill) => {
+    const totals = rangeBills.reduce((acc, bill) => {
       const key = bill.paymentMode || "Cash";
       acc[key] = (acc[key] || 0) + Number(bill.amount || 0);
       return acc;
@@ -116,13 +179,14 @@ const CashierDashboardPage = () => {
       value,
       color: paymentPalette[name] || "#f59e0b",
     }));
-  }, [todayBills]);
+  }, [rangeBills]);
+
   const pendingBookings = useMemo(() => bookings.filter((booking) => String(booking.status || "Pending") === "Pending"), [bookings]);
   const lowStockItems = useMemo(() => inventoryItems.filter((item) => Number(item.currentStock) < Number(item.minimumStock)), [inventoryItems]);
 
   const recentActivity = useMemo(
     () =>
-      [...bills]
+      [...rangeBills]
         .sort((a, b) => new Date(b.billDate || b.createdAt || 0) - new Date(a.billDate || a.createdAt || 0))
         .slice(0, 8)
         .map((bill, index) => ({
@@ -135,21 +199,13 @@ const CashierDashboardPage = () => {
           status: bill.status || "Paid",
           date: formatDateTime(bill.billDate || bill.createdAt),
         })),
-    [bills]
+    [rangeBills]
   );
-
-  const downloadTodayReport = () => {
-    const today = toDateKey(new Date());
-    const todayBills = bills.filter((b) => toDateKey(b.billDate || b.createdAt) === today);
-    const todayBookings = bookings.filter((b) => toDateKey(b.bookingDate || b.createdAt) === today);
-    const todayDonations = donations.filter((d) => toDateKey(d.donationDate || d.createdAt) === today);
-    const todayOrders = prasadamOrders.filter((o) => toDateKey(o.orderDate || o.createdAt) === today);
-    const todayDevotees = devotees.filter((dev) => toDateKey(dev.createdAt) === today);
-
-    const totalAmount = sumBy(todayBills, (b) => b.amount);
-    const totalPooja = sumBy(todayBookings, (b) => b.amount || b.price || 0);
-    const totalDonations = sumBy(todayDonations, (d) => d.amount || 0);
-    const totalPrasadam = sumBy(todayOrders, (o) => o.amount || o.totalPrice || 0);
+  const downloadRangeReport = () => {
+    const totalAmount = sumBy(rangeBills, (b) => b.amount);
+    const totalPooja = sumBy(rangeBookings, (b) => b.amount || b.price || 0);
+    const totalDonations = sumBy(rangeDonations, (d) => d.amount || 0);
+    const totalPrasadam = sumBy(rangePrasadamOrders, (o) => o.amount || o.totalPrice || 0);
 
     const paymentBreakdown = {
       "Cash": 0,
@@ -157,7 +213,7 @@ const CashierDashboardPage = () => {
       "Card": 0,
       "Bank Transfer": 0
     };
-    todayBills.forEach((b) => {
+    rangeBills.forEach((b) => {
       const mode = b.paymentMode || "Cash";
       const matchedKey = Object.keys(paymentBreakdown).find(k => k.toLowerCase() === mode.toLowerCase()) || "Cash";
       paymentBreakdown[matchedKey] += Number(b.amount || 0);
@@ -173,12 +229,12 @@ const CashierDashboardPage = () => {
 
     doc.setFontSize(14);
     doc.setTextColor(51, 65, 85);
-    doc.text("Daily Cashier Report", 40, 78);
+    doc.text("Cashier Date Range Report", 40, 78);
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
-    doc.text(`Date: ${new Date().toLocaleDateString("en-IN")}`, 40, 98);
-    doc.text(`Generated at: ${new Date().toLocaleTimeString("en-IN")}`, 40, 112);
+    doc.text(`Range: ${formatDate(fromDate)} to ${formatDate(toDate)}`, 40, 98);
+    doc.text(`Generated at: ${new Date().toLocaleString("en-IN")}`, 40, 112);
 
     // Divider
     doc.setDrawColor(242, 140, 24);
@@ -211,14 +267,18 @@ const CashierDashboardPage = () => {
     yPos += 25;
 
     // 2. Devotees Table
-    if (todayDevotees.length > 0) {
+    const rangeDevotees = devotees.filter((dev) => {
+      const dk = toDateKey(dev.createdAt);
+      return (!fromDate || dk >= fromDate) && (!toDate || dk <= toDate);
+    });
+    if (rangeDevotees.length > 0) {
       if (yPos > 720) { doc.addPage(); yPos = 40; }
       doc.setFont("helvetica", "bold");
       doc.setFontSize(13);
-      doc.text("Today's Registered Devotees", 40, yPos);
+      doc.text("Registered Devotees in Range", 40, yPos);
       yPos += 10;
 
-      const devoteesData = todayDevotees.map((d) => [
+      const devoteesData = rangeDevotees.map((d) => [
         d.name || "-",
         d.email || "-",
         d.phone || "-",
@@ -237,24 +297,25 @@ const CashierDashboardPage = () => {
     }
 
     // 3. Prasadam Orders Table
-    if (todayOrders.length > 0) {
+    if (rangePrasadamOrders.length > 0) {
       if (yPos > 720) { doc.addPage(); yPos = 40; }
       doc.setFont("helvetica", "bold");
       doc.setFontSize(13);
-      doc.text("Today's Prasadam Orders", 40, yPos);
+      doc.text("Prasadam Orders in Range", 40, yPos);
       yPos += 10;
 
-      const ordersData = todayOrders.map((o) => [
+      const ordersData = rangePrasadamOrders.map((o) => [
         o.devoteeName || "Walk-in",
-        o.items?.map((item) => `${item.name} (${item.quantity})`).join(", ") || "-",
+        o.itemName || "-",
+        o.quantity || "1",
         `Rs ${(o.amount || o.totalPrice || 0).toLocaleString("en-IN")}`,
-        o.paymentMode || "Cash",
+        o.paymentMethod || "Cash",
         o.status || "Completed"
       ]);
 
       autoTable(doc, {
         startY: yPos,
-        head: [["Devotee Name", "Items (Qty)", "Total Price", "Payment Mode", "Status"]],
+        head: [["Devotee Name", "Item", "Qty", "Total Price", "Payment Mode", "Status"]],
         body: ordersData,
         theme: "striped",
         headStyles: { fillColor: [242, 140, 24] },
@@ -264,19 +325,19 @@ const CashierDashboardPage = () => {
     }
 
     // 4. Donations Table
-    if (todayDonations.length > 0) {
+    if (rangeDonations.length > 0) {
       if (yPos > 720) { doc.addPage(); yPos = 40; }
       doc.setFont("helvetica", "bold");
       doc.setFontSize(13);
-      doc.text("Today's Donations", 40, yPos);
+      doc.text("Donations in Range", 40, yPos);
       yPos += 10;
 
-      const donationsData = todayDonations.map((d) => [
+      const donationsData = rangeDonations.map((d) => [
         d.devoteeName || d.donorName || "Anonymous",
         d.donationType || "-",
         d.festivalEvent || "General",
         `Rs ${Number(d.amount || 0).toLocaleString("en-IN")}`,
-        d.paymentMode || "Cash"
+        d.paymentMethod || "Cash"
       ]);
 
       autoTable(doc, {
@@ -291,17 +352,17 @@ const CashierDashboardPage = () => {
     }
 
     // 5. Pooja Bookings Table
-    if (todayBookings.length > 0) {
+    if (rangeBookings.length > 0) {
       if (yPos > 720) { doc.addPage(); yPos = 40; }
       doc.setFont("helvetica", "bold");
       doc.setFontSize(13);
-      doc.text("Today's Pooja Bookings", 40, yPos);
+      doc.text("Pooja Bookings in Range", 40, yPos);
       yPos += 10;
 
-      const bookingsData = todayBookings.map((b) => [
+      const bookingsData = rangeBookings.map((b) => [
         b.devoteeName || "Devotee",
-        b.sevaType || b.poojaName || "-",
-        new Date(b.bookingDate).toLocaleDateString("en-IN"),
+        b.service || b.sevaType || b.poojaName || "-",
+        new Date(b.datetime || b.bookingDate).toLocaleDateString("en-IN"),
         `Rs ${Number(b.amount || b.price || 0).toLocaleString("en-IN")}`,
         b.status || "Confirmed"
       ]);
@@ -318,26 +379,26 @@ const CashierDashboardPage = () => {
     }
 
     // 6. Transaction History Table
-    if (todayBills.length > 0) {
+    if (rangeBills.length > 0) {
       if (yPos > 720) { doc.addPage(); yPos = 40; }
       doc.setFont("helvetica", "bold");
       doc.setFontSize(13);
-      doc.text("Today's Transaction History", 40, yPos);
+      doc.text("Transaction History in Range", 40, yPos);
       yPos += 10;
 
-      const transactionsData = todayBills.map((b, index) => [
+      const transactionsData = rangeBills.map((b, index) => [
         b.referenceNo || `RC-${String(index + 1).padStart(4, "0")}`,
         b.devoteeName || "-",
         b.billType || "Other",
         b.sevaType || "-",
         `Rs ${Number(b.amount || 0).toLocaleString("en-IN")}`,
         b.paymentMode || "Cash",
-        new Date(b.billDate || b.createdAt).toLocaleTimeString("en-IN")
+        new Date(b.billDate || b.createdAt).toLocaleDateString("en-IN")
       ]);
 
       autoTable(doc, {
         startY: yPos,
-        head: [["Receipt No", "Devotee Name", "Type", "Service", "Amount", "Mode", "Time"]],
+        head: [["Receipt No", "Devotee Name", "Type", "Service", "Amount", "Mode", "Date"]],
         body: transactionsData,
         theme: "striped",
         headStyles: { fillColor: [51, 65, 85] },
@@ -345,32 +406,32 @@ const CashierDashboardPage = () => {
       });
     }
 
-    doc.save(`Today_Report_${today}.pdf`);
+    doc.save(`Report_${fromDate}_to_${toDate}.pdf`);
   };
 
   const stats = [
     {
-      title: "Today's Collection",
-      value: formatCurrency(sumBy(todayBills, (bill) => bill.amount)),
-      note: `${todayBills.length} bills recorded today`,
+      title: "Range Collection",
+      value: formatCurrency(sumBy(rangeBills, (bill) => bill.amount)),
+      note: `From ${formatDate(fromDate)} to ${formatDate(toDate)}`,
       tone: "orange",
     },
     {
       title: "Pooja Bookings",
-      value: bookings.length,
-      note: `${pendingBookings.length} pending approvals`,
+      value: rangeBookings.length,
+      note: `${rangeBookings.filter(b => String(b.status || "Pending") === "Pending").length} pending`,
       tone: "gold",
     },
     {
       title: "Donation Value",
-      value: formatCurrency(sumBy(donations, (donation) => donation.amount)),
-      note: `${donations.length} donation records`,
+      value: formatCurrency(sumBy(rangeDonations, (donation) => donation.amount)),
+      note: `${rangeDonations.length} records in range`,
       tone: "green",
     },
     {
       title: "Prasadam Sales",
-      value: formatCurrency(sumBy(prasadamOrders, (order) => order.amount || order.totalPrice)),
-      note: `${prasadamOrders.length} orders`,
+      value: formatCurrency(sumBy(rangePrasadamOrders, (order) => order.amount || order.totalPrice)),
+      note: `${rangePrasadamOrders.length} orders in range`,
       tone: "blue",
     },
   ];
@@ -385,12 +446,41 @@ const CashierDashboardPage = () => {
       stats={stats}
       actions={
         <>
+          <div className="flex flex-col gap-1 mr-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] font-extrabold text-[#8a5200] uppercase tracking-wider">From:</span>
+                <input
+                  type="date"
+                  value={fromDate}
+                  max={toDateKey(new Date())}
+                  onChange={(e) => handleFromDateChange(e.target.value)}
+                  className="rounded-full border border-[#f0c58f] bg-white px-3 py-1.5 text-xs font-semibold text-slate-800 outline-none focus:ring-1 focus:ring-[#f28c18]"
+                />
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] font-extrabold text-[#8a5200] uppercase tracking-wider">To:</span>
+                <input
+                  type="date"
+                  value={toDate}
+                  max={toDateKey(new Date())}
+                  onChange={(e) => handleToDateChange(e.target.value)}
+                  className="rounded-full border border-[#f0c58f] bg-white px-3 py-1.5 text-xs font-semibold text-slate-800 outline-none focus:ring-1 focus:ring-[#f28c18]"
+                />
+              </div>
+            </div>
+            {dateError && (
+              <span className="text-[10px] font-bold text-red-600 animate-pulse mt-0.5 ml-1">
+                ⚠️ {dateError}
+              </span>
+            )}
+          </div>
           <button
             type="button"
-            onClick={downloadTodayReport}
+            onClick={downloadRangeReport}
             className="rounded-full bg-emerald-600 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700"
           >
-            Download Today's Report
+            Download Range Report
           </button>
           <button
             type="button"
@@ -556,24 +646,6 @@ const CashierDashboardPage = () => {
                   {item.label}
                 </button>
               ))}
-            </div>
-          </section>
-
-          <section className="rounded-[22px] border border-[#f0d3a2] bg-white/90 p-5 shadow-sm">
-            <h2 className="text-xl font-extrabold text-slate-950">Operational summary</h2>
-            <div className="mt-4 space-y-3 text-sm">
-              <div className="flex items-center justify-between rounded-2xl bg-[#fff8ef] px-4 py-3">
-                <span className="font-medium text-slate-600">Pending bookings</span>
-                <span className="font-extrabold text-slate-950">{pendingBookings.length}</span>
-              </div>
-              <div className="flex items-center justify-between rounded-2xl bg-[#fff8ef] px-4 py-3">
-                <span className="font-medium text-slate-600">Low stock items</span>
-                <span className="font-extrabold text-slate-950">{lowStockItems.length}</span>
-              </div>
-              <div className="flex items-center justify-between rounded-2xl bg-[#fff8ef] px-4 py-3">
-                <span className="font-medium text-slate-600">Donation rows</span>
-                <span className="font-extrabold text-slate-950">{donations.length}</span>
-              </div>
             </div>
           </section>
         </aside>

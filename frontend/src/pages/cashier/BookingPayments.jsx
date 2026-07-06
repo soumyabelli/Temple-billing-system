@@ -56,6 +56,7 @@ const BookingPayments = () => {
   const [message, setMessage] = useState("");
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [showHistory, setShowHistory] = useState(false);
   const [form, setForm] = useState(() => {
     const initialService = getPoojaTypes()[0];
     return {
@@ -301,6 +302,13 @@ const BookingPayments = () => {
           </button>
           <button
             type="button"
+            onClick={() => setShowHistory((prev) => !prev)}
+            className="rounded-full bg-emerald-600 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700"
+          >
+            {showHistory ? "Hide History" : "View History"}
+          </button>
+          <button
+            type="button"
             onClick={() => navigate("/cashier/billing")}
             className="rounded-full bg-[#f28c18] px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:opacity-95"
           >
@@ -309,8 +317,9 @@ const BookingPayments = () => {
         </>
       }
     >
-      <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <section className="rounded-[22px] border border-[#f0d3a2] bg-white/95 p-5 shadow-sm">
+      <div className="w-full">
+        {!showHistory ? (
+          <section className="rounded-[22px] border border-[#f0d3a2] bg-white/95 p-5 shadow-sm">
           <div className="flex items-center justify-between gap-3">
             <div>
               <h2 className="text-2xl font-extrabold text-slate-950">Admin added services</h2>
@@ -456,9 +465,16 @@ const BookingPayments = () => {
             </button>
           </form>
         </section>
-
-        <section className="rounded-[22px] border border-[#f0d3a2] bg-white/95 p-5 shadow-sm">
-          <div className="flex items-center justify-between gap-3">
+        ) : (
+          <div>
+            <button
+              onClick={() => setShowHistory(false)}
+              className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#f0c58f] bg-white px-4 py-2 text-sm font-bold text-slate-800 shadow-sm transition hover:bg-[#fff8ef]"
+            >
+              ← Back to Booking Form
+            </button>
+            <section className="rounded-[22px] border border-[#f0d3a2] bg-white/95 p-5 shadow-sm">
+              <div className="flex items-center justify-between gap-3">
             <div>
               <h2 className="text-2xl font-extrabold text-slate-950">Booking history</h2>
               <p className="mt-1 text-sm font-medium text-slate-700">
@@ -544,6 +560,8 @@ const BookingPayments = () => {
             </table>
           </div>
         </section>
+          </div>
+        )}
       </div>
     </CashierPageShell>
   );
