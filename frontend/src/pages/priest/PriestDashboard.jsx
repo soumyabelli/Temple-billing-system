@@ -42,6 +42,8 @@ import PriestNotifications from "./PriestNotifications";
 import PriestProfile from "./PriestProfile";
 import PriestSettings from "./PriestSettings";
 import PriestInventory from "./PriestInventory";
+import Attendance from "../staff/Attendance";
+import LeaveRequest from "../staff/LeaveRequest";
 import priestAvatar from "../../assets/logo.png";
 
 const API_BASE = "http://localhost:5000/api";
@@ -1236,6 +1238,10 @@ const PriestDashboard = () => {
             return <FestivalDuties darkMode={darkMode} />;
           case "Inventory Requests":
             return <PriestInventory darkMode={darkMode} />;
+          case "Attendance":
+            return <Attendance darkMode={darkMode} />;
+          case "Apply Leave":
+            return <LeaveRequest darkMode={darkMode} />;
           case "Notifications":
             return <PriestNotifications darkMode={darkMode} />;
           case "Profile":

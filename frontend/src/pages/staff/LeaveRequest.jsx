@@ -87,14 +87,18 @@ const LeaveRequest = () => {
     setIsSubmitting(true);
 
     try {
-      await axios.post("http://localhost:5000/api/leaves/apply", {
+      const res = await axios.post("http://localhost:5000/api/leaves/apply", {
         ...form,
         reason: form.reason.trim(),
         staffId: staff?.id || staff?._id,
         staffName: staff?.name || "Staff",
       });
 
-      alert("Leave Applied Successfully");
+      if (res.data.quotaExceeded) {
+        alert(res.data.message);
+      } else {
+        alert("Leave Applied Successfully");
+      }
       setForm({ leaveType: "General", reason: "", fromDate: "", toDate: "" });
     } catch (err) {
       const serverMsg =

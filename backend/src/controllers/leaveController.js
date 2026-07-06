@@ -1,6 +1,8 @@
 const Leave = require("../models/Leave");
-const { createNotification, createStaffNotification } = require("../utils/notificationService");
+const Employee = require("../models/Employee");
 const Notification = require("../models/Notification");
+const { createNotification, createStaffNotification } = require("../utils/notificationService");
+const mongoose = require("mongoose");
 const LEAVE_STATUSES = ["Pending", "Approved", "Rejected"];
 
 const parseISODate = (value) => {
@@ -66,6 +68,50 @@ const getLocalTodayStr = () => {
   const month = String(now.getMonth() + 1).padStart(2, "0");
   const day = String(now.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
+};
+
+const getEmployeeYearlyQuota = async (staffId) => {
+  let employee = null;
+  if (mongoose.Types.ObjectId.isValid(staffId)) {
+    employee = await Employee.findById(staffId);
+  }
+  if (!employee) {
+    employee = await Employee.findOne({ employeeId: staffId });
+  }
+
+  let casualQuota = 12;
+  const emergencyQuota = 2;
+  
+  if (employee && employee.joiningDate) {
+    const currentYear = new Date().getFullYear();
+    const joinDate = new Date(employee.joiningDate);
+    if (joinDate.getFullYear() === currentYear) {
+      casualQuota = 12 - joinDate.getMonth();
+    }
+  }
+
+  return {
+    casualQuota,
+    emergencyQuota,
+    totalQuota: casualQuota + emergencyQuota,
+  };
+};
+
+const getLeaveDaysCount = (fromDateStr, toDateStr, year) => {
+  const startOfYear = new Date(`${year}-01-01T00:00:00`);
+  const endOfYear = new Date(`${year}-12-31T00:00:00`);
+  const from = new Date(`${fromDateStr}T00:00:00`);
+  const to = new Date(`${toDateStr}T00:00:00`);
+  
+  if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime())) return 0;
+  
+  const start = from < startOfYear ? startOfYear : from;
+  const end = to > endOfYear ? endOfYear : to;
+  
+  if (start <= end) {
+    return Math.round((end - start) / (1000 * 60 * 60 * 24)) + 1;
+  }
+  return 0;
 };
 
 exports.applyLeave = async (req, res) => {
@@ -137,6 +183,25 @@ exports.applyLeave = async (req, res) => {
       });
     }
 
+    // ── Quota Check ──────────────────────────────────────────────────────────
+    const currentYear = new Date().getFullYear();
+    const { totalQuota } = await getEmployeeYearlyQuota(staffId);
+    
+    const existingLeaves = await Leave.find({
+      staffId,
+      status: { $ne: "Rejected" },
+      fromDate: { $lte: `${currentYear}-12-31` },
+      toDate: { $gte: `${currentYear}-01-01` }
+    });
+    
+    let usedDays = 0;
+    existingLeaves.forEach(l => {
+      usedDays += getLeaveDaysCount(l.fromDate, l.toDate, currentYear);
+    });
+    
+    const requestedDays = getLeaveDaysCount(fromDate, toDate, currentYear);
+    const quotaExceeded = (usedDays + requestedDays) > totalQuota;
+
     // ── Save ─────────────────────────────────────────────────────────────────
     const leave = await Leave.create({
       staffId,
@@ -161,6 +226,10 @@ exports.applyLeave = async (req, res) => {
     return res.json({
       success: true,
       leave,
+      quotaExceeded,
+      message: quotaExceeded 
+        ? `Warning: You have exceeded your leave limit of ${totalQuota} days for the year. Salary will be deducted for extra leaves.` 
+        : "Leave applied successfully."
     });
   } catch (error) {
     return res.status(500).json({
@@ -191,7 +260,20 @@ exports.getLeaveStats = async (req, res) => {
     const leaves = await Leave.find({ staffId });
     const summary = buildLeaveSummary(leaves);
 
-    return res.json(summary);
+    const currentYear = new Date().getFullYear();
+    const quotaInfo = await getEmployeeYearlyQuota(staffId);
+    
+    let usedDays = 0;
+    leaves.filter(l => l.status !== "Rejected").forEach(l => {
+      usedDays += getLeaveDaysCount(l.fromDate, l.toDate, currentYear);
+    });
+
+    return res.json({
+      ...summary,
+      ...quotaInfo,
+      usedDays,
+      remainingDays: Math.max(0, quotaInfo.totalQuota - usedDays)
+    });
   } catch (error) {
     return res.status(500).json({
       success: false,

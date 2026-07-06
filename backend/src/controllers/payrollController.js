@@ -98,6 +98,8 @@ const buildEmployeePayroll = ({ employee, monthRange, attendanceDocs, leaveDocs,
   let lateDays = 0;
   let overtimeHours = 0;
 
+  let previouslyTakenLeaves = 0;
+
   const attendanceByDate = new Map();
   attendanceDocs.filter((doc) => matchesEmployee(doc, employee)).forEach((doc) => {
     attendanceByDate.set(doc.dateKey, doc);
@@ -113,7 +115,14 @@ const buildEmployeePayroll = ({ employee, monthRange, attendanceDocs, leaveDocs,
       const toDate = new Date(`${leave.toDate}T00:00:00`);
       if (Number.isNaN(fromDate.getTime()) || Number.isNaN(toDate.getTime())) return;
       for (let cursor = new Date(fromDate); cursor <= toDate; cursor.setDate(cursor.getDate() + 1)) {
-        leaveByDate.set(toDateKey(cursor), leave);
+        const dKey = toDateKey(cursor);
+        if (dKey >= `${monthRange.year}-01-01` && dKey < toDateKey(monthRange.startDate)) {
+          if (!joiningKey || dKey >= joiningKey) {
+            previouslyTakenLeaves += 1;
+          }
+        } else if (dKey >= toDateKey(monthRange.startDate) && dKey <= monthEndKey) {
+          leaveByDate.set(dKey, leave);
+        }
       }
     });
 
@@ -143,9 +152,21 @@ const buildEmployeePayroll = ({ employee, monthRange, attendanceDocs, leaveDocs,
     (task) => matchesEmployee(task, employee) && isExtraDutyAssignment(task.assignmentType)
   ).length;
 
+  let casualQuota = 12;
+  if (employee.joiningDate) {
+    const joinDate = new Date(employee.joiningDate);
+    if (joinDate.getFullYear() === monthRange.year) {
+      casualQuota = 12 - joinDate.getMonth();
+    }
+  }
+  const totalQuota = casualQuota + 2;
+
+  const remainingPaidLeaves = Math.max(0, totalQuota - previouslyTakenLeaves);
+  const unpaidLeaveDays = Math.max(0, leaveDays - remainingPaidLeaves);
+
   const baseSalary = roundMoney(employee.salary || 0);
   const dailyRate = baseSalary / Math.max(1, monthRange.daysInMonth);
-  const deduction = roundMoney(absentDays * dailyRate + halfDays * dailyRate * 0.5);
+  const deduction = roundMoney((absentDays + unpaidLeaveDays) * dailyRate + halfDays * dailyRate * 0.5);
   const extraDutyPay =
     savedRecord?.extraDutyPay != null ? roundMoney(savedRecord.extraDutyPay) : 0;
   const bonus = savedRecord?.bonus != null ? roundMoney(savedRecord.bonus) : 0;
@@ -228,11 +249,12 @@ const loadPayrollContext = async (monthValue) => {
   const monthRange = getMonthRange(monthValue);
   const startKey = toDateKey(monthRange.startDate);
   const endKey = toDateKey(monthRange.endDate);
+  const startOfYear = `${monthRange.year}-01-01`;
 
   const [employees, attendanceDocs, leaveDocs, taskDocs, payrollRecords] = await Promise.all([
     Employee.find({ role: { $ne: "admin" }, status: { $in: ["Active", "On Leave"] } }).sort({ name: 1 }),
     Attendance.find({ dateKey: { $gte: startKey, $lte: endKey } }),
-    Leave.find({ status: "Approved", fromDate: { $lte: endKey }, toDate: { $gte: startKey } }),
+    Leave.find({ status: "Approved", fromDate: { $lte: endKey }, toDate: { $gte: startOfYear } }),
     Task.find({
       $or: [{ dateKey: { $gte: startKey, $lte: endKey } }, { dueDate: { $gte: startKey, $lte: endKey } }],
     }),

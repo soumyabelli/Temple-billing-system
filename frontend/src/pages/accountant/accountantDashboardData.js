@@ -11,6 +11,7 @@ import {
   FaUsers,
   FaWallet,
   FaRupeeSign,
+  FaFileSignature,
 } from "react-icons/fa";
 import { MdPayments, MdOutlineVolunteerActivism, MdTempleBuddhist } from "react-icons/md";
 import { TbReportAnalytics } from "react-icons/tb";
@@ -29,6 +30,8 @@ export const accountantSidebarPrimary = [
 ];
 
 export const accountantSidebarUtility = [
+  { label: "Attendance", icon: FaClock },
+  { label: "Apply Leave", icon: FaFileSignature },
   { label: "Notifications", icon: FaBell },
   { label: "Profile", icon: FaUserCircle },
 ];

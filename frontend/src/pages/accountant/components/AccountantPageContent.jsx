@@ -23,6 +23,8 @@ import {
 import { MdTempleBuddhist } from "react-icons/md";
 import AccountantDonutCard from "./AccountantDonutCard";
 import AccountantRevenueChart from "./AccountantRevenueChart";
+import Attendance from "../../staff/Attendance";
+import LeaveRequest from "../../staff/LeaveRequest";
 import {
   accountantStats,
   billingRows,
@@ -1032,6 +1034,18 @@ const AccountantPageContent = ({ activeItem, user, currentDate, currentWeekday }
       return <ReportsAnalyticsView />;
     case "Notifications":
       return <NotificationsView />;
+    case "Attendance":
+      return (
+        <div style={{ padding: "2rem" }}>
+          <Attendance />
+        </div>
+      );
+    case "Apply Leave":
+      return (
+        <div style={{ padding: "2rem" }}>
+          <LeaveRequest />
+        </div>
+      );
     case "Profile":
       return <ProfileView user={user} />;
     case "Dashboard":

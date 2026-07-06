@@ -569,7 +569,7 @@ const StaffDashboard = () => {
 
     try {
       setSubmittingLeave(true);
-      await axios.post(`${API_BASE}/leaves/apply`, {
+      const res = await axios.post(`${API_BASE}/leaves/apply`, {
         ...leaveForm,
         staffId,
         staffName: displayName,
@@ -582,7 +582,11 @@ const StaffDashboard = () => {
       });
       await fetchDashboardData();
       setActiveSection("leaveRequests");
-      alert("Leave request sent to admin");
+      if (res.data.quotaExceeded) {
+        alert(res.data.message);
+      } else {
+        alert("Leave request sent to admin");
+      }
     } catch (apiError) {
       alert(apiError.response?.data?.message || "Failed to submit leave request");
     } finally {

@@ -59,6 +59,8 @@ import RegisterDevoteesPage from "./pages/cashier/RegisterDevoteesPage";
 import PriestDashboard from "./pages/priest/PriestDashboard";
 import StaffDashboard from "./pages/staff/StaffDashboard";
 import LeaveHistory from "./pages/staff/LeaveHistory";
+import Attendance from "./pages/staff/Attendance";
+import LeaveRequest from "./pages/staff/LeaveRequest";
 import DevoteeDashboard from "./pages/devotee/DevoteeDashboard";
 
 import LoginPage from "./pages/auth/LoginPage";
@@ -527,6 +529,8 @@ function App() {
         <Route path="register-devotees" element={<RegisterDevoteesPage />} />
         <Route path="payments" element={<PaymentsPage />} />
         <Route path="reports" element={<ReportsPage />} />
+        <Route path="attendance" element={<Attendance />} />
+        <Route path="apply-leave" element={<div style={{ padding: "2rem" }}><LeaveRequest /></div>} />
         <Route path="inventory" element={<InventoryPage />} />
         <Route path="notifications" element={<NotificationsPage />} />
         <Route path="profile" element={<ProfilePage />} />
@@ -535,6 +539,22 @@ function App() {
       {/* PRIEST */}
       <Route
         path="/priest"
+        element={
+          <ProtectedRoute allowedRoles={["priest"]}>
+            <PriestDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/priest/attendance"
+        element={
+          <ProtectedRoute allowedRoles={["priest"]}>
+            <PriestDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/priest/apply-leave"
         element={
           <ProtectedRoute allowedRoles={["priest"]}>
             <PriestDashboard />
