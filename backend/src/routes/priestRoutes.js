@@ -27,6 +27,11 @@ const {
   updateProfile,
   getSettings,
   updateSettings,
+  getMyDuties,
+  startMyDuty,
+  completeMyDuty,
+  requestTransfer,
+  getPriestsList,
 } = require("../controllers/priestController");
 const {
   getInventoryCatalog,
@@ -46,6 +51,13 @@ router.get("/today-schedule", getTodaySchedule);
 router.get("/upcoming-poojas", getUpcomingPoojas);
 router.get("/completed-today", getCompletedToday);
 router.patch("/bookings/:id/status", updateBookingStatus);
+
+// New Unified Duties Endpoints
+router.get("/my-duties", getMyDuties);
+router.put("/my-duties/start", startMyDuty);
+router.put("/my-duties/complete", completeMyDuty);
+router.post("/my-duties/transfer", requestTransfer);
+router.get("/priests-list", getPriestsList);
 
 // Module 1 Endpoints
 router.get("/assigned-poojas", getAssignedPoojas);

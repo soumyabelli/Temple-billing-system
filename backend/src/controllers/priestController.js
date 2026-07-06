@@ -7,6 +7,9 @@ const InventoryItem = require("../models/InventoryItem");
 const Instruction = require("../models/Instruction");
 const Employee = require("../models/Employee");
 const PriestSetting = require("../models/PriestSetting");
+const TransferRequest = require("../models/TransferRequest");
+const Leave = require("../models/Leave");
+
 // Helper to check if a booking date is today
 const isDateToday = (dateStr) => {
   try {
@@ -1095,4 +1098,221 @@ exports.updateSettings = async (req, res) => {
     return res.status(500).json({ message: "Failed to update settings" });
   }
 };
+
+// MODULE 9: PRIEST WORKFLOW REDESIGN (MY DUTIES)
+
+exports.getMyDuties = async (req, res) => {
+  try {
+    const priestId = req.user.id;
+    const user = await User.findById(priestId);
+
+    // 1. Fetch Bookings assigned to Priest
+    const bookings = await Booking.find({ assignedPriest: priestId });
+    // 2. Fetch Tasks (Sevas/Special/Festival) assigned to Priest
+    const tasks = await Task.find({
+      $or: [{ staffId: priestId }, { staffEmail: user.email }]
+    });
+
+    const unifiedDuties = [];
+
+    bookings.forEach(b => {
+      unifiedDuties.push({
+        id: b._id,
+        referenceType: "Booking",
+        poojaName: b.service || "General Pooja",
+        devotee: b.devoteeName || "N/A",
+        date: formatDateTime(b.datetime),
+        rawDate: new Date(b.datetime),
+        time: formatTime(b.datetime),
+        area: "Main Temple", // Default for poojas
+        priority: "High", // Default for booked poojas
+        assignedBy: "Admin",
+        status: b.status,
+      });
+    });
+
+    tasks.forEach(t => {
+      const taskDate = t.dateKey || new Date().toISOString().slice(0, 10);
+      const timeStr = t.time || t.startTime || "09:00 AM";
+      // Merge date and time for rawDate sorting
+      let rawDate = new Date(`${taskDate}T12:00:00`);
+      try {
+        const parsedTime = new Date(`${taskDate} ${timeStr}`);
+        if (!isNaN(parsedTime)) rawDate = parsedTime;
+      } catch (e) {}
+
+      unifiedDuties.push({
+        id: t._id,
+        referenceType: "Task",
+        poojaName: t.title || t.dutyName || t.duty || "Seva",
+        devotee: "N/A", // Sevas typically don't have a specific devotee attached in Tasks
+        date: formatDateTime(rawDate),
+        rawDate,
+        time: timeStr,
+        area: t.area || t.dutyArea || "General",
+        priority: t.priority || "Medium",
+        assignedBy: t.assignedBy || "Admin",
+        status: t.status,
+      });
+    });
+
+    // Sort by date descending
+    unifiedDuties.sort((a, b) => b.rawDate - a.rawDate);
+
+    return res.status(200).json(unifiedDuties);
+  } catch (error) {
+    console.error("Error fetching My Duties:", error);
+    return res.status(500).json({ message: "Failed to load My Duties" });
+  }
+};
+
+exports.startMyDuty = async (req, res) => {
+  try {
+    const { referenceType, referenceId } = req.body;
+    
+    if (referenceType === "Booking") {
+      const booking = await Booking.findById(referenceId);
+      if (!booking || booking.status !== "Assigned") {
+        return res.status(400).json({ message: "Cannot start this duty. It may not be in 'Assigned' state." });
+      }
+      booking.status = "In Progress";
+      booking.startedAt = new Date();
+      await booking.save();
+    } else if (referenceType === "Task") {
+      const task = await Task.findById(referenceId);
+      if (!task || task.status !== "Assigned") {
+        return res.status(400).json({ message: "Cannot start this duty. It may not be in 'Assigned' state." });
+      }
+      task.status = "In Progress";
+      await task.save();
+    } else {
+      return res.status(400).json({ message: "Invalid reference type" });
+    }
+
+    return res.status(200).json({ message: "Duty started successfully" });
+  } catch (error) {
+    console.error("Error starting duty:", error);
+    return res.status(500).json({ message: "Failed to start duty" });
+  }
+};
+
+exports.completeMyDuty = async (req, res) => {
+  try {
+    const { referenceType, referenceId, remarks, duration } = req.body;
+    
+    if (referenceType === "Booking") {
+      const booking = await Booking.findById(referenceId);
+      if (!booking || booking.status !== "In Progress") {
+        return res.status(400).json({ message: "Cannot complete. Duty must be 'In Progress'." });
+      }
+      booking.status = "Completed";
+      booking.completedAt = new Date();
+      booking.completionRemarks = remarks || "";
+      booking.completionDuration = Number(duration) || 0;
+      await booking.save();
+    } else if (referenceType === "Task") {
+      const task = await Task.findById(referenceId);
+      if (!task || task.status !== "In Progress") {
+        return res.status(400).json({ message: "Cannot complete. Duty must be 'In Progress'." });
+      }
+      task.status = "Completed";
+      task.completedAt = new Date();
+      task.completionRemarks = remarks || "";
+      task.completionDuration = Number(duration) || 0;
+      await task.save();
+    } else {
+      return res.status(400).json({ message: "Invalid reference type" });
+    }
+
+    return res.status(200).json({ message: "Duty completed successfully" });
+  } catch (error) {
+    console.error("Error completing duty:", error);
+    return res.status(500).json({ message: "Failed to complete duty" });
+  }
+};
+
+exports.requestTransfer = async (req, res) => {
+  try {
+    const priestId = req.user.id;
+    const { referenceType, referenceId, requestedPriestId, reason, remarks } = req.body;
+
+    if (!requestedPriestId || requestedPriestId === priestId) {
+      return res.status(400).json({ message: "Invalid requested priest." });
+    }
+
+    // Validation
+    let dateStr = "";
+    if (referenceType === "Booking") {
+      const booking = await Booking.findById(referenceId);
+      if (!booking || booking.status !== "Assigned") {
+        return res.status(400).json({ message: "Can only transfer duties that are in 'Assigned' state." });
+      }
+      dateStr = booking.datetime;
+    } else if (referenceType === "Task") {
+      const task = await Task.findById(referenceId);
+      if (!task || task.status !== "Assigned") {
+        return res.status(400).json({ message: "Can only transfer duties that are in 'Assigned' state." });
+      }
+      dateStr = task.dateKey;
+    } else {
+      return res.status(400).json({ message: "Invalid reference type" });
+    }
+
+    // Check if requested priest is on leave
+    let conflictWarning = "";
+    if (dateStr) {
+      const checkDate = new Date(dateStr).toISOString().slice(0, 10);
+      const leaveCheck = await Leave.findOne({
+        staffId: requestedPriestId,
+        status: "Approved",
+        fromDate: { $lte: checkDate },
+        toDate: { $gte: checkDate },
+      });
+      if (leaveCheck) {
+        conflictWarning = "Warning: The requested priest is on approved leave for this date.";
+      }
+    }
+
+    const transferRequest = await TransferRequest.create({
+      referenceType,
+      referenceId,
+      originalPriest: priestId,
+      requestedPriest: requestedPriestId,
+      reason,
+      remarks,
+    });
+
+    if (referenceType === "Booking") {
+      await Booking.findByIdAndUpdate(referenceId, { status: "Transfer Requested" });
+    } else {
+      await Task.findByIdAndUpdate(referenceId, { status: "Transfer Requested" });
+    }
+
+    await Notification.create({
+      title: "Pooja Transfer Request",
+      message: `A priest has requested to transfer a duty. Reason: ${reason}`,
+      audienceRole: "admin",
+      category: "transfer",
+    });
+
+    return res.status(200).json({ 
+      message: "Transfer request submitted successfully to Admin.", 
+      warning: conflictWarning 
+    });
+  } catch (error) {
+    console.error("Error requesting transfer:", error);
+    return res.status(500).json({ message: "Failed to request transfer" });
+  }
+};
+
+exports.getPriestsList = async (req, res) => {
+  try {
+    const priests = await User.find({ role: "priest", status: "Active" }).select("name email _id");
+    return res.status(200).json(priests);
+  } catch (error) {
+    console.error("Error fetching priests list:", error);
+    return res.status(500).json({ message: "Failed to fetch priests" });
+  }
+};
+
 

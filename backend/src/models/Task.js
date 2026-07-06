@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const TASK_STATUSES = ["Pending", "Assigned", "In Progress", "Completed", "Cancelled", "Accepted", "Rejected", "Attended"];
+const TASK_STATUSES = ["Pending", "Assigned", "In Progress", "Completed", "Cancelled", "Accepted", "Rejected", "Attended", "Transfer Requested", "Transferred"];
 
 const taskSchema = new mongoose.Schema(
   {
@@ -164,6 +164,8 @@ const taskSchema = new mongoose.Schema(
     rejectedAt: { type: Date },
     rejectionReason: { type: String, trim: true },
     completedAt: { type: Date },
+    completionRemarks: { type: String, trim: true, default: "" },
+    completionDuration: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

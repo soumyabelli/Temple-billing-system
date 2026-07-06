@@ -17,6 +17,7 @@ const priestRoutes = require("./routes/priestRoutes");
 const prasadamRoutes = require("./routes/prasadamRoutes");
 const bookingRoutes = require("./routes/bookingRoutes");
 const attendanceSettingsRoutes = require("./routes/attendanceSettingsRoutes");
+const transferRoutes = require("./routes/transferRoutes");
 
 const app = express();
 
@@ -44,5 +45,6 @@ app.use("/api/priest", priestRoutes);
 app.use("/api/prasadam", prasadamRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/attendance/settings", attendanceSettingsRoutes);
+app.use("/api/transfers", transferRoutes);
 
 module.exports = app;

@@ -33,11 +33,7 @@ import {
   getPriestDashboard,
   updatePoojaStatus,
 } from "../../services/priestService";
-import AssignedPoojas from "./AssignedPoojas";
-import SevaSchedule from "./SevaSchedule";
-import CompletedServices from "./CompletedServices";
-import SpecialDuties from "./SpecialDuties";
-import FestivalDuties from "./FestivalDuties";
+import MyDuties from "./MyDuties";
 import PriestNotifications from "./PriestNotifications";
 import PriestProfile from "./PriestProfile";
 import PriestSettings from "./PriestSettings";
@@ -1226,16 +1222,8 @@ const PriestDashboard = () => {
         switch (activeItem) {
           case "Dashboard":
             return <DashboardView darkMode={darkMode} />;
-          case "Assigned Poojas":
-            return <AssignedPoojas darkMode={darkMode} />;
-          case "Seva Schedule":
-            return <SevaSchedule darkMode={darkMode} />;
-          case "Completed Services":
-            return <CompletedServices darkMode={darkMode} />;
-          case "Special Duties":
-            return <SpecialDuties darkMode={darkMode} />;
-          case "Festival Duties":
-            return <FestivalDuties darkMode={darkMode} />;
+          case "My Duties":
+            return <MyDuties darkMode={darkMode} />;
           case "Inventory Requests":
             return <PriestInventory darkMode={darkMode} />;
           case "Attendance":
