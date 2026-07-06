@@ -86,11 +86,12 @@ const getBookings = async (req, res) => {
   }
 };
 
+
+
 const createBooking = async (req, res) => {
   try {
     const { devoteeName, devoteeEmail, devoteePhone, service, datetime, amount, contactNumber, notes, devoteeId, eventId, paymentMethod } = req.body;
     const normalizedDevoteeEmail = normalizeEmail(devoteeEmail);
-    const bookingStatus = "Confirmed";
 
     if (!devoteeName || !service || !datetime || amount == null) {
       return res.status(400).json({ error: "Missing required booking fields." });
@@ -114,6 +115,11 @@ const createBooking = async (req, res) => {
       return res.status(400).json({ error: "Invalid payment method." });
     }
 
+    const hasKeys = process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET;
+    const isOnline = pm && pm !== "Cash";
+    const bookingStatus = (hasKeys && isOnline) ? "Pending" : "Confirmed";
+    const paymentStatus = (hasKeys && isOnline) ? "Pending" : "Paid";
+
     let booking;
     const bookingPayload = {
       devoteeId: devoteeId || undefined,
@@ -126,6 +132,7 @@ const createBooking = async (req, res) => {
       amount: numericAmount,
       paymentMethod: pm || undefined,
       status: bookingStatus,
+      paymentStatus: paymentStatus,
       contactNumber,
       notes,
     };
@@ -145,9 +152,35 @@ const createBooking = async (req, res) => {
       referenceNo: `BK-${String(booking._id).slice(-6).toUpperCase()}`,
       sourceId: booking._id.toString(),
       notes,
-      status: booking.status === "Confirmed" ? "Paid" : "Pending",
+      status: bookingStatus === "Confirmed" ? "Paid" : "Pending",
     });
 
+    if (hasKeys && isOnline) {
+      const razorpayClient = new Razorpay({
+        key_id: process.env.RAZORPAY_KEY_ID,
+        key_secret: process.env.RAZORPAY_KEY_SECRET,
+      });
+
+      const orderOptions = {
+        amount: Math.round(numericAmount * 100),
+        currency: "INR",
+        receipt: `booking_${Date.now()}`,
+        payment_capture: 1,
+      };
+
+      const order = await razorpayClient.orders.create(orderOptions);
+      booking.razorpayOrderId = order.id;
+      await booking.save();
+
+      return res.status(201).json({
+        booking: normalizeBookingEmails(booking.toObject ? booking.toObject() : booking),
+        order,
+        key: process.env.RAZORPAY_KEY_ID || "",
+        simulated: false,
+      });
+    }
+
+    // Direct / Simulated Confirmations
     // Send notification
     await createStaffNotification({
       title: "Booking Confirmed",
@@ -194,10 +227,91 @@ const createBooking = async (req, res) => {
       }
     }
 
-    return res.status(201).json({ booking: normalizeBookingEmails(booking.toObject ? booking.toObject() : booking) });
+    return res.status(201).json({
+      booking: normalizeBookingEmails(booking.toObject ? booking.toObject() : booking),
+      simulated: true,
+    });
   } catch (error) {
     console.error("createBooking error:", error);
     return res.status(500).json({ error: "Unable to create booking." });
+  }
+};
+
+const verifyBookingPayment = async (req, res) => {
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, bookingId } = req.body;
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      return res.status(400).json({ error: "Missing Razorpay verification fields." });
+    }
+
+    const expected = crypto.createHmac("sha256", process.env.RAZORPAY_KEY_SECRET || "").update(`${razorpay_order_id}|${razorpay_payment_id}`).digest("hex");
+    if (expected !== razorpay_signature) {
+      return res.status(400).json({ error: "Invalid signature." });
+    }
+
+    let booking = null;
+    if (bookingId) booking = await Booking.findById(bookingId);
+    if (!booking) booking = await Booking.findOne({ razorpayOrderId: razorpay_order_id });
+    if (!booking) return res.status(404).json({ error: "Booking not found for this order." });
+
+    booking.status = "Confirmed";
+    booking.paymentStatus = "Paid";
+    booking.transactionId = razorpay_payment_id;
+    booking.razorpayPaymentId = razorpay_payment_id;
+    booking.razorpaySignature = razorpay_signature;
+    await booking.save();
+
+    await Bill.updateMany(
+      { sourceId: booking._id.toString() },
+      { status: "Paid" }
+    );
+
+    // If booking linked to an event, increment registrations and collection
+    if (booking.eventId && !booking.counted) {
+      try {
+        await Event.findByIdAndUpdate(String(booking.eventId), {
+          $inc: { registrations: 1, collection: Number(booking.amount) || 0 }
+        });
+        booking.counted = true;
+        await booking.save();
+      } catch (err) {
+        console.error("Failed to update event collection from verifyBookingPayment:", err);
+      }
+    }
+
+    // Send notifications
+    try {
+      await createStaffNotification({
+        title: "Booking Confirmed",
+        message: `Your ${booking.service} booking has been confirmed successfully.`,
+        audienceEmail: booking.devoteeEmail || undefined,
+        category: "booking",
+      });
+
+      await createStaffNotification({
+        title: `📅 Pooja Booking: ${booking.service}`,
+        message: `New booking for "${booking.devoteeName}" — ${booking.service} — ₹${booking.amount} (${booking.paymentMethod || "UPI"}) is recorded.`,
+        audienceRole: "cashier",
+        category: "booking",
+      });
+
+      if (booking.devoteeEmail || booking.devoteePhone || booking.contactNumber) {
+        const devotee = { name: booking.devoteeName, email: booking.devoteeEmail, phone: booking.devoteePhone || booking.contactNumber };
+        sendBookingConfirmation(devotee, {
+          service: booking.service,
+          datetime: booking.datetime,
+          amount: booking.amount,
+          status: "Confirmed",
+        }).catch((err) => console.warn("Failed to send booking confirmation:", err.message));
+      }
+    } catch (notifErr) {
+      console.warn("Notification after booking verify failed:", notifErr);
+    }
+
+    return res.status(200).json({ success: true, booking: normalizeBookingEmails(booking.toObject ? booking.toObject() : booking) });
+  } catch (error) {
+    console.error("verifyBookingPayment error:", error);
+    return res.status(500).json({ error: "Failed to verify booking payment." });
   }
 };
 
@@ -248,6 +362,10 @@ const createDonation = async (req, res) => {
       return res.status(400).json({ error: "Please provide a valid contact number." });
     }
 
+    const hasKeys = process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET;
+    const isOnline = paymentMethod && paymentMethod !== "Cash";
+    const donationStatus = (hasKeys && isOnline) ? "Pending" : "Completed";
+
     let donation;
     const donationPayload = {
       donorName: donorName.trim(),
@@ -257,9 +375,9 @@ const createDonation = async (req, res) => {
       category,
       paymentMethod,
       contactNumber,
-      transactionId,
+      transactionId: (hasKeys && isOnline) ? undefined : transactionId,
       notes,
-      status: "Completed",
+      status: donationStatus,
       eventId: eventId || undefined,
       donatedBy: donatedBy || undefined,
     };
@@ -279,9 +397,35 @@ const createDonation = async (req, res) => {
       referenceNo: `DN-${String(donation._id).slice(-6).toUpperCase()}`,
       sourceId: donation._id.toString(),
       notes,
-      status: "Paid",
+      status: donationStatus === "Completed" ? "Paid" : "Pending",
     });
 
+    if (hasKeys && isOnline) {
+      const razorpayClient = new Razorpay({
+        key_id: process.env.RAZORPAY_KEY_ID,
+        key_secret: process.env.RAZORPAY_KEY_SECRET,
+      });
+
+      const orderOptions = {
+        amount: Math.round(numericAmount * 100),
+        currency: "INR",
+        receipt: `donation_${Date.now()}`,
+        payment_capture: 1,
+      };
+
+      const order = await razorpayClient.orders.create(orderOptions);
+      donation.razorpayOrderId = order.id;
+      await donation.save();
+
+      return res.status(201).json({
+        donation: normalizeDonationEmails(donation.toObject ? donation.toObject() : donation),
+        order,
+        key: process.env.RAZORPAY_KEY_ID || "",
+        simulated: false,
+      });
+    }
+
+    // Direct / Simulated Completed Donation
     await createStaffNotification({
       title: "Donation Received",
       message: `${donorName.trim()} donated INR ${numericAmount} for ${category}.`,
@@ -317,8 +461,12 @@ const createDonation = async (req, res) => {
       }
     }
 
-    return res.status(201).json({ donation: normalizeDonationEmails(donation.toObject ? donation.toObject() : donation) });
+    return res.status(201).json({
+      donation: normalizeDonationEmails(donation.toObject ? donation.toObject() : donation),
+      simulated: true,
+    });
   } catch (error) {
+    console.error("createDonation error:", error);
     return res.status(500).json({ error: "Unable to create donation." });
   }
 };
@@ -898,7 +1046,10 @@ const createPrasadamOrder = async (req, res) => {
       .trim()
       .toLowerCase();
     const resolvedChannel = normalizedChannel === "cashier" ? "cashier" : "devotee";
-    const orderStatus = "Placed";
+
+    const hasKeys = process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET;
+    const isOnline = paymentMethod && paymentMethod !== "Cash" && resolvedChannel === "devotee";
+    const orderStatus = (hasKeys && isOnline) ? "Pending" : "Placed";
 
     let resolvedDevoteeId = devoteeId || undefined;
     if (!resolvedDevoteeId && normalizedOrderEmail) {
@@ -929,9 +1080,35 @@ const createPrasadamOrder = async (req, res) => {
       referenceNo: `PR-${String(order._id).slice(-6).toUpperCase()}`,
       sourceId: order._id.toString(),
       notes: `Quantity: ${normalizedQty}, Unit Price: ${unitPrice}`,
-      status: "Paid",
+      status: orderStatus === "Placed" ? "Paid" : "Pending",
     });
 
+    if (hasKeys && isOnline) {
+      const razorpayClient = new Razorpay({
+        key_id: process.env.RAZORPAY_KEY_ID,
+        key_secret: process.env.RAZORPAY_KEY_SECRET,
+      });
+
+      const orderOptions = {
+        amount: Math.round(totalAmount * 100),
+        currency: "INR",
+        receipt: `prasadam_${Date.now()}`,
+        payment_capture: 1,
+      };
+
+      const rzpOrder = await razorpayClient.orders.create(orderOptions);
+      order.razorpayOrderId = rzpOrder.id;
+      await order.save();
+
+      return res.status(201).json({
+        order: normalizeOrderEmails(order.toObject ? order.toObject() : order),
+        rzpOrder,
+        key: process.env.RAZORPAY_KEY_ID || "",
+        simulated: false,
+      });
+    }
+
+    // Direct / Simulated Confirmations
     await Notification.create({
       title: "New Prasadam Order",
       message: `${devoteeName} ordered ${itemName} x${normalizedQty}.`,
@@ -954,7 +1131,7 @@ const createPrasadamOrder = async (req, res) => {
         quantity: normalizedQty,
         amount: totalAmount,
         status: orderStatus,
-      });
+      }).catch((err) => console.warn("Failed to send prasadam order confirmation:", err.message));
     }
 
     prasadamItem.availableQuantity -= normalizedQty;
@@ -965,12 +1142,93 @@ const createPrasadamOrder = async (req, res) => {
         title: "⚠️ Low Prasadam Stock",
         message: `${prasadamItem.name} stock is low. Current: ${prasadamItem.availableQuantity}.`,
         category: "inventory",
-      });
+      }).catch(() => {});
     }
 
-    return res.status(201).json({ order: normalizeOrderEmails(order.toObject ? order.toObject() : order) });
+    return res.status(201).json({
+      order: normalizeOrderEmails(order.toObject ? order.toObject() : order),
+      simulated: true,
+    });
   } catch (error) {
+    console.error("createPrasadamOrder error:", error);
     return res.status(500).json({ error: "Failed to place prasadam order." });
+  }
+};
+
+const verifyPrasadamPayment = async (req, res) => {
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderId } = req.body;
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      return res.status(400).json({ error: "Missing Razorpay verification fields." });
+    }
+
+    const expected = crypto.createHmac("sha256", process.env.RAZORPAY_KEY_SECRET || "").update(`${razorpay_order_id}|${razorpay_payment_id}`).digest("hex");
+    if (expected !== razorpay_signature) {
+      return res.status(400).json({ error: "Invalid signature." });
+    }
+
+    let order = null;
+    if (orderId) order = await PrasadamOrder.findById(orderId);
+    if (!order) order = await PrasadamOrder.findOne({ razorpayOrderId: razorpay_order_id });
+    if (!order) return res.status(404).json({ error: "Prasadam order not found." });
+
+    order.status = "Placed";
+    order.razorpayPaymentId = razorpay_payment_id;
+    order.razorpaySignature = razorpay_signature;
+    await order.save();
+
+    await Bill.updateMany(
+      { sourceId: order._id.toString() },
+      { status: "Paid" }
+    );
+
+    // Deduct stock after payment completes
+    const prasadamItem = await Prasadam.findOne({ name: { $regex: new RegExp(`^${order.itemName}$`, "i") } });
+    if (prasadamItem) {
+      prasadamItem.availableQuantity = Math.max(0, prasadamItem.availableQuantity - order.quantity);
+      await prasadamItem.save();
+
+      if (prasadamItem.availableQuantity <= prasadamItem.minimumStock) {
+        await createStaffBroadcastNotifications({
+          title: "⚠️ Low Prasadam Stock",
+          message: `${prasadamItem.name} stock is low. Current: ${prasadamItem.availableQuantity}.`,
+          category: "inventory",
+        }).catch(() => {});
+      }
+    }
+
+    // Send notifications/emails
+    try {
+      await Notification.create({
+        title: "New Prasadam Order",
+        message: `${order.devoteeName} ordered ${order.itemName} x${order.quantity}.`,
+        audienceEmail: order.email || undefined,
+      });
+
+      await createStaffNotification({
+        title: `🍚 Prasadam Order: ${order.itemName}`,
+        message: `${order.devoteeName} ordered ${order.itemName} x${order.quantity} — ₹${order.amount} (${order.paymentMethod || "UPI"}).`,
+        audienceRole: "cashier",
+        category: "prasadam",
+      });
+
+      if (order.email || order.phone) {
+        const devotee = { name: order.devoteeName, email: order.email, phone: order.phone };
+        sendPrasadamOrderConfirmation(devotee, {
+          item: order.itemName,
+          quantity: order.quantity,
+          amount: order.amount,
+          status: "Placed",
+        }).catch((err) => console.warn("Failed to send prasadam order confirmation:", err.message));
+      }
+    } catch (notifErr) {
+      console.warn("Notification after prasadam verify failed:", notifErr);
+    }
+
+    return res.status(200).json({ success: true, order: normalizeOrderEmails(order.toObject ? order.toObject() : order) });
+  } catch (error) {
+    console.error("verifyPrasadamPayment error:", error);
+    return res.status(500).json({ error: "Failed to verify prasadam payment." });
   }
 };
 
@@ -1338,6 +1596,8 @@ module.exports = {
   createNotification,
   createRazorpayOrder,
   verifyRazorpayPayment,
+  verifyBookingPayment,
+  verifyPrasadamPayment,
   handleRazorpayWebhook,
   getPrasadamOrders,
   createPrasadamOrder,

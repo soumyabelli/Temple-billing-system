@@ -5,6 +5,7 @@ import templeBg from "../../assets/temple-bg.jpg";
 import CashierPageShell from "../../components/cashier/CashierPageShell";
 import {
   createPrasadamOrder,
+  verifyPrasadamPayment,
   fetchBills,
   fetchPrasadamOrders,
   fetchPrasadamMaster,
@@ -155,7 +156,7 @@ const PrasadamSales = () => {
 
     setSaving(true);
     try {
-      await createPrasadamOrder({
+      const orderRes = await createPrasadamOrder({
         devoteeName: form.devoteeName.trim(),
         email: form.devoteeEmail.trim() || undefined,
         phone: form.devoteePhone.trim() || undefined,
@@ -164,6 +165,74 @@ const PrasadamSales = () => {
         unitPrice,
         paymentMethod: form.paymentMethod,
       });
+
+      const { order, rzpOrder, key, simulated } = orderRes;
+
+      if (!simulated && rzpOrder) {
+        const loadRazorpayScript = () =>
+          new Promise((resolve) => {
+            if (window.Razorpay) return resolve(true);
+            const script = document.createElement("script");
+            script.src = "https://checkout.razorpay.com/v1/checkout.js";
+            script.onload = () => resolve(true);
+            script.onerror = () => resolve(false);
+            document.body.appendChild(script);
+          });
+
+        const loaded = await loadRazorpayScript();
+        if (!loaded) {
+          setMessage("Unable to load payment gateway. Try again later.");
+          setSaving(false);
+          return;
+        }
+
+        const options = {
+          key: key || "",
+          amount: rzpOrder.amount,
+          currency: rzpOrder.currency,
+          name: "Temple Prasadam Order",
+          description: order.itemName,
+          order_id: rzpOrder.id,
+          prefill: {
+            name: form.devoteeName.trim(),
+            email: form.devoteeEmail.trim(),
+            contact: form.devoteePhone.trim(),
+          },
+          handler: async function (resp) {
+            try {
+              setSaving(true);
+              await verifyPrasadamPayment({
+                razorpay_order_id: resp.razorpay_order_id,
+                razorpay_payment_id: resp.razorpay_payment_id,
+                razorpay_signature: resp.razorpay_signature,
+                orderId: order._id,
+              });
+
+              setForm({
+                ...emptyForm,
+                itemName: prasadamTypes[0]?.name || "",
+              });
+              setMessage("Prasadam order saved successfully and paid.");
+              await loadData();
+              loadNotifications().catch(() => {});
+            } catch (err) {
+              setMessage("Payment verification failed.");
+              console.warn("verify prasadam payment handler error", err);
+            } finally {
+              setSaving(false);
+            }
+          },
+          modal: {
+            ondismiss: function () {
+              setSaving(false);
+            },
+          },
+        };
+
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+        return;
+      }
 
       setForm({
         ...emptyForm,

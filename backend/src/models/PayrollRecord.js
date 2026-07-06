@@ -38,6 +38,9 @@ const payrollRecordSchema = new mongoose.Schema(
     paidAt: { type: Date, default: null },
     paidBy: { type: String, trim: true, default: "" },
     notes: { type: String, trim: true, default: "" },
+    razorpayOrderId: { type: String, trim: true },
+    razorpayPaymentId: { type: String, trim: true },
+    razorpaySignature: { type: String, trim: true },
   },
   { timestamps: true }
 );

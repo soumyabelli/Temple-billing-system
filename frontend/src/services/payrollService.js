@@ -21,6 +21,11 @@ export const payEmployeePayroll = async (employeeId, payload) => {
   return response.data;
 };
 
+export const verifyPayrollPayment = async (payload) => {
+  const response = await axios.post(`${API_BASE}/verify-payment`, payload, authConfig());
+  return response.data;
+};
+
 export const getPerformanceDashboard = async (month) => {
   const response = await axios.get(`${API_BASE}/performance`, {
     ...authConfig(),

@@ -25,6 +25,9 @@ const prasadamOrderSchema = new mongoose.Schema(
       enum: ["UPI", "Cash", "Card", "Bank Transfer", "Net Banking", "Debit Card", "Credit Card"],
       default: "UPI",
     },
+    razorpayOrderId: { type: String, trim: true },
+    razorpayPaymentId: { type: String, trim: true },
+    razorpaySignature: { type: String, trim: true },
     status: {
       type: String,
       enum: [

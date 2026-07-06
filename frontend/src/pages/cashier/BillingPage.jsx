@@ -3,6 +3,7 @@ import templeBg from "../../assets/temple-bg.jpg";
 import CashierPageShell from "../../components/cashier/CashierPageShell";
 import {
   createBill,
+  verifyBillPayment,
   createCashierNotification,
   fetchBills,
   formatCurrency,
@@ -93,7 +94,7 @@ const BillingPage = () => {
 
     setSaving(true);
     try {
-      await createBill({
+      const billRes = await createBill({
         devoteeName: form.devoteeName.trim(),
         sevaType: form.sevaType.trim(),
         amount: Number(form.amount),
@@ -101,8 +102,77 @@ const BillingPage = () => {
         billType: form.billType,
         notes: form.notes.trim(),
         referenceNo: `MB-${Date.now().toString().slice(-6)}`,
-        status: "Paid",
       });
+
+      const { bill, order, key, simulated } = billRes;
+
+      if (!simulated && order) {
+        const loadRazorpayScript = () =>
+          new Promise((resolve) => {
+            if (window.Razorpay) return resolve(true);
+            const script = document.createElement("script");
+            script.src = "https://checkout.razorpay.com/v1/checkout.js";
+            script.onload = () => resolve(true);
+            script.onerror = () => resolve(false);
+            document.body.appendChild(script);
+          });
+
+        const loaded = await loadRazorpayScript();
+        if (!loaded) {
+          setMessage("Unable to load payment gateway. Try again later.");
+          setSaving(false);
+          return;
+        }
+
+        const options = {
+          key: key || "",
+          amount: order.amount,
+          currency: order.currency,
+          name: "Temple Billing",
+          description: bill.sevaType,
+          order_id: order.id,
+          prefill: {
+            name: bill.devoteeName,
+          },
+          handler: async function (resp) {
+            try {
+              setSaving(true);
+              await verifyBillPayment({
+                razorpay_order_id: resp.razorpay_order_id,
+                razorpay_payment_id: resp.razorpay_payment_id,
+                razorpay_signature: resp.razorpay_signature,
+                billId: bill._id,
+              });
+
+              await createCashierNotification({
+                title: "Bill Recorded & Paid",
+                message: `${form.devoteeName.trim()} bill was added to the cashier ledger.`,
+                audienceRole: "cashier",
+                broadcast: true,
+                category: "billing",
+              }).catch(() => null);
+
+              setForm(emptyForm);
+              setMessage("Bill saved successfully and paid.");
+              await loadBills();
+            } catch (err) {
+              setMessage("Payment verification failed.");
+              console.warn("verify bill payment handler error", err);
+            } finally {
+              setSaving(false);
+            }
+          },
+          modal: {
+            ondismiss: function () {
+              setSaving(false);
+            },
+          },
+        };
+
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+        return;
+      }
 
       await createCashierNotification({
         title: "Bill Recorded",

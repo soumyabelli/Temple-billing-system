@@ -18,6 +18,8 @@ const {
   createNotification,
   createRazorpayOrder,
   verifyRazorpayPayment,
+  verifyBookingPayment,
+  verifyPrasadamPayment,
   handleRazorpayWebhook,
   getPrasadamOrders,
   createPrasadamOrder,
@@ -31,6 +33,7 @@ const router = express.Router();
 
 router.get("/bookings", getBookings);
 router.post("/bookings", createBooking);
+router.post("/bookings/verify", verifyBookingPayment);
 router.patch("/bookings/:id/status", updateBookingStatus);
 router.get("/donations", getDonations);
 router.post("/donations", createDonation);
@@ -46,6 +49,7 @@ router.patch("/events/:id", updateEvent);
 // Razorpay endpoints for order creation, verification and webhook
 router.post("/razorpay/order", createRazorpayOrder);
 router.post("/razorpay/verify", verifyRazorpayPayment);
+router.post("/prasadam-orders/verify", verifyPrasadamPayment);
 router.post("/razorpay/webhook", express.raw({ type: "application/json" }), handleRazorpayWebhook);
 router.post("/support", submitSupportRequest);
 router.get("/support", getSupportRequests);

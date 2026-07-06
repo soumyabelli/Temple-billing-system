@@ -60,6 +60,14 @@ export const verifyRazorpayPayment = async (payload) => {
   const response = await axios.post(`${API_BASE}/razorpay/verify`, payload);
   return response.data;
 };
+export const verifyBookingPayment = async (payload) => {
+  const response = await axios.post(`${API_BASE}/bookings/verify`, payload);
+  return response.data;
+};
+export const verifyPrasadamPayment = async (payload) => {
+  const response = await axios.post(`${API_BASE}/prasadam-orders/verify`, payload);
+  return response.data;
+};
 export const createDevoteeBooking = async (payload) => {
   const response = await axios.post(`${API_BASE}/bookings`, payload);
   return response.data;

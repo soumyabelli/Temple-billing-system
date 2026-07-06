@@ -5,6 +5,7 @@ import templeBg from "../../assets/temple-bg.jpg";
 import CashierPageShell from "../../components/cashier/CashierPageShell";
 import {
   createDonation,
+  verifyDonationPayment,
   fetchBills,
   fetchDonations,
   fetchEvents,
@@ -176,7 +177,7 @@ export default function DonationsPage() {
 
     setSaving(true);
     try {
-      await createDonation({
+      const donationRes = await createDonation({
         donorName: form.donorName.trim(),
         donorEmail: form.donorEmail.trim() || undefined,
         contactNumber: form.contactNumber.trim() || undefined,
@@ -186,6 +187,74 @@ export default function DonationsPage() {
         eventId: form.donationMode === "Festival" ? selectedFestival?._id : undefined,
         notes,
       });
+
+      const { donation, order, key, simulated } = donationRes;
+
+      if (!simulated && order) {
+        const loadRazorpayScript = () =>
+          new Promise((resolve) => {
+            if (window.Razorpay) return resolve(true);
+            const script = document.createElement("script");
+            script.src = "https://checkout.razorpay.com/v1/checkout.js";
+            script.onload = () => resolve(true);
+            script.onerror = () => resolve(false);
+            document.body.appendChild(script);
+          });
+
+        const loaded = await loadRazorpayScript();
+        if (!loaded) {
+          setMessage("Unable to load payment gateway. Try again later.");
+          setSaving(false);
+          return;
+        }
+
+        const options = {
+          key: key || "",
+          amount: order.amount,
+          currency: order.currency,
+          name: "Temple Donation",
+          description: donation.category,
+          order_id: order.id,
+          prefill: {
+            name: form.donorName.trim(),
+            email: form.donorEmail.trim(),
+            contact: form.contactNumber.trim(),
+          },
+          handler: async function (resp) {
+            try {
+              setSaving(true);
+              await verifyDonationPayment({
+                razorpay_order_id: resp.razorpay_order_id,
+                razorpay_payment_id: resp.razorpay_payment_id,
+                razorpay_signature: resp.razorpay_signature,
+                donationId: donation._id,
+              });
+
+              setForm({
+                ...emptyForm,
+                category: donationTypes[0] || "General",
+              });
+              setMessage("Donation saved successfully and paid.");
+              await loadData();
+              loadNotifications().catch(() => {});
+            } catch (err) {
+              setMessage("Payment verification failed.");
+              console.warn("verify donation payment handler error", err);
+            } finally {
+              setSaving(false);
+            }
+          },
+          modal: {
+            ondismiss: function () {
+              setSaving(false);
+            },
+          },
+        };
+
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+        return;
+      }
 
       setForm({
         ...emptyForm,

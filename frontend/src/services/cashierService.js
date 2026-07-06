@@ -88,7 +88,7 @@ export const fetchBookings = async () => {
 
 export const createBooking = async (payload) => {
   const response = await axios.post(`${API_BASE}/devotee/bookings`, payload);
-  return response.data?.booking || null;
+  return response.data || null;
 };
 
 export const updateBookingStatus = async (id, status) => {
@@ -103,7 +103,7 @@ export const fetchDonations = async () => {
 
 export const createDonation = async (payload) => {
   const response = await axios.post(`${API_BASE}/devotee/donations`, payload);
-  return response.data?.donation || null;
+  return response.data || null;
 };
 
 export const fetchPrasadamOrders = async () => {
@@ -113,7 +113,7 @@ export const fetchPrasadamOrders = async () => {
 
 export const createPrasadamOrder = async (payload) => {
   const response = await axios.post(`${API_BASE}/devotee/prasadam-orders`, { ...(payload || {}), channel: "cashier" });
-  return response.data?.order || null;
+  return response.data || null;
 };
 
 export const fetchPrasadamMaster = async () => {
@@ -134,6 +134,26 @@ export const fetchBills = async () => {
 
 export const createBill = async (payload) => {
   const response = await axios.post(`${API_BASE}/bills`, payload);
+  return response.data || null;
+};
+
+export const verifyBillPayment = async (payload) => {
+  const response = await axios.post(`${API_BASE}/bills/verify`, payload);
+  return response.data || null;
+};
+
+export const verifyBookingPayment = async (payload) => {
+  const response = await axios.post(`${API_BASE}/devotee/bookings/verify`, payload);
+  return response.data || null;
+};
+
+export const verifyPrasadamPayment = async (payload) => {
+  const response = await axios.post(`${API_BASE}/devotee/prasadam-orders/verify`, payload);
+  return response.data || null;
+};
+
+export const verifyDonationPayment = async (payload) => {
+  const response = await axios.post(`${API_BASE}/devotee/razorpay/verify`, payload);
   return response.data || null;
 };
 

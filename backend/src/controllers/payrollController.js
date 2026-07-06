@@ -4,6 +4,8 @@ const Attendance = require("../models/Attendance");
 const Leave = require("../models/Leave");
 const Task = require("../models/Task");
 const PayrollRecord = require("../models/PayrollRecord");
+const crypto = require("crypto");
+const Razorpay = require("razorpay");
 
 const clean = (value) => String(value || "").trim();
 const normalizeEmail = (email) => clean(email).toLowerCase();
@@ -371,6 +373,10 @@ exports.payEmployeePayroll = async (req, res) => {
     const finalExtraDutyPay = roundMoney(extraDutyPay);
     const netSalary = roundMoney(computed.baseSalary - computed.deduction + finalExtraDutyPay + finalBonus);
 
+    const hasKeys = process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET;
+    const isOnline = method !== "Cash";
+    const recordStatus = (hasKeys && isOnline) ? "Pending" : "Paid";
+
     const payload = {
       employeeId: employee._id,
       employeeName: employee.name,
@@ -389,10 +395,10 @@ exports.payEmployeePayroll = async (req, res) => {
       extraDutyPay: finalExtraDutyPay,
       bonus: finalBonus,
       netSalary,
-      status: "Paid",
+      status: recordStatus,
       paymentMethod: method,
-      transactionId: clean(transactionId),
-      paidAt: new Date(),
+      transactionId: (hasKeys && isOnline) ? "" : clean(transactionId),
+      paidAt: (hasKeys && isOnline) ? null : new Date(),
       paidBy: req.user?.name || req.user?.id || "Admin",
       notes: clean(notes),
     };
@@ -401,10 +407,47 @@ exports.payEmployeePayroll = async (req, res) => {
       ? await PayrollRecord.findByIdAndUpdate(existingRecord._id, payload, { new: true })
       : await PayrollRecord.create(payload);
 
+    if (hasKeys && isOnline) {
+      const razorpayClient = new Razorpay({
+        key_id: process.env.RAZORPAY_KEY_ID,
+        key_secret: process.env.RAZORPAY_KEY_SECRET,
+      });
+
+      const orderOptions = {
+        amount: Math.round(netSalary * 100),
+        currency: "INR",
+        receipt: `payroll_${Date.now()}`,
+        payment_capture: 1,
+      };
+
+      const order = await razorpayClient.orders.create(orderOptions);
+      record.razorpayOrderId = order.id;
+      await record.save();
+
+      return res.json({
+        success: true,
+        message: "Razorpay order created for salary payment.",
+        record,
+        order,
+        key: process.env.RAZORPAY_KEY_ID || "",
+        simulated: false,
+        employee: {
+          ...computed,
+          bonus: finalBonus,
+          netSalary,
+          status: "Pending",
+          paymentMethod: method,
+          payrollId: record._id.toString(),
+          extraDutyPay: finalExtraDutyPay,
+        },
+      });
+    }
+
     return res.json({
       success: true,
       message: "Salary payment recorded successfully.",
       record,
+      simulated: true,
       employee: {
         ...computed,
         bonus: finalBonus,
@@ -417,7 +460,39 @@ exports.payEmployeePayroll = async (req, res) => {
       },
     });
   } catch (error) {
+    console.error("payEmployeePayroll error:", error);
     return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+exports.verifyPayrollPayment = async (req, res) => {
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, recordId } = req.body;
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      return res.status(400).json({ success: false, message: "Missing Razorpay verification fields." });
+    }
+
+    const expected = crypto.createHmac("sha256", process.env.RAZORPAY_KEY_SECRET || "").update(`${razorpay_order_id}|${razorpay_payment_id}`).digest("hex");
+    if (expected !== razorpay_signature) {
+      return res.status(400).json({ success: false, message: "Invalid signature." });
+    }
+
+    let record = null;
+    if (recordId) record = await PayrollRecord.findById(recordId);
+    if (!record) record = await PayrollRecord.findOne({ razorpayOrderId: razorpay_order_id });
+    if (!record) return res.status(404).json({ success: false, message: "Payroll record not found." });
+
+    record.status = "Paid";
+    record.transactionId = razorpay_payment_id;
+    record.razorpayPaymentId = razorpay_payment_id;
+    record.razorpaySignature = razorpay_signature;
+    record.paidAt = new Date();
+    await record.save();
+
+    return res.json({ success: true, message: "Salary payment verified successfully.", record });
+  } catch (error) {
+    console.error("verifyPayrollPayment error:", error);
+    return res.status(500).json({ success: false, message: "Failed to verify payroll payment." });
   }
 };
 

@@ -5,6 +5,7 @@ import templeBg from "../../assets/temple-bg.jpg";
 import CashierPageShell from "../../components/cashier/CashierPageShell";
 import {
   createBooking,
+  verifyBookingPayment,
   fetchBills,
   fetchBookings,
   formatCurrency,
@@ -185,7 +186,7 @@ const BookingPayments = () => {
 
     setSaving(true);
     try {
-      await createBooking({
+      const bookingRes = await createBooking({
         devoteeName: form.devoteeName.trim(),
         devoteeEmail: form.devoteeEmail.trim() || undefined,
         devoteePhone: form.devoteePhone.trim() || undefined,
@@ -196,6 +197,76 @@ const BookingPayments = () => {
         notes: form.notes.trim(),
         status: "Pending",
       });
+
+      const { booking: createdBooking, order, key, simulated } = bookingRes;
+
+      if (!simulated && order) {
+        const loadRazorpayScript = () =>
+          new Promise((resolve) => {
+            if (window.Razorpay) return resolve(true);
+            const script = document.createElement("script");
+            script.src = "https://checkout.razorpay.com/v1/checkout.js";
+            script.onload = () => resolve(true);
+            script.onerror = () => resolve(false);
+            document.body.appendChild(script);
+          });
+
+        const loaded = await loadRazorpayScript();
+        if (!loaded) {
+          setMessage("Unable to load payment gateway. Try again later.");
+          setSaving(false);
+          return;
+        }
+
+        const options = {
+          key: key || "",
+          amount: order.amount,
+          currency: order.currency,
+          name: "Temple Pooja Booking",
+          description: form.service.trim(),
+          order_id: order.id,
+          prefill: {
+            name: form.devoteeName.trim(),
+            email: form.devoteeEmail.trim(),
+            contact: form.devoteePhone.trim(),
+          },
+          handler: async function (resp) {
+            try {
+              setSaving(true);
+              await verifyBookingPayment({
+                razorpay_order_id: resp.razorpay_order_id,
+                razorpay_payment_id: resp.razorpay_payment_id,
+                razorpay_signature: resp.razorpay_signature,
+                bookingId: createdBooking._id,
+              });
+
+              setForm({
+                ...emptyForm,
+                service: poojaTypes[0]?.name || "",
+                amount: poojaTypes[0]?.price || "",
+                datetime: buildMinDateTime(),
+              });
+              setMessage("Pooja booking saved successfully and paid.");
+              await loadData();
+              loadNotifications().catch(() => {});
+            } catch (err) {
+              setMessage("Payment verification failed.");
+              console.warn("verify booking payment handler error", err);
+            } finally {
+              setSaving(false);
+            }
+          },
+          modal: {
+            ondismiss: function () {
+              setSaving(false);
+            },
+          },
+        };
+
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+        return;
+      }
 
       setForm({
         ...emptyForm,

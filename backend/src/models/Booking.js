@@ -41,6 +41,9 @@ const bookingSchema = new mongoose.Schema(
       default: "Pending",
     },
     transactionId: { type: String, trim: true, default: "" },
+    razorpayOrderId: { type: String, trim: true },
+    razorpayPaymentId: { type: String, trim: true },
+    razorpaySignature: { type: String, trim: true },
     bookingNumber: { type: String, trim: true },
     status: {
       type: String,

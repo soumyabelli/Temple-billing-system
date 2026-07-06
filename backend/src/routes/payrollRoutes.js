@@ -3,6 +3,7 @@ const { authenticate, authorizeRoles } = require("../middleware/authMiddleware")
 const {
   getPayrollDashboard,
   payEmployeePayroll,
+  verifyPayrollPayment,
   getPerformanceDashboard,
 } = require("../controllers/payrollController");
 
@@ -10,6 +11,7 @@ const router = express.Router();
 
 router.get("/dashboard", authenticate, authorizeRoles("admin", "accountant"), getPayrollDashboard);
 router.get("/performance", authenticate, authorizeRoles("admin", "accountant"), getPerformanceDashboard);
+router.post("/verify-payment", authenticate, authorizeRoles("admin", "accountant"), verifyPayrollPayment);
 router.post("/:employeeId/pay", authenticate, authorizeRoles("admin", "accountant"), payEmployeePayroll);
 
 module.exports = router;

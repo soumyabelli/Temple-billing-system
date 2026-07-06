@@ -16,6 +16,8 @@ import {
   createDevoteeBooking,
   createRazorpayOrder,
   verifyRazorpayPayment,
+  verifyBookingPayment,
+  verifyPrasadamPayment,
   submitDevoteeSupport,
   getSupportRequests,
   getPrasadamOrders,
@@ -717,6 +719,16 @@ const DevoteeDashboard = () => {
       return;
     }
 
+    const loadRazorpayScript = () =>
+      new Promise((resolve) => {
+        if (window.Razorpay) return resolve(true);
+        const script = document.createElement("script");
+        script.src = "https://checkout.razorpay.com/v1/checkout.js";
+        script.onload = () => resolve(true);
+        script.onerror = () => resolve(false);
+        document.body.appendChild(script);
+      });
+
     const isConfirmed = window.confirm("Once paid, there is no return of money (non-refundable). Do you want to confirm booking?");
     if (!isConfirmed) return;
 
@@ -735,7 +747,72 @@ const DevoteeDashboard = () => {
       };
 
       const bookingRes = await createDevoteeBooking(payload);
-      const createdBooking = bookingRes?.booking;
+      const { booking: createdBooking, order, key, simulated } = bookingRes;
+
+      if (!simulated && order) {
+        const loaded = await loadRazorpayScript();
+        if (!loaded) {
+          setBookingError("Unable to load payment gateway. Try again later.");
+          return;
+        }
+
+        const options = {
+          key: key || "",
+          amount: order.amount,
+          currency: order.currency,
+          name: "Temple Pooja Booking",
+          description: bookingService,
+          order_id: order.id,
+          prefill: {
+            name: activeName,
+            email: activeEmail,
+            contact: activePhone,
+          },
+          handler: async function (resp) {
+            try {
+              setBookingLoading(true);
+              await verifyBookingPayment({
+                razorpay_order_id: resp.razorpay_order_id,
+                razorpay_payment_id: resp.razorpay_payment_id,
+                razorpay_signature: resp.razorpay_signature,
+                bookingId: createdBooking._id,
+              });
+
+              const [bookingsRes, notificationsRes] = await Promise.all([
+                getDevoteeBookings(activeEmail),
+                getDevoteeNotifications(activeEmail),
+              ]);
+              setBookingsData(bookingsRes.bookings || []);
+              setNotificationsData(formatNotifications(notificationsRes.notifications || []));
+
+              setBookingSuccess("Booking successful! Your order has been placed and payment is confirmed. Please note: This payment is final and non-refundable.");
+              const firstPooja = poojaTypes[0];
+              setBookingService(firstPooja?.name || "");
+              setBookingDatetime("");
+              setBookingAmount(firstPooja?.price || 0);
+              setBookingContact("");
+              setBookingNotes("");
+              setBookingPaymentMethod("UPI");
+              setActivePage("My Bookings");
+            } catch (err) {
+              setBookingError(err?.response?.data?.error || "Payment verification failed.");
+              console.warn("verify booking handler error", err);
+            } finally {
+              setBookingLoading(false);
+            }
+          },
+          modal: {
+            ondismiss: function () {
+              // user closed checkout
+            },
+          },
+        };
+
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+        return;
+      }
+
       if (createdBooking?._id) {
         setBookingsData((prev) => [createdBooking, ...prev.filter((booking) => booking._id !== createdBooking._id)]);
       }
@@ -815,8 +892,78 @@ const DevoteeDashboard = () => {
         notes: `Check-in: ${formatDateTimeDisplay(roomCheckIn)} | Check-out: ${formatDateTimeDisplay(roomCheckOut)}`,
       };
 
+      const loadRazorpayScript = () =>
+        new Promise((resolve) => {
+          if (window.Razorpay) return resolve(true);
+          const script = document.createElement("script");
+          script.src = "https://checkout.razorpay.com/v1/checkout.js";
+          script.onload = () => resolve(true);
+          script.onerror = () => resolve(false);
+          document.body.appendChild(script);
+        });
+
       const bookingRes = await createDevoteeBooking(payload);
-      const createdBooking = bookingRes?.booking;
+      const { booking: createdBooking, order, key, simulated } = bookingRes;
+
+      if (!simulated && order) {
+        const loaded = await loadRazorpayScript();
+        if (!loaded) {
+          setRoomError("Unable to load payment gateway. Try again later.");
+          return;
+        }
+
+        const options = {
+          key: key || "",
+          amount: order.amount,
+          currency: order.currency,
+          name: "Temple Room Booking",
+          description: `Room Booking: ${roomType}`,
+          order_id: order.id,
+          prefill: {
+            name: activeName,
+            email: activeEmail,
+            contact: activePhone,
+          },
+          handler: async function (resp) {
+            try {
+              setRoomLoading(true);
+              await verifyBookingPayment({
+                razorpay_order_id: resp.razorpay_order_id,
+                razorpay_payment_id: resp.razorpay_payment_id,
+                razorpay_signature: resp.razorpay_signature,
+                bookingId: createdBooking._id,
+              });
+
+              const [bookingsRes, notificationsRes] = await Promise.all([
+                getDevoteeBookings(activeEmail),
+                getDevoteeNotifications(activeEmail),
+              ]);
+              setBookingsData(bookingsRes.bookings || []);
+              setNotificationsData(formatNotifications(notificationsRes.notifications || []));
+
+              setRoomSuccess(`Room booking successful! Room Type: ${roomType} for ${diffDays} day(s). Amount paid: ${formatCurrency(finalAmount)}.`);
+              setRoomCheckIn("");
+              setRoomCheckOut("");
+              setActivePage("My Bookings");
+            } catch (err) {
+              setRoomError(err?.response?.data?.error || "Payment verification failed.");
+              console.warn("verify room booking handler error", err);
+            } finally {
+              setRoomLoading(false);
+            }
+          },
+          modal: {
+            ondismiss: function () {
+              // user closed checkout
+            },
+          },
+        };
+
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+        return;
+      }
+
       if (createdBooking?._id) {
         setBookingsData((prev) => [createdBooking, ...prev.filter((booking) => booking._id !== createdBooking._id)]);
       }
@@ -1327,12 +1474,80 @@ const DevoteeDashboard = () => {
     if (!isConfirmed) return;
 
     try {
-      await createPrasadamOrder({
+      const orderRes = await createPrasadamOrder({
         devoteeName: profileData.name,
         email: profileData.email,
         phone: profileData.phone,
         ...prasadamForm,
       });
+
+      const { order, rzpOrder, key, simulated } = orderRes;
+
+      if (!simulated && rzpOrder) {
+        const loadRazorpayScript = () =>
+          new Promise((resolve) => {
+            if (window.Razorpay) return resolve(true);
+            const script = document.createElement("script");
+            script.src = "https://checkout.razorpay.com/v1/checkout.js";
+            script.onload = () => resolve(true);
+            script.onerror = () => resolve(false);
+            document.body.appendChild(script);
+          });
+
+        const loaded = await loadRazorpayScript();
+        if (!loaded) {
+          setPrasadamMessage("Unable to load payment gateway. Try again later.");
+          return;
+        }
+
+        const options = {
+          key: key || "",
+          amount: rzpOrder.amount,
+          currency: rzpOrder.currency,
+          name: "Temple Prasadam Order",
+          description: order.itemName,
+          order_id: rzpOrder.id,
+          prefill: {
+            name: profileData.name,
+            email: profileData.email,
+            contact: profileData.phone,
+          },
+          handler: async function (resp) {
+            try {
+              await verifyPrasadamPayment({
+                razorpay_order_id: resp.razorpay_order_id,
+                razorpay_payment_id: resp.razorpay_payment_id,
+                razorpay_signature: resp.razorpay_signature,
+                orderId: order._id,
+              });
+
+              const ordersRes = await getPrasadamOrders(user?.email);
+              setPrasadamOrders(ordersRes.orders || []);
+              const notificationsRes = await getDevoteeNotifications(user?.email);
+              setNotificationsData(formatNotifications(notificationsRes.notifications || []));
+              setPrasadamForm({
+                itemName: "Laddu Prasadam",
+                quantity: 1,
+                paymentMethod: "UPI",
+              });
+              setPrasadamMessage("Prasadam order placed successfully! Payment is confirmed. Please note: This payment is final and non-refundable.");
+            } catch (err) {
+              setPrasadamMessage(err?.response?.data?.error || "Payment verification failed.");
+              console.warn("verify prasadam order handler error", err);
+            }
+          },
+          modal: {
+            ondismiss: function () {
+              // user closed checkout
+            },
+          },
+        };
+
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+        return;
+      }
+
       const ordersRes = await getPrasadamOrders(user?.email);
       setPrasadamOrders(ordersRes.orders || []);
       const notificationsRes = await getDevoteeNotifications(user?.email);

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import SectionCard from "../../../components/admin/employee/SectionCard";
-import { getPayrollDashboard, payEmployeePayroll } from "../../../services/payrollService";
+import { getPayrollDashboard, payEmployeePayroll, verifyPayrollPayment } from "../../../services/payrollService";
 
 const formatCurrency = (value) => `₹${Number(value || 0).toLocaleString("en-IN")}`;
 
@@ -80,7 +80,7 @@ const Payroll = () => {
     setPayingId(employee.employeeId);
     setError("");
     try {
-      await payEmployeePayroll(employee.employeeId, {
+      const response = await payEmployeePayroll(employee.employeeId, {
         monthKey,
         paymentMethod: form.paymentMethod || "Bank Transfer",
         bonus: Number(form.bonus || 0),
@@ -88,6 +88,65 @@ const Payroll = () => {
         transactionId: form.transactionId || "",
         notes: form.notes || "",
       });
+
+      const { record, order, key, simulated } = response;
+
+      if (!simulated && order) {
+        const loadRazorpayScript = () =>
+          new Promise((resolve) => {
+            if (window.Razorpay) return resolve(true);
+            const script = document.createElement("script");
+            script.src = "https://checkout.razorpay.com/v1/checkout.js";
+            script.onload = () => resolve(true);
+            script.onerror = () => resolve(false);
+            document.body.appendChild(script);
+          });
+
+        const loaded = await loadRazorpayScript();
+        if (!loaded) {
+          setError("Unable to load payment gateway. Try again later.");
+          return;
+        }
+
+        const options = {
+          key: key || "",
+          amount: order.amount,
+          currency: order.currency,
+          name: "Temple Employee Payroll",
+          description: `Salary for ${employee.employeeName}`,
+          order_id: order.id,
+          prefill: {
+            name: employee.employeeName,
+          },
+          handler: async function (resp) {
+            try {
+              setPayingId(employee.employeeId);
+              await verifyPayrollPayment({
+                razorpay_order_id: resp.razorpay_order_id,
+                razorpay_payment_id: resp.razorpay_payment_id,
+                razorpay_signature: resp.razorpay_signature,
+                recordId: record._id,
+              });
+              await loadDashboard();
+            } catch (err) {
+              setError("Payment verification failed.");
+              console.warn("verify payroll payment handler error", err);
+            } finally {
+              setPayingId("");
+            }
+          },
+          modal: {
+            ondismiss: function () {
+              setPayingId("");
+            },
+          },
+        };
+
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+        return;
+      }
+
       await loadDashboard();
     } catch (payError) {
       setError(payError.response?.data?.message || "Failed to record salary payment.");
