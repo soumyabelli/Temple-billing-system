@@ -1058,3 +1058,29 @@ Thank you!
 To: 9945650664
 Message: Prasadam order confirmed! Item: Curd Rice Prasadam. Qty: 1. Ready soon! -Temple
 
+[2026-07-06T04:37:50.050Z] EMAIL
+To: deepthiskulal@mail.com
+Subject: Donation Receipt
+Donation Receipt
+Amount: ₹4165
+Category: goo dana
+Transaction ID: pay_TA5ULPjkEOkoBf
+Thank you for your donation!
+
+[2026-07-06T04:37:50.058Z] SMS
+To: 8618001961
+Message: Donation received! Amount: ₹4165. Transaction ID: pay_TA5ULPjkEOkoBf. Thank you! -Temple
+
+[2026-07-06T04:39:10.597Z] EMAIL
+To: bellisoumya@gmail.com
+Subject: Pooja Booking Confirmation
+Pooja Booking Confirmation
+Service: Abhisheka
+Date & Time: 2026-07-06T10:23
+Amount: ₹801
+Thank you!
+
+[2026-07-06T04:39:10.599Z] SMS
+To: 9945650664
+Message: Pooja booking confirmed! Service: Abhisheka on 2026-07-06T10:23. Amount: ₹801. -Temple
+
