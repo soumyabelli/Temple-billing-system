@@ -1,7 +1,6 @@
 import "./LeaveRequest.css";
 
 import { useState } from "react";
-
 import axios from "axios";
 
 const staff = JSON.parse(localStorage.getItem("user"));
@@ -25,11 +24,11 @@ const LEAVE_TYPES = [
 const errorStyle = {
   color: "red",
   fontSize: "12px",
-  marginTop: "-10px",
+  marginTop: "-5px",
   paddingLeft: "4px",
 };
 
-const LeaveRequest = () => {
+const LeaveRequest = ({ darkMode }) => {
   const todayStr = getLocalDateKey();
 
   const [form, setForm] = useState({
@@ -113,64 +112,81 @@ const LeaveRequest = () => {
   const field = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
 
   return (
-    <div className="leave-container">
-      <form onSubmit={handleSubmit}>
-
+    <div className={`leave-container ${darkMode ? "dark" : ""}`}>
+      <section className="apply-leave-page">
         <h2>Apply Leave</h2>
+        <p>Submit your leave request to admin.</p>
 
-        {/* Leave Type */}
-        <select
-          value={form.leaveType}
-          disabled={isSubmitting}
-          onChange={(e) => field("leaveType", e.target.value)}
-        >
-          {LEAVE_TYPES.map((t) => (
-            <option key={t} value={t}>{t}</option>
-          ))}
-        </select>
-        {errors.leaveType && <p style={errorStyle}>{errors.leaveType}</p>}
+        <form onSubmit={handleSubmit} className="leave-form">
+          <div>
+            <label htmlFor="leaveType">Leave Type</label>
+            <select
+              id="leaveType"
+              value={form.leaveType}
+              disabled={isSubmitting}
+              onChange={(e) => field("leaveType", e.target.value)}
+            >
+              {LEAVE_TYPES.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+            {errors.leaveType && <p style={errorStyle}>{errors.leaveType}</p>}
+          </div>
 
-        {/* Reason */}
-        <input
-          type="text"
-          placeholder="Reason (min 10 characters)"
-          value={form.reason}
-          disabled={isSubmitting}
-          onChange={(e) => field("reason", e.target.value)}
-        />
-        {errors.reason && <p style={errorStyle}>{errors.reason}</p>}
+          <div>
+            <label htmlFor="reason">Reason</label>
+            <input
+              id="reason"
+              type="text"
+              placeholder="Reason (min 10 characters)"
+              value={form.reason}
+              disabled={isSubmitting}
+              onChange={(e) => field("reason", e.target.value)}
+            />
+            {errors.reason && <p style={errorStyle}>{errors.reason}</p>}
+          </div>
 
-        {/* From Date — min is today (local timezone) */}
-        <input
-          type="date"
-          value={form.fromDate}
-          min={todayStr}
-          disabled={isSubmitting}
-          onChange={(e) => {
-            field("fromDate", e.target.value);
-            // reset toDate if it has become invalid
-            if (form.toDate && form.toDate < e.target.value) {
-              field("toDate", "");
-            }
-          }}
-        />
-        {errors.fromDate && <p style={errorStyle}>{errors.fromDate}</p>}
+          <div className="date-grid">
+            <div>
+              <label htmlFor="fromDate">From Date</label>
+              <input
+                id="fromDate"
+                type="date"
+                value={form.fromDate}
+                min={todayStr}
+                disabled={isSubmitting}
+                onChange={(e) => {
+                  field("fromDate", e.target.value);
+                  if (form.toDate && form.toDate < e.target.value) {
+                    field("toDate", "");
+                  }
+                }}
+              />
+              {errors.fromDate && <p style={errorStyle}>{errors.fromDate}</p>}
+            </div>
+            <div>
+              <label htmlFor="toDate">To Date</label>
+              <input
+                id="toDate"
+                type="date"
+                value={form.toDate}
+                min={form.fromDate || todayStr}
+                disabled={isSubmitting}
+                onChange={(e) => field("toDate", e.target.value)}
+              />
+              {errors.toDate && <p style={errorStyle}>{errors.toDate}</p>}
+            </div>
+          </div>
 
-        {/* To Date — min is fromDate, or today if fromDate not yet selected */}
-        <input
-          type="date"
-          value={form.toDate}
-          min={form.fromDate || todayStr}
-          disabled={isSubmitting}
-          onChange={(e) => field("toDate", e.target.value)}
-        />
-        {errors.toDate && <p style={errorStyle}>{errors.toDate}</p>}
-
-        <button disabled={isSubmitting}>
-          {isSubmitting ? "Submitting..." : "Submit Leave"}
-        </button>
-
-      </form>
+          <div className="form-actions">
+            <button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Submitting..." : "Send Leave Request"}
+            </button>
+          </div>
+        </form>
+      </section>
     </div>
   );
 };
