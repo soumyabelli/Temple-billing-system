@@ -1,8 +1,8 @@
 import { useEffect, useState, useMemo } from "react";
-import { FaCheckCircle, FaUserPlus, FaSearch, FaUsers } from "react-icons/fa";
+import { FaCheckCircle, FaUserPlus, FaSearch, FaUsers, FaEye, FaTimes } from "react-icons/fa";
 import templeBg from "../../assets/temple-bg.jpg";
 import CashierPageShell from "../../components/cashier/CashierPageShell";
-import { registerDevotee, fetchDevotees } from "../../services/cashierService";
+import { registerDevotee, fetchDevotees, fetchBookings, fetchDonations } from "../../services/cashierService";
 import { useNotifications } from "../../context/NotificationContext";
 
 const emptyForm = {
@@ -25,14 +25,12 @@ const RegisterDevoteesPage = () => {
   const [devotees, setDevotees] = useState([]);
   const [devoteesLoading, setDevoteesLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [recent, setRecent] = useState(() => {
-    try {
-      const stored = localStorage.getItem("recentDevotees");
-      return stored ? JSON.parse(stored) : [];
-    } catch (e) {
-      return [];
-    }
-  });
+
+  const [showAll, setShowAll] = useState(false);
+  const [selectedDevotee, setSelectedDevotee] = useState(null);
+  const [selectedDevoteeBookings, setSelectedDevoteeBookings] = useState([]);
+  const [selectedDevoteeDonations, setSelectedDevoteeDonations] = useState([]);
+  const [detailsLoading, setDetailsLoading] = useState(false);
 
   const loadDevotees = async () => {
     setDevoteesLoading(true);
@@ -59,6 +57,39 @@ const RegisterDevoteesPage = () => {
       )
     );
   }, [devotees, searchQuery]);
+
+  const displayedDevotees = useMemo(() => {
+    return showAll ? filteredDevotees : filteredDevotees.slice(0, 5);
+  }, [filteredDevotees, showAll]);
+
+  const handleViewDetails = async (devotee) => {
+    setSelectedDevotee(devotee);
+    setDetailsLoading(true);
+    try {
+      const [allBookings, allDonations] = await Promise.all([
+        fetchBookings(),
+        fetchDonations(),
+      ]);
+      const devoteeName = devotee.name || "";
+      const devoteeEmail = devotee.email || "";
+
+      const filteredBookings = allBookings.filter(b => 
+        (b.devoteeName && b.devoteeName.toLowerCase() === devoteeName.toLowerCase()) || 
+        (b.devoteeEmail && b.devoteeEmail.toLowerCase() === devoteeEmail.toLowerCase())
+      );
+      const filteredDonations = allDonations.filter(d => 
+        (d.donorName && d.donorName.toLowerCase() === devoteeName.toLowerCase()) ||
+        (d.devoteeEmail && d.devoteeEmail.toLowerCase() === devoteeEmail.toLowerCase()) ||
+        (d.email && d.email.toLowerCase() === devoteeEmail.toLowerCase())
+      );
+      setSelectedDevoteeBookings(filteredBookings);
+      setSelectedDevoteeDonations(filteredDonations);
+    } catch (err) {
+      console.error("Error fetching devotee history:", err);
+    } finally {
+      setDetailsLoading(false);
+    }
+  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -103,19 +134,6 @@ const RegisterDevoteesPage = () => {
         role: "devotee",
       });
 
-      const newDevotee = {
-        name: form.name.trim(),
-        email: normalizeEmail(form.email),
-        phone: form.phone.trim(),
-        place: form.place.trim(),
-      };
-
-      setRecent((current) => {
-        const updated = [newDevotee, ...current].slice(0, 5);
-        localStorage.setItem("recentDevotees", JSON.stringify(updated));
-        return updated;
-      });
-
       setForm(emptyForm);
       setMessage("Devotee registered successfully. They can now log in with the new account.");
       loadNotifications().catch(() => {});
@@ -135,11 +153,11 @@ const RegisterDevoteesPage = () => {
       actions={
         <div className="inline-flex items-center gap-2 rounded-full border border-[#f0c58f] bg-white px-4 py-2 text-sm font-bold text-slate-900">
           <FaUserPlus className="text-[#f28c18]" />
-          Full registration form
+          Full devotee directory
         </div>
       }
     >
-      <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+      <div className="max-w-4xl mx-auto">
         <section className="rounded-[22px] border border-[#f0d3a2] bg-white/95 p-5 shadow-sm">
           <h2 className="text-2xl font-extrabold text-slate-950">New devotee registration</h2>
           <p className="mt-1 text-sm font-medium text-slate-700">
@@ -232,42 +250,6 @@ const RegisterDevoteesPage = () => {
             </button>
           </form>
         </section>
-
-        <aside className="space-y-6">
-          <section className="rounded-[22px] border border-[#f0d3a2] bg-white/95 p-5 shadow-sm">
-            <h2 className="text-2xl font-extrabold text-slate-950">What gets saved</h2>
-            <div className="mt-4 space-y-3 text-sm text-slate-700">
-              <div className="rounded-2xl bg-[#fff8ef] px-4 py-3">Name, email, phone, address and place.</div>
-              <div className="rounded-2xl bg-[#fff8ef] px-4 py-3">A devotee login account with the role set to devotee.</div>
-              <div className="rounded-2xl bg-[#fff8ef] px-4 py-3">Ready for bookings, donations and receipt history.</div>
-            </div>
-          </section>
-
-          <section className="rounded-[22px] border border-[#f0d3a2] bg-white/95 p-5 shadow-sm">
-            <h2 className="text-2xl font-extrabold text-slate-950">Recent registrations</h2>
-            <div className="mt-4 space-y-3">
-              {recent.length ? (
-                recent.map((item) => (
-                  <div key={`${item.email}-${item.phone}`} className="rounded-2xl border border-[#ead7bb] bg-[#fffaf4] px-4 py-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="font-bold text-slate-950">{item.name}</p>
-                        <p className="mt-1 text-sm text-slate-700">{item.email}</p>
-                      </div>
-                      <FaCheckCircle className="text-[#16a34a]" />
-                    </div>
-                    <p className="mt-2 text-sm text-slate-700">{item.phone || "-"}</p>
-                    <p className="mt-1 text-sm text-slate-500">{item.place || "Place not provided"}</p>
-                  </div>
-                ))
-              ) : (
-                <div className="rounded-2xl bg-[#fff8ef] px-4 py-3 text-sm text-slate-700">
-                  No devotee registrations yet.
-                </div>
-              )}
-            </div>
-          </section>
-        </aside>
       </div>
 
       <section className="mt-8 rounded-[22px] border border-[#f0d3a2] bg-white/95 p-6 shadow-sm">
@@ -275,7 +257,7 @@ const RegisterDevoteesPage = () => {
           <div>
             <h2 className="text-2xl font-extrabold text-slate-950">Registered Devotees</h2>
             <p className="mt-1 text-sm font-medium text-slate-700">
-              Complete directory of all devotee accounts registered in the system.
+              Complete directory of all devotee accounts registered in the system. Showing up to 5 by default.
             </p>
           </div>
           <div className="flex items-center gap-2 rounded-2xl border border-[#ead7bb] bg-[#fffaf4] px-4 py-3 text-sm text-slate-700">
@@ -290,7 +272,7 @@ const RegisterDevoteesPage = () => {
         </div>
 
         <div className="mt-6 overflow-x-auto">
-          <table className="w-full min-w-[900px] text-left text-sm">
+          <table className="w-full min-w-[950px] text-left text-sm">
             <thead className="bg-[#fff7eb] text-slate-600">
               <tr>
                 <th className="px-4 py-3 font-bold">Name</th>
@@ -299,17 +281,18 @@ const RegisterDevoteesPage = () => {
                 <th className="px-4 py-3 font-bold">Place / City</th>
                 <th className="px-4 py-3 font-bold">Address</th>
                 <th className="px-4 py-3 font-bold">Registered Date</th>
+                <th className="px-4 py-3 font-bold">Actions</th>
               </tr>
             </thead>
             <tbody>
               {devoteesLoading ? (
                 <tr>
-                  <td colSpan="6" className="px-4 py-8 text-center text-slate-500">
+                  <td colSpan="7" className="px-4 py-8 text-center text-slate-500">
                     Loading devotees directory...
                   </td>
                 </tr>
-              ) : filteredDevotees.length ? (
-                filteredDevotees.map((devotee) => (
+              ) : displayedDevotees.length ? (
+                displayedDevotees.map((devotee) => (
                   <tr key={devotee._id || devotee.email} className="border-b border-[#f2e7d7] last:border-b-0">
                     <td className="px-4 py-3 font-bold text-slate-950">{devotee.name}</td>
                     <td className="px-4 py-3 font-semibold text-slate-700">{devotee.email}</td>
@@ -323,11 +306,20 @@ const RegisterDevoteesPage = () => {
                         year: "numeric",
                       }) : "-"}
                     </td>
+                    <td className="px-4 py-3">
+                      <button
+                        type="button"
+                        onClick={() => handleViewDetails(devotee)}
+                        className="inline-flex items-center gap-1.5 rounded-full bg-[#fff8ef] border border-[#f0c58f] px-3 py-1.5 text-xs font-bold text-[#8a5200] transition hover:bg-[#f28c18] hover:text-white"
+                      >
+                        <FaEye /> View
+                      </button>
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="6" className="px-4 py-8 text-center text-slate-500">
+                  <td colSpan="7" className="px-4 py-8 text-center text-slate-500">
                     No devotees found matching the search criteria.
                   </td>
                 </tr>
@@ -335,7 +327,144 @@ const RegisterDevoteesPage = () => {
             </tbody>
           </table>
         </div>
+
+        {filteredDevotees.length > 5 && (
+          <div className="mt-4 flex justify-center">
+            <button
+              type="button"
+              onClick={() => setShowAll(!showAll)}
+              className="rounded-full bg-[#f28c18] px-6 py-2.5 text-sm font-bold text-white shadow-sm transition hover:opacity-95"
+            >
+              {showAll ? "Show Less" : "View All Devotees"}
+            </button>
+          </div>
+        )}
       </section>
+
+      {/* Devotee Details Modal */}
+      {selectedDevotee && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-[28px] border border-[#f0c58f] bg-white p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-[#f2e7d7] pb-4">
+              <div>
+                <h3 className="text-2xl font-extrabold text-slate-950">Devotee Details</h3>
+                <p className="text-sm font-medium text-slate-600">Complete booking and donation history for this devotee.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedDevotee(null)}
+                className="rounded-full p-2 text-slate-400 hover:bg-[#fff8ef] hover:text-[#f28c18] transition"
+              >
+                <FaTimes size={20} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="mt-6 space-y-6">
+              {/* Profile Card */}
+              <div className="grid gap-4 rounded-2xl border border-[#f0c58f] bg-[#fffbf5] p-5 md:grid-cols-2 lg:grid-cols-3">
+                <div>
+                  <span className="text-xs font-bold text-[#8a5200] uppercase tracking-wider">Full Name</span>
+                  <p className="text-base font-extrabold text-slate-950 mt-0.5">{selectedDevotee.name}</p>
+                </div>
+                <div>
+                  <span className="text-xs font-bold text-[#8a5200] uppercase tracking-wider">Email Address</span>
+                  <p className="text-base font-semibold text-slate-800 mt-0.5">{selectedDevotee.email}</p>
+                </div>
+                <div>
+                  <span className="text-xs font-bold text-[#8a5200] uppercase tracking-wider">Phone Number</span>
+                  <p className="text-base text-slate-800 mt-0.5">{selectedDevotee.phone || "-"}</p>
+                </div>
+                <div>
+                  <span className="text-xs font-bold text-[#8a5200] uppercase tracking-wider">Place / City</span>
+                  <p className="text-base text-slate-800 mt-0.5">{selectedDevotee.place || "-"}</p>
+                </div>
+                <div className="md:col-span-2 lg:col-span-2">
+                  <span className="text-xs font-bold text-[#8a5200] uppercase tracking-wider">Address</span>
+                  <p className="text-base text-slate-700 mt-0.5">{selectedDevotee.address || "-"}</p>
+                </div>
+              </div>
+
+              {/* Lists Section */}
+              <div className="grid gap-6 md:grid-cols-2">
+                {/* Bookings */}
+                <div className="rounded-2xl border border-[#f2e7d7] bg-white p-4">
+                  <h4 className="text-lg font-bold text-slate-950 border-b border-[#f2e7d7] pb-2 flex items-center justify-between">
+                    <span>Bookings</span>
+                    <span className="rounded-full bg-[#fff8ef] px-2 py-0.5 text-xs font-bold text-[#8a5200]">
+                      {detailsLoading ? "..." : selectedDevoteeBookings.length}
+                    </span>
+                  </h4>
+                  <div className="mt-3 max-h-[250px] overflow-y-auto space-y-2">
+                    {detailsLoading ? (
+                      <p className="text-sm text-slate-500 py-4 text-center">Loading history...</p>
+                    ) : selectedDevoteeBookings.length ? (
+                      selectedDevoteeBookings.map((b) => (
+                        <div key={b._id} className="rounded-xl border border-[#f2e7d7] p-3 text-xs bg-[#fffaf5]">
+                          <div className="flex justify-between font-bold text-slate-900">
+                            <span>{b.service}</span>
+                            <span className="text-[#8a5200]">Rs {b.amount || b.price}</span>
+                          </div>
+                          <div className="flex justify-between mt-1 text-slate-600 font-medium">
+                            <span>{new Date(b.datetime || b.bookingDate).toLocaleDateString("en-IN")}</span>
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] ${
+                              String(b.status).toLowerCase() === "confirmed" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"
+                            }`}>{b.status || "Pending"}</span>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-slate-500 py-4 text-center">No bookings found.</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Donations */}
+                <div className="rounded-2xl border border-[#f2e7d7] bg-white p-4">
+                  <h4 className="text-lg font-bold text-slate-950 border-b border-[#f2e7d7] pb-2 flex items-center justify-between">
+                    <span>Donations & Receipts</span>
+                    <span className="rounded-full bg-[#fff8ef] px-2 py-0.5 text-xs font-bold text-[#8a5200]">
+                      {detailsLoading ? "..." : selectedDevoteeDonations.length}
+                    </span>
+                  </h4>
+                  <div className="mt-3 max-h-[250px] overflow-y-auto space-y-2">
+                    {detailsLoading ? (
+                      <p className="text-sm text-slate-500 py-4 text-center">Loading history...</p>
+                    ) : selectedDevoteeDonations.length ? (
+                      selectedDevoteeDonations.map((d) => (
+                        <div key={d._id} className="rounded-xl border border-[#f2e7d7] p-3 text-xs bg-[#fffaf5]">
+                          <div className="flex justify-between font-bold text-slate-900">
+                            <span>{d.donationType || d.category || "General Donation"}</span>
+                            <span className="text-[#8a5200]">Rs {d.amount}</span>
+                          </div>
+                          <div className="flex justify-between mt-1 text-slate-600 font-medium">
+                            <span>{new Date(d.createdAt || d.donationDate).toLocaleDateString("en-IN")}</span>
+                            <span>{d.paymentMethod || "UPI"}</span>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-slate-500 py-4 text-center">No donations found.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="mt-6 border-t border-[#f2e7d7] pt-4 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setSelectedDevotee(null)}
+                className="rounded-2xl bg-slate-900 px-5 py-2.5 text-sm font-bold text-white transition hover:opacity-90"
+              >
+                Close Details
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </CashierPageShell>
   );
 };
