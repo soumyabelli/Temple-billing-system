@@ -23,8 +23,6 @@ export const cashierSidebarItems = [
   { title: "Prasadam Sales", icon: FaReceipt, path: "/cashier/prasadam-sales" },
   { title: "Receipts", icon: FaReceipt, path: "/cashier/receipts" },
   { title: "Register Devotees", icon: FaUsers, path: "/cashier/register-devotees" },
-  { title: "Payments", icon: FaCreditCard, path: "/cashier/payments" },
-  { title: "Reports", icon: FaChartBar, path: "/cashier/reports" },
   { title: "Attendance", icon: FaClock, path: "/cashier/attendance" },
   { title: "Apply Leave", icon: FaFileSignature, path: "/cashier/apply-leave" },
   { title: "Notifications", icon: FaBell, path: "/cashier/notifications" },

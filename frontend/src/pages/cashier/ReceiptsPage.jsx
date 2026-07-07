@@ -1,13 +1,42 @@
 import { useEffect, useMemo, useState } from "react";
-import { FaDownload, FaReceipt, FaSearch } from "react-icons/fa";
+import {
+  FaDownload,
+  FaReceipt,
+  FaSearch,
+  FaPrint,
+  FaCreditCard,
+  FaMoneyBillWave,
+  FaChartPie,
+  FaSyncAlt,
+} from "react-icons/fa";
+import { jsPDF } from "jspdf";
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import templeBg from "../../assets/temple-bg.jpg";
 import CashierPageShell from "../../components/cashier/CashierPageShell";
 import {
   fetchBills,
+  fetchBookings,
+  fetchDonations,
+  fetchPrasadamOrders,
   formatCurrency,
   formatDateTime,
   getBillReference,
   inferBillType,
+  updateBillStatus,
+  isToday,
+  sumBy,
+  toDateKey,
 } from "../../services/cashierService";
 
 const receiptTabs = ["All", "Pooja Booking", "Donation", "Prasadam Sale", "Other"];
@@ -19,26 +48,74 @@ const receiptTone = {
   Other: "bg-[#f4f4f5] text-[#334155]",
 };
 
+const statusTone = {
+  Paid: "bg-[#e8f7ee] text-[#166534]",
+  Pending: "bg-[#fff1d7] text-[#9a5a00]",
+  Cancelled: "bg-[#fde8e8] text-[#9b1c1c]",
+};
+
+const paymentColors = {
+  Cash: "#16a34a",
+  UPI: "#7c3aed",
+  Card: "#2563eb",
+  "Bank Transfer": "#f59e0b",
+  "Net Banking": "#f97316",
+};
+
+const buildLastDays = (days = 7) => {
+  const rows = [];
+  for (let offset = days - 1; offset >= 0; offset -= 1) {
+    const date = new Date();
+    date.setDate(date.getDate() - offset);
+    rows.push({
+      key: toDateKey(date),
+      label: date.toLocaleDateString("en-IN", { weekday: "short" }),
+    });
+  }
+  return rows;
+};
+
 const ReceiptsPage = () => {
+  // Top-level Navigation Section: "ledger" | "payments" | "reports"
+  const [activeSection, setActiveSection] = useState("ledger");
+
   const [bills, setBills] = useState([]);
+  const [bookings, setBookings] = useState([]);
+  const [donations, setDonations] = useState([]);
+  const [prasadamOrders, setPrasadamOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Ledger state
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState("All");
 
-  const loadBills = async () => {
+  // Reports state
+  const [range, setRange] = useState("monthly");
+
+  const loadData = async () => {
     setLoading(true);
     try {
-      const rows = await fetchBills();
-      setBills(rows);
+      const [billRows, bookingRows, donationRows, orderRows] = await Promise.allSettled([
+        fetchBills(),
+        fetchBookings(),
+        fetchDonations(),
+        fetchPrasadamOrders(),
+      ]);
+
+      setBills(billRows.status === "fulfilled" ? billRows.value : []);
+      setBookings(bookingRows.status === "fulfilled" ? bookingRows.value : []);
+      setDonations(donationRows.status === "fulfilled" ? donationRows.value : []);
+      setPrasadamOrders(orderRows.status === "fulfilled" ? orderRows.value : []);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadBills();
+    loadData();
   }, []);
 
+  // Ledger grouping & filters
   const sections = useMemo(() => {
     const grouped = { "Pooja Booking": [], Donation: [], "Prasadam Sale": [], Other: [] };
     bills.forEach((bill, index) => {
@@ -65,44 +142,256 @@ const ReceiptsPage = () => {
       .sort((a, b) => new Date(b.billDate || b.createdAt || 0) - new Date(a.billDate || a.createdAt || 0));
   }, [bills, query, tab]);
 
-  const stats = [
-    {
-      title: "All Receipts",
-      value: bills.length,
-      note: "Combined ledger entries",
-      tone: "orange",
-    },
-    {
-      title: "Pooja Receipts",
-      value: sections["Pooja Booking"].length,
-      note: "Booking history",
-      tone: "gold",
-    },
-    {
-      title: "Donation Receipts",
-      value: sections.Donation.length,
-      note: "Donation history",
-      tone: "green",
-    },
-    {
-      title: "Prasadam Receipts",
-      value: sections["Prasadam Sale"].length,
-      note: "Prasadam sales",
-      tone: "blue",
-    },
-  ];
+  // Payments overview logic
+  const paymentSummary = useMemo(() => {
+    const grouped = bills.reduce((acc, bill) => {
+      const mode = bill.paymentMode || "Cash";
+      if (!acc[mode]) acc[mode] = { total: 0, count: 0 };
+      acc[mode].total += Number(bill.amount || 0);
+      acc[mode].count += 1;
+      return acc;
+    }, {});
 
-  const handleDownloadCsv = () => {
+    return Object.entries(grouped)
+      .map(([mode, data]) => ({ mode, ...data }))
+      .sort((a, b) => b.total - a.total);
+  }, [bills]);
+
+  const recentPayments = useMemo(
+    () =>
+      [...bills]
+        .sort((a, b) => new Date(b.billDate || b.createdAt || 0) - new Date(a.billDate || a.createdAt || 0))
+        .slice(0, 12),
+    [bills]
+  );
+
+  const pendingPaymentsCount = useMemo(
+    () => bills.filter((bill) => (bill.status || "Paid") === "Pending").length,
+    [bills]
+  );
+
+  // Reports range logic
+  const rangeStart = useMemo(() => {
+    const now = new Date();
+    if (range === "weekly") return new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
+    if (range === "yearly") return new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+    return new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+  }, [range]);
+
+  const rangeBills = useMemo(
+    () => bills.filter((bill) => new Date(bill.billDate || bill.createdAt || 0) >= rangeStart),
+    [bills, rangeStart]
+  );
+
+  const rangeBookings = useMemo(
+    () => bookings.filter((booking) => new Date(booking.createdAt || booking.datetime || 0) >= rangeStart),
+    [bookings, rangeStart]
+  );
+  const rangeDonations = useMemo(
+    () => donations.filter((donation) => new Date(donation.createdAt || 0) >= rangeStart),
+    [donations, rangeStart]
+  );
+  const rangePrasadamOrders = useMemo(
+    () => prasadamOrders.filter((order) => new Date(order.createdAt || 0) >= rangeStart),
+    [prasadamOrders, rangeStart]
+  );
+
+  const dailySeries = useMemo(() => {
+    const days = buildLastDays(7);
+    return days.map((day) => ({
+      day: day.label,
+      amount: sumBy(rangeBills.filter((bill) => toDateKey(bill.billDate || bill.createdAt) === day.key), (bill) => bill.amount),
+    }));
+  }, [rangeBills]);
+
+  const paymentSeries = useMemo(() => {
+    const totals = rangeBills.reduce((acc, bill) => {
+      const mode = bill.paymentMode || "Cash";
+      acc[mode] = (acc[mode] || 0) + Number(bill.amount || 0);
+      return acc;
+    }, {});
+
+    return Object.entries(totals).map(([name, value]) => ({
+      name,
+      value,
+      color: paymentColors[name] || "#f59e0b",
+    }));
+  }, [rangeBills]);
+
+  const paymentTotals = paymentSeries.reduce((total, item) => total + item.value, 0);
+
+  const bookingRevenue = useMemo(() => sumBy(rangeBills.filter((bill) => inferBillType(bill) === "Pooja Booking"), (bill) => bill.amount), [rangeBills]);
+  const donationRevenue = useMemo(() => sumBy(rangeBills.filter((bill) => inferBillType(bill) === "Donation"), (bill) => bill.amount), [rangeBills]);
+  const prasadamRevenue = useMemo(() => sumBy(rangeBills.filter((bill) => inferBillType(bill) === "Prasadam Sale"), (bill) => bill.amount), [rangeBills]);
+
+  const recentReportRows = useMemo(
+    () =>
+      [...rangeBills]
+        .sort((a, b) => new Date(b.billDate || b.createdAt || 0) - new Date(a.billDate || a.createdAt || 0))
+        .slice(0, 10)
+        .map((bill) => ({
+          id: bill.referenceNo || bill._id,
+          type: inferBillType(bill),
+          service: bill.sevaType,
+          amount: bill.amount,
+          paymentMode: bill.paymentMode || "Cash",
+          status: bill.status || "Paid",
+          date: formatDateTime(bill.billDate || bill.createdAt),
+        })),
+    [rangeBills]
+  );
+
+  // Status & Print Action Handlers
+  const handleMarkAsPaid = async (id) => {
+    try {
+      await updateBillStatus(id, "Paid");
+      await loadData();
+    } catch (err) {
+      console.error("Failed to mark bill as paid", err);
+    }
+  };
+
+  const handlePrintReceipt = (bill, index) => {
+    const doc = new jsPDF({ unit: "mm", format: "a4" });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 16;
+    let y = 18;
+
+    // Header Band
+    doc.setFillColor(180, 106, 19);
+    doc.rect(0, 0, pageWidth, 34, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(17);
+    doc.text("Sri Shanti Mahadev Mandir", margin, y);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.text("Official Temple Receipt", margin, y + 8);
+
+    const refNo = getBillReference(bill, index);
+    doc.text(`Receipt No: ${refNo}`, pageWidth - margin, y, { align: "right" });
+    doc.text(`Date: ${formatDateTime(bill.billDate || bill.createdAt)}`, pageWidth - margin, y + 8, { align: "right" });
+
+    y = 48;
+    doc.setTextColor(31, 29, 25);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(15);
+    const type = inferBillType(bill);
+    doc.text(`${type} Receipt`, margin, y);
+
+    // Status Badge
+    doc.setFontSize(9);
+    doc.setFillColor(250, 247, 241);
+    doc.setDrawColor(229, 217, 197);
+    doc.roundedRect(pageWidth - margin - 40, y - 7, 40, 10, 2, 2, "FD");
+    doc.setTextColor(116, 81, 25);
+    doc.text(String(bill.status || "Paid"), pageWidth - margin - 20, y - 1, { align: "center" });
+
+    y += 12;
+    // Devotee Details Box
+    doc.setFillColor(255, 252, 246);
+    doc.setDrawColor(235, 226, 213);
+    doc.roundedRect(margin, y, pageWidth - margin * 2, 26, 2, 2, "FD");
+    doc.setTextColor(31, 29, 25);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.text("Devotee Details", margin + 4, y + 7);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.text(`Name: ${bill.devoteeName || "-"}`, margin + 4, y + 15);
+    
+    y += 36;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.text("Receipt Details", margin, y);
+    y += 6;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+
+    const details = [
+      ["Payment Mode", bill.paymentMode || "Cash"],
+      ["Seva Type / Service", bill.sevaType || "-"],
+    ];
+
+    details.forEach(([label, value]) => {
+      doc.setTextColor(112, 92, 62);
+      doc.text(`${label}:`, margin, y);
+      doc.setTextColor(31, 29, 25);
+      doc.text(String(value || "-"), margin + 42, y);
+      y += 7;
+    });
+
+    y += 4;
+    const tableX = margin;
+    const tableWidth = pageWidth - margin * 2;
+    const colWidths = [tableWidth - 38, 38];
+    const headerHeight = 10;
+    doc.setFillColor(255, 240, 223);
+    doc.setDrawColor(241, 206, 156);
+    doc.rect(tableX, y, tableWidth, headerHeight, "FD");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(110, 69, 7);
+    doc.text("Description", tableX + 3, y + 6.5);
+    doc.text("Amount", tableX + colWidths[0] + colWidths[1] - 3, y + 6.5, { align: "right" });
+
+    y += headerHeight;
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(31, 29, 25);
+
+    const rowHeight = 12;
+    doc.setDrawColor(232, 225, 214);
+    doc.rect(tableX, y, tableWidth, rowHeight, "S");
+    doc.text(String(bill.sevaType || "-"), tableX + 3, y + 7);
+    doc.text(formatCurrency(bill.amount), tableX + tableWidth - 3, y + 7, { align: "right" });
+    y += rowHeight;
+
+    y += 6;
+    doc.setFillColor(250, 247, 241);
+    doc.roundedRect(pageWidth - margin - 72, y, 72, 18, 2, 2, "F");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(112, 92, 62);
+    doc.text("Total Amount", pageWidth - margin - 68, y + 7);
+    doc.setTextColor(31, 29, 25);
+    doc.setFontSize(12);
+    doc.text(formatCurrency(bill.amount), pageWidth - margin - 4, y + 13, { align: "right" });
+
+    if (bill.notes) {
+      y += 28;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.text("Notes", margin, y);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.text(doc.splitTextToSize(String(bill.notes), pageWidth - margin * 2), margin, y + 7);
+    }
+
+    // Footer
+    doc.setDrawColor(229, 217, 197);
+    doc.line(margin, pageHeight - 18, pageWidth - margin, pageHeight - 18);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(112, 103, 94);
+    doc.text("Generated by Temple Billing System", margin, pageHeight - 10);
+    doc.text("Thank you for your devotion and support.", pageWidth - margin, pageHeight - 10, { align: "right" });
+
+    doc.save(`receipt-${refNo}.pdf`);
+  };
+
+  // Export CSV Handlers
+  const handleDownloadLedgerCsv = () => {
     const rows = [
       ["Receipt", "Devotee", "Type", "Service", "Amount", "Payment", "Status", "Date"],
-      ...filteredBills.map((bill, index) => [
-        getBillReference(bill, index),
+      ...filteredBills.map((bill, idx) => [
+        getBillReference(bill, idx),
         bill.devoteeName,
         inferBillType(bill),
         bill.sevaType,
         bill.amount,
         bill.paymentMode,
-        bill.status,
+        bill.status || "Paid",
         formatDateTime(bill.billDate || bill.createdAt),
       ]),
     ];
@@ -115,180 +404,605 @@ const ReceiptsPage = () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = "cashier-receipts.csv";
+    link.download = "cashier-receipts-ledger.csv";
     link.click();
     URL.revokeObjectURL(url);
   };
 
-  return (
-    <CashierPageShell
-      eyebrow="Receipts"
-      image={templeBg}
-      imageAlt="Temple receipts ledger"
-      stats={stats}
-      actions={
+  const handleDownloadReportsCsv = () => {
+    const rows = [
+      ["Receipt", "Type", "Service", "Amount", "Payment", "Status", "Date"],
+      ...recentReportRows.map((row) => [row.id, row.type, row.service, row.amount, row.paymentMode, row.status, row.date]),
+    ];
+
+    const csv = rows
+      .map((row) => row.map((cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(","))
+      .join("\r\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `cashier-reports-summary-${range}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Dynamic Page Shell Configuration
+  const shellProps = useMemo(() => {
+    if (activeSection === "payments") {
+      const todayTotal = sumBy(bills.filter((b) => isToday(b.billDate || b.createdAt)), (b) => b.amount);
+      return {
+        eyebrow: "Receipts > Payments",
+        title: "Payments processing overview",
+        description: "Review total income across payment modes (Cash, UPI, etc.) and check recent transaction statuses.",
+        stats: [
+          { title: "Today Amount", value: formatCurrency(todayTotal), note: "Live counter total", tone: "orange" },
+          { title: "Bill Count", value: bills.length, note: "All payment records", tone: "gold" },
+          { title: "Paid", value: bills.filter((b) => (b.status || "Paid") === "Paid").length, note: "Settled successfully", tone: "green" },
+          { title: "Pending", value: pendingPaymentsCount, note: "Needs settlement", tone: "blue" },
+        ],
+        actions: (
+          <button
+            type="button"
+            onClick={loadData}
+            className="inline-flex items-center gap-2 rounded-full bg-[#f28c18] px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:opacity-95"
+          >
+            <FaSyncAlt /> Refresh Payments
+          </button>
+        ),
+      };
+    }
+
+    if (activeSection === "reports") {
+      const rangeTotal = sumBy(rangeBills, (b) => b.amount);
+      return {
+        eyebrow: "Receipts > Reports",
+        title: "Cashier reports & analytics summary",
+        description: "Set ranges, inspect collections trends, analyze payment methods, and download CSV reports.",
+        stats: [
+          { title: "Report Total", value: formatCurrency(rangeTotal), note: `For ${range} range`, tone: "orange" },
+          { title: "Bookings", value: rangeBookings.length, note: `${rangeBookings.filter((b) => isToday(b.createdAt)).length} today`, tone: "gold" },
+          { title: "Donations", value: rangeDonations.length, note: "Donation records", tone: "green" },
+          { title: "Prasadam Orders", value: rangePrasadamOrders.length, note: "Sales records", tone: "blue" },
+        ],
+        actions: (
+          <>
+            <button
+              type="button"
+              onClick={loadData}
+              className="inline-flex items-center gap-2 rounded-full border border-[#f0c58f] bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:bg-[#fff8ef]"
+            >
+              <FaSyncAlt /> Refresh Reports
+            </button>
+            <button
+              type="button"
+              onClick={handleDownloadReportsCsv}
+              className="inline-flex items-center gap-2 rounded-full bg-[#f28c18] px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:opacity-95"
+            >
+              <FaDownload /> Export CSV
+            </button>
+          </>
+        ),
+      };
+    }
+
+    // Default: ledger
+    return {
+      eyebrow: "Receipts",
+      title: "Receipts ledger and cashier records",
+      description: "Search and review temple receipts, download standard ledger CSV, and update payment statuses.",
+      stats: [
+        { title: "All Receipts", value: bills.length, note: "Combined ledger entries", tone: "orange" },
+        { title: "Pooja Receipts", value: sections["Pooja Booking"].length, note: "Booking history", tone: "gold" },
+        { title: "Donation Receipts", value: sections.Donation.length, note: "Donation history", tone: "green" },
+        { title: "Prasadam Receipts", value: sections["Prasadam Sale"].length, note: "Prasadam sales", tone: "blue" },
+      ],
+      actions: (
         <>
           <button
             type="button"
-            onClick={loadBills}
+            onClick={loadData}
             className="rounded-full border border-[#f0c58f] bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:bg-[#fff8ef]"
           >
-            Refresh Receipts
+            Refresh Ledger
           </button>
           <button
             type="button"
-            onClick={handleDownloadCsv}
+            onClick={handleDownloadLedgerCsv}
             className="rounded-full bg-[#f28c18] px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:opacity-95"
           >
             Download CSV
           </button>
         </>
-      }
+      ),
+    };
+  }, [activeSection, bills, rangeBills, rangeBookings, rangeDonations, rangePrasadamOrders, sections, range, pendingPaymentsCount]);
+
+  return (
+    <CashierPageShell
+      eyebrow={shellProps.eyebrow}
+      image={templeBg}
+      imageAlt="Temple Receipts"
+      stats={shellProps.stats}
+      actions={shellProps.actions}
     >
-      <section className="rounded-[22px] border border-[#f0d3a2] bg-white/95 p-5 shadow-sm">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <h2 className="text-2xl font-extrabold text-slate-950">Receipt sections</h2>
-            <p className="mt-1 text-sm font-medium text-slate-700">
-              Use the tabs to switch between pooja, donation and prasadam receipts.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2 rounded-2xl border border-[#ead7bb] bg-[#fffaf4] px-4 py-3 text-sm text-slate-700">
-              <FaSearch />
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search receipt"
-                className="w-[180px] bg-transparent outline-none"
-              />
-            </div>
-            <button
-              type="button"
-              onClick={handleDownloadCsv}
-              className="inline-flex items-center gap-2 rounded-2xl border border-[#ead7bb] bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition hover:bg-[#fff8ef]"
-            >
-              <FaDownload /> Export
-            </button>
-          </div>
-        </div>
-
-        <div className="mt-5 flex flex-wrap gap-2">
-          {receiptTabs.map((item) => (
-            <button
-              key={item}
-              type="button"
-              onClick={() => setTab(item)}
-              className={`rounded-full border px-4 py-2 text-sm font-bold transition ${
-                tab === item
-                  ? "border-[#f28c18] bg-[#fff1df] text-[#8a5200]"
-                  : "border-[#ead7bb] bg-white text-slate-700 hover:bg-[#fff8ef]"
-              }`}
-            >
-              {item}
-            </button>
-          ))}
-        </div>
+      {/* Navigation Sub-Tabs */}
+      <section className="flex border-b border-[#f2e7d7] bg-white px-4 py-2 shadow-sm rounded-t-[22px]">
+        {["ledger", "payments", "reports"].map((section) => (
+          <button
+            key={section}
+            type="button"
+            onClick={() => setActiveSection(section)}
+            className={`px-5 py-3 text-sm font-extrabold transition-all border-b-2 capitalize ${
+              activeSection === section
+                ? "border-[#f28c18] text-[#8a5200]"
+                : "border-transparent text-slate-500 hover:text-slate-900"
+            }`}
+          >
+            {section === "ledger" ? "Receipts Ledger" : section === "payments" ? "Payments Overview" : "Reports & Analytics"}
+          </button>
+        ))}
       </section>
 
-      <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <section className="rounded-[22px] border border-[#f0d3a2] bg-white/95 p-5 shadow-sm">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <h2 className="text-2xl font-extrabold text-slate-950">Receipt ledger</h2>
-              <p className="mt-1 text-sm font-medium text-slate-700">
-                Searchable bill register with all saved cashier receipts.
-              </p>
-            </div>
-            <FaReceipt className="text-[#f28c18]" />
-          </div>
+      {/* RENDER ACTIVE TAB */}
+      {activeSection === "ledger" && (
+        <>
+          <section className="rounded-b-[22px] border-x border-b border-[#f0d3a2] bg-white/95 p-5 shadow-sm">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+              <div>
+                <h2 className="text-2xl font-extrabold text-slate-950">Receipt sections</h2>
+                <p className="mt-1 text-sm font-medium text-slate-700">
+                  Use the tabs to switch between pooja, donation and prasadam receipts.
+                </p>
+              </div>
 
-          <div className="mt-5 overflow-x-auto">
-            <table className="w-full min-w-[920px] text-left text-sm">
-              <thead className="bg-[#fff7eb] text-slate-600">
-                <tr>
-                  <th className="px-4 py-3 font-bold">Receipt</th>
-                  <th className="px-4 py-3 font-bold">Devotee</th>
-                  <th className="px-4 py-3 font-bold">Type</th>
-                  <th className="px-4 py-3 font-bold">Service</th>
-                  <th className="px-4 py-3 font-bold">Amount</th>
-                  <th className="px-4 py-3 font-bold">Payment</th>
-                  <th className="px-4 py-3 font-bold">Date</th>
-                  <th className="px-4 py-3 font-bold">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-2 rounded-2xl border border-[#ead7bb] bg-[#fffaf4] px-4 py-3 text-sm text-slate-700">
+                  <FaSearch />
+                  <input
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Search receipt"
+                    className="w-[180px] bg-transparent outline-none"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={handleDownloadLedgerCsv}
+                  className="inline-flex items-center gap-2 rounded-2xl border border-[#ead7bb] bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition hover:bg-[#fff8ef]"
+                >
+                  <FaDownload /> Export
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-5 flex flex-wrap gap-2">
+              {receiptTabs.map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  onClick={() => setTab(item)}
+                  className={`rounded-full border px-4 py-2 text-sm font-bold transition ${
+                    tab === item
+                      ? "border-[#f28c18] bg-[#fff1df] text-[#8a5200]"
+                      : "border-[#ead7bb] bg-white text-slate-700 hover:bg-[#fff8ef]"
+                  }`}
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+            <section className="rounded-[22px] border border-[#f0d3a2] bg-white/95 p-5 shadow-sm">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-2xl font-extrabold text-slate-950">Receipt ledger</h2>
+                  <p className="mt-1 text-sm font-medium text-slate-700">
+                    Searchable bill register with all saved cashier receipts.
+                  </p>
+                </div>
+                <FaReceipt className="text-[#f28c18]" />
+              </div>
+
+              <div className="mt-5 overflow-x-auto">
+                <table className="w-full min-w-[920px] text-left text-sm">
+                  <thead className="bg-[#fff7eb] text-slate-600">
+                    <tr>
+                      <th className="px-4 py-3 font-bold">Receipt</th>
+                      <th className="px-4 py-3 font-bold">Devotee</th>
+                      <th className="px-4 py-3 font-bold">Type</th>
+                      <th className="px-4 py-3 font-bold">Service</th>
+                      <th className="px-4 py-3 font-bold">Amount</th>
+                      <th className="px-4 py-3 font-bold">Payment</th>
+                      <th className="px-4 py-3 font-bold">Date</th>
+                      <th className="px-4 py-3 font-bold">Status</th>
+                      <th className="px-4 py-3 font-bold text-center">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loading ? (
+                      <tr>
+                        <td colSpan="9" className="px-4 py-8 text-center text-slate-500">
+                          Loading receipts...
+                        </td>
+                      </tr>
+                    ) : filteredBills.length ? (
+                      filteredBills.map((bill, index) => {
+                        const type = inferBillType(bill);
+                        return (
+                          <tr key={bill._id || bill.referenceNo || index} className="border-b border-[#f2e7d7]">
+                            <td className="px-4 py-3 font-bold text-slate-950">{getBillReference(bill, index)}</td>
+                            <td className="px-4 py-3 font-semibold text-slate-800">{bill.devoteeName}</td>
+                            <td className="px-4 py-3">{type}</td>
+                            <td className="px-4 py-3">{bill.sevaType}</td>
+                            <td className="px-4 py-3 font-bold text-slate-950">{formatCurrency(bill.amount)}</td>
+                            <td className="px-4 py-3">{bill.paymentMode || "-"}</td>
+                            <td className="px-4 py-3 text-slate-700">{formatDateTime(bill.billDate || bill.createdAt)}</td>
+                            <td className="px-4 py-3">
+                              <span
+                                className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${
+                                  statusTone[bill.status || "Paid"] || statusTone.Paid
+                                }`}
+                              >
+                                {bill.status || "Paid"}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              <div className="flex items-center justify-center gap-2">
+                                {(bill.status === "Pending") && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleMarkAsPaid(bill._id)}
+                                    className="rounded-lg bg-[#166534] px-3 py-1 text-xs font-bold text-white transition hover:bg-[#15803d]"
+                                    title="Mark as Paid"
+                                  >
+                                    Mark as Paid
+                                  </button>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => handlePrintReceipt(bill, index)}
+                                  className="inline-flex items-center gap-1 rounded-lg border border-[#f0c58f] bg-white px-3 py-1 text-xs font-bold text-slate-900 transition hover:bg-[#fff8ef]"
+                                  title="Print Receipt"
+                                >
+                                  <FaPrint className="text-xs" /> Print
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    ) : (
+                      <tr>
+                        <td colSpan="9" className="px-4 py-8 text-center text-slate-500">
+                          No receipts found for the selected filter.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <aside className="space-y-6">
+              <section className="rounded-[22px] border border-[#f0d3a2] bg-white/95 p-5 shadow-sm">
+                <h2 className="text-2xl font-extrabold text-slate-950">Receipt summary</h2>
+                <div className="mt-4 space-y-3 text-sm">
+                  {shellProps.stats.map((item) => (
+                    <div key={item.title} className="flex items-center justify-between rounded-2xl bg-[#fff8ef] px-4 py-3">
+                      <span className="font-medium text-slate-600">{item.title}</span>
+                      <span className="font-extrabold text-slate-950">{item.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <section className="rounded-[22px] border border-[#f0d3a2] bg-white/95 p-5 shadow-sm">
+                <h2 className="text-2xl font-extrabold text-slate-950">Grouped sections</h2>
+                <div className="mt-4 space-y-3">
+                  {receiptTabs
+                    .filter((item) => item !== "All")
+                    .map((item) => (
+                      <div key={item} className="flex items-center justify-between rounded-2xl bg-[#fff8ef] px-4 py-3 text-sm">
+                        <span className="font-semibold text-slate-700">{item}</span>
+                        <span className="font-bold text-slate-950">{sections[item]?.length || 0}</span>
+                      </div>
+                    ))}
+                </div>
+              </section>
+            </aside>
+          </div>
+        </>
+      )}
+
+      {activeSection === "payments" && (
+        <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+          <section className="rounded-[22px] border border-[#f0d3a2] bg-white/95 p-5 shadow-sm">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-2xl font-extrabold text-slate-950">Payment channels</h2>
+                <p className="mt-1 text-sm font-medium text-slate-700">
+                  Total value and count for each payment method.
+                </p>
+              </div>
+              <FaCreditCard className="text-[#f28c18]" />
+            </div>
+
+            <div className="mt-5 space-y-3">
+              {paymentSummary.length ? (
+                paymentSummary.map((item) => (
+                  <div key={item.mode} className="rounded-2xl border border-[#ead7bb] bg-[#fffaf4] px-4 py-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="font-extrabold text-slate-950">{item.mode}</p>
+                        <p className="mt-1 text-sm text-slate-600">{item.count} transactions</p>
+                      </div>
+                      <FaMoneyBillWave className="text-[#f28c18]" />
+                    </div>
+                    <p className="mt-3 text-2xl font-extrabold text-slate-950">{formatCurrency(item.total)}</p>
+                  </div>
+                ))
+              ) : (
+                <div className="rounded-2xl bg-[#fff8ef] px-4 py-6 text-center text-slate-500">No payment data yet.</div>
+              )}
+            </div>
+          </section>
+
+          <section className="rounded-[22px] border border-[#f0d3a2] bg-white/95 p-5 shadow-sm">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-2xl font-extrabold text-slate-950">Recent payments</h2>
+                <p className="mt-1 text-sm font-medium text-slate-700">
+                  Latest ledger entries for bookings, donations and prasadam.
+                </p>
+              </div>
+              <FaReceipt className="text-[#f28c18]" />
+            </div>
+
+            <div className="mt-5 overflow-x-auto">
+              <table className="w-full min-w-[820px] text-left text-sm">
+                <thead className="bg-[#fff7eb] text-slate-600">
                   <tr>
-                    <td colSpan="8" className="px-4 py-8 text-center text-slate-500">
-                      Loading receipts...
-                    </td>
+                    <th className="px-4 py-3 font-bold">Receipt</th>
+                    <th className="px-4 py-3 font-bold">Type</th>
+                    <th className="px-4 py-3 font-bold">Amount</th>
+                    <th className="px-4 py-3 font-bold">Payment</th>
+                    <th className="px-4 py-3 font-bold">Status</th>
+                    <th className="px-4 py-3 font-bold">Date</th>
                   </tr>
-                ) : filteredBills.length ? (
-                  filteredBills.map((bill, index) => {
-                    const type = inferBillType(bill);
-                    return (
+                </thead>
+                <tbody>
+                  {loading ? (
+                    <tr>
+                      <td colSpan="6" className="px-4 py-8 text-center text-slate-500">
+                        Loading payments...
+                      </td>
+                    </tr>
+                  ) : recentPayments.length ? (
+                    recentPayments.map((bill, index) => (
                       <tr key={bill._id || bill.referenceNo || index} className="border-b border-[#f2e7d7]">
-                        <td className="px-4 py-3 font-bold text-slate-950">{getBillReference(bill, index)}</td>
-                        <td className="px-4 py-3 font-semibold text-slate-800">{bill.devoteeName}</td>
-                        <td className="px-4 py-3">{type}</td>
-                        <td className="px-4 py-3">{bill.sevaType}</td>
+                        <td className="px-4 py-3 font-bold text-slate-950">{bill.referenceNo || `RC-${String(index + 1).padStart(4, "0")}`}</td>
+                        <td className="px-4 py-3">{inferBillType(bill)}</td>
                         <td className="px-4 py-3 font-bold text-slate-950">{formatCurrency(bill.amount)}</td>
-                        <td className="px-4 py-3">{bill.paymentMode || "-"}</td>
-                        <td className="px-4 py-3 text-slate-700">{formatDateTime(bill.billDate || bill.createdAt)}</td>
+                        <td className="px-4 py-3">{bill.paymentMode || "Cash"}</td>
                         <td className="px-4 py-3">
                           <span
                             className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${
-                              receiptTone[type] || receiptTone.Other
+                              statusTone[bill.status || "Paid"] || statusTone.Paid
                             }`}
                           >
                             {bill.status || "Paid"}
                           </span>
                         </td>
+                        <td className="px-4 py-3 text-slate-700">{formatDateTime(bill.billDate || bill.createdAt)}</td>
                       </tr>
-                    );
-                  })
-                ) : (
-                  <tr>
-                    <td colSpan="8" className="px-4 py-8 text-center text-slate-500">
-                      No receipts found for the selected filter.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <aside className="space-y-6">
-          <section className="rounded-[22px] border border-[#f0d3a2] bg-white/95 p-5 shadow-sm">
-            <h2 className="text-2xl font-extrabold text-slate-950">Receipt summary</h2>
-            <div className="mt-4 space-y-3 text-sm">
-              {stats.map((item) => (
-                <div key={item.title} className="flex items-center justify-between rounded-2xl bg-[#fff8ef] px-4 py-3">
-                  <span className="font-medium text-slate-600">{item.title}</span>
-                  <span className="font-extrabold text-slate-950">{item.value}</span>
-                </div>
-              ))}
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="6" className="px-4 py-8 text-center text-slate-500">
+                        No payment records found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           </section>
+        </div>
+      )}
 
-          <section className="rounded-[22px] border border-[#f0d3a2] bg-white/95 p-5 shadow-sm">
-            <h2 className="text-2xl font-extrabold text-slate-950">Grouped sections</h2>
-            <div className="mt-4 space-y-3">
-              {receiptTabs
-                .filter((item) => item !== "All")
-                .map((item) => (
-                  <div key={item} className="flex items-center justify-between rounded-2xl bg-[#fff8ef] px-4 py-3 text-sm">
-                    <span className="font-semibold text-slate-700">{item}</span>
-                    <span className="font-bold text-slate-950">{sections[item]?.length || 0}</span>
-                  </div>
+      {activeSection === "reports" && (
+        <>
+          <section className="rounded-b-[22px] border-x border-b border-[#f0d3a2] bg-white/95 p-5 shadow-sm">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+              <div>
+                <h2 className="text-2xl font-extrabold text-slate-950">Report range</h2>
+                <p className="mt-1 text-sm font-medium text-slate-700">
+                  Switch between weekly, monthly and yearly views.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {["weekly", "monthly", "yearly"].map((item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    onClick={() => setRange(item)}
+                    className={`rounded-full border px-4 py-2 text-sm font-bold capitalize transition ${
+                      range === item
+                        ? "border-[#f28c18] bg-[#fff1df] text-[#8a5200]"
+                        : "border-[#ead7bb] bg-white text-slate-700 hover:bg-[#fff8ef]"
+                    }`}
+                  >
+                    {item}
+                  </button>
                 ))}
+              </div>
+            </div>
+
+            <div className="mt-5 grid gap-4 lg:grid-cols-4">
+              <div className="rounded-2xl bg-[#fff8ef] px-4 py-4">
+                <p className="text-sm uppercase tracking-[0.24em] text-[#8a5200]">Revenue</p>
+                <p className="mt-3 text-3xl font-extrabold text-slate-950">{formatCurrency(sumBy(rangeBills, (bill) => bill.amount))}</p>
+              </div>
+              <div className="rounded-2xl bg-[#fff8ef] px-4 py-4">
+                <p className="text-sm uppercase tracking-[0.24em] text-[#8a5200]">Bookings</p>
+                <p className="mt-3 text-3xl font-extrabold text-slate-950">{bookingRevenue ? formatCurrency(bookingRevenue) : "Rs 0"}</p>
+              </div>
+              <div className="rounded-2xl bg-[#fff8ef] px-4 py-4">
+                <p className="text-sm uppercase tracking-[0.24em] text-[#8a5200]">Donations</p>
+                <p className="mt-3 text-3xl font-extrabold text-slate-950">{donationRevenue ? formatCurrency(donationRevenue) : "Rs 0"}</p>
+              </div>
+              <div className="rounded-2xl bg-[#fff8ef] px-4 py-4">
+                <p className="text-sm uppercase tracking-[0.24em] text-[#8a5200]">Prasadam</p>
+                <p className="mt-3 text-3xl font-extrabold text-slate-950">{prasadamRevenue ? formatCurrency(prasadamRevenue) : "Rs 0"}</p>
+              </div>
             </div>
           </section>
-        </aside>
-      </div>
+
+          <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+            <section className="rounded-[22px] border border-[#f0d3a2] bg-white/95 p-5 shadow-sm">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-2xl font-extrabold text-slate-950">Seven day collection trend</h2>
+                  <p className="mt-1 text-sm font-medium text-slate-700">
+                    Total money collected each day from the cashier ledger.
+                  </p>
+                </div>
+                <FaChartPie className="text-[#f28c18]" />
+              </div>
+
+              <div className="mt-5 h-[290px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={dailySeries} margin={{ top: 10, right: 10, left: -12, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="cashierReport" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#f28c18" stopOpacity={0.45} />
+                        <stop offset="95%" stopColor="#f28c18" stopOpacity={0.05} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f2e4cf" />
+                    <XAxis dataKey="day" tickLine={false} axisLine={false} tick={{ fill: "#64748b", fontSize: 11 }} />
+                    <YAxis tickLine={false} axisLine={false} tick={{ fill: "#64748b", fontSize: 11 }} />
+                    <Tooltip
+                      contentStyle={{ background: "#0f172a", borderRadius: 12, border: "none", color: "#fff" }}
+                      labelStyle={{ color: "#cbd5e1" }}
+                    />
+                    <Area type="monotone" dataKey="amount" stroke="#f28c18" strokeWidth={3} fill="url(#cashierReport)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </section>
+
+            <section className="rounded-[22px] border border-[#f0d3a2] bg-white/95 p-5 shadow-sm">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-2xl font-extrabold text-slate-950">Payment methods</h2>
+                  <p className="mt-1 text-sm font-medium text-slate-700">
+                    Distribution by payment mode.
+                  </p>
+                </div>
+                <FaChartPie className="text-[#f28c18]" />
+              </div>
+
+              <div className="relative mt-4 h-[220px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={paymentSeries} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={58} outerRadius={88} paddingAngle={2}>
+                      {paymentSeries.map((entry) => (
+                        <Cell key={entry.name} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+
+              <div className="grid gap-2 sm:grid-cols-2">
+                {paymentSeries.length ? (
+                  paymentSeries.map((item) => (
+                    <div key={item.name} className="flex items-center justify-between rounded-2xl border border-[#ead7bb] bg-[#fffaf4] px-3 py-2 text-sm">
+                      <span className="font-semibold text-slate-800">{item.name}</span>
+                      <span className="font-bold text-slate-950">{formatCurrency(item.value)}</span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="rounded-2xl bg-[#fff8ef] px-4 py-6 text-center text-slate-500">No payment data yet.</div>
+                )}
+              </div>
+              <p className="mt-4 text-sm text-slate-600">
+                Total by method: {formatCurrency(paymentTotals)}
+              </p>
+            </section>
+          </div>
+
+          <section className="rounded-[22px] border border-[#f0d3a2] bg-white/95 p-5 shadow-sm">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-2xl font-extrabold text-slate-950">Recent report rows</h2>
+                <p className="mt-1 text-sm font-medium text-slate-700">
+                  Latest transactions from the selected range.
+                </p>
+              </div>
+              <span className="rounded-full bg-[#fff1d7] px-3 py-1 text-xs font-bold text-[#8a5200]">
+                {recentReportRows.length} rows
+              </span>
+            </div>
+
+            <div className="mt-5 overflow-x-auto">
+              <table className="w-full min-w-[900px] text-left text-sm">
+                <thead className="bg-[#fff7eb] text-slate-600">
+                  <tr>
+                    <th className="px-4 py-3 font-bold">Receipt</th>
+                    <th className="px-4 py-3 font-bold">Type</th>
+                    <th className="px-4 py-3 font-bold">Service</th>
+                    <th className="px-4 py-3 font-bold">Amount</th>
+                    <th className="px-4 py-3 font-bold">Payment</th>
+                    <th className="px-4 py-3 font-bold">Date</th>
+                    <th className="px-4 py-3 font-bold">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loading ? (
+                    <tr>
+                      <td colSpan="7" className="px-4 py-8 text-center text-slate-500">
+                        Loading reports...
+                      </td>
+                    </tr>
+                  ) : recentReportRows.length ? (
+                    recentReportRows.map((row) => (
+                      <tr key={`${row.id}-${row.date}`} className="border-b border-[#f2e7d7]">
+                        <td className="px-4 py-3 font-bold text-slate-950">{row.id}</td>
+                        <td className="px-4 py-3">{row.type}</td>
+                        <td className="px-4 py-3">{row.service}</td>
+                        <td className="px-4 py-3 font-bold text-slate-950">{formatCurrency(row.amount)}</td>
+                        <td className="px-4 py-3">{row.paymentMode}</td>
+                        <td className="px-4 py-3 text-slate-700">{row.date}</td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${
+                              statusTone[row.status] || statusTone.Paid
+                            }`}
+                          >
+                            {row.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="7" className="px-4 py-8 text-center text-slate-500">
+                        No report rows available for this period.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </>
+      )}
     </CashierPageShell>
   );
 };

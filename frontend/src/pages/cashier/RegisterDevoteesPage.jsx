@@ -1,8 +1,8 @@
-import { useState } from "react";
-import { FaCheckCircle, FaUserPlus } from "react-icons/fa";
+import { useEffect, useState, useMemo } from "react";
+import { FaCheckCircle, FaUserPlus, FaSearch, FaUsers } from "react-icons/fa";
 import templeBg from "../../assets/temple-bg.jpg";
 import CashierPageShell from "../../components/cashier/CashierPageShell";
-import { registerDevotee } from "../../services/cashierService";
+import { registerDevotee, fetchDevotees } from "../../services/cashierService";
 import { useNotifications } from "../../context/NotificationContext";
 
 const emptyForm = {
@@ -22,6 +22,9 @@ const RegisterDevoteesPage = () => {
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [devotees, setDevotees] = useState([]);
+  const [devoteesLoading, setDevoteesLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [recent, setRecent] = useState(() => {
     try {
       const stored = localStorage.getItem("recentDevotees");
@@ -30,6 +33,32 @@ const RegisterDevoteesPage = () => {
       return [];
     }
   });
+
+  const loadDevotees = async () => {
+    setDevoteesLoading(true);
+    try {
+      const data = await fetchDevotees();
+      setDevotees(data);
+    } catch (err) {
+      console.error("Failed to load devotees list", err);
+    } finally {
+      setDevoteesLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadDevotees();
+  }, []);
+
+  const filteredDevotees = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return devotees;
+    return devotees.filter((d) =>
+      [d.name, d.email, d.phone, d.place].filter(Boolean).some((field) =>
+        field.toLowerCase().includes(q)
+      )
+    );
+  }, [devotees, searchQuery]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -90,6 +119,7 @@ const RegisterDevoteesPage = () => {
       setForm(emptyForm);
       setMessage("Devotee registered successfully. They can now log in with the new account.");
       loadNotifications().catch(() => {});
+      loadDevotees().catch(() => {});
     } catch (error) {
       setMessage(error.response?.data?.message || "Failed to register devotee.");
     } finally {
@@ -239,6 +269,73 @@ const RegisterDevoteesPage = () => {
           </section>
         </aside>
       </div>
+
+      <section className="mt-8 rounded-[22px] border border-[#f0d3a2] bg-white/95 p-6 shadow-sm">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-2xl font-extrabold text-slate-950">Registered Devotees</h2>
+            <p className="mt-1 text-sm font-medium text-slate-700">
+              Complete directory of all devotee accounts registered in the system.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 rounded-2xl border border-[#ead7bb] bg-[#fffaf4] px-4 py-3 text-sm text-slate-700">
+            <FaSearch />
+            <input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by name, email, phone..."
+              className="w-[220px] bg-transparent outline-none"
+            />
+          </div>
+        </div>
+
+        <div className="mt-6 overflow-x-auto">
+          <table className="w-full min-w-[900px] text-left text-sm">
+            <thead className="bg-[#fff7eb] text-slate-600">
+              <tr>
+                <th className="px-4 py-3 font-bold">Name</th>
+                <th className="px-4 py-3 font-bold">Email</th>
+                <th className="px-4 py-3 font-bold">Phone</th>
+                <th className="px-4 py-3 font-bold">Place / City</th>
+                <th className="px-4 py-3 font-bold">Address</th>
+                <th className="px-4 py-3 font-bold">Registered Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {devoteesLoading ? (
+                <tr>
+                  <td colSpan="6" className="px-4 py-8 text-center text-slate-500">
+                    Loading devotees directory...
+                  </td>
+                </tr>
+              ) : filteredDevotees.length ? (
+                filteredDevotees.map((devotee) => (
+                  <tr key={devotee._id || devotee.email} className="border-b border-[#f2e7d7] last:border-b-0">
+                    <td className="px-4 py-3 font-bold text-slate-950">{devotee.name}</td>
+                    <td className="px-4 py-3 font-semibold text-slate-700">{devotee.email}</td>
+                    <td className="px-4 py-3 text-slate-800">{devotee.phone || "-"}</td>
+                    <td className="px-4 py-3 text-slate-800">{devotee.place || "-"}</td>
+                    <td className="px-4 py-3 text-slate-600 max-w-[280px] truncate" title={devotee.address}>{devotee.address || "-"}</td>
+                    <td className="px-4 py-3 text-slate-600">
+                      {devotee.createdAt ? new Date(devotee.createdAt).toLocaleDateString("en-IN", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      }) : "-"}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="6" className="px-4 py-8 text-center text-slate-500">
+                    No devotees found matching the search criteria.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </CashierPageShell>
   );
 };

@@ -205,3 +205,16 @@ export const changeCashierPassword = async (userId, payload) => {
   const response = await changeEmployeePassword(userId, payload);
   return response;
 };
+
+export const updateBillStatus = async (id, status) => {
+  const response = await axios.patch(`${API_BASE}/bills/${id}/status`, { status });
+  return response.data || null;
+};
+
+export const fetchDevotees = async () => {
+  const token = localStorage.getItem("token");
+  const response = await axios.get(`${API_BASE}/auth/cashier/devotees`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  return response.data || [];
+};

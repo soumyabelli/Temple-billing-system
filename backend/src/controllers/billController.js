@@ -134,4 +134,24 @@ const verifyBillPayment = async (req, res) => {
   }
 };
 
-module.exports = { getBills, createBill, verifyBillPayment };
+const updateBillStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const bill = await Bill.findById(id);
+    if (!bill) {
+      return res.status(404).json({ message: "Bill not found" });
+    }
+
+    bill.status = status || "Paid";
+    await bill.save();
+
+    return res.status(200).json({ success: true, bill });
+  } catch (error) {
+    console.error("updateBillStatus error:", error);
+    return res.status(500).json({ message: "Failed to update bill status", error: error.message });
+  }
+};
+
+module.exports = { getBills, createBill, verifyBillPayment, updateBillStatus };
