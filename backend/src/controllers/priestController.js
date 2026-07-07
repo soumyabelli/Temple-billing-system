@@ -148,9 +148,8 @@ exports.getPriestDashboard = async (req, res) => {
     const notifications = await Notification.find({
       $or: [
         { audienceRole: "priest" },
-        { audienceRole: "staff" },
-        { audienceRole: { $exists: false } },
-        { audienceEmail: { $exists: false } }
+        { audienceId: priestId },
+        { audienceEmail: user.email }
       ]
     }).sort({ createdAt: -1 }).limit(10);
 

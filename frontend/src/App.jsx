@@ -634,6 +634,22 @@ function App() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/priest/my-duties"
+        element={
+          <ProtectedRoute allowedRoles={["priest"]}>
+            <PriestDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/priest/inventory-requests"
+        element={
+          <ProtectedRoute allowedRoles={["priest"]}>
+            <PriestDashboard />
+          </ProtectedRoute>
+        }
+      />
 
       {/* STAFF */}
       <Route
