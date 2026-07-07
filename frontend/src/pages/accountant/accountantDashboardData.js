@@ -40,43 +40,26 @@ export const accountantStats = [
   {
     title: "Today's Collection",
     value: "Rs 25,000",
-    change: "+12.5% from yesterday",
-    tone: "up",
     icon: FaRupeeSign,
   },
   {
     title: "Monthly Revenue",
     value: "Rs 4,85,000",
-    change: "+18.4% this month",
-    tone: "up",
     icon: FaWallet,
   },
   {
     title: "Total Donations",
     value: "Rs 1,78,500",
-    change: "+9.1% from last month",
-    tone: "up",
     icon: FaDonate,
-  },
-  {
-    title: "Pending Payments",
-    value: "Rs 6,500",
-    change: "-5.4% from yesterday",
-    tone: "down",
-    icon: FaClock,
   },
   {
     title: "Pooja Revenue",
     value: "Rs 1,12,000",
-    change: "+7.1% from last month",
-    tone: "up",
     icon: MdTempleBuddhist,
   },
   {
     title: "Prasadam Revenue",
     value: "Rs 82,250",
-    change: "+11.6% from last month",
-    tone: "up",
     icon: MdOutlineVolunteerActivism,
   },
 ];
