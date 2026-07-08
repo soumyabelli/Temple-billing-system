@@ -1,6 +1,6 @@
 const InventoryRequest = require("../models/InventoryRequest");
 const InventoryItem = require("../models/InventoryItem");
-const InventoryLog = require("../models/InventoryLog");
+const InventoryIssue = require("../models/InventoryIssue");
 const { createStaffNotification } = require("../utils/notificationService");
 const { seedDefaultItems } = require("./inventoryItemController");
 
@@ -30,9 +30,9 @@ exports.getInventoryCatalog = async (req, res) => {
       _id: item._id,
       name: item.name,
       unit: item.unit,
-      stock: item.currentStock,
+      stock: item.availableStock,
       minimumStock: item.minimumStock,
-      status: item.currentStock === 0 ? "Out Of Stock" : item.currentStock <= item.minimumStock ? "Low Stock" : "Available",
+      status: item.availableStock === 0 ? "Out Of Stock" : item.availableStock <= item.minimumStock ? "Low Stock" : "Healthy",
     }));
     return res.json({ success: true, items });
   } catch (error) {
@@ -43,7 +43,7 @@ exports.getInventoryCatalog = async (req, res) => {
 // POST /api/staff/inventory-requests (and /api/priest/inventory-requests)
 exports.createInventoryRequest = async (req, res) => {
   try {
-    const { userId, staffId, userName, staffName, role, itemName, quantity, unit, reason, requestedBy } = req.body;
+    const { userId, staffId, userName, staffName, role, itemName, quantity, unit, reason, requestedBy, purpose, expectedDate, priority } = req.body;
     const trimmedItemName = clean(itemName);
     const trimmedQuantity = clean(quantity);
     const trimmedUnit = clean(unit);
@@ -51,11 +51,13 @@ exports.createInventoryRequest = async (req, res) => {
     const trimmedUserId = clean(userId || staffId);
     const trimmedUserName = clean(userName || staffName || requestedBy);
     const requestRole = clean(role) || "Staff";
+    const requestPurpose = clean(purpose);
+    const requestPriority = clean(priority) || "Medium";
 
-    if (!trimmedUserId || !trimmedUserName || !trimmedItemName || !trimmedQuantity || !trimmedUnit || !trimmedReason) {
+    if (!trimmedUserId || !trimmedUserName || !trimmedItemName || !trimmedQuantity || !trimmedUnit || (!trimmedReason && !requestPurpose)) {
       return res.status(400).json({
         success: false,
-        message: "userId, userName, itemName, quantity, unit and reason are required",
+        message: "userId, userName, itemName, quantity, unit and reason/purpose are required",
       });
     }
 
@@ -96,7 +98,10 @@ exports.createInventoryRequest = async (req, res) => {
       itemName: trimmedItemName,
       quantity: parsedQty,
       unit: trimmedUnit,
-      reason: trimmedReason,
+      reason: trimmedReason || requestPurpose,
+      purpose: requestPurpose || trimmedReason,
+      expectedDate: expectedDate ? new Date(expectedDate) : new Date(),
+      priority: requestPriority,
       status: "Pending",
       adminReason: "",
       reviewedBy: "",
@@ -106,7 +111,7 @@ exports.createInventoryRequest = async (req, res) => {
     // Notify admin
     await createStaffNotification({
       title: "🔔 New Inventory Request",
-      message: `${trimmedUserName} (${requestRole}) requested ${parsedQty} ${trimmedUnit} of ${trimmedItemName}.\nReason: ${trimmedReason}`,
+      message: `${trimmedUserName} (${requestRole}) requested ${parsedQty} ${trimmedUnit} of ${trimmedItemName}.\nPurpose: ${requestPurpose || trimmedReason}`,
       audienceRole: "admin",
       category: "inventory",
     });
@@ -183,24 +188,13 @@ exports.updateInventoryRequestStatus = async (req, res) => {
       }
 
       const parsedQty = parseFloat(request.quantity);
-      if (inventoryItem.currentStock < parsedQty) {
+      if (inventoryItem.availableStock < parsedQty) {
         return res.status(400).json({ success: false, message: "Insufficient inventory stock." });
       }
 
-      const stockBefore = inventoryItem.currentStock;
-      inventoryItem.currentStock -= parsedQty;
-      const stockAfter = inventoryItem.currentStock;
-
+      inventoryItem.availableStock -= parsedQty;
+      inventoryItem.issuedStock += parsedQty;
       await inventoryItem.save();
-
-      console.log(`[Inventory Approval Success]
-- Request ID: ${request._id}
-- Item Name: ${request.itemName}
-- Quantity Approved: ${parsedQty}
-- Stock Before: ${stockBefore}
-- Stock After: ${stockAfter}
-- Employee Name: ${request.userName}
-- Approval Time: ${new Date().toISOString()}`);
 
       request.status = "Approved";
       request.adminReason = clean(adminReason);
@@ -210,27 +204,31 @@ exports.updateInventoryRequestStatus = async (req, res) => {
       request.approvedAt = new Date();
       await request.save();
 
-      await InventoryLog.create({
+      await InventoryIssue.create({
+        request: request._id,
         item: inventoryItem._id,
-        action: "Consumed",
-        quantity: parsedQty,
-        oldStock: stockBefore,
-        newStock: stockAfter,
-        user: req.user ? req.user.id : null,
+        itemName: inventoryItem.name,
+        userId: request.userId,
+        userName: request.userName,
+        role: request.role,
+        issuedQuantity: parsedQty,
+        unit: inventoryItem.unit,
+        issuedBy: req.user ? req.user.name || req.user.id : "Admin",
+        purpose: request.purpose || request.reason,
       });
 
       await createStaffNotification({
-        title: "🔔 Request Approved",
-        message: `✅ Your request for ${request.itemName} (${request.quantity} ${request.unit}) has been approved.`,
+        title: "🔔 Request Approved & Issued",
+        message: `✅ Your request for ${request.itemName} (${request.quantity} ${request.unit}) has been approved and issued to you.`,
         audienceId: request.userId,
         category: "inventory",
       });
 
       // Check for low stock alert
-      if (inventoryItem.currentStock <= inventoryItem.minimumStock) {
+      if (inventoryItem.availableStock <= inventoryItem.minimumStock) {
         await createStaffNotification({
           title: "⚠️ Low Stock Alert",
-          message: `${inventoryItem.name} stock is now at or below minimum level. Current: ${inventoryItem.currentStock} ${inventoryItem.unit}, Minimum: ${inventoryItem.minimumStock} ${inventoryItem.unit}. Please reorder soon.`,
+          message: `${inventoryItem.name} stock is now at or below minimum level. Current: ${inventoryItem.availableStock} ${inventoryItem.unit}, Minimum: ${inventoryItem.minimumStock} ${inventoryItem.unit}. Please reorder soon.`,
           audienceRole: "admin",
           category: "inventory",
         });

@@ -38,6 +38,10 @@ const {
   createInventoryRequest,
   getInventoryRequests,
 } = require("../controllers/inventoryRequestController");
+const {
+  getInventoryIssues,
+  completeUsage,
+} = require("../controllers/inventoryIssueController");
 const { authenticate, authorizeRoles } = require("../middleware/authMiddleware");
 
 const router = express.Router();
@@ -102,5 +106,8 @@ router.get("/inventory/catalog", getInventoryCatalog);
 router.post("/inventory-requests", createInventoryRequest);
 router.get("/inventory-requests", getInventoryRequests);
 router.get("/inventory-requests/:userId", getInventoryRequests);
+router.get("/inventory-issues", getInventoryIssues);
+router.get("/inventory-issues/:userId", getInventoryIssues);
+router.post("/inventory-issues/:id/complete", completeUsage);
 
 module.exports = router;

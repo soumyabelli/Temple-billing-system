@@ -137,13 +137,10 @@ const PriestDashboard = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {[
           { icon: MdTempleHindu, label: "Today's Poojas", value: stats.todayPooja, color: "bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400" },
           { icon: FaCalendarCheck, label: "Upcoming Poojas", value: stats.upcomingPooja, color: "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400" },
-          { icon: FaCheckCircle, label: "Completed Today", value: stats.completedToday, color: "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400" },
-          { icon: FaHourglassHalf, label: "Pending Services", value: stats.pendingServices, color: "bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400" },
-          { icon: FaUsers, label: "Total Devotees", value: stats.totalDevotees, color: "bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400" },
         ].map((card, i) => (
           <div
             key={i}
@@ -180,10 +177,10 @@ const PriestDashboard = () => {
         ))}
       </div>
 
-      {/* Main Grid: Today's Schedule (spans 2), Upcoming & Completed (span 1 each) */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      {/* Main Grid: Today's Schedule (spans 2), Upcoming Poojas (span 1) */}
+      <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
         {/* Today's Schedule Table */}
-        <div className={`lg:col-span-2 rounded-2xl p-6 border transition-colors ${darkMode ? "bg-[#1f2937] border-slate-700" : "bg-white border-[#ece8e1]"
+        <div className={`rounded-2xl p-6 border transition-colors ${darkMode ? "bg-[#1f2937] border-slate-700" : "bg-white border-[#ece8e1]"
           }`}>
           <div className="flex items-center justify-between mb-6">
             <h3 className={`text-lg font-bold flex items-center gap-2 ${darkMode ? "text-slate-100" : "text-[#1d1b19]"}`}>
@@ -204,7 +201,6 @@ const PriestDashboard = () => {
                   <th className={`text-left pb-3 font-semibold ${darkMode ? "text-slate-400" : "text-slate-500"}`}>Time</th>
                   <th className={`text-left pb-3 font-semibold ${darkMode ? "text-slate-400" : "text-slate-500"}`}>Pooja / Service</th>
                   <th className={`text-left pb-3 font-semibold ${darkMode ? "text-slate-400" : "text-slate-500"}`}>Devotee</th>
-                  <th className={`text-left pb-3 font-semibold ${darkMode ? "text-slate-400" : "text-slate-500"}`}>Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -213,111 +209,16 @@ const PriestDashboard = () => {
                     <td className={`py-3 px-1 font-medium ${darkMode ? "text-slate-300" : "text-slate-700"}`}>{item.time}</td>
                     <td className={`py-3 px-1 font-semibold ${darkMode ? "text-slate-200" : "text-slate-800"}`}>{item.pooja}</td>
                     <td className={`py-3 px-1 ${darkMode ? "text-slate-300" : "text-slate-700"}`}>{item.devotee}</td>
-                    <td className="py-3 px-1">
-                      <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${getStatusColor(item.status)}`}>
-                        {item.status}
-                      </span>
-                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         </div>
-
-        {/* Upcoming Poojas */}
-        <div className={`rounded-2xl p-6 border transition-colors ${darkMode ? "bg-[#1f2937] border-slate-700" : "bg-white border-[#ece8e1]"
-          }`}>
-          <div className="flex items-center justify-between mb-5">
-            <h3 className={`text-lg font-bold flex items-center gap-2 ${darkMode ? "text-slate-100" : "text-[#1d1b19]"}`}>
-              <FaCalendarCheck className="text-[#e07a22]" /> Upcoming Poojas
-            </h3>
-            <button onClick={() => navigate("/priest/seva-schedule")} className="text-orange-500 text-xs font-bold hover:underline">
-              View All
-            </button>
-          </div>
-
-          <div className="space-y-3">
-            {upcomingPoojas.slice(0, 4).map((pooja) => (
-              <div
-                key={pooja.id}
-                className={`p-3.5 rounded-xl border flex items-center justify-between group cursor-pointer transition-all hover:-translate-y-0.5 ${darkMode ? "bg-slate-800/50 border-slate-700 hover:bg-slate-800" : "bg-[#fcfbf9] border-[#ece8e1] hover:bg-orange-50/30"
-                  }`}
-              >
-                <div>
-                  <p className={`font-bold text-sm ${darkMode ? "text-slate-200" : "text-slate-800"}`}>{pooja.pooja}</p>
-                  <p className="text-xs text-orange-500 font-semibold mt-1">{pooja.date}</p>
-                  <p className={`text-xs ${darkMode ? "text-slate-400" : "text-slate-600"} mt-0.5`}>{pooja.devotee}</p>
-                </div>
-                <MdArrowForward className="text-slate-400 group-hover:text-orange-500 transition-colors" />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Completed Services */}
-        <div className={`rounded-2xl p-6 border transition-colors ${darkMode ? "bg-[#1f2937] border-slate-700" : "bg-white border-[#ece8e1]"
-          }`}>
-          <div className="flex items-center justify-between mb-5">
-            <h3 className={`text-lg font-bold flex items-center gap-2 ${darkMode ? "text-slate-100" : "text-[#1d1b19]"}`}>
-              <FaCheckCircle className="text-emerald-500" /> Completed Today
-            </h3>
-            <button onClick={() => navigate("/priest/completed-services")} className="text-emerald-600 text-xs font-bold hover:underline">
-              View All
-            </button>
-          </div>
-
-          <div className="space-y-3">
-            {completedServices.slice(0, 5).map((service) => (
-              <div
-                key={service.id}
-                className={`p-3.5 rounded-xl border flex items-center justify-between ${darkMode ? "bg-slate-800/50 border-slate-700" : "bg-[#fcfbf9] border-[#ece8e1]"
-                  }`}
-              >
-                <div>
-                  <p className={`font-bold text-sm ${darkMode ? "text-slate-200" : "text-slate-800"}`}>{service.pooja}</p>
-                  <p className={`text-xs ${darkMode ? "text-slate-400" : "text-slate-600"} mt-1`}>{service.time}</p>
-                  <p className={`text-xs ${darkMode ? "text-slate-300" : "text-slate-700"} mt-0.5`}>{service.devotee}</p>
-                </div>
-                <div className="w-6 h-6 rounded-full bg-emerald-50 dark:bg-emerald-950/30 flex items-center justify-center">
-                  <FaCheckCircle className="text-emerald-500 text-xs" />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
 
-      {/* Row 4: Seva Duties, Announcements, Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Seva Duties */}
-        <div className={`rounded-2xl p-6 border transition-colors ${darkMode ? "bg-[#1f2937] border-slate-700" : "bg-white border-[#ece8e1]"
-          }`}>
-          <h3 className={`text-lg font-bold mb-5 flex items-center gap-2 ${darkMode ? "text-slate-100" : "text-[#1d1b19]"}`}>
-            <FaBook className="text-purple-500" /> Today's Seva Duties
-          </h3>
-
-          <div className="space-y-3.5">
-            {sevaDuties.slice(0, 4).map((duty) => (
-              <div
-                key={duty.id}
-                className={`p-3 rounded-xl border flex items-start gap-3 ${darkMode ? "bg-slate-800/40 border-slate-700" : "bg-slate-50 border-slate-100"
-                  }`}
-              >
-                <div className="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-950/40 flex items-center justify-center shrink-0 mt-0.5">
-                  <FaBook className="text-purple-500 text-xs" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between">
-                    <p className={`font-bold text-sm ${darkMode ? "text-slate-200" : "text-slate-800"}`}>{duty.duty}</p>
-                    <span className="text-[11px] font-bold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 px-2 py-0.5 rounded-full">{duty.time}</span>
-                  </div>
-                  <p className={`text-xs ${darkMode ? "text-slate-300" : "text-slate-600"} mt-1.5`}>{duty.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+      {/* Row 4: Announcements */}
+      <div className="grid grid-cols-1 gap-6">
 
         {/* Announcements */}
         <div className={`rounded-2xl p-6 border transition-colors ${darkMode ? "bg-[#1f2937] border-slate-700" : "bg-white border-[#ece8e1]"
@@ -350,34 +251,6 @@ const PriestDashboard = () => {
                 </div>
               );
             })}
-          </div>
-        </div>
-
-        {/* Quick Actions Grid */}
-        <div className={`rounded-2xl p-6 border transition-colors ${darkMode ? "bg-[#1f2937] border-slate-700" : "bg-white border-[#ece8e1]"
-          }`}>
-          <h3 className={`text-lg font-bold mb-5 ${darkMode ? "text-slate-100" : "text-[#1d1b19]"}`}>
-            Quick Actions
-          </h3>
-
-          <div className="grid grid-cols-2 gap-3">
-            {[
-              { label: "View Assigned Poojas", icon: FaClipboardList, color: "bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-100/70 dark:bg-purple-950/20 dark:hover:bg-purple-900/30 dark:text-purple-400 dark:border-purple-900/30", path: "/priest/assigned-poojas" },
-              { label: "Update Service Status", icon: FaCheckCircle, color: "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-100/70 dark:bg-emerald-950/20 dark:hover:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-900/30", path: "/priest/assigned-poojas" },
-              { label: "Seva Schedule", icon: FaCalendarAlt, color: "bg-orange-50 hover:bg-orange-100 text-orange-700 border-orange-100/70 dark:bg-orange-950/20 dark:hover:bg-orange-900/30 dark:text-orange-400 dark:border-orange-900/30", path: "/priest/seva-schedule" },
-              { label: "Add Special Note", icon: FaPlus, color: "bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-100/70 dark:bg-blue-950/20 dark:hover:bg-blue-900/30 dark:text-blue-400 dark:border-blue-900/30", path: "/priest/settings" },
-              { label: "View Devotees", icon: FaUsers, color: "bg-[#fcfbf9] hover:bg-[#ece8e1] text-amber-800 border-amber-200 dark:bg-amber-950/20 dark:hover:bg-amber-900/30 dark:text-amber-400 dark:border-amber-900/30", path: "/priest/assigned-poojas" },
-              { label: "Check Items Required", icon: MdTempleHindu, color: "bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-100/70 dark:bg-rose-950/20 dark:hover:bg-rose-900/30 dark:text-rose-400 dark:border-rose-900/30", path: "/priest/seva-schedule" },
-            ].map((action, index) => (
-              <button
-                key={index}
-                onClick={() => navigate(action.path)}
-                className={`p-3.5 rounded-xl border flex flex-col justify-between items-start gap-2.5 transition-all text-left group hover:-translate-y-0.5 ${action.color}`}
-              >
-                <action.icon size={18} className="transition-transform group-hover:scale-110" />
-                <span className="text-[12px] font-bold leading-tight">{action.label}</span>
-              </button>
-            ))}
           </div>
         </div>
       </div>
@@ -454,7 +327,6 @@ const PriestDashboard = () => {
                   <th className={`text-left pb-3 font-semibold ${darkMode ? "text-slate-400" : "text-slate-500"}`}>Time</th>
                   <th className={`text-left pb-3 font-semibold ${darkMode ? "text-slate-400" : "text-slate-500"}`}>Pooja Name</th>
                   <th className={`text-left pb-3 font-semibold ${darkMode ? "text-slate-400" : "text-slate-500"}`}>Devotee</th>
-                  <th className={`text-left pb-3 font-semibold ${darkMode ? "text-slate-400" : "text-slate-500"}`}>Status</th>
                   <th className={`text-center pb-3 font-semibold ${darkMode ? "text-slate-400" : "text-slate-500"}`}>Actions</th>
                 </tr>
               </thead>
@@ -466,49 +338,20 @@ const PriestDashboard = () => {
                       <td className={`py-4 px-2 font-semibold ${darkMode ? "text-slate-200" : "text-slate-800"}`}>{pooja.pooja}</td>
                       <td className={`py-4 px-2 ${darkMode ? "text-slate-300" : "text-slate-700"}`}>{pooja.devotee}</td>
                       <td className="py-4 px-2">
-                        <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${getStatusColor(pooja.status)}`}>
-                          {pooja.status}
-                        </span>
-                      </td>
-                      <td className="py-4 px-2">
                         <div className="flex items-center justify-center gap-2">
-                          {pooja.status !== "Completed" && (
-                            <>
-                              {pooja.status !== "In Progress" ? (
-                                <button
-                                  onClick={() => handleStatusChange(pooja.id, "In Progress")}
-                                  className="px-3 py-1 rounded-lg text-xs font-semibold bg-amber-500 text-white hover:bg-amber-600 transition-colors"
-                                >
-                                  Start Pooja
-                                </button>
-                              ) : (
-                                <button
-                                  onClick={() => handleStatusChange(pooja.id, "Completed")}
-                                  className="px-3 py-1 rounded-lg text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
-                                >
-                                  Complete
-                                </button>
-                              )}
-                              <button
-                                onClick={() => handleStatusChange(pooja.id, "Pending")}
-                                className="px-3 py-1 rounded-lg text-xs font-semibold bg-rose-50 text-rose-600 dark:bg-rose-950/20 dark:text-rose-400 hover:bg-rose-100 transition-colors border border-rose-100 dark:border-rose-900/30"
-                              >
-                                Put Pending
-                              </button>
-                            </>
-                          )}
-                          {pooja.status === "Completed" && (
-                            <span className="text-xs text-slate-400 font-semibold flex items-center gap-1">
-                              <FaCheckCircle className="text-emerald-500" /> Completed
-                            </span>
-                          )}
+                          <button
+                            onClick={() => navigate("/priest/my-duties")}
+                            className="px-3 py-1 rounded-lg text-xs font-semibold bg-purple-50 text-purple-600 dark:bg-purple-950/20 dark:text-purple-400 hover:bg-purple-100 transition-colors border border-purple-100 dark:border-purple-900/30"
+                          >
+                            Assign to other priest
+                          </button>
                         </div>
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="5" className="py-8 text-center font-medium text-slate-400">
+                    <td colSpan="4" className="py-8 text-center font-medium text-slate-400">
                       No poojas found matching search.
                     </td>
                   </tr>

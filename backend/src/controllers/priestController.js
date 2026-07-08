@@ -88,9 +88,8 @@ exports.getPriestDashboard = async (req, res) => {
     // 5. Pending Services assigned to this priest
     const pendingBookings = bookings.filter(b => b.status === "Pending");
 
-    // 6. Total Devotees Served
-    const completedBookings = bookings.filter(b => b.status === "Completed");
-    const uniqueDevotees = new Set(completedBookings.map(b => b.devoteeName).filter(Boolean));
+    // 6. Total Devotees Served (All Assigned)
+    const uniqueDevotees = new Set(bookings.map(b => b.devoteeName).filter(Boolean));
     const totalDevoteesCount = uniqueDevotees.size;
 
     // Stats
@@ -120,6 +119,7 @@ exports.getPriestDashboard = async (req, res) => {
     }));
 
     // 9. Format completed services
+    const completedBookings = bookings.filter(b => b.status === "Completed");
     const completedServicesFormatted = completedBookings.map(b => ({
       id: b._id,
       pooja: b.service,

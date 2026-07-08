@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { FiBox, FiClock, FiCheckCircle, FiLock, FiSave } from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext";
-import "../staff/StaffDashboard.css"; // Reuse existing styles
+import "./StaffDashboard.css"; // Reuse existing styles
 
 const API_BASE = "http://localhost:5000/api";
 
@@ -25,10 +25,10 @@ const formatDateTime = (value) => {
   });
 };
 
-const PriestInventory = () => {
+const StaffInventory = () => {
   const { user } = useAuth();
-  const priestId = user?.id || user?._id || "";
-  const priestName = user?.name || "Priest";
+  const staffId = user?.id || user?._id || "";
+  const staffName = user?.name || "Staff";
 
   const [activeTab, setActiveTab] = useState("requests"); // "requests" | "issued"
 
@@ -51,12 +51,12 @@ const PriestInventory = () => {
   const [completionForm, setCompletionForm] = useState({}); // { [issueId]: { usedQuantity: "", returnedQuantity: "", remarks: "" } }
 
   const fetchRequestsData = useCallback(async () => {
-    if (!priestId) return;
+    if (!staffId) return;
     setLoading(true);
     try {
       const [catRes, reqRes] = await Promise.all([
-        axios.get(`${API_BASE}/priest/inventory/catalog`, { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }),
-        axios.get(`${API_BASE}/priest/inventory-requests/${priestId}`, { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } })
+        axios.get(`${API_BASE}/staff/inventory/catalog`, { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }),
+        axios.get(`${API_BASE}/staff/inventory-requests/${staffId}`, { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } })
       ]);
       setCatalog(catRes.data?.items || []);
       setRequests(reqRes.data?.requests || []);
@@ -65,21 +65,21 @@ const PriestInventory = () => {
     } finally {
       setLoading(false);
     }
-  }, [priestId]);
+  }, [staffId]);
 
   const fetchIssuesData = useCallback(async () => {
-    if (!priestId) return;
+    if (!staffId) return;
     setIssuesLoading(true);
     setIssuesError("");
     try {
-      const res = await axios.get(`${API_BASE}/priest/inventory-issues/${priestId}`, { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } });
+      const res = await axios.get(`${API_BASE}/staff/inventory-issues/${staffId}`, { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } });
       setIssues(Array.isArray(res.data?.issues) ? res.data.issues : []);
     } catch (err) {
       setIssuesError(err.response?.data?.message || "Failed to load issued items.");
     } finally {
       setIssuesLoading(false);
     }
-  }, [priestId]);
+  }, [staffId]);
 
   useEffect(() => {
     if (activeTab === "requests") {
@@ -134,10 +134,10 @@ const PriestInventory = () => {
       setSubmitting(true);
       setError("");
       setSuccessMsg("");
-      await axios.post(`${API_BASE}/priest/inventory-requests`, {
-        userId: priestId,
-        userName: priestName,
-        role: "Priest",
+      await axios.post(`${API_BASE}/staff/inventory-requests`, {
+        userId: staffId,
+        userName: staffName,
+        role: "Staff",
         itemName: form.itemName,
         quantity: parsedQty,
         unit: form.unit,
@@ -173,10 +173,10 @@ const PriestInventory = () => {
 
     setCompletingIssueId(issueId);
     try {
-      await axios.post(`${API_BASE}/priest/inventory-issues/${issueId}/complete`, {
+      await axios.post(`${API_BASE}/staff/inventory-issues/${issueId}/complete`, {
         usedQuantity: usedQty,
         returnedQuantity: returnedQty,
-        remarks: data.remarks || "Usage logged by priest",
+        remarks: data.remarks || "Usage logged by staff",
       }, { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } });
       await fetchIssuesData();
       setCompletionForm((p) => {
@@ -364,7 +364,7 @@ const PriestInventory = () => {
                     <textarea
                       id="inv-reason"
                       rows="2"
-                      placeholder="e.g. For tomorrow's pooja"
+                      placeholder="e.g. For tomorrow's tasks"
                       value={form.reason}
                       onChange={(e) => { setForm(p => ({ ...p, reason: e.target.value })); setError(""); }}
                     />
@@ -583,4 +583,4 @@ const PriestInventory = () => {
   );
 };
 
-export default PriestInventory;
+export default StaffInventory;

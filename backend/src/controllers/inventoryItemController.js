@@ -1,14 +1,15 @@
 const InventoryItem = require("../models/InventoryItem");
 const InventoryLog = require("../models/InventoryLog");
+const RestockHistory = require("../models/RestockHistory");
 const { createStaffNotification } = require("../utils/notificationService");
 
 const INVENTORY_UNITS = ["Kg", "Liter", "Pack", "Pieces", "Box"];
 
 const DEFAULT_ITEMS = [
-  { name: "Camphor", unit: "Pack", currentStock: 4, minimumStock: 10, category: "Pooja" },
-  { name: "Flowers", unit: "Kg", currentStock: 18, minimumStock: 10, category: "Pooja" },
-  { name: "Ghee", unit: "Liter", currentStock: 12, minimumStock: 5, category: "Pooja" },
-  { name: "Agarbathi", unit: "Pack", currentStock: 6, minimumStock: 10, category: "Pooja" },
+  { name: "Camphor", unit: "Pack", availableStock: 4, minimumStock: 10, category: "Pooja" },
+  { name: "Flowers", unit: "Kg", availableStock: 18, minimumStock: 10, category: "Pooja" },
+  { name: "Ghee", unit: "Liter", availableStock: 12, minimumStock: 5, category: "Pooja" },
+  { name: "Agarbathi", unit: "Pack", availableStock: 6, minimumStock: 10, category: "Pooja" },
 ];
 
 const clean = (value) => String(value || "").trim();
@@ -36,7 +37,7 @@ const getAllInventoryItems = async (req, res) => {
 // POST /api/admin/inventory-items
 const createInventoryItem = async (req, res) => {
   try {
-    const { name, unit, currentStock, minimumStock, category, description } = req.body;
+    const { name, unit, availableStock, minimumStock, category, description } = req.body;
 
     if (!clean(name)) {
       return res.status(400).json({ success: false, message: "Item name is required." });
@@ -47,8 +48,8 @@ const createInventoryItem = async (req, res) => {
         message: `Unit must be one of: ${INVENTORY_UNITS.join(", ")}`,
       });
     }
-    if (currentStock === undefined || currentStock === null || Number(currentStock) < 0) {
-      return res.status(400).json({ success: false, message: "Current stock must be a non-negative number." });
+    if (availableStock === undefined || availableStock === null || Number(availableStock) < 0) {
+      return res.status(400).json({ success: false, message: "Available stock must be a non-negative number." });
     }
     if (minimumStock === undefined || minimumStock === null || Number(minimumStock) < 0) {
       return res.status(400).json({ success: false, message: "Minimum stock must be a non-negative number." });
@@ -57,20 +58,22 @@ const createInventoryItem = async (req, res) => {
     const item = await InventoryItem.create({
       name: clean(name),
       unit: clean(unit),
-      currentStock: Number(currentStock),
+      availableStock: Number(availableStock),
       minimumStock: Number(minimumStock),
       category: clean(category),
       description: clean(description),
     });
 
-    await InventoryLog.create({
-      item: item._id,
-      action: "Added",
-      quantity: item.currentStock,
-      oldStock: 0,
-      newStock: item.currentStock,
-      user: req.user.id,
-    });
+    if (item.availableStock > 0) {
+      await RestockHistory.create({
+        item: item._id,
+        itemName: item.name,
+        quantity: item.availableStock,
+        unit: item.unit,
+        supplier: "Initial Stock",
+        restockedBy: req.user ? req.user.id : "System",
+      });
+    }
 
     return res.status(201).json({ success: true, item });
   } catch (error) {
@@ -85,7 +88,7 @@ const createInventoryItem = async (req, res) => {
 const updateInventoryItem = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, unit, currentStock, minimumStock, category, description } = req.body;
+    const { name, unit, availableStock, minimumStock, category, description } = req.body;
 
     const existingItem = await InventoryItem.findById(id);
     if (!existingItem) {
@@ -104,29 +107,18 @@ const updateInventoryItem = async (req, res) => {
       }
       updatePayload.unit = clean(unit);
     }
-    if (currentStock !== undefined) updatePayload.currentStock = Math.max(0, Number(currentStock));
+    if (availableStock !== undefined) updatePayload.availableStock = Math.max(0, Number(availableStock));
     if (minimumStock !== undefined) updatePayload.minimumStock = Math.max(0, Number(minimumStock));
     if (category !== undefined) updatePayload.category = clean(category);
     if (description !== undefined) updatePayload.description = clean(description);
 
     const item = await InventoryItem.findByIdAndUpdate(id, updatePayload, { new: true });
 
-    if (currentStock !== undefined && Number(currentStock) !== existingItem.currentStock) {
-      await InventoryLog.create({
-        item: item._id,
-        action: "Updated",
-        quantity: Math.abs(Number(currentStock) - existingItem.currentStock),
-        oldStock: existingItem.currentStock,
-        newStock: item.currentStock,
-        user: req.user.id,
-      });
-    }
-
     // Send low stock alert if updated stock is at or below minimum
-    if (item.currentStock <= item.minimumStock) {
+    if (item.availableStock <= item.minimumStock) {
       await createStaffNotification({
         title: "⚠️ Low Stock Alert",
-        message: `${item.name} stock is below minimum level. Current: ${item.currentStock} ${item.unit}, Minimum: ${item.minimumStock} ${item.unit}.`,
+        message: `${item.name} stock is below minimum level. Current: ${item.availableStock} ${item.unit}, Minimum: ${item.minimumStock} ${item.unit}.`,
         audienceRole: "admin",
         category: "inventory",
       });
@@ -159,7 +151,7 @@ const deleteInventoryItem = async (req, res) => {
 const restockItem = async (req, res) => {
   try {
     const { id } = req.params;
-    const { quantityAdded } = req.body;
+    const { quantityAdded, supplier, purchaseDate, cost, invoiceUrl } = req.body;
 
     if (!quantityAdded || Number(quantityAdded) <= 0) {
       return res.status(400).json({ success: false, message: "Valid quantity added is required." });
@@ -170,17 +162,19 @@ const restockItem = async (req, res) => {
       return res.status(404).json({ success: false, message: "Inventory item not found." });
     }
 
-    const oldStock = item.currentStock;
-    item.currentStock += Number(quantityAdded);
+    item.availableStock += Number(quantityAdded);
     await item.save();
 
-    await InventoryLog.create({
+    await RestockHistory.create({
       item: item._id,
-      action: "Restocked",
+      itemName: item.name,
       quantity: Number(quantityAdded),
-      oldStock,
-      newStock: item.currentStock,
-      user: req.user.id,
+      unit: item.unit,
+      supplier: clean(supplier),
+      purchaseDate: purchaseDate ? new Date(purchaseDate) : new Date(),
+      cost: Number(cost) || 0,
+      invoiceUrl: clean(invoiceUrl),
+      restockedBy: req.user ? req.user.name || req.user.id : "Admin",
     });
 
     return res.json({ success: true, message: "Item restocked successfully", item });

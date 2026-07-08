@@ -9,6 +9,11 @@ const {
   getInventoryLogs,
 } = require("../controllers/inventoryItemController");
 const { updateInventoryRequestStatus } = require("../controllers/inventoryRequestController");
+const { authenticate, authorizeRoles } = require("../middleware/authMiddleware");
+
+// All routes require authentication and admin/superadmin role
+router.use(authenticate);
+router.use(authorizeRoles("admin", "superadmin"));
 
 // GET /api/admin/inventory-items
 router.get("/inventory-items", getAllInventoryItems);
@@ -30,5 +35,9 @@ router.get("/inventory-logs", getInventoryLogs);
 
 // PUT /api/admin/inventory-requests/:id/status
 router.put("/inventory-requests/:id/status", updateInventoryRequestStatus);
+const { getConsumptionReports } = require("../controllers/inventoryIssueController");
+
+// GET /api/admin/inventory/reports/consumption
+router.get("/inventory/reports/consumption", getConsumptionReports);
 
 module.exports = router;

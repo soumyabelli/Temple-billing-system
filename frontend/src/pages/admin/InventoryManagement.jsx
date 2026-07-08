@@ -27,13 +27,13 @@ const formatDateTime = (value) => {
   });
 };
 
-const EMPTY_ITEM_FORM = { name: "", unit: "Pack", currentStock: "", minimumStock: "", category: "", description: "" };
+const EMPTY_ITEM_FORM = { name: "", unit: "Pack", availableStock: "", minimumStock: "", category: "", description: "" };
 
 // ─────────────────────────────────────────────
 // Low Stock Alert Banner
 // ─────────────────────────────────────────────
 const LowStockBanner = ({ items }) => {
-  const lowItems = items.filter((i) => i.currentStock <= i.minimumStock);
+  const lowItems = items.filter((i) => i.availableStock <= i.minimumStock);
   if (lowItems.length === 0) return null;
   return (
     <div style={{ background: "#fff7ed", border: "1px solid #fb923c", borderRadius: "12px", padding: "14px 18px", marginBottom: "16px" }}>
@@ -41,12 +41,12 @@ const LowStockBanner = ({ items }) => {
         ⚠️ Low Stock Alert — {lowItems.length} item{lowItems.length > 1 ? "s" : ""} below minimum level
       </p>
       <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-        {lowItems.map((item) => (
+        {lowItems.map((item, index) => (
           <span
             key={item?._id || index}
             style={{ background: "#fee2e2", color: "#b91c1c", borderRadius: "20px", padding: "4px 12px", fontSize: "12px", fontWeight: 600 }}
           >
-            🔴 {item?.name}: {item?.currentStock}/{item?.minimumStock} {item?.unit}
+            🔴 {item?.name}: {item?.availableStock}/{item?.minimumStock} {item?.unit}
           </span>
         ))}
       </div>
@@ -60,7 +60,7 @@ const LowStockBanner = ({ items }) => {
 const ItemFormModal = ({ editItem, onClose, onSave }) => {
   const [form, setForm] = useState(
     editItem
-      ? { name: editItem.name, unit: editItem.unit, currentStock: editItem.currentStock, minimumStock: editItem.minimumStock, category: editItem.category || "", description: editItem.description || "" }
+      ? { name: editItem.name, unit: editItem.unit, availableStock: editItem.stock || editItem.availableStock, minimumStock: editItem.minimumStock, category: editItem.category || "", description: editItem.description || "" }
       : EMPTY_ITEM_FORM
   );
   const [saving, setSaving] = useState(false);
@@ -70,13 +70,13 @@ const ItemFormModal = ({ editItem, onClose, onSave }) => {
     e.preventDefault();
     if (!form.name.trim()) { setError("Item name is required."); return; }
     if (!form.unit) { setError("Unit is required."); return; }
-    if (form.currentStock === "" || Number(form.currentStock) < 0) { setError("Current stock must be 0 or more."); return; }
+    if (form.availableStock === "" || Number(form.availableStock) < 0) { setError("Available stock must be 0 or more."); return; }
     if (form.minimumStock === "" || Number(form.minimumStock) < 0) { setError("Minimum stock must be 0 or more."); return; }
 
     setSaving(true);
     setError("");
     try {
-      await onSave({ ...form, currentStock: Number(form.currentStock), minimumStock: Number(form.minimumStock) });
+      await onSave({ ...form, availableStock: Number(form.availableStock), minimumStock: Number(form.minimumStock) });
       onClose();
     } catch (err) {
       setError(err.response?.data?.message || "Failed to save item.");
@@ -140,13 +140,13 @@ const ItemFormModal = ({ editItem, onClose, onSave }) => {
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
             <div>
-              <label style={{ fontSize: "13px", fontWeight: 600, color: "#475569", display: "block", marginBottom: "6px" }}>Current Stock *</label>
+              <label style={{ fontSize: "13px", fontWeight: 600, color: "#475569", display: "block", marginBottom: "6px" }}>Available Stock *</label>
               <input
                 type="number"
                 min="0"
                 step="1"
-                value={form.currentStock}
-                onChange={(e) => setForm((p) => ({ ...p, currentStock: e.target.value }))}
+                value={form.availableStock}
+                onChange={(e) => setForm((p) => ({ ...p, availableStock: e.target.value }))}
                 placeholder="0"
                 style={{ width: "100%", border: "1px solid #cbd5e1", borderRadius: "10px", padding: "9px 12px", fontSize: "14px" }}
               />
@@ -190,14 +190,24 @@ const ItemFormModal = ({ editItem, onClose, onSave }) => {
 // Restock Item Modal
 // ─────────────────────────────────────────────
 const RestockModal = ({ item, onClose, onRestock }) => {
-  const [quantity, setQuantity] = useState("");
+  const [quantityAdded, setQuantityAdded] = useState("");
+  const [supplier, setSupplier] = useState("");
+  const [cost, setCost] = useState("");
+  const [purchaseDate, setPurchaseDate] = useState("");
+  const [invoiceNumber, setInvoiceNumber] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!item || (!item._id && !item.id)) return;
     setLoading(true);
-    await onRestock(item._id || item.id, Number(quantity));
+    await onRestock(item._id || item.id, {
+      quantityAdded: Number(quantityAdded),
+      supplier,
+      cost: Number(cost),
+      purchaseDate,
+      invoiceNumber
+    });
     setLoading(false);
     onClose();
   };
@@ -207,19 +217,64 @@ const RestockModal = ({ item, onClose, onRestock }) => {
       <div style={{ background: "#fff", borderRadius: "20px", padding: "32px", width: "440px", maxWidth: "95vw", boxShadow: "0 20px 60px rgba(0,0,0,0.15)" }}>
         <h3 style={{ fontSize: "18px", fontWeight: 700, color: "#0f172a", marginBottom: "6px" }}>Restock Item</h3>
         <p style={{ fontSize: "13px", color: "#64748b", marginBottom: "16px" }}>
-          Add stock to: <strong>{item?.name}</strong> (Current: {item?.currentStock} {item?.unit})
+          Add stock to: <strong>{item?.name}</strong> (Available: {item?.stock || item?.availableStock} {item?.unit})
         </p>
-        <form onSubmit={handleSubmit}>
-          <label style={{ fontSize: "13px", fontWeight: 600, color: "#475569", display: "block", marginBottom: "6px" }}>Quantity to Add *</label>
-          <input
-            type="number"
-            min="1"
-            step="1"
-            value={quantity}
-            onChange={(e) => setQuantity(e.target.value)}
-            style={{ width: "100%", border: "1px solid #cbd5e1", borderRadius: "10px", padding: "10px 12px", fontSize: "14px", marginBottom: "16px" }}
-          />
-          <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          <div>
+            <label style={{ fontSize: "13px", fontWeight: 600, color: "#475569", display: "block", marginBottom: "6px" }}>Quantity to Add *</label>
+            <input
+              type="number"
+              min="1"
+              step="1"
+              value={quantityAdded}
+              onChange={(e) => setQuantityAdded(e.target.value)}
+              style={{ width: "100%", border: "1px solid #cbd5e1", borderRadius: "10px", padding: "10px 12px", fontSize: "14px" }}
+              required
+            />
+          </div>
+          <div>
+            <label style={{ fontSize: "13px", fontWeight: 600, color: "#475569", display: "block", marginBottom: "6px" }}>Supplier Name *</label>
+            <input
+              type="text"
+              value={supplier}
+              onChange={(e) => setSupplier(e.target.value)}
+              style={{ width: "100%", border: "1px solid #cbd5e1", borderRadius: "10px", padding: "10px 12px", fontSize: "14px" }}
+              required
+            />
+          </div>
+          <div>
+            <label style={{ fontSize: "13px", fontWeight: 600, color: "#475569", display: "block", marginBottom: "6px" }}>Total Cost (₹)</label>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={cost}
+              onChange={(e) => setCost(e.target.value)}
+              style={{ width: "100%", border: "1px solid #cbd5e1", borderRadius: "10px", padding: "10px 12px", fontSize: "14px" }}
+            />
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+            <div>
+              <label style={{ fontSize: "13px", fontWeight: 600, color: "#475569", display: "block", marginBottom: "6px" }}>Purchase Date *</label>
+              <input
+                type="date"
+                value={purchaseDate}
+                onChange={(e) => setPurchaseDate(e.target.value)}
+                style={{ width: "100%", border: "1px solid #cbd5e1", borderRadius: "10px", padding: "10px 12px", fontSize: "14px" }}
+                required
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: "13px", fontWeight: 600, color: "#475569", display: "block", marginBottom: "6px" }}>Invoice Number</label>
+              <input
+                type="text"
+                value={invoiceNumber}
+                onChange={(e) => setInvoiceNumber(e.target.value)}
+                style={{ width: "100%", border: "1px solid #cbd5e1", borderRadius: "10px", padding: "10px 12px", fontSize: "14px" }}
+              />
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end", marginTop: "10px" }}>
             <button
               type="button"
               onClick={onClose}
@@ -229,7 +284,7 @@ const RestockModal = ({ item, onClose, onRestock }) => {
             </button>
             <button
               type="submit"
-              disabled={loading || !quantity || Number(quantity) <= 0}
+              disabled={loading || !quantityAdded || Number(quantityAdded) <= 0 || !supplier || !purchaseDate}
               style={{ padding: "10px 24px", borderRadius: "30px", background: "#2563eb", color: "#fff", fontWeight: 600, border: "none", cursor: "pointer" }}
             >
               {loading ? "Restocking..." : "Restock"}
@@ -300,7 +355,7 @@ const RejectReasonModal = ({ request, onClose, onReject }) => {
 const InventoryManagement = () => {
   const { user } = useAuth();
 
-  // Tabs: "items" | "requests"
+  // Tabs: "items" | "requests" | "consumptions"
   const [activeTab, setActiveTab] = useState("items");
 
   // Inventory Items state
@@ -322,12 +377,16 @@ const InventoryManagement = () => {
   const [rejectingRequest, setRejectingRequest] = useState(null);
   const [restockingItem, setRestockingItem] = useState(null);
 
+  // Consumption Reports state
+  const [consumptions, setConsumptions] = useState([]);
+  const [consumptionsLoading, setConsumptionsLoading] = useState(false);
+
   // ── Fetch inventory items ──
   const fetchInventoryItems = async () => {
     setItemsLoading(true);
     setItemsError("");
     try {
-      const res = await axios.get(`${API_BASE}/admin/inventory-items`);
+      const res = await axios.get(`${API_BASE}/admin/inventory-items`, { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } });
       setInventoryItems(Array.isArray(res.data?.items) ? res.data.items : []);
     } catch (err) {
       setItemsError(err.response?.data?.message || "Failed to load inventory items.");
@@ -341,7 +400,7 @@ const InventoryManagement = () => {
     setRequestsLoading(true);
     setRequestError("");
     try {
-      const response = await axios.get(`${API_BASE}/staff/inventory-requests`);
+      const response = await axios.get(`${API_BASE}/staff/inventory-requests`, { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } });
       setInventoryRequests(Array.isArray(response.data?.requests) ? response.data.requests : []);
     } catch (error) {
       setRequestError(error.response?.data?.message || "Failed to load inventory requests.");
@@ -350,9 +409,23 @@ const InventoryManagement = () => {
     }
   };
 
+  // ── Fetch consumptions ──
+  const fetchConsumptions = async () => {
+    setConsumptionsLoading(true);
+    try {
+      const response = await axios.get(`${API_BASE}/admin/inventory/reports/consumption`, { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } });
+      setConsumptions(Array.isArray(response.data?.consumptions) ? response.data.consumptions : []);
+    } catch (error) {
+      console.error("Failed to load consumption reports", error);
+    } finally {
+      setConsumptionsLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchInventoryItems();
     fetchInventoryRequests();
+    fetchConsumptions();
   }, []);
 
   // ── Computed summaries ──
@@ -411,7 +484,7 @@ const InventoryManagement = () => {
     if (!window.confirm("Are you sure you want to delete this inventory item?")) return;
     setDeletingItemId(itemId);
     try {
-      await axios.delete(`${API_BASE}/admin/inventory-items/${itemId}`);
+      await axios.delete(`${API_BASE}/admin/inventory-items/${itemId}`, { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } });
       await fetchInventoryItems();
     } catch (err) {
       setItemsError(err.response?.data?.message || "Failed to delete item.");
@@ -424,18 +497,18 @@ const InventoryManagement = () => {
     if (editingItem) {
       const itemId = editingItem._id || editingItem.id;
       if (!itemId) return;
-      await axios.put(`${API_BASE}/admin/inventory-items/${itemId}`, formData);
+      await axios.put(`${API_BASE}/admin/inventory-items/${itemId}`, formData, { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } });
     } else {
-      await axios.post(`${API_BASE}/admin/inventory-items`, formData);
+      await axios.post(`${API_BASE}/admin/inventory-items`, formData, { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } });
     }
     await fetchInventoryItems();
     setEditingItem(null);
   };
 
-  const handleRestockSubmit = async (itemId, quantityAdded) => {
+  const handleRestockSubmit = async (itemId, restockData) => {
     if (!itemId) return;
     try {
-      await axios.post(`${API_BASE}/admin/inventory/restock/${itemId}`, { quantityAdded });
+      await axios.post(`${API_BASE}/admin/inventory/restock/${itemId}`, restockData, { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } });
       await fetchInventoryItems();
     } catch (err) {
       setItemsError(err.response?.data?.message || "Failed to restock item.");
@@ -448,11 +521,11 @@ const InventoryManagement = () => {
     setActionLoadingId(requestId);
     setRequestError("");
     try {
-      await axios.put(`${API_BASE}/staff/inventory-requests/${requestId}/status`, {
+      await axios.put(`${API_BASE}/admin/inventory-requests/${requestId}/status`, {
         status,
         adminReason,
         reviewedBy: user?.name || "Admin",
-      });
+      }, { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } });
       await Promise.all([fetchInventoryRequests(), fetchInventoryItems()]);
     } catch (error) {
       setRequestError(error.response?.data?.message || "Failed to update inventory request status.");
@@ -462,7 +535,7 @@ const InventoryManagement = () => {
   };
 
   const handleApprove = (request) => {
-    if (window.confirm(`Approve request for ${request.quantity} ${request.unit} of ${request.itemName} by ${request.userName || request.staffName}?\n\nThis will deduct the quantity from current stock.`)) {
+    if (window.confirm(`Approve request for ${request.quantity} ${request.unit} of ${request.itemName} by ${request.userName || request.staffName}?\n\nThis will deduct the quantity from current stock and issue it.`)) {
       updateInventoryRequestStatus(request._id, "Approved");
     }
   };
@@ -534,9 +607,9 @@ const InventoryManagement = () => {
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
             <h1 className="text-[42px] font-bold text-[#111827]">Inventory Management</h1>
-            <p className="mt-2 text-[#525252]">Manage temple inventory stock and review staff requests.</p>
+            <p className="mt-2 text-[#525252]">Manage temple inventory stock, restock history, and track consumption.</p>
           </div>
-          <div className="rounded-3xl bg-[#eff6ff] px-5 py-3 text-sm font-semibold text-[#1d4ed8]">Prasadam & Inventory</div>
+          <div className="rounded-3xl bg-[#eff6ff] px-5 py-3 text-sm font-semibold text-[#1d4ed8]">Inventory Center</div>
         </div>
 
         {/* Summary cards */}
@@ -547,26 +620,26 @@ const InventoryManagement = () => {
             <p className="mt-2 text-sm text-[#475569]">All staff inventory requests.</p>
           </div>
           <div className="rounded-3xl border border-[#fef3c7] bg-[#fffbeb] p-6">
-            <p className="text-sm uppercase tracking-[0.24em] text-[#92400e]">Pending</p>
+            <p className="text-sm uppercase tracking-[0.24em] text-[#92400e]">Pending Requests</p>
             <p className="mt-4 text-[2rem] font-bold text-[#92400e]">{requestSummary.pending}</p>
-            <p className="mt-2 text-sm text-[#92400e]">Waiting for your review.</p>
+            <p className="mt-2 text-sm text-[#92400e]">Waiting for your approval.</p>
           </div>
           <div className="rounded-3xl border border-[#d1fae5] bg-[#ecfdf5] p-6">
-            <p className="text-sm uppercase tracking-[0.24em] text-[#166534]">Approved</p>
+            <p className="text-sm uppercase tracking-[0.24em] text-[#166534]">Total Issued</p>
             <p className="mt-4 text-[2rem] font-bold text-[#166534]">{requestSummary.approved}</p>
-            <p className="mt-2 text-sm text-[#166534]">Stock issued to staff.</p>
+            <p className="mt-2 text-sm text-[#166534]">Items issued to staff/priests.</p>
           </div>
-          <div className="rounded-3xl border border-[#fee2e2] bg-[#fff1f2] p-6">
-            <p className="text-sm uppercase tracking-[0.24em] text-[#b91c1c]">Rejected</p>
-            <p className="mt-4 text-[2rem] font-bold text-[#b91c1c]">{requestSummary.rejected}</p>
-            <p className="mt-2 text-sm text-[#b91c1c]">Requests with reasons.</p>
+          <div className="rounded-3xl border border-[#e0e7ff] bg-[#eef2ff] p-6">
+            <p className="text-sm uppercase tracking-[0.24em] text-[#3730a3]">Consumption Records</p>
+            <p className="mt-4 text-[2rem] font-bold text-[#3730a3]">{consumptions.length}</p>
+            <p className="mt-2 text-sm text-[#3730a3]">Completed usage logs.</p>
           </div>
         </div>
       </div>
 
       {/* Tabs */}
       <div className="rounded-2xl border border-[#ece8e1] bg-white shadow-sm">
-        <div style={{ borderBottom: "1px solid #e5e7eb", display: "flex" }}>
+        <div style={{ borderBottom: "1px solid #e5e7eb", display: "flex", overflowX: "auto" }}>
           <button
             type="button"
             onClick={() => setActiveTab("items")}
@@ -581,7 +654,7 @@ const InventoryManagement = () => {
               color: activeTab === "items" ? "#2563eb" : "#64748b",
             }}
           >
-            📦 Inventory Items
+            📦 Central Inventory
           </button>
           <button
             type="button"
@@ -598,7 +671,7 @@ const InventoryManagement = () => {
               position: "relative",
             }}
           >
-            📋 Staff Requests
+            📋 Issue Requests
             {requestSummary.pending > 0 && (
               <span style={{
                 background: "#ef4444", color: "#fff", borderRadius: "20px", fontSize: "11px",
@@ -607,6 +680,22 @@ const InventoryManagement = () => {
                 {requestSummary.pending}
               </span>
             )}
+          </button>
+          <button
+            type="button"
+            onClick={() => { setActiveTab("consumptions"); fetchConsumptions(); }}
+            style={{
+              padding: "14px 24px",
+              fontWeight: 700,
+              fontSize: "14px",
+              border: "none",
+              background: "transparent",
+              cursor: "pointer",
+              borderBottom: activeTab === "consumptions" ? "3px solid #2563eb" : "3px solid transparent",
+              color: activeTab === "consumptions" ? "#2563eb" : "#64748b",
+            }}
+          >
+            📊 Consumption Tracking
           </button>
         </div>
 
@@ -618,7 +707,7 @@ const InventoryManagement = () => {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "12px" }}>
               <div>
                 <h2 className="text-2xl font-bold text-[#111827]">Inventory Items</h2>
-                <p className="mt-1 text-sm text-[#64748b]">Add, edit, or remove temple inventory items. Stock levels update automatically when requests are approved.</p>
+                <p className="mt-1 text-sm text-[#64748b]">Manage central stock. Stock is tracked across Available, Reserved, and Issued states.</p>
               </div>
               <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
                 <input
@@ -654,9 +743,10 @@ const InventoryManagement = () => {
                 <thead className="border-b border-[#e2e8f0] text-[#475569]">
                   <tr>
                     <th className="px-4 py-3">Item Name</th>
-                    <th className="px-4 py-3">Description</th>
                     <th className="px-4 py-3">Category</th>
-                    <th className="px-4 py-3">Current Stock</th>
+                    <th className="px-4 py-3">Available Stock</th>
+                    <th className="px-4 py-3">Issued Stock</th>
+                    <th className="px-4 py-3">Consumed Stock</th>
                     <th className="px-4 py-3">Min. Stock</th>
                     <th className="px-4 py-3">Unit</th>
                     <th className="px-4 py-3">Status</th>
@@ -665,23 +755,24 @@ const InventoryManagement = () => {
                 </thead>
                 <tbody>
                   {itemsLoading ? (
-                    <tr><td colSpan="7" className="px-4 py-6 text-center text-sm text-[#64748b]">Loading inventory items…</td></tr>
+                    <tr><td colSpan="9" className="px-4 py-6 text-center text-sm text-[#64748b]">Loading inventory items…</td></tr>
                   ) : filteredItems.length === 0 ? (
-                    <tr><td colSpan="7" className="px-4 py-6 text-center text-sm text-[#64748b]">No inventory items found. Click "+ Add Item" to get started.</td></tr>
+                    <tr><td colSpan="9" className="px-4 py-6 text-center text-sm text-[#64748b]">No inventory items found. Click "+ Add Item" to get started.</td></tr>
                   ) : (
-                    filteredItems.map((item) => {
-                      const isLow = item?.currentStock <= item?.minimumStock;
+                    filteredItems.map((item, index) => {
+                      const isLow = (item?.availableStock || 0) <= (item?.minimumStock || 0);
                       const itemId = item?._id || item?.id;
                       return (
                         <tr key={itemId || index} className="border-b border-[#f1f5f9] hover:bg-[#f8fafc]">
                           <td className="px-4 py-4 font-semibold text-[#0f172a]">{item?.name}</td>
-                          <td className="px-4 py-4 text-[#64748b]" style={{ maxWidth: "150px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={item?.description}>{item?.description || "-"}</td>
                           <td className="px-4 py-4 text-[#64748b]">{item?.category || "-"}</td>
                           <td className="px-4 py-4">
                             <span style={{ fontWeight: 700, color: isLow ? "#b91c1c" : "#166534" }}>
-                              {item?.currentStock}
+                              {item?.availableStock || item?.stock || 0}
                             </span>
                           </td>
+                          <td className="px-4 py-4 text-[#2563eb] font-medium">{item?.issuedStock || 0}</td>
+                          <td className="px-4 py-4 text-[#64748b] font-medium">{item?.consumedStock || 0}</td>
                           <td className="px-4 py-4">{item?.minimumStock}</td>
                           <td className="px-4 py-4">{item?.unit}</td>
                           <td className="px-4 py-4">
@@ -740,7 +831,7 @@ const InventoryManagement = () => {
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
                 <h2 className="text-2xl font-bold text-[#111827]">Staff Inventory Requests</h2>
-                <p className="mt-2 text-sm text-[#64748b]">Approve or reject requests. Approving will automatically deduct from current stock.</p>
+                <p className="mt-2 text-sm text-[#64748b]">Approve or reject requests. Approving will automatically deduct from available stock and issue it to the staff.</p>
               </div>
               <div className="flex flex-wrap gap-3">
                 <button
@@ -777,7 +868,7 @@ const InventoryManagement = () => {
                 >
                   <option value="all">All</option>
                   <option value="Pending">Pending</option>
-                  <option value="Approved">Approved</option>
+                  <option value="Approved">Approved/Issued</option>
                   <option value="Rejected">Rejected</option>
                 </select>
               </div>
@@ -806,10 +897,9 @@ const InventoryManagement = () => {
                     <th className="px-4 py-3">Requested By</th>
                     <th className="px-4 py-3">Role</th>
                     <th className="px-4 py-3">Quantity</th>
-                    <th className="px-4 py-3">Reason</th>
+                    <th className="px-4 py-3">Purpose</th>
                     <th className="px-4 py-3">Date</th>
                     <th className="px-4 py-3">Status</th>
-                    <th className="px-4 py-3">Admin Reason</th>
                     <th className="px-4 py-3">Actions</th>
                   </tr>
                 </thead>
@@ -834,8 +924,8 @@ const InventoryManagement = () => {
                           <td className="px-4 py-4">{request.userName || request.staffName || "-"}</td>
                           <td className="px-4 py-4">{request.role || "Staff"}</td>
                           <td className="px-4 py-4">{request.quantity} {request.unit || ""}</td>
-                          <td className="px-4 py-4" style={{ maxWidth: "180px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={request.reason}>
-                            {request.reason || "-"}
+                          <td className="px-4 py-4" style={{ maxWidth: "180px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={request.purpose || request.reason}>
+                            {request.purpose || request.reason || "-"}
                           </td>
                           <td className="px-4 py-4">{formatDateTime(request.createdAt)}</td>
                           <td className="px-4 py-4">
@@ -843,7 +933,6 @@ const InventoryManagement = () => {
                               {request.status}
                             </span>
                           </td>
-                          <td className="px-4 py-4">{request.adminReason || "-"}</td>
                           <td className="px-4 py-4">
                             {request.status === "Pending" ? (
                               <div className="flex flex-wrap gap-2">
@@ -853,7 +942,7 @@ const InventoryManagement = () => {
                                   onClick={() => handleApprove(request)}
                                   disabled={actionLoadingId === reqId}
                                 >
-                                  {actionLoadingId === reqId ? "Working…" : "✓ Approve"}
+                                  {actionLoadingId === reqId ? "Working…" : "✓ Issue"}
                                 </button>
                                 <button
                                   type="button"
@@ -865,7 +954,7 @@ const InventoryManagement = () => {
                                 </button>
                               </div>
                             ) : (
-                              <span className="text-sm text-[#475569]">—</span>
+                              <span className="text-sm text-[#475569]">{request.adminReason || "—"}</span>
                             )}
                           </td>
                         </tr>
@@ -877,6 +966,71 @@ const InventoryManagement = () => {
             </div>
           </div>
         )}
+
+        {/* ─────── CONSUMPTIONS TAB ─────── */}
+        {activeTab === "consumptions" && (
+          <div className="p-6">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-[#111827]">Consumption Tracking</h2>
+                <p className="mt-2 text-sm text-[#64748b]">Review items consumed by staff. Staff are required to return unused quantities.</p>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={fetchConsumptions}
+                  className="rounded-full border border-[#cbd5e1] bg-white px-4 py-2 text-sm font-semibold text-[#1f2937] transition hover:bg-[#f8fafc]"
+                >
+                  Refresh
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-6 overflow-x-auto">
+              <table className="min-w-full text-left text-sm text-[#334155]">
+                <thead className="border-b border-[#e2e8f0] text-[#475569]">
+                  <tr>
+                    <th className="px-4 py-3">Date</th>
+                    <th className="px-4 py-3">Item</th>
+                    <th className="px-4 py-3">User</th>
+                    <th className="px-4 py-3">Issued</th>
+                    <th className="px-4 py-3">Used</th>
+                    <th className="px-4 py-3">Returned</th>
+                    <th className="px-4 py-3">Purpose</th>
+                    <th className="px-4 py-3">Remarks</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {consumptionsLoading ? (
+                    <tr>
+                      <td colSpan="8" className="px-4 py-6 text-center text-sm text-[#64748b]">Loading consumption reports…</td>
+                    </tr>
+                  ) : consumptions.length === 0 ? (
+                    <tr>
+                      <td colSpan="8" className="px-4 py-6 text-center text-sm text-[#64748b]">No consumption records found.</td>
+                    </tr>
+                  ) : (
+                    consumptions.map((record, index) => {
+                      return (
+                        <tr key={record._id || index} className="border-b border-[#f1f5f9] hover:bg-[#f8fafc]">
+                          <td className="px-4 py-4">{formatDateTime(record.createdAt || record.date)}</td>
+                          <td className="px-4 py-4 font-semibold text-[#0f172a]">{record.itemName}</td>
+                          <td className="px-4 py-4">{record.userName} <span className="text-xs text-[#64748b]">({record.role})</span></td>
+                          <td className="px-4 py-4 text-[#475569]">{record.issuedQuantity} {record.unit}</td>
+                          <td className="px-4 py-4 font-bold text-[#b91c1c]">{record.usedQuantity} {record.unit}</td>
+                          <td className="px-4 py-4 font-bold text-[#166534]">{record.returnedQuantity} {record.unit}</td>
+                          <td className="px-4 py-4" style={{ maxWidth: "150px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={record.purpose}>{record.purpose || "-"}</td>
+                          <td className="px-4 py-4" style={{ maxWidth: "150px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={record.remarks}>{record.remarks || "-"}</td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );

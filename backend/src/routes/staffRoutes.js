@@ -27,7 +27,10 @@ const {
   getInventorySummary: getInventorySummaryData,
   updateInventoryRequestStatus: updateInventoryRequestStatusData,
 } = require("../controllers/inventoryRequestController");
-
+const {
+  getInventoryIssues,
+  completeUsage,
+} = require("../controllers/inventoryIssueController");
 
 
 /* GET STAFF TASKS */
@@ -126,5 +129,9 @@ router.post(
 );
 
 
+/* INVENTORY ISSUES */
+router.get("/inventory-issues", getInventoryIssues);
+router.get("/inventory-issues/:userId", getInventoryIssues);
+router.post("/inventory-issues/:id/complete", completeUsage);
 
 module.exports = router;

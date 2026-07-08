@@ -47,6 +47,20 @@ const inventoryRequestSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    purpose: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    expectedDate: {
+      type: Date,
+      required: true,
+    },
+    priority: {
+      type: String,
+      enum: ["High", "Medium", "Low"],
+      default: "Medium",
+    },
     status: {
       type: String,
       enum: INVENTORY_REQUEST_STATUSES,
