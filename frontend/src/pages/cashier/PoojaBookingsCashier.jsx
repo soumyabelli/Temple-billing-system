@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { FaCalendarAlt, FaHeart, FaInfoCircle, FaRegClock } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 import { getPoojaTypes } from "../../services/poojaTypeService";
 import { createDevoteeBooking, getDevoteeBookings, markNotificationAsRead } from "../../services/devoteeService";
@@ -72,6 +73,8 @@ const CashierPoojaBookings = () => {
 
   const [poojaServices, setPoojaServices] = useState([]);
   const [selectedPoojaName, setSelectedPoojaName] = useState("");
+  const [priests, setPriests] = useState([]);
+  const [assignedPriest, setAssignedPriest] = useState("");
 
   const [dateTime, setDateTime] = useState(() => {
     const d = new Date();
@@ -154,11 +157,22 @@ const CashierPoojaBookings = () => {
     }
   };
 
+  const loadPriests = async () => {
+    try {
+      const API_BASE = "http://localhost:5000/api";
+      const res = await axios.get(`${API_BASE}/priest/priests-list`);
+      setPriests(res.data || []);
+    } catch (e) {
+      console.error("Failed to load priests", e);
+    }
+  };
+
   useEffect(() => {
-    // fetch services + my bookings + notifications
+    // fetch services + my bookings + notifications + priests
     loadPoojas();
     loadBookings();
     loadNotifications();
+    loadPriests();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -205,6 +219,7 @@ const CashierPoojaBookings = () => {
         paymentMethod,
         contactNumber: contactNumber || undefined,
         notes: notes || undefined,
+        assignedPriest: assignedPriest || undefined,
       };
 
       await createDevoteeBooking(payload);
@@ -321,6 +336,21 @@ const CashierPoojaBookings = () => {
                 <div className="bbm-field">
                   <label>Notes (Optional)</label>
                   <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} />
+                </div>
+
+                <div className="bbm-field">
+                  <label>Assign Priest (Optional)</label>
+                  <select
+                    value={assignedPriest}
+                    onChange={(e) => setAssignedPriest(e.target.value)}
+                  >
+                    <option value="">-- No Priest Assigned --</option>
+                    {priests.map((p) => (
+                      <option key={p._id} value={p._id}>
+                        {p.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <button className="bbm-submit" type="submit" disabled={loading || !poojaServices.length}>

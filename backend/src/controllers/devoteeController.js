@@ -90,7 +90,7 @@ const getBookings = async (req, res) => {
 
 const createBooking = async (req, res) => {
   try {
-    const { devoteeName, devoteeEmail, devoteePhone, service, datetime, amount, contactNumber, notes, devoteeId, eventId, paymentMethod } = req.body;
+    const { devoteeName, devoteeEmail, devoteePhone, service, datetime, amount, contactNumber, notes, devoteeId, eventId, paymentMethod, assignedPriest } = req.body;
     const normalizedDevoteeEmail = normalizeEmail(devoteeEmail);
 
     if (!devoteeName || !service || !datetime || amount == null) {
@@ -121,6 +121,14 @@ const createBooking = async (req, res) => {
     const paymentStatus = "Paid";
 
     let booking;
+    let priestName = "";
+    if (assignedPriest) {
+      if (isDbConnected()) {
+        const priestUser = await User.findById(assignedPriest);
+        if (priestUser) priestName = priestUser.name;
+      }
+    }
+
     const bookingPayload = {
       devoteeId: devoteeId || undefined,
       eventId: eventId || undefined,
@@ -135,6 +143,8 @@ const createBooking = async (req, res) => {
       paymentStatus: paymentStatus,
       contactNumber,
       notes,
+      assignedPriest: assignedPriest || undefined,
+      priestName: priestName || undefined,
     };
 
     if (isDbConnected()) {

@@ -1306,7 +1306,10 @@ exports.requestTransfer = async (req, res) => {
 
 exports.getPriestsList = async (req, res) => {
   try {
-    const priests = await User.find({ role: "priest", status: "Active" }).select("name email _id");
+    const priests = await User.find({ 
+      role: { $regex: /^priest$/i }, 
+      status: { $ne: "Inactive" } 
+    }).select("name email _id");
     return res.status(200).json(priests);
   } catch (error) {
     console.error("Error fetching priests list:", error);
