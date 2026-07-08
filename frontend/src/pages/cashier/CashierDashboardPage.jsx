@@ -411,27 +411,27 @@ const CashierDashboardPage = () => {
 
   const stats = [
     {
-      title: "Range Collection",
-      value: formatCurrency(sumBy(rangeBills, (bill) => bill.amount)),
-      note: `From ${formatDate(fromDate)} to ${formatDate(toDate)}`,
+      title: "Total Revenues",
+      value: formatCurrency(sumBy(bills, (bill) => bill.amount)),
+      note: `All lifetime collections`,
       tone: "orange",
     },
     {
       title: "Pooja Bookings",
-      value: rangeBookings.length,
-      note: `${rangeBookings.filter(b => String(b.status || "Pending") === "Pending").length} pending`,
+      value: bookings.length,
+      note: `${bookings.filter(b => String(b.status || "Pending") === "Pending").length} pending`,
       tone: "gold",
     },
     {
-      title: "Donation Value",
-      value: formatCurrency(sumBy(rangeDonations, (donation) => donation.amount)),
-      note: `${rangeDonations.length} records in range`,
+      title: "Total Donations",
+      value: formatCurrency(sumBy(donations, (donation) => donation.amount)),
+      note: `${donations.length} records total`,
       tone: "green",
     },
     {
       title: "Prasadam Sales",
-      value: formatCurrency(sumBy(rangePrasadamOrders, (order) => order.amount || order.totalPrice)),
-      note: `${rangePrasadamOrders.length} orders in range`,
+      value: formatCurrency(sumBy(prasadamOrders, (order) => order.amount || order.totalPrice)),
+      note: `${prasadamOrders.length} orders total`,
       tone: "blue",
     },
   ];

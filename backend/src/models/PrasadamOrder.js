@@ -31,6 +31,8 @@ const prasadamOrderSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: [
+        "Collected",
+        "Not Collected",
         "Pending",
         "Approved",
         "Rejected",
@@ -43,7 +45,7 @@ const prasadamOrderSchema = new mongoose.Schema(
         "Ready",
         "Delivered",
       ],
-      default: "Pending",
+      default: "Not Collected",
     },
   },
   { timestamps: true }

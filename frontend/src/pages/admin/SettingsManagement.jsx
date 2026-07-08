@@ -1,26 +1,17 @@
+import { useState } from "react";
 import {
   MdTempleBuddhist,
   MdPerson,
   MdNotificationsNone,
-  MdCreditCard,
-  MdTune,
-  MdSecurity,
-  MdBackup,
-  MdSupportAgent,
-  MdEmail,
-  MdPhone,
-  MdLockOutline,
+  MdOutlineVisibility,
   MdOutlineVisibilityOff,
   MdOutlineKeyboardArrowDown,
-  MdAccessTime,
 } from "react-icons/md";
 import { useAuth } from "../../context/AuthContext";
+import { changePassword } from "../../services/authService";
 
 const fieldClass =
-  "h-9 w-full rounded-lg border border-[#ece8e1] bg-[#faf9f7] px-3 text-sm text-[#202632] outline-none";
-
-const selectClass =
-  "h-9 w-full appearance-none rounded-lg border border-[#ece8e1] bg-[#faf9f7] px-3 pr-8 text-sm text-[#202632] outline-none";
+  "h-9 w-full rounded-lg border border-[#ece8e1] bg-[#faf9f7] px-3 text-sm text-[#202632] outline-none transition focus:border-[#ff8b00]";
 
 const sectionClass =
   "rounded-2xl border border-[#ece8e1] bg-[#fffdfb] p-5 shadow-sm";
@@ -28,38 +19,122 @@ const sectionClass =
 const sectionTitleClass =
   "text-[20px] font-bold text-[#17151f]";
 
-const Toggle = ({ checked = true }) => (
-  <label className="relative inline-flex h-6 w-11 items-center">
+const Toggle = ({ checked, onChange }) => (
+  <label className="relative inline-flex h-6 w-11 cursor-pointer items-center">
     <input
       type="checkbox"
-      defaultChecked={checked}
+      checked={checked}
+      onChange={onChange}
       className="peer sr-only"
     />
-
     <span className="h-6 w-11 rounded-full bg-[#d7dbe1] transition peer-checked:bg-[#ff8b00]" />
-
     <span className="absolute left-0.5 h-5 w-5 rounded-full bg-white transition peer-checked:translate-x-5" />
   </label>
 );
 
-const SelectField = ({ value }) => (
-  <div className="relative">
-    <select defaultValue={value} className={selectClass}>
-      <option>{value}</option>
-    </select>
-
-    <MdOutlineKeyboardArrowDown
-      className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[#7b8492]"
-      size={20}
-    />
-  </div>
-);
-
 const SettingsManagement = () => {
-  const { user } = useAuth();
+  const { user, token, updateUser } = useAuth();
+
+  // Temple Info State
+  const [templeName, setTempleName] = useState(() => localStorage.getItem("templeName") || "Sri Shanti Mahadev Mandir");
+  const [templeAddress, setTempleAddress] = useState(() => localStorage.getItem("templeAddress") || "1-8-276/A, Kukatpally, Hyderabad, Telangana - 500072");
+  const [templePhone, setTemplePhone] = useState(() => localStorage.getItem("templePhone") || "040-12345678");
+  const [templeEmail, setTempleEmail] = useState(() => localStorage.getItem("templeEmail") || "info@ssmm.in");
+  const [templeGst, setTempleGst] = useState(() => localStorage.getItem("templeGst") || "36AAATS1234A1Z5");
+
+  // Admin Account Settings State
+  const [fullName, setFullName] = useState(user?.name || "Admin");
+  const [email, setEmail] = useState(user?.email || "admin@ssmm.in");
+  const [username, setUsername] = useState(user?.username || "superadmin");
+
+  // Password States
+  const [currentPass, setCurrentPass] = useState("");
+  const [newPass, setNewPass] = useState("");
+  const [confirmPass, setConfirmPass] = useState("");
+
+  // Visibility States
+  const [showCurrentPass, setShowCurrentPass] = useState(false);
+  const [showNewPass, setShowNewPass] = useState(false);
+  const [showConfirmPass, setShowConfirmPass] = useState(false);
+
+  // Notification States
+  const [smsNotifications, setSmsNotifications] = useState(() => JSON.parse(localStorage.getItem("smsNotifications") ?? "true"));
+  const [emailAlerts, setEmailAlerts] = useState(() => JSON.parse(localStorage.getItem("emailAlerts") ?? "true"));
+  const [bookingReminders, setBookingReminders] = useState(() => JSON.parse(localStorage.getItem("bookingReminders") ?? "true"));
+  const [festivalAnnouncements, setFestivalAnnouncements] = useState(() => JSON.parse(localStorage.getItem("festivalAnnouncements") ?? "true"));
+  const [paymentReceipts, setPaymentReceipts] = useState(() => JSON.parse(localStorage.getItem("paymentReceipts") ?? "true"));
+  const [systemUpdates, setSystemUpdates] = useState(() => JSON.parse(localStorage.getItem("systemUpdates") ?? "false"));
+  const [marketingNotifications, setMarketingNotifications] = useState(() => JSON.parse(localStorage.getItem("marketingNotifications") ?? "false"));
+
+  // Status Alerts
+  const [templeMsg, setTempleMsg] = useState("");
+  const [profileMsg, setProfileMsg] = useState("");
+  const [passwordMsg, setPasswordMsg] = useState("");
+  const [notificationMsg, setNotificationMsg] = useState("");
+
+  const handleSaveTempleChanges = () => {
+    localStorage.setItem("templeName", templeName);
+    localStorage.setItem("templeAddress", templeAddress);
+    localStorage.setItem("templePhone", templePhone);
+    localStorage.setItem("templeEmail", templeEmail);
+    localStorage.setItem("templeGst", templeGst);
+    
+    setTempleMsg("Temple information saved successfully!");
+    setTimeout(() => setTempleMsg(""), 3000);
+  };
+
+  const handleUpdateProfile = () => {
+    const updatedUser = {
+      ...user,
+      name: fullName,
+      email: email,
+      username: username,
+    };
+    updateUser(updatedUser);
+    setProfileMsg("Profile details updated successfully!");
+    setTimeout(() => setProfileMsg(""), 3000);
+  };
+
+  const handleResetPassword = async () => {
+    if (!currentPass || !newPass || !confirmPass) {
+      setPasswordMsg("Please fill in all password fields.");
+      setTimeout(() => setPasswordMsg(""), 3000);
+      return;
+    }
+    if (newPass !== confirmPass) {
+      setPasswordMsg("New password and confirm password do not match.");
+      setTimeout(() => setPasswordMsg(""), 3000);
+      return;
+    }
+
+    try {
+      await changePassword({ token, currentPassword: currentPass, newPassword: newPass });
+      setPasswordMsg("Password changed successfully!");
+      setCurrentPass("");
+      setNewPass("");
+      setConfirmPass("");
+    } catch (err) {
+      console.error(err);
+      setPasswordMsg(err.response?.data?.message || "Failed to reset password.");
+    }
+    setTimeout(() => setPasswordMsg(""), 3000);
+  };
+
+  const handleSavePreferences = () => {
+    localStorage.setItem("smsNotifications", JSON.stringify(smsNotifications));
+    localStorage.setItem("emailAlerts", JSON.stringify(emailAlerts));
+    localStorage.setItem("bookingReminders", JSON.stringify(bookingReminders));
+    localStorage.setItem("festivalAnnouncements", JSON.stringify(festivalAnnouncements));
+    localStorage.setItem("paymentReceipts", JSON.stringify(paymentReceipts));
+    localStorage.setItem("systemUpdates", JSON.stringify(systemUpdates));
+    localStorage.setItem("marketingNotifications", JSON.stringify(marketingNotifications));
+
+    setNotificationMsg("Notification preferences saved successfully!");
+    setTimeout(() => setNotificationMsg(""), 3000);
+  };
+
   const avatarSrc = user?.photo || "";
-  const avatarInitial = (user?.name || "Admin").charAt(0).toUpperCase();
-  const displayName = user?.name || "Admin";
+  const avatarInitial = (fullName || "Admin").charAt(0).toUpperCase();
   const displayRole = user?.role === "admin"
     ? "Super Admin"
     : user?.role
@@ -68,226 +143,259 @@ const SettingsManagement = () => {
 
   return (
     <div className="mt-5 space-y-4 pb-6">
-
       {/* HEADER */}
-
       <div>
         <h1 className={sectionTitleClass}>Settings</h1>
-
         <p className="text-[15px] text-[#5c6675]">
-          Manage system preferences, temple details,
-          accounts, notifications and security.
+          Manage system preferences, temple details, accounts, notifications and security.
         </p>
-
         <div className="mt-2 h-1 w-12 rounded-full bg-[#ff8b00]" />
       </div>
 
       {/* TOP GRID */}
-
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
-
         {/* TEMPLE INFO */}
-
         <div className={`${sectionClass} xl:col-span-3`}>
-
           <div className="mb-4 flex items-center gap-2">
-
             <span className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 text-[#ff8b00]">
               <MdTempleBuddhist size={20} />
             </span>
-
             <h3 className="text-[20px] font-bold text-[#1d1b19]">
               Temple Information
             </h3>
           </div>
 
           <div className="space-y-2 text-sm">
-
             <p>Temple Name</p>
             <input
-              defaultValue="Sri Shanti Mahadev Mandir"
+              value={templeName}
+              onChange={(e) => setTempleName(e.target.value)}
               className={fieldClass}
             />
 
             <p>Address</p>
-
             <textarea
-              defaultValue="1-8-276/A, Kukatpally, Hyderabad, Telangana - 500072"
-              className="w-full rounded-lg border border-[#ece8e1] bg-[#faf9f7] px-3 py-2 text-sm text-[#202632] outline-none"
+              value={templeAddress}
+              onChange={(e) => setTempleAddress(e.target.value)}
+              className="w-full rounded-lg border border-[#ece8e1] bg-[#faf9f7] px-3 py-2 text-sm text-[#202632] outline-none transition focus:border-[#ff8b00]"
               rows={2}
             />
 
             <p>Phone</p>
             <input
-              defaultValue="040-12345678"
+              value={templePhone}
+              onChange={(e) => setTemplePhone(e.target.value)}
               className={fieldClass}
             />
 
             <p>Email</p>
             <input
-              defaultValue="info@ssmm.in"
+              value={templeEmail}
+              onChange={(e) => setTempleEmail(e.target.value)}
               className={fieldClass}
             />
 
             <p>GST Number</p>
             <input
-              defaultValue="36AAATS1234A1Z5"
+              value={templeGst}
+              onChange={(e) => setTempleGst(e.target.value)}
               className={fieldClass}
             />
 
             <div className="pt-1">
-
               <p className="mb-2">Temple Logo</p>
-
               <div className="flex items-center gap-3">
                 <div className="flex h-14 w-14 items-center justify-center rounded-full border border-[#ece8e1] bg-orange-50 text-[#ff8b00]">
                   <MdTempleBuddhist size={22} />
                 </div>
-
                 <button className="h-10 rounded-lg border border-[#f4caa8] px-3 text-sm font-semibold text-[#f07f00]">
                   Change Logo
                 </button>
-
               </div>
             </div>
 
-            <button className="mt-2 h-10 w-full rounded-lg bg-[#ff8b00] text-sm font-semibold text-white transition-all duration-300 hover:scale-[1.01] hover:bg-[#ef7f00]">
+            {templeMsg && (
+              <p className="mt-1 text-xs font-semibold text-green-600">{templeMsg}</p>
+            )}
+
+            <button
+              onClick={handleSaveTempleChanges}
+              className="mt-2 h-10 w-full rounded-lg bg-[#ff8b00] text-sm font-semibold text-white transition-all duration-300 hover:scale-[1.01] hover:bg-[#ef7f00]"
+            >
               Save Changes
             </button>
-
           </div>
         </div>
 
         {/* ADMIN SETTINGS */}
-
         <div className={`${sectionClass} xl:col-span-3`}>
-
           <div className="mb-4 flex items-center gap-2">
-
             <span className="flex h-10 w-10 items-center justify-center rounded-full bg-violet-100 text-violet-700">
               <MdPerson size={20} />
             </span>
-
             <h3 className="text-[20px] font-bold text-[#1d1b19]">
               Admin Account Settings
             </h3>
-
           </div>
 
           <div className="space-y-2 text-sm">
-
             <p>Full Name</p>
-            <input defaultValue="Admin" className={fieldClass} />
+            <input
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              className={fieldClass}
+            />
 
             <p>Email</p>
-            <input defaultValue="admin@ssmm.in" className={fieldClass} />
+            <input
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className={fieldClass}
+            />
 
             <p>Username</p>
-            <input defaultValue="superadmin" className={fieldClass} />
+            <input
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className={fieldClass}
+            />
 
             <p>Current Password</p>
-
             <div className="relative">
-
               <input
-                defaultValue="..........."
+                type={showCurrentPass ? "text" : "password"}
+                value={currentPass}
+                onChange={(e) => setCurrentPass(e.target.value)}
+                placeholder="••••••••"
                 className={`${fieldClass} pr-9`}
               />
-
-              <MdOutlineVisibilityOff className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7b8492]" />
-
+              <button
+                type="button"
+                onClick={() => setShowCurrentPass(!showCurrentPass)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7b8492]"
+              >
+                {showCurrentPass ? <MdOutlineVisibility size={18} /> : <MdOutlineVisibilityOff size={18} />}
+              </button>
             </div>
 
             <p>New Password</p>
-
             <div className="relative">
-
               <input
-                defaultValue="..........."
+                type={showNewPass ? "text" : "password"}
+                value={newPass}
+                onChange={(e) => setNewPass(e.target.value)}
+                placeholder="••••••••"
                 className={`${fieldClass} pr-9`}
               />
-
-              <MdOutlineVisibilityOff className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7b8492]" />
-
+              <button
+                type="button"
+                onClick={() => setShowNewPass(!showNewPass)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7b8492]"
+              >
+                {showNewPass ? <MdOutlineVisibility size={18} /> : <MdOutlineVisibilityOff size={18} />}
+              </button>
             </div>
 
             <p>Confirm Password</p>
-
             <div className="relative">
-
               <input
-                defaultValue="..........."
+                type={showConfirmPass ? "text" : "password"}
+                value={confirmPass}
+                onChange={(e) => setConfirmPass(e.target.value)}
+                placeholder="••••••••"
                 className={`${fieldClass} pr-9`}
               />
-
-              <MdOutlineVisibilityOff className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7b8492]" />
-
+              <button
+                type="button"
+                onClick={() => setShowConfirmPass(!showConfirmPass)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7b8492]"
+              >
+                {showConfirmPass ? <MdOutlineVisibility size={18} /> : <MdOutlineVisibilityOff size={18} />}
+              </button>
             </div>
+
+            {profileMsg && (
+              <p className="mt-1 text-xs font-semibold text-green-600">{profileMsg}</p>
+            )}
+            {passwordMsg && (
+              <p className={`mt-1 text-xs font-semibold ${passwordMsg.includes("successfully") ? "text-green-600" : "text-red-600"}`}>
+                {passwordMsg}
+              </p>
+            )}
 
             <div className="mt-2 flex gap-2">
-
-              <button className="h-10 flex-1 rounded-lg bg-[#ff8b00] text-sm font-semibold text-white transition-all duration-300 hover:scale-[1.01] hover:bg-[#ef7f00]">
+              <button
+                onClick={handleUpdateProfile}
+                className="h-10 flex-1 rounded-lg bg-[#ff8b00] text-sm font-semibold text-white transition-all duration-300 hover:scale-[1.01] hover:bg-[#ef7f00]"
+              >
                 Update Profile
               </button>
-
-              <button className="h-10 flex-1 rounded-lg border border-[#ece8e1] text-sm font-semibold text-[#4b5563]">
+              <button
+                onClick={handleResetPassword}
+                className="h-10 flex-1 rounded-lg border border-[#ece8e1] text-sm font-semibold text-[#4b5563] hover:bg-gray-50"
+              >
                 Reset Password
               </button>
-
             </div>
-
           </div>
         </div>
 
         {/* NOTIFICATIONS */}
-
         <div className={`${sectionClass} xl:col-span-3`}>
-
           <div className="mb-4 flex items-center gap-2">
-
             <span className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 text-green-700">
               <MdNotificationsNone size={20} />
             </span>
-
             <h3 className="text-[20px] font-bold text-[#1d1b19]">
               Notification Settings
             </h3>
-
           </div>
 
           <div className="space-y-3 pt-2 text-sm text-[#252b37]">
-
-            {[
-              ["SMS Notifications", true],
-              ["Email Alerts", true],
-              ["Booking Reminders", true],
-              ["Festival Announcements", true],
-              ["Payment Receipts", true],
-              ["System Updates", false],
-              ["Marketing Notifications", false],
-            ].map(([label, on]) => (
-
-              <div
-                key={label}
-                className="flex items-center justify-between"
-              >
-                <span>{label}</span>
-
-                <Toggle checked={on} />
-              </div>
-            ))}
+            <div className="flex items-center justify-between">
+              <span>SMS Notifications</span>
+              <Toggle checked={smsNotifications} onChange={(e) => setSmsNotifications(e.target.checked)} />
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Email Alerts</span>
+              <Toggle checked={emailAlerts} onChange={(e) => setEmailAlerts(e.target.checked)} />
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Booking Reminders</span>
+              <Toggle checked={bookingReminders} onChange={(e) => setBookingReminders(e.target.checked)} />
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Festival Announcements</span>
+              <Toggle checked={festivalAnnouncements} onChange={(e) => setFestivalAnnouncements(e.target.checked)} />
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Payment Receipts</span>
+              <Toggle checked={paymentReceipts} onChange={(e) => setPaymentReceipts(e.target.checked)} />
+            </div>
+            <div className="flex items-center justify-between">
+              <span>System Updates</span>
+              <Toggle checked={systemUpdates} onChange={(e) => setSystemUpdates(e.target.checked)} />
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Marketing Notifications</span>
+              <Toggle checked={marketingNotifications} onChange={(e) => setMarketingNotifications(e.target.checked)} />
+            </div>
           </div>
 
-          <button className="mt-5 h-10 w-full rounded-lg bg-[#ff8b00] text-sm font-semibold text-white transition-all duration-300 hover:scale-[1.01] hover:bg-[#ef7f00]">
+          {notificationMsg && (
+            <p className="mt-3 text-xs font-semibold text-green-600">{notificationMsg}</p>
+          )}
+
+          <button
+            onClick={handleSavePreferences}
+            className="mt-5 h-10 w-full rounded-lg bg-[#ff8b00] text-sm font-semibold text-white transition-all duration-300 hover:scale-[1.01] hover:bg-[#ef7f00]"
+          >
             Save Preferences
           </button>
-
         </div>
 
         {/* ADMIN PROFILE */}
-
         <div className={`${sectionClass} xl:col-span-3`}>
-
           <h3 className="text-[20px] font-bold text-[#1d1b19]">
             Admin Profile
           </h3>
@@ -297,7 +405,7 @@ const SettingsManagement = () => {
               {avatarSrc ? (
                 <img
                   src={avatarSrc}
-                  alt={displayName}
+                  alt={fullName}
                   className="h-full w-full object-cover"
                 />
               ) : (
@@ -308,22 +416,16 @@ const SettingsManagement = () => {
             </div>
 
             <div>
-
               <p className="text-[18px] font-bold text-[#17151f]">
-                {displayName}
+                {fullName}
               </p>
-
               <span className="mt-1 inline-block rounded-full bg-orange-100 px-3 py-1 text-sm font-semibold text-[#b66000]">
                 {displayRole}
               </span>
-
             </div>
           </div>
-
         </div>
-
       </div>
-
     </div>
   );
 };

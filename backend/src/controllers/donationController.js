@@ -58,7 +58,7 @@ const createDonation = async (req, res) => {
       referenceNo: `DN-${String(donation._id).slice(-6).toUpperCase()}`,
       sourceId: donation._id.toString(),
       notes: notes || "",
-      status: "Paid",
+      status: "Pending",
       billDate: new Date(),
     });
 
@@ -158,9 +158,44 @@ const deleteDonation = async (req, res) => {
   }
 };
 
+// UPDATE DONATION STATUS
+const updateDonationStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+    const donation = await Donation.findById(req.params.id);
+    if (!donation) {
+      return res.status(404).json({
+        success: false,
+        message: "Donation not found",
+      });
+    }
+
+    donation.status = status;
+    await donation.save();
+
+    // Sync bill ledger status as well
+    await Bill.updateMany(
+      { sourceId: donation._id.toString() },
+      { $set: { status: status === "Collected" ? "Paid" : "Pending" } }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Donation status updated successfully",
+      donation,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   createDonation,
   getAllDonations,
   getDonationStats,
   deleteDonation,
+  updateDonationStatus,
 };

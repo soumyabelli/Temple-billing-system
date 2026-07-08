@@ -1,7 +1,10 @@
-﻿import { useMemo } from "react";
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const statusStyles = {
+  Collected: "bg-emerald-100 text-emerald-700",
+  "Not Collected": "bg-amber-100 text-amber-700",
   Completed: "bg-emerald-100 text-emerald-700",
   Pending: "bg-amber-100 text-amber-700",
   Failed: "bg-rose-100 text-rose-700",
@@ -14,18 +17,29 @@ const formatCurrency = (value) => {
   return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(amount);
 };
 
-const DonationTable = ({ donations = [] }) => {
+const DonationTable = ({ donations = [], onRefresh }) => {
   const navigate = useNavigate();
+
+  const handleToggleStatus = async (donationId, currentStatus) => {
+    const nextStatus = currentStatus === "Collected" ? "Not Collected" : "Collected";
+    try {
+      await axios.patch(`http://localhost:5000/api/donations/${donationId}/status`, { status: nextStatus });
+      if (onRefresh) onRefresh();
+    } catch (err) {
+      console.warn("Failed to toggle status in DonationTable", err);
+    }
+  };
 
   const rows = useMemo(
     () =>
       donations.map((donation) => ({
+        raw: donation,
         id: donation._id || donation.id || "-",
         donor: donation.donorName || donation.donor || "Unknown",
         category: donation.category || "General",
         amount: formatCurrency(donation.amount),
         date: donation.createdAt ? new Date(donation.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : donation.date || "-",
-        status: donation.status || "Completed",
+        status: donation.status || "Not Collected",
         verifiedBy: donation.verifiedBy || donation.verifiedBy || "Admin",
       })),
     [donations]
@@ -68,9 +82,13 @@ const DonationTable = ({ donations = [] }) => {
                 <td className="py-4 px-3 text-amber-300 font-semibold">{row.amount}</td>
                 <td className="py-4 px-3">{row.date}</td>
                 <td className="py-4 px-3">
-                  <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[row.status] || "bg-slate-700 text-slate-100"}`}>
+                  <button
+                    onClick={() => handleToggleStatus(row.raw?._id || row.raw?.id || row.id, row.status)}
+                    className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold transition hover:scale-105 ${statusStyles[row.status] || "bg-slate-700 text-slate-100"}`}
+                    title="Click to toggle status"
+                  >
                     {row.status}
-                  </span>
+                  </button>
                 </td>
                 <td className="py-4 px-3">{row.verifiedBy}</td>
               </tr>

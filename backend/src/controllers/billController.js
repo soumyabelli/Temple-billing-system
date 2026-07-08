@@ -32,9 +32,7 @@ const createBill = async (req, res) => {
     }
 
     const numericAmount = Number(amount);
-    const hasKeys = process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET;
-    const isOnline = paymentMode && paymentMode !== "Cash";
-    const billStatus = (hasKeys && isOnline) ? "Pending" : "Paid";
+    const billStatus = "Paid";
 
     let finalRef = referenceNo;
     if (!finalRef) {

@@ -12,6 +12,7 @@ import {
   MdFestival,
   MdVerified,
   MdFeedback,
+  MdMeetingRoom,
 } from "react-icons/md";
 import { FaDonate, FaBoxes, FaCalendarAlt, FaListAlt, FaPlusCircle, FaBullhorn, FaUsers } from "react-icons/fa";
 import { HiDocumentReport } from "react-icons/hi";
@@ -32,13 +33,9 @@ export const sidebarItems = [
     path: "/admin/donations",
   },
   { title: "Billing & Payments", icon: MdOutlinePayments, path: "/admin/billing" },
-  {
-    title: "Prasada",
-    icon: FaBoxes,
-    path: "/admin/prasada/booked",
-    subItems: [{ title: "Prasada Booked", path: "/admin/prasada/booked" }],
-  },
+  { title: "Prasada", icon: FaBoxes, path: "/admin/prasada/booked" },
   { title: "Inventory", icon: FaBoxes, path: "/admin/inventory" },
+  { title: "Room Allotment", icon: MdMeetingRoom, path: "/admin/rooms" },
   {
     title: "Employee Management",
     icon: MdPeopleAlt,
@@ -57,10 +54,6 @@ export const sidebarItems = [
   { title: "Events", icon: FaCalendarAlt, path: "/admin/events" },
   { title: "Feedback & Complaints", icon: MdFeedback, path: "/admin/feedback" },
   { title: "Notifications", icon: MdNotifications, path: "/admin/notifications" },
-  { title: "Reports & Analytics", icon: HiDocumentReport, path: "/admin/reports" },
-  { title: "Receipts & Documents", icon: MdReceiptLong, path: "/admin/receipts" },
-  { title: "User Management", icon: MdManageAccounts, path: "/admin/users" },
   { title: "Settings", icon: MdOutlineSettings, path: "/admin/settings" },
-  { title: "Profile", icon: MdOutlinePerson, path: "/admin/profile" },
   { title: "Logout", icon: MdLogout, path: "/logout" },
 ];

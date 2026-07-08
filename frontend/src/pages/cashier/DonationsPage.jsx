@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaHeart, FaSearch } from "react-icons/fa";
+import axios from "axios";
 import templeBg from "../../assets/temple-bg.jpg";
 import CashierPageShell from "../../components/cashier/CashierPageShell";
 import {
@@ -30,6 +31,8 @@ const emptyForm = {
 };
 
 const statusStyles = {
+  Collected: "bg-[#def7e3] text-[#166534]",
+  "Not Collected": "bg-[#fff1d7] text-[#9a5a00]",
   Completed: "bg-[#def7e3] text-[#166534]",
   Pending: "bg-[#fff1d7] text-[#9a5a00]",
   Failed: "bg-[#fee2e2] text-[#b91c1c]",
@@ -67,6 +70,16 @@ export default function DonationsPage() {
       setEvents(eventRows.status === "fulfilled" ? eventRows.value : []);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleToggleStatus = async (donation) => {
+    const nextStatus = donation.status === "Collected" ? "Not Collected" : "Collected";
+    try {
+      await axios.patch(`http://localhost:5000/api/donations/${donation._id}/status`, { status: nextStatus });
+      await loadData();
+    } catch (err) {
+      console.warn("Failed to update donation status", err);
     }
   };
 
@@ -529,9 +542,13 @@ export default function DonationsPage() {
                         <td className="px-4 py-3">{donation.paymentMethod || "UPI"}</td>
                         <td className="px-4 py-3 text-slate-700">{formatDateTime(donation.createdAt)}</td>
                         <td className="px-4 py-3">
-                          <span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${statusStyles[donation.status || "Completed"] || statusStyles.Completed}`}>
-                            {donation.status || "Completed"}
-                          </span>
+                          <button
+                            onClick={() => handleToggleStatus(donation)}
+                            className={`inline-flex rounded-full px-3 py-1 text-xs font-bold transition hover:scale-105 ${statusStyles[donation.status || "Not Collected"] || statusStyles["Not Collected"]}`}
+                            title="Click to toggle status"
+                          >
+                            {donation.status || "Not Collected"}
+                          </button>
                           <p className="mt-1 text-[11px] text-slate-500">{donationMode}</p>
                         </td>
                       </tr>

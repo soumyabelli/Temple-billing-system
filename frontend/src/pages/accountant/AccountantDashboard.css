@@ -376,9 +376,9 @@
 .accountant-stat-card__value {
   margin: 8px 0 6px;
   color: #5a3726;
-  font-size: 30px;
+  font-size: 20px;
   font-weight: 800;
-  line-height: 1.1;
+  line-height: 1.3;
 }
 
 .accountant-stat-card__change {

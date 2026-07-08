@@ -26,9 +26,147 @@ import {
   markNotificationAsRead,
 } from "../../services/devoteeService";
 
+const INITIAL_ROOMS = [
+  {
+    number: "101",
+    type: "Standard",
+    status: "Available",
+    price: 1200,
+    block: "Block A",
+    floor: "First Floor",
+    capacity: 2,
+    bedType: "Double",
+    amenities: ["Attached Bathroom", "Fan", "WiFi"],
+    checkinTime: "12:00 PM",
+    checkoutTime: "11:00 AM",
+  },
+  {
+    number: "102",
+    type: "Standard",
+    status: "Available",
+    price: 1200,
+    block: "Block A",
+    floor: "First Floor",
+    capacity: 2,
+    bedType: "Double",
+    amenities: ["Attached Bathroom", "Fan", "WiFi"],
+    checkinTime: "12:00 PM",
+    checkoutTime: "11:00 AM",
+  },
+  {
+    number: "103",
+    type: "Standard",
+    status: "Occupied",
+    price: 1200,
+    block: "Block A",
+    floor: "First Floor",
+    capacity: 2,
+    bedType: "Double",
+    amenities: ["Attached Bathroom", "Fan", "WiFi"],
+    checkinTime: "12:00 PM",
+    checkoutTime: "11:00 AM",
+    devotee: "Venkatesh Kumar",
+    phone: "9876543210",
+    days: 2,
+    payMode: "UPI",
+    checkinDate: "2026-07-07",
+  },
+  {
+    number: "201",
+    type: "Deluxe",
+    status: "Available",
+    price: 2000,
+    block: "Block B",
+    floor: "Second Floor",
+    capacity: 3,
+    bedType: "King",
+    amenities: ["Attached Bathroom", "AC", "TV", "WiFi", "Geyser"],
+    checkinTime: "12:00 PM",
+    checkoutTime: "11:00 AM",
+  },
+  {
+    number: "202",
+    type: "Deluxe",
+    status: "Occupied",
+    price: 2000,
+    block: "Block B",
+    floor: "Second Floor",
+    capacity: 3,
+    bedType: "King",
+    amenities: ["Attached Bathroom", "AC", "TV", "WiFi", "Geyser"],
+    checkinTime: "12:00 PM",
+    checkoutTime: "11:00 AM",
+    devotee: "Meera Iyer",
+    phone: "8765432109",
+    days: 3,
+    payMode: "Cash",
+    checkinDate: "2026-07-06",
+  },
+  {
+    number: "301",
+    type: "VIP Suite",
+    status: "Occupied",
+    price: 4500,
+    block: "Main Block",
+    floor: "Third Floor",
+    capacity: 4,
+    bedType: "King",
+    amenities: ["Attached Bathroom", "AC", "TV", "WiFi", "Geyser", "Refrigerator", "Sofa", "Room Service"],
+    checkinTime: "12:00 PM",
+    checkoutTime: "11:00 AM",
+    devotee: "Ramesh Sharma",
+    phone: "7654321098",
+    days: 1,
+    payMode: "Card",
+    checkinDate: "2026-07-08",
+  },
+  {
+    number: "302",
+    type: "VIP Suite",
+    status: "Available",
+    price: 4500,
+    block: "Main Block",
+    floor: "Third Floor",
+    capacity: 4,
+    bedType: "King",
+    amenities: ["Attached Bathroom", "AC", "TV", "WiFi", "Geyser", "Refrigerator", "Sofa", "Room Service"],
+    checkinTime: "12:00 PM",
+    checkoutTime: "11:00 AM",
+  },
+];
+
+const INITIAL_HISTORY = [
+  {
+    id: "B-8801",
+    devoteeName: "Suresh Prasad",
+    phone: "9988776655",
+    roomNumber: "101",
+    roomType: "Standard",
+    amount: 2400,
+    days: 2,
+    checkinDate: "2026-07-01",
+    checkoutDate: "2026-07-03",
+    payMode: "Cash",
+    status: "Completed",
+  },
+  {
+    id: "B-8802",
+    devoteeName: "Amit Patel",
+    phone: "8877665544",
+    roomNumber: "201",
+    roomType: "Deluxe",
+    amount: 6000,
+    days: 3,
+    checkinDate: "2026-07-02",
+    checkoutDate: "2026-07-05",
+    payMode: "UPI",
+    status: "Completed",
+  },
+];
+
 const menuItems = [
   { label: "Dashboard", icon: "home" },
-  { label: "Book Pooja", icon: "book" },
+  { label: "Booking", icon: "book" },
   { label: "My Bookings", icon: "calendar" },
   { label: "Donations", icon: "heart" },
   { label: "Receipts", icon: "receipt" },
@@ -253,6 +391,37 @@ const DevoteeDashboard = () => {
   const [notificationsData, setNotificationsData] = useState([]);
   const [eventsData, setEventsData] = useState([]);
   const [selectedEventId, setSelectedEventId] = useState(null);
+
+  const [availableRooms, setAvailableRooms] = useState(() => {
+    const saved = localStorage.getItem("templeRooms_v2");
+    return saved ? JSON.parse(saved) : INITIAL_ROOMS;
+  });
+  const [roomHistory, setRoomHistory] = useState(() => {
+    const saved = localStorage.getItem("templeRoomHistory");
+    return saved ? JSON.parse(saved) : INITIAL_HISTORY;
+  });
+
+  const roomTypesList = useMemo(() => {
+    const list = {};
+    availableRooms.forEach((r) => {
+      if (!list[r.type]) {
+        list[r.type] = {
+          type: r.type,
+          price: r.price,
+          amenities: r.amenities || [],
+          block: r.block || "Block A",
+          floor: r.floor || "Ground Floor",
+          capacity: r.capacity || 2,
+        };
+      }
+    });
+    const result = Object.values(list);
+    return result.length > 0 ? result : [
+      { type: "Standard", price: 1200, amenities: ["Attached Bathroom", "Fan", "WiFi"] },
+      { type: "Deluxe", price: 2000, amenities: ["Attached Bathroom", "AC", "TV", "WiFi", "Geyser"] },
+      { type: "VIP Suite", price: 4500, amenities: ["Attached Bathroom", "AC", "TV", "WiFi", "Geyser", "Refrigerator", "Sofa", "Room Service"] }
+    ];
+  }, [availableRooms]);
   const [prasadamOrders, setPrasadamOrders] = useState([]);
   const [profileData, setProfileData] = useState({
     name: user?.name || "Devotee User",
@@ -277,10 +446,27 @@ const DevoteeDashboard = () => {
   const [showAllDonations, setShowAllDonations] = useState(false);
   const [viewingReceipt, setViewingReceipt] = useState(null);
   const [bookingTab, setBookingTab] = useState("Pooja");
-  const [roomType, setRoomType] = useState("Standard Non-AC Room");
+
+  const [selectedRoomNumber, setSelectedRoomNumber] = useState(() => {
+    const saved = localStorage.getItem("templeRooms_v2");
+    const parsed = saved ? JSON.parse(saved) : INITIAL_ROOMS;
+    const firstAvail = parsed.find(r => r.status === "Available") || parsed[0];
+    return firstAvail ? firstAvail.number : "";
+  });
+  const [roomType, setRoomType] = useState(() => {
+    const saved = localStorage.getItem("templeRooms_v2");
+    const parsed = saved ? JSON.parse(saved) : INITIAL_ROOMS;
+    const firstAvail = parsed.find(r => r.status === "Available") || parsed[0];
+    return firstAvail ? firstAvail.type : "Standard";
+  });
   const [roomCheckIn, setRoomCheckIn] = useState("");
   const [roomCheckOut, setRoomCheckOut] = useState("");
-  const [roomAmount, setRoomAmount] = useState(500);
+  const [roomAmount, setRoomAmount] = useState(() => {
+    const saved = localStorage.getItem("templeRooms_v2");
+    const parsed = saved ? JSON.parse(saved) : INITIAL_ROOMS;
+    const firstAvail = parsed.find(r => r.status === "Available") || parsed[0];
+    return firstAvail ? firstAvail.price : 1200;
+  });
   const [roomPaymentMethod, setRoomPaymentMethod] = useState("UPI");
   const [roomLoading, setRoomLoading] = useState(false);
   const [roomSuccess, setRoomSuccess] = useState("");
@@ -446,6 +632,19 @@ const DevoteeDashboard = () => {
   }, [selectedEventId, eventsData, donationCategories]);
 
   useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === "templeRooms_v2") {
+        setAvailableRooms(e.newValue ? JSON.parse(e.newValue) : []);
+      }
+      if (e.key === "templeRoomHistory") {
+        setRoomHistory(e.newValue ? JSON.parse(e.newValue) : []);
+      }
+    };
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
+
+  useEffect(() => {
     const loadDevoteeData = async () => {
       try {
         const [bookingsRes, donationsRes, notificationsRes, profileRes, eventsRes, prasadamRes] = await Promise.all([
@@ -512,6 +711,15 @@ const DevoteeDashboard = () => {
           }))
         );
         setPrasadamOrders(prasadamRes.orders || []);
+
+        const roomsSaved = localStorage.getItem("templeRooms_v2");
+        if (roomsSaved) {
+          setAvailableRooms(JSON.parse(roomsSaved));
+        }
+        const historySaved = localStorage.getItem("templeRoomHistory");
+        if (historySaved) {
+          setRoomHistory(JSON.parse(historySaved));
+        }
       } catch (error) {
         console.warn("Unable to load devotee data", error);
       }
@@ -881,108 +1089,76 @@ const DevoteeDashboard = () => {
       const activeName = String(profileData.name || user?.name || "").trim();
       const activePhone = String(profileData.phone || "").trim();
 
+      // Find the specific selected room
+      const targetRoom = availableRooms.find((r) => r.number === selectedRoomNumber);
+      if (!targetRoom || targetRoom.status !== "Available") {
+        setRoomError(`Room "${selectedRoomNumber}" is not available. Please choose another room.`);
+        setRoomLoading(false);
+        return;
+      }
+
+      // Mark the room as occupied in availableRooms
+      const updatedRooms = availableRooms.map((r) => {
+        if (r.number === targetRoom.number) {
+          return {
+            ...r,
+            status: "Occupied",
+            devotee: activeName,
+            phone: activePhone,
+            days: diffDays,
+            payMode: roomPaymentMethod,
+            checkinDate: roomCheckIn.split("T")[0],
+          };
+        }
+        return r;
+      });
+
+      setAvailableRooms(updatedRooms);
+      localStorage.setItem("templeRooms_v2", JSON.stringify(updatedRooms));
+
+      // Append new booking to room history
+      const newBooking = {
+        id: `B-${Math.floor(1000 + Math.random() * 9000)}`,
+        devoteeName: activeName,
+        phone: activePhone,
+        roomNumber: targetRoom.number,
+        roomType: targetRoom.type,
+        amount: finalAmount,
+        days: diffDays,
+        checkinDate: roomCheckIn.split("T")[0],
+        checkoutDate: roomCheckOut.split("T")[0],
+        payMode: roomPaymentMethod,
+        status: "Active",
+      };
+
+      const updatedHistory = [newBooking, ...roomHistory];
+      setRoomHistory(updatedHistory);
+      localStorage.setItem("templeRoomHistory", JSON.stringify(updatedHistory));
+
+      // Create a devotee booking ledger record in backend
       const payload = {
         devoteeName: activeName,
         devoteeEmail: activeEmail,
         devoteePhone: activePhone || undefined,
-        service: `Room Booking: ${roomType}`,
+        service: `Room Allotment: Room ${targetRoom.number} (${roomType})`,
         datetime: roomCheckIn,
         amount: finalAmount,
         paymentMethod: roomPaymentMethod,
         notes: `Check-in: ${formatDateTimeDisplay(roomCheckIn)} | Check-out: ${formatDateTimeDisplay(roomCheckOut)}`,
       };
 
-      const loadRazorpayScript = () =>
-        new Promise((resolve) => {
-          if (window.Razorpay) return resolve(true);
-          const script = document.createElement("script");
-          script.src = "https://checkout.razorpay.com/v1/checkout.js";
-          script.onload = () => resolve(true);
-          script.onerror = () => resolve(false);
-          document.body.appendChild(script);
-        });
+      await createDevoteeBooking(payload);
 
-      const bookingRes = await createDevoteeBooking(payload);
-      const { booking: createdBooking, order, key, simulated } = bookingRes;
-
-      if (!simulated && order) {
-        const loaded = await loadRazorpayScript();
-        if (!loaded) {
-          setRoomError("Unable to load payment gateway. Try again later.");
-          return;
-        }
-
-        const options = {
-          key: key || "",
-          amount: order.amount,
-          currency: order.currency,
-          name: "Temple Room Booking",
-          description: `Room Booking: ${roomType}`,
-          order_id: order.id,
-          prefill: {
-            name: activeName,
-            email: activeEmail,
-            contact: activePhone,
-          },
-          handler: async function (resp) {
-            try {
-              setRoomLoading(true);
-              await verifyBookingPayment({
-                razorpay_order_id: resp.razorpay_order_id,
-                razorpay_payment_id: resp.razorpay_payment_id,
-                razorpay_signature: resp.razorpay_signature,
-                bookingId: createdBooking._id,
-              });
-
-              const [bookingsRes, notificationsRes] = await Promise.all([
-                getDevoteeBookings(activeEmail),
-                getDevoteeNotifications(activeEmail),
-              ]);
-              setBookingsData(bookingsRes.bookings || []);
-              setNotificationsData(formatNotifications(notificationsRes.notifications || []));
-
-              setRoomSuccess(`Room booking successful! Room Type: ${roomType} for ${diffDays} day(s). Amount paid: ${formatCurrency(finalAmount)}.`);
-              setRoomCheckIn("");
-              setRoomCheckOut("");
-              setActivePage("My Bookings");
-            } catch (err) {
-              setRoomError(err?.response?.data?.error || "Payment verification failed.");
-              console.warn("verify room booking handler error", err);
-            } finally {
-              setRoomLoading(false);
-            }
-          },
-          modal: {
-            ondismiss: function () {
-              // user closed checkout
-            },
-          },
-        };
-
-        const rzp = new window.Razorpay(options);
-        rzp.open();
-        return;
-      }
-
-      if (createdBooking?._id) {
-        setBookingsData((prev) => [createdBooking, ...prev.filter((booking) => booking._id !== createdBooking._id)]);
-      }
-
-      try {
-        const [bookingsRes, notificationsRes] = await Promise.all([
-          getDevoteeBookings(activeEmail),
-          getDevoteeNotifications(activeEmail),
-        ]);
-        setBookingsData(bookingsRes.bookings || []);
-        setNotificationsData(formatNotifications(notificationsRes.notifications || []));
-      } catch (refreshError) {
-        console.warn("Unable to refresh bookings after create", refreshError);
-      }
-
-      setRoomSuccess(`Room booking successful! Room Type: ${roomType} for ${diffDays} day(s). Amount paid: ${formatCurrency(finalAmount)}.`);
+      setRoomSuccess(`Room ${targetRoom.number} booking successful! Duration: ${diffDays} day(s). Amount paid: ${formatCurrency(finalAmount)}.`);
       setRoomCheckIn("");
       setRoomCheckOut("");
-      setActivePage("My Bookings");
+      
+      // Reload bookings lists
+      try {
+        const bookingsRes = await getDevoteeBookings(activeEmail);
+        setBookingsData(bookingsRes.bookings || []);
+      } catch (e) {}
+
     } catch (error) {
       console.warn("Unable to create room booking", error);
       setRoomError(error?.response?.data?.error || "Unable to create room booking. Please try again.");
@@ -1620,7 +1796,7 @@ const DevoteeDashboard = () => {
                 if (item.action === "View Bookings") setActivePage("My Bookings");
                 if (item.action === "View History") setActivePage("Receipts");
                 if (item.action === "View Orders") {
-                  setActivePage("Book Pooja");
+                  setActivePage("Booking");
                   setBookingTab("Prasadam");
                 }
               }}
@@ -1938,94 +2114,233 @@ const DevoteeDashboard = () => {
         )}
 
         {bookingTab === "Room" && (
-          <div className={`${glassCard}`}>
-            <h2 className="text-[2rem] font-bold">Book Guest Room</h2>
-            <p className="mt-2 text-[#4f4f4f]">Rent a comfortable guest room at the temple premises for your visit.</p>
+          <div className="space-y-8">
+            <div className={`${glassCard}`}>
+              <h2 className="text-[2rem] font-bold">Book Guest Room</h2>
+              <p className="mt-2 text-[#4f4f4f]">Rent a comfortable guest room at the temple premises for your visit.</p>
 
-            <div className="mt-6 max-w-2xl mx-auto">
-              <div className={glassSection}>
-                <h3 className="text-xl font-semibold">Room Booking Form</h3>
-                <div className="mt-4 grid gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-[#5d5d5d] mb-1">Room Type</label>
-                    <select
-                      value={roomType}
-                      onChange={(e) => {
-                        const selectedType = e.target.value;
-                        setRoomType(selectedType);
-                        if (selectedType === "Standard Non-AC Room") setRoomAmount(500);
-                        else if (selectedType === "Deluxe AC Room") setRoomAmount(1000);
-                        else if (selectedType === "VIP Suite") setRoomAmount(2500);
-                      }}
-                      className={glassInput}
-                    >
-                      <option value="Standard Non-AC Room">Standard Non-AC Room (Rs 500 / day)</option>
-                      <option value="Deluxe AC Room">Deluxe AC Room (Rs 1,000 / day)</option>
-                      <option value="VIP Suite">VIP Suite (Rs 2,500 / day)</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-[#5d5d5d] mb-1">Check-in Date & Time</label>
-                    <input
-                      type="datetime-local"
-                      value={roomCheckIn}
-                      onChange={(e) => setRoomCheckIn(e.target.value)}
-                      className={glassInput}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-[#5d5d5d] mb-1">Check-out Date & Time</label>
-                    <input
-                      type="datetime-local"
-                      value={roomCheckOut}
-                      onChange={(e) => setRoomCheckOut(e.target.value)}
-                      className={glassInput}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-[#5d5d5d] mb-1">Payment Method</label>
-                    <select
-                      value={roomPaymentMethod}
-                      onChange={(e) => setRoomPaymentMethod(e.target.value)}
-                      className={glassInput}
-                    >
-                      <option value="UPI">UPI</option>
-                      <option value="Card">Card</option>
-                      <option value="Net Banking">Net Banking</option>
-                    </select>
-                  </div>
-
-                  {roomCheckIn && roomCheckOut && (() => {
-                    const days = Math.ceil((new Date(roomCheckOut) - new Date(roomCheckIn)) / (1000 * 60 * 60 * 24)) || 1;
-                    if (days > 0) {
+              <div className="mt-8 grid gap-8 lg:grid-cols-3">
+                {/* LEFT: ROOM CARD LISTING */}
+                <div className="lg:col-span-2 space-y-4">
+                  <h3 className="text-xl font-bold text-slate-800 mb-2">Available Rooms</h3>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    {availableRooms.map((room) => {
+                      const isSelected = selectedRoomNumber === room.number;
                       return (
-                        <div className="rounded-2xl bg-[#fff7e7] px-4 py-3 text-sm font-semibold text-[#8b5a0a] border border-amber-200/50">
-                          Total Duration: {days} Day(s) | Total Price: {formatCurrency(roomAmount * days)}
+                        <div
+                          key={room.number}
+                          onClick={() => {
+                            if (room.status === "Available") {
+                              setSelectedRoomNumber(room.number);
+                              setRoomType(room.type);
+                              setRoomAmount(room.price);
+                            }
+                          }}
+                          className={`rounded-2xl border p-5 transition duration-300 backdrop-blur-md ${
+                            room.status !== "Available"
+                              ? "opacity-50 cursor-not-allowed border-slate-200 bg-slate-100/10"
+                              : isSelected
+                              ? "cursor-pointer border-[#ff9f2f] bg-white/60 shadow-md ring-2 ring-[#ff9f2f]"
+                              : "cursor-pointer border-white/40 bg-white/20 hover:bg-white/40"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs uppercase tracking-wider font-semibold text-[#8b5a0a]">
+                              {room.block} - {room.floor}
+                            </span>
+                            <span className={`rounded px-2 py-0.5 text-xs font-bold ${
+                              room.status === "Available" ? "bg-[#0f766e]/10 text-[#0f766e]" : "bg-red-100 text-red-800"
+                            }`}>
+                              {room.status === "Available" ? `${formatCurrency(room.price)} / day` : "Occupied"}
+                            </span>
+                          </div>
+                          <p className="mt-3 text-xl font-extrabold text-slate-900">Room {room.number} ({room.type})</p>
+                          <p className="text-xs text-slate-500 mt-1">Bed Type: {room.bedType || "Double"} | Capacity: {room.capacity || 2} Persons</p>
+
+                          <div className="mt-4 border-t border-slate-200/50 pt-3">
+                            <p className="text-xs font-bold text-slate-700">Amenities Included:</p>
+                            <div className="mt-1 flex flex-wrap gap-1">
+                              {(room.amenities || []).slice(0, 4).map((amenity) => (
+                                <span
+                                  key={amenity}
+                                  className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-600 font-medium"
+                                >
+                                  {amenity}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
                         </div>
                       );
-                    }
-                    return null;
-                  })()}
-
-                  <button
-                    type="button"
-                    onClick={handleRoomSubmit}
-                    disabled={roomLoading}
-                    className={glassButton}
-                  >
-                    {roomLoading ? "Processing room booking..." : "Confirm & Book Room"}
-                  </button>
-
-                  {roomError && (
-                    <p className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 mt-2">{roomError}</p>
-                  )}
-                  {roomSuccess && (
-                    <p className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700 mt-2">{roomSuccess}</p>
-                  )}
+                    })}
+                  </div>
                 </div>
+
+                {/* RIGHT: ROOM BOOKING FORM */}
+                <div className={glassSection}>
+                  <h3 className="text-xl font-semibold">Room Booking Form</h3>
+                  <div className="mt-4 grid gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-[#5d5d5d] mb-1">Selected Room</label>
+                      <select
+                        value={selectedRoomNumber}
+                        onChange={(e) => {
+                          const num = e.target.value;
+                          setSelectedRoomNumber(num);
+                          const matchingRoom = availableRooms.find((r) => r.number === num);
+                          if (matchingRoom) {
+                            setRoomType(matchingRoom.type);
+                            setRoomAmount(matchingRoom.price);
+                          }
+                        }}
+                        className={glassInput}
+                      >
+                        <option value="">-- Select Room --</option>
+                        {availableRooms.map((r) => (
+                          <option key={r.number} value={r.number} disabled={r.status !== "Available"}>
+                            Room {r.number} ({r.type} - {formatCurrency(r.price)} / day) {r.status !== "Available" ? "[Occupied]" : ""}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-[#5d5d5d] mb-1">Check-in Date & Time</label>
+                      <input
+                        type="datetime-local"
+                        value={roomCheckIn}
+                        onChange={(e) => setRoomCheckIn(e.target.value)}
+                        className={glassInput}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-[#5d5d5d] mb-1">Check-out Date & Time</label>
+                      <input
+                        type="datetime-local"
+                        value={roomCheckOut}
+                        onChange={(e) => setRoomCheckOut(e.target.value)}
+                        className={glassInput}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-[#5d5d5d] mb-1">Payment Method</label>
+                      <select
+                        value={roomPaymentMethod}
+                        onChange={(e) => setRoomPaymentMethod(e.target.value)}
+                        className={glassInput}
+                      >
+                        <option value="UPI">UPI</option>
+                        <option value="Card">Card</option>
+                        <option value="Net Banking">Net Banking</option>
+                      </select>
+                    </div>
+
+                    {roomCheckIn && roomCheckOut && (() => {
+                      const days = Math.ceil((new Date(roomCheckOut) - new Date(roomCheckIn)) / (1000 * 60 * 60 * 24)) || 1;
+                      if (days > 0) {
+                        return (
+                          <div className="rounded-2xl bg-[#fff7e7] px-4 py-3 text-sm font-semibold text-[#8b5a0a] border border-amber-200/50">
+                            Total Duration: {days} Day(s) | Total Price: {formatCurrency(roomAmount * days)}
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
+
+                    <button
+                      type="button"
+                      onClick={handleRoomSubmit}
+                      disabled={roomLoading}
+                      className={glassButton}
+                    >
+                      {roomLoading ? "Processing room booking..." : "Confirm & Book Room"}
+                    </button>
+
+                    {roomError && (
+                      <p className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 mt-2">{roomError}</p>
+                    )}
+                    {roomSuccess && (
+                      <p className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700 mt-2">{roomSuccess}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* MY ROOM BOOKING HISTORY */}
+            <div className={`${glassCard}`}>
+              <h3 className="text-xl font-bold text-slate-800 mb-4">My Room Booking History</h3>
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-left text-sm text-[#4f3f26]">
+                  <thead>
+                    <tr className="border-b border-white/20 text-slate-600">
+                      <th className="py-3 px-3">Booking ID</th>
+                      <th className="py-3 px-3">Room No</th>
+                      <th className="py-3 px-3">Room Type</th>
+                      <th className="py-3 px-3">Stay Details</th>
+                      <th className="py-3 px-3">Days</th>
+                      <th className="py-3 px-3">Amount Paid</th>
+                      <th className="py-3 px-3">Status</th>
+                      <th className="py-3 px-3">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {roomHistory.filter(h => 
+                      h.devoteeName?.toLowerCase() === String(profileData.name || user?.name || "").trim().toLowerCase() ||
+                      (profileData.phone && h.phone === profileData.phone) ||
+                      (profileData.email && h.email === profileData.email)
+                    ).length === 0 ? (
+                      <tr>
+                        <td colSpan="8" className="py-6 text-center text-slate-500 font-semibold">
+                          No room booking records found.
+                        </td>
+                      </tr>
+                    ) : (
+                      roomHistory
+                        .filter(h => 
+                          h.devoteeName?.toLowerCase() === String(profileData.name || user?.name || "").trim().toLowerCase() ||
+                          (profileData.phone && h.phone === profileData.phone) ||
+                          (profileData.email && h.email === profileData.email)
+                        )
+                        .map((record) => (
+                          <tr key={record.id} className="border-b border-white/10 hover:bg-white/10 transition">
+                            <td className="py-3 px-3 font-mono font-bold text-indigo-700">{record.id}</td>
+                            <td className="py-3 px-3 font-bold">{record.roomNumber}</td>
+                            <td className="py-3 px-3">{record.roomType}</td>
+                            <td className="py-3 px-3 text-xs">
+                              <div>Checkin: {record.checkinDate}</div>
+                              <div>Checkout: {record.checkoutDate}</div>
+                            </td>
+                            <td className="py-3 px-3 font-semibold">{record.days} day(s)</td>
+                            <td className="py-3 px-3 font-bold">{formatCurrency(record.amount)}</td>
+                            <td className="py-3 px-3">
+                              <span
+                                className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-bold ${
+                                  record.status === "Active"
+                                    ? "bg-blue-100 text-blue-800"
+                                    : "bg-green-100 text-green-800"
+                                }`}
+                              >
+                                {record.status}
+                              </span>
+                            </td>
+                            <td className="py-3 px-3">
+                              <button
+                                onClick={() => {
+                                  window.alert(`Downloading Receipt ${record.id}...\nDevotee: ${record.devoteeName}\nTotal amount: ${formatCurrency(record.amount)}`);
+                                }}
+                                className="inline-flex items-center gap-1 rounded bg-[#fff3d8] px-2 py-1 text-xs font-semibold text-[#7f4b11] transition hover:bg-[#ffe4b4]"
+                              >
+                                Download Receipt
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
@@ -2073,7 +2388,7 @@ const DevoteeDashboard = () => {
                   {showAllBookings ? "Show Recent 5" : "View All"}
                 </button>
               )}
-              <button type="button" onClick={() => { setActivePage("Book Pooja"); setBookingTab("Pooja"); }} className="rounded-2xl bg-[#1b7f77] px-4 py-2 text-sm font-semibold text-white">New Booking</button>
+              <button type="button" onClick={() => { setActivePage("Booking"); setBookingTab("Pooja"); }} className="rounded-2xl bg-[#1b7f77] px-4 py-2 text-sm font-semibold text-white">New Booking</button>
             </div>
           </div>
           <div className="mt-6 overflow-x-auto">
@@ -3113,7 +3428,7 @@ const DevoteeDashboard = () => {
 
   const renderContent = () => {
     switch (activePage) {
-      case "Book Pooja":
+      case "Booking":
         return renderBookPooja();
       case "My Bookings":
         return renderMyBookings();

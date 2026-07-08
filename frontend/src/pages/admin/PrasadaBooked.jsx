@@ -16,7 +16,7 @@ const formatDateTime = (value) => {
   });
 };
 
-const STATUS_OPTIONS = ["Pending", "Approved", "Rejected", "Processing", "Ready for Pickup", "Completed", "Cancelled"];
+const STATUS_OPTIONS = ["Not Collected", "Collected"];
 
 const statusClassMap = {
   Pending: "bg-[#fef3c7] text-[#92400e]",
@@ -122,9 +122,9 @@ const PrasadaBooked = () => {
             <p className="mt-4 text-[2rem] font-bold text-[#0f172a]">{orders.length}</p>
           </div>
           <div className="rounded-3xl border border-[#fef3c7] bg-[#fffbeb] p-6">
-            <p className="text-sm uppercase tracking-[0.24em] text-[#92400e]">Pending</p>
+            <p className="text-sm uppercase tracking-[0.24em] text-[#92400e]">Not Collected</p>
             <p className="mt-4 text-[2rem] font-bold text-[#92400e]">
-              {orders.filter((o) => ["Pending", "Placed"].includes(displayStatus(o))).length}
+              {orders.filter((o) => ["Pending", "Placed", "Not Collected"].includes(displayStatus(o))).length}
             </p>
           </div>
           <div className="rounded-3xl border border-[#d1fae5] bg-[#ecfdf5] p-6">
@@ -229,7 +229,7 @@ const PrasadaBooked = () => {
                       <td className="px-4 py-4">
                         <div className="flex flex-col gap-2">
                           <select
-                            value={STATUS_OPTIONS.includes(status) ? status : "Pending"}
+                            value={STATUS_OPTIONS.includes(status) ? status : "Not Collected"}
                             disabled={updatingId === orderId || deletingId === orderId}
                             onChange={(e) => handleStatusChange(orderId, e.target.value)}
                             className="rounded-lg border border-[#cbd5e1] px-2 py-1 text-xs outline-none focus:border-[#2563eb]"

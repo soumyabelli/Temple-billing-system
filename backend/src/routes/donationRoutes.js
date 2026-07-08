@@ -4,6 +4,7 @@ const {
   getAllDonations,
   getDonationStats,
   deleteDonation,
+  updateDonationStatus,
 } = require("../controllers/donationController");
 
 const router = express.Router();
@@ -15,5 +16,7 @@ router.get("/", getAllDonations);
 router.get("/stats", getDonationStats);
 
 router.delete("/:id", deleteDonation);
+
+router.patch("/:id/status", updateDonationStatus);
 
 module.exports = router;

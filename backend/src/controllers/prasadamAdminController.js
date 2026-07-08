@@ -6,6 +6,8 @@ const { createStaffNotification } = require("../utils/notificationService");
 const clean = (v) => String(v || "").trim();
 
 const ALLOWED_ORDER_STATUSES = [
+  "Collected",
+  "Not Collected",
   "Pending",
   "Approved",
   "Rejected",
@@ -16,9 +18,11 @@ const ALLOWED_ORDER_STATUSES = [
 ];
 
 const mapToModelStatuses = (incoming) => {
+  if (incoming === "Collected") return ["Collected"];
+  if (incoming === "Not Collected") return ["Not Collected"];
   switch (incoming) {
     case "Pending":
-      return ["Pending", "Placed"];
+      return ["Pending", "Placed", "Not Collected"];
     case "Approved":
       return ["Approved"];
     case "Rejected":
@@ -28,40 +32,42 @@ const mapToModelStatuses = (incoming) => {
     case "Ready for Pickup":
       return ["Ready for Pickup", "Ready"];
     case "Completed":
-      return ["Completed", "Delivered"];
+      return ["Completed", "Delivered", "Collected"];
     case "Cancelled":
       return ["Cancelled"];
     default:
-      return [];
+      return [incoming];
   }
 };
 
 const mapFromModelStatus = (modelStatus) => {
+  if (modelStatus === "Collected") return "Collected";
+  if (modelStatus === "Not Collected") return "Not Collected";
   switch (modelStatus) {
     case "Pending":
-      return "Pending";
+      return "Not Collected";
     case "Approved":
-      return "Approved";
+      return "Collected";
     case "Rejected":
-      return "Rejected";
+      return "Not Collected";
     case "Processing":
-      return "Processing";
+      return "Not Collected";
     case "Ready for Pickup":
-      return "Ready for Pickup";
+      return "Collected";
     case "Completed":
-      return "Completed";
+      return "Collected";
     case "Placed":
-      return "Pending";
+      return "Not Collected";
     case "Preparing":
-      return "Processing";
+      return "Not Collected";
     case "Ready":
-      return "Ready for Pickup";
+      return "Collected";
     case "Delivered":
-      return "Completed";
+      return "Collected";
     case "Cancelled":
-      return "Cancelled";
+      return "Not Collected";
     default:
-      return modelStatus || "Pending";
+      return modelStatus || "Not Collected";
   }
 };
 
@@ -184,6 +190,12 @@ exports.updateAdminPrasadamOrderStatus = async (req, res) => {
     const prevModelStatus = order.status;
     order.status = modelStatus;
     await order.save();
+
+    // Sync bill ledger status as well
+    await Bill.updateMany(
+      { sourceId: order._id.toString() },
+      { $set: { status: modelStatus === "Collected" || modelStatus === "Completed" || modelStatus === "Delivered" || modelStatus === "Ready" ? "Paid" : "Pending" } }
+    );
 
     await createStaffNotification({
       title: `🔔 Prasadam Order Updated`,

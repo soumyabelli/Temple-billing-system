@@ -71,8 +71,8 @@ const donationSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["Completed", "Pending", "Failed"],
-      default: "Completed",
+      enum: ["Collected", "Not Collected", "Completed", "Pending", "Failed"],
+      default: "Not Collected",
     },
 
     donatedBy: {

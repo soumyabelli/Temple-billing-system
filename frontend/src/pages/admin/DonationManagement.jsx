@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { getDonationTypes } from "../../services/donationTypeService";
@@ -126,7 +126,7 @@ const DonationManagement = () => {
         </div>
       </div>
 
-      <DonationTable donations={filteredDonations} />
+      <DonationTable donations={filteredDonations} onRefresh={fetchDonations} />
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <RecentDonations donations={filteredDonations} />

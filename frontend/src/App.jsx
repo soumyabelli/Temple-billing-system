@@ -40,6 +40,7 @@ import BillingManagement from "./pages/admin/BillingManagement";
 import InventoryManagement from "./pages/admin/InventoryManagement";
 import PrasadaBooked from "./pages/admin/PrasadaBooked";
 import NotificationsCenter from "./pages/admin/NotificationsCenter";
+import RoomAllotment from "./pages/admin/RoomAllotment";
 import AdminLayout from "./layouts/AdminLayout";
 
 import CashierLayout from "./layouts/CashierLayout";
@@ -198,6 +199,16 @@ function App() {
           <ProtectedRoute allowedRoles={["admin"]}>
             <AdminLayout>
               <PrasadaBooked />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/rooms"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminLayout>
+              <RoomAllotment />
             </AdminLayout>
           </ProtectedRoute>
         }

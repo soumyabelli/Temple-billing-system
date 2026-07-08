@@ -117,8 +117,8 @@ const createBooking = async (req, res) => {
 
     const hasKeys = process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET;
     const isOnline = pm && pm !== "Cash";
-    const bookingStatus = (hasKeys && isOnline) ? "Pending" : "Confirmed";
-    const paymentStatus = (hasKeys && isOnline) ? "Pending" : "Paid";
+    const bookingStatus = "Completed";
+    const paymentStatus = "Paid";
 
     let booking;
     const bookingPayload = {
@@ -362,9 +362,7 @@ const createDonation = async (req, res) => {
       return res.status(400).json({ error: "Please provide a valid contact number." });
     }
 
-    const hasKeys = process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET;
-    const isOnline = paymentMethod && paymentMethod !== "Cash";
-    const donationStatus = (hasKeys && isOnline) ? "Pending" : "Completed";
+    const donationStatus = "Not Collected";
 
     let donation;
     const donationPayload = {
@@ -1047,9 +1045,7 @@ const createPrasadamOrder = async (req, res) => {
       .toLowerCase();
     const resolvedChannel = normalizedChannel === "cashier" ? "cashier" : "devotee";
 
-    const hasKeys = process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET;
-    const isOnline = paymentMethod && paymentMethod !== "Cash" && resolvedChannel === "devotee";
-    const orderStatus = (hasKeys && isOnline) ? "Pending" : "Placed";
+    const orderStatus = "Not Collected";
 
     let resolvedDevoteeId = devoteeId || undefined;
     if (!resolvedDevoteeId && normalizedOrderEmail) {
@@ -1349,7 +1345,7 @@ const createRazorpayOrder = async (req, res) => {
       category,
       paymentMethod,
       notes,
-      status: "Pending",
+      status: "Not Collected",
       eventId: eventId || undefined,
       razorpayOrderId: order.id,
     });
@@ -1363,7 +1359,7 @@ const createRazorpayOrder = async (req, res) => {
       referenceNo: `DN-${String(donation._id).slice(-6).toUpperCase()}`,
       sourceId: donation._id.toString(),
       notes,
-      status: "Pending",
+      status: "Paid",
     });
 
     return res.status(201).json({ order, donation: normalizeDonationEmails(donation.toObject ? donation.toObject() : donation), key: process.env.RAZORPAY_KEY_ID || "" });

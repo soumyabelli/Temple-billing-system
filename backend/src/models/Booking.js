@@ -38,7 +38,7 @@ const bookingSchema = new mongoose.Schema(
     paymentStatus: {
       type: String,
       enum: ["Pending", "Paid", "Failed", "Refunded"],
-      default: "Pending",
+      default: "Paid",
     },
     transactionId: { type: String, trim: true, default: "" },
     razorpayOrderId: { type: String, trim: true },
@@ -61,7 +61,7 @@ const bookingSchema = new mongoose.Schema(
         "Transfer Requested",
         "Transferred",
       ],
-      default: "Pending",
+      default: "Completed",
     },
     contactNumber: { type: String, trim: true },
     notes: { type: String, trim: true },

@@ -22,7 +22,7 @@ const syncLedgerBills = async () => {
           referenceNo: `BK-${String(b._id).slice(-6).toUpperCase()}`,
           sourceId: b._id.toString(),
           notes: b.notes || "",
-          status: b.status === "Pending" || b.paymentStatus === "Pending" ? "Pending" : "Paid",
+          status: "Paid",
           billDate: b.createdAt || b.datetime || new Date(),
         });
         bookingCount++;
@@ -47,7 +47,7 @@ const syncLedgerBills = async () => {
           referenceNo: `DN-${String(d._id).slice(-6).toUpperCase()}`,
           sourceId: d._id.toString(),
           notes: d.notes || "",
-          status: d.status === "Pending" ? "Pending" : "Paid",
+          status: "Paid",
           billDate: d.createdAt || new Date(),
         });
         donationCount++;
@@ -72,7 +72,7 @@ const syncLedgerBills = async () => {
           referenceNo: `PR-${String(o._id).slice(-6).toUpperCase()}`,
           sourceId: o._id.toString(),
           notes: `Quantity: ${o.quantity || 1}, Unit Price: ${o.unitPrice || 0}`,
-          status: o.status === "Pending" ? "Pending" : "Paid",
+          status: "Paid",
           billDate: o.createdAt || new Date(),
         });
         orderCount++;

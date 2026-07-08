@@ -81,7 +81,7 @@ const seed = async () => {
         service: "Abhishekam",
         datetime: formatISODate(7, 30), // Today 07:30 AM
         amount: 500,
-        status: "In Progress",
+        status: "Completed",
         assignedPriest: priestId,
       },
       {
@@ -90,7 +90,7 @@ const seed = async () => {
         service: "Archana",
         datetime: formatISODate(9, 0), // Today 09:00 AM
         amount: 100,
-        status: "Upcoming",
+        status: "Completed",
         assignedPriest: priestId,
       },
       {
@@ -99,7 +99,7 @@ const seed = async () => {
         service: "Special Seva",
         datetime: formatISODate(10, 30), // Today 10:30 AM
         amount: 1500,
-        status: "Upcoming",
+        status: "Completed",
         assignedPriest: priestId,
       },
       {
@@ -108,7 +108,7 @@ const seed = async () => {
         service: "Homa",
         datetime: formatISODate(12, 0), // Today 12:00 PM
         amount: 2500,
-        status: "Upcoming",
+        status: "Completed",
         assignedPriest: priestId,
       },
       {
@@ -117,7 +117,7 @@ const seed = async () => {
         service: "Archana",
         datetime: formatISODate(16, 30), // Today 04:30 PM
         amount: 100,
-        status: "Pending",
+        status: "Completed",
         assignedPriest: priestId,
       },
       // Upcoming future bookings (Tomorrow)
@@ -127,7 +127,7 @@ const seed = async () => {
         service: "Abhishekam",
         datetime: formatISODate(7, 30, 1), // Tomorrow 07:30 AM
         amount: 500,
-        status: "Confirmed",
+        status: "Completed",
         assignedPriest: priestId,
       },
       {
@@ -136,7 +136,7 @@ const seed = async () => {
         service: "Special Seva",
         datetime: formatISODate(10, 30, 2), // Day after tomorrow 10:30 AM
         amount: 1500,
-        status: "Confirmed",
+        status: "Completed",
         assignedPriest: priestId,
       },
       // Completed historical bookings

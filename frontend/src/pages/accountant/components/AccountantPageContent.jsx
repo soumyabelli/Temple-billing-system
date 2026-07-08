@@ -241,6 +241,11 @@ const DashboardView = ({ user, currentDate, currentWeekday }) => {
     let poojaRevenue = 0;
     let prasadamRevenue = 0;
 
+    let globalTotalRevenue = 0;
+    let globalTotalDonations = 0;
+    let globalPoojaRevenue = 0;
+    let globalPrasadamRevenue = 0;
+
     // Payment methods mapping for donut chart
     const methods = { Cash: 0, UPI: 0, Card: 0, "Bank Transfer": 0, "Net Banking": 0 };
     // Category mapping for donut chart
@@ -253,6 +258,19 @@ const DashboardView = ({ user, currentDate, currentWeekday }) => {
       // Today's collection
       if (bDate === todayStr && String(b.status).toLowerCase() === "paid") {
         todayCollection += amt;
+      }
+
+      // Global lifetime stats
+      if (String(b.status).toLowerCase() === "paid") {
+        globalTotalRevenue += amt;
+        const type = String(b.billType || "Other").toLowerCase();
+        if (type.includes("donation")) {
+          globalTotalDonations += amt;
+        } else if (type.includes("pooja") || type.includes("booking")) {
+          globalPoojaRevenue += amt;
+        } else if (type.includes("prasadam") || type.includes("sale")) {
+          globalPrasadamRevenue += amt;
+        }
       }
 
       // Range metrics
@@ -298,6 +316,10 @@ const DashboardView = ({ user, currentDate, currentWeekday }) => {
       totalDonations,
       poojaRevenue,
       prasadamRevenue,
+      globalTotalRevenue,
+      globalTotalDonations,
+      globalPoojaRevenue,
+      globalPrasadamRevenue,
       paymentSegments,
       categorySegments,
     };
@@ -365,10 +387,10 @@ const DashboardView = ({ user, currentDate, currentWeekday }) => {
 
   const statCards = [
     { title: "Today's Collection", value: `Rs ${metrics.todayCollection.toLocaleString("en-IN")}`, icon: FaRupeeSign },
-    { title: "Range Revenue", value: `Rs ${metrics.rangeTotal.toLocaleString("en-IN")}`, icon: FaWallet },
-    { title: "Total Donations", value: `Rs ${metrics.totalDonations.toLocaleString("en-IN")}`, icon: FaDonate },
-    { title: "Pooja Revenue", value: `Rs ${metrics.poojaRevenue.toLocaleString("en-IN")}`, icon: MdTempleBuddhist },
-    { title: "Prasadam Revenue", value: `Rs ${metrics.prasadamRevenue.toLocaleString("en-IN")}`, icon: MdOutlineVolunteerActivism },
+    { title: "Total Revenue", value: `Rs ${metrics.globalTotalRevenue.toLocaleString("en-IN")}`, icon: FaWallet },
+    { title: "Total Donations", value: `Rs ${metrics.globalTotalDonations.toLocaleString("en-IN")}`, icon: FaDonate },
+    { title: "Pooja Revenue", value: `Rs ${metrics.globalPoojaRevenue.toLocaleString("en-IN")}`, icon: MdTempleBuddhist },
+    { title: "Prasadam Revenue", value: `Rs ${metrics.globalPrasadamRevenue.toLocaleString("en-IN")}`, icon: MdOutlineVolunteerActivism },
   ];
 
   if (loading) {

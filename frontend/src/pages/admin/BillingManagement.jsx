@@ -4,29 +4,19 @@ import { getDevoteeBookings, getDevoteeDonations, getPrasadamOrders } from "../.
 
 const formatCurrency = (value) => `₹ ${Number(value || 0).toLocaleString()}`;
 
-const getRangeStart = (range) => {
-  const now = new Date();
-  if (range === "weekly") {
-    return new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
-  }
-  if (range === "yearly") {
-    return new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
-  }
-  return new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
-};
-
-const formatRangeLabel = (range) => {
-  if (range === "weekly") return "Weekly";
-  if (range === "yearly") return "Yearly";
-  return "Monthly";
-};
-
 const BillingManagement = () => {
   const [bookings, setBookings] = useState([]);
   const [donations, setDonations] = useState([]);
   const [prasadamOrders, setPrasadamOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [reportRange, setReportRange] = useState("monthly");
+  const [fromDate, setFromDate] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 30);
+    return d.toISOString().split("T")[0];
+  });
+  const [toDate, setToDate] = useState(() => {
+    return new Date().toISOString().split("T")[0];
+  });
 
   useEffect(() => {
     const loadData = async () => {
@@ -59,33 +49,32 @@ const BillingManagement = () => {
   );
 
   const prasadamRevenue = useMemo(
-    () => prasadamOrders.reduce((total, item) => total + Number(item.totalPrice || 0), 0),
+    () => prasadamOrders.reduce((total, item) => total + Number(item.amount || item.totalPrice || 0), 0),
     [prasadamOrders]
   );
 
   const totalRevenue = bookingRevenue + donationRevenue + prasadamRevenue;
 
-  const reportStartDate = useMemo(() => getRangeStart(reportRange), [reportRange]);
-
   const filterByDate = (item, dateKeys) => {
     const rawDate = dateKeys.map((key) => item[key]).find(Boolean);
-    const parsed = rawDate ? new Date(rawDate) : null;
-    return parsed instanceof Date && !Number.isNaN(parsed.getTime()) && parsed >= reportStartDate;
+    if (!rawDate) return false;
+    const parsed = new Date(rawDate).toISOString().split("T")[0];
+    return (!fromDate || parsed >= fromDate) && (!toDate || parsed <= toDate);
   };
 
   const filteredBookings = useMemo(
     () => bookings.filter((item) => filterByDate(item, ["createdAt", "datetime"])),
-    [bookings, reportStartDate]
+    [bookings, fromDate, toDate]
   );
 
   const filteredDonations = useMemo(
     () => donations.filter((item) => filterByDate(item, ["createdAt", "date"])),
-    [donations, reportStartDate]
+    [donations, fromDate, toDate]
   );
 
   const filteredPrasadamOrders = useMemo(
     () => prasadamOrders.filter((item) => filterByDate(item, ["createdAt", "orderDate", "date"])),
-    [prasadamOrders, reportStartDate]
+    [prasadamOrders, fromDate, toDate]
   );
 
   const reportBookingRevenue = useMemo(
@@ -99,7 +88,7 @@ const BillingManagement = () => {
   );
 
   const reportPrasadamRevenue = useMemo(
-    () => filteredPrasadamOrders.reduce((total, item) => total + Number(item.totalPrice || 0), 0),
+    () => filteredPrasadamOrders.reduce((total, item) => total + Number(item.amount || item.totalPrice || 0), 0),
     [filteredPrasadamOrders]
   );
 
@@ -142,7 +131,7 @@ const BillingManagement = () => {
         id: item._id,
         category: "Prasadam Order",
         description: item.itemName || "Prasadam",
-        amount: Number(item.totalPrice || 0),
+        amount: Number(item.amount || item.totalPrice || 0),
         paymentMethod: item.paymentMethod || "UPI",
         status: item.status || "Pending",
         date: item.createdAt || item.orderDate || "",
@@ -177,7 +166,7 @@ const BillingManagement = () => {
         id: item._id,
         category: "Prasadam Order",
         description: item.itemName || "Prasadam",
-        amount: Number(item.totalPrice || 0),
+        amount: Number(item.amount || item.totalPrice || 0),
         paymentMethod: item.paymentMethod || "UPI",
         status: item.status || "Pending",
         date: item.createdAt || item.orderDate || "",
@@ -209,9 +198,8 @@ const BillingManagement = () => {
   };
 
   const handleDownloadReport = () => {
-    const periodLabel = formatRangeLabel(reportRange);
     const lines = [
-      `Report type: ${periodLabel}`,
+      `Report Period: ${fromDate} to ${toDate}`,
       `Generated: ${new Date().toLocaleString()}`,
       "",
       "Summary",
@@ -234,7 +222,7 @@ const BillingManagement = () => {
       });
     }
 
-    downloadPdfFile(`billing-report-${reportRange}.pdf`, lines);
+    downloadPdfFile(`billing-report-${fromDate}-to-${toDate}.pdf`, lines);
   };
 
   return (
@@ -248,25 +236,34 @@ const BillingManagement = () => {
           <div className="rounded-3xl bg-[#f8fafc] px-5 py-3 text-sm font-semibold text-[#0f766e]">Updated live from temple transactions</div>
         </div>
 
-        <div className="mt-6 flex flex-col gap-3 rounded-3xl border border-[#e5e7eb] bg-[#f8fafc] p-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <label htmlFor="reportRange" className="text-sm font-semibold text-[#334155]">Report range</label>
-            <select
-              id="reportRange"
-              value={reportRange}
-              onChange={(e) => setReportRange(e.target.value)}
-              className="rounded-3xl border border-[#cbd5e1] bg-white px-4 py-2 text-sm text-[#0f172a] shadow-sm outline-none transition focus:border-[#2563eb] focus:ring-2 focus:ring-[#bfdbfe]"
-            >
-              <option value="weekly">Weekly</option>
-              <option value="monthly">Monthly</option>
-              <option value="yearly">Yearly</option>
-            </select>
+        <div className="mt-6 flex flex-col gap-4 rounded-3xl border border-[#e5e7eb] bg-[#f8fafc] p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-2">
+              <label htmlFor="fromDate" className="text-sm font-semibold text-[#334155]">From</label>
+              <input
+                id="fromDate"
+                type="date"
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+                className="rounded-3xl border border-[#cbd5e1] bg-white px-4 py-2 text-sm text-[#0f172a] shadow-sm outline-none transition focus:border-[#2563eb]"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <label htmlFor="toDate" className="text-sm font-semibold text-[#334155]">To</label>
+              <input
+                id="toDate"
+                type="date"
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
+                className="rounded-3xl border border-[#cbd5e1] bg-white px-4 py-2 text-sm text-[#0f172a] shadow-sm outline-none transition focus:border-[#2563eb]"
+              />
+            </div>
           </div>
           <button
             onClick={handleDownloadReport}
             className="inline-flex items-center justify-center rounded-3xl bg-[#2563eb] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#1d4ed8]"
           >
-            Download {formatRangeLabel(reportRange)} Report PDF
+            Download Report PDF
           </button>
         </div>
 
@@ -297,7 +294,7 @@ const BillingManagement = () => {
       <div className="rounded-2xl border border-[#ece8e1] bg-white p-6 shadow-sm">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-[#111827]">{formatRangeLabel(reportRange)} Report Summary</h2>
+            <h2 className="text-2xl font-bold text-[#111827]">Report Period Summary</h2>
             <p className="mt-2 text-sm text-[#64748b]">Metrics for the selected report period.</p>
           </div>
           <span className="rounded-full bg-[#eff6ff] px-3 py-1 text-sm font-semibold text-[#2563eb]">{reportTransactions.length} transactions</span>
