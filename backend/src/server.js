@@ -9,6 +9,9 @@ const startServer = async () => {
 
   if (!dbConnected) {
     console.warn("Starting without MongoDB. Auth will use local file fallback.");
+  } else {
+    const { syncLedgerBills } = require("./utils/syncService");
+    await syncLedgerBills().catch((err) => console.error("Sync error:", err));
   }
 
   app.listen(PORT, () => {

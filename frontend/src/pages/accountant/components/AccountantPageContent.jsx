@@ -630,7 +630,6 @@ const BillingView = ({ bills, loading }) => {
   const billingStats = [
     { label: "Total Bills", value: filtered.length, note: "All generated bills" },
     { label: "Paid Bills", value: paidCount, note: "Settled payments" },
-    { label: "Pending Bills", value: pendingCount, note: "Awaiting settlement" },
     { label: "Total Billing Revenue", value: `Rs ${totalRevenue.toLocaleString("en-IN")}`, note: "Paid cycles" },
   ];
 

@@ -1,4 +1,5 @@
 const Donation = require("../models/Donation");
+const Bill = require("../models/Bill");
 
 // CREATE DONATION
 const createDonation = async (req, res) => {
@@ -46,6 +47,19 @@ const createDonation = async (req, res) => {
       paymentMethod,
       transactionId,
       notes,
+    });
+
+    await Bill.create({
+      devoteeName: donorName.trim(),
+      sevaType: category || "General",
+      amount: numericAmount,
+      paymentMode: paymentMethod || "UPI",
+      billType: "Donation",
+      referenceNo: `DN-${String(donation._id).slice(-6).toUpperCase()}`,
+      sourceId: donation._id.toString(),
+      notes: notes || "",
+      status: "Paid",
+      billDate: new Date(),
     });
 
     res.status(201).json({
@@ -130,6 +144,7 @@ const deleteDonation = async (req, res) => {
     }
 
     await donation.deleteOne();
+    await Bill.deleteMany({ sourceId: donation._id.toString() });
 
     res.status(200).json({
       success: true,

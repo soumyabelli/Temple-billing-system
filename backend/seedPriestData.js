@@ -6,6 +6,7 @@ const User = require("./src/models/User");
 const Booking = require("./src/models/Booking");
 const Task = require("./src/models/Task");
 const Notification = require("./src/models/Notification");
+const Bill = require("./src/models/Bill");
 
 const seed = async () => {
   const uri = process.env.MONGODB_URI;
@@ -150,8 +151,25 @@ const seed = async () => {
       },
     ];
 
-    await Booking.create(bookingsData);
+    const createdBookings = await Booking.create(bookingsData);
     console.log("Bookings seeded successfully.");
+
+    // Seed corresponding Bills
+    console.log("Seeding Bills for Bookings...");
+    await Bill.deleteMany({ billType: "Pooja Booking" });
+    const billsData = createdBookings.map((b) => ({
+      devoteeName: b.devoteeName,
+      sevaType: b.service,
+      amount: b.amount,
+      paymentMode: "UPI",
+      billType: "Pooja Booking",
+      referenceNo: `BK-${String(b._id).slice(-6).toUpperCase()}`,
+      sourceId: b._id.toString(),
+      status: b.status === "Pending" ? "Pending" : "Paid",
+      billDate: b.createdAt || b.datetime || new Date(),
+    }));
+    await Bill.create(billsData);
+    console.log("Bills for seeded Bookings created successfully.");
 
     console.log("Seeding Seva Duties (Tasks)...");
     const todayDateKey = today.toISOString().slice(0, 10);
