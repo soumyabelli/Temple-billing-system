@@ -498,24 +498,24 @@ const PriestDashboard = () => {
     const paged = data.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
     const card = darkMode ? "bg-[#1f2937] border-slate-700" : "bg-white border-[#ece8e1]";
-    const txt  = darkMode ? "text-slate-100" : "text-[#1d1b19]";
-    const sub  = darkMode ? "text-slate-400" : "text-slate-500";
-    const row  = darkMode ? "hover:bg-slate-800/40 border-slate-700" : "hover:bg-slate-50/50 border-slate-100";
-    const inp  = darkMode ? "bg-slate-800 border-slate-700 text-slate-100 placeholder-slate-500" : "bg-white border-slate-200 text-slate-800";
+    const txt = darkMode ? "text-slate-100" : "text-[#1d1b19]";
+    const sub = darkMode ? "text-slate-400" : "text-slate-500";
+    const row = darkMode ? "hover:bg-slate-800/40 border-slate-700" : "hover:bg-slate-50/50 border-slate-100";
+    const inp = darkMode ? "bg-slate-800 border-slate-700 text-slate-100 placeholder-slate-500" : "bg-white border-slate-200 text-slate-800";
 
     const FILTERS = [
-      { id: "all",   label: "All Time" },
+      { id: "all", label: "All Time" },
       { id: "today", label: "Today" },
-      { id: "week",  label: "This Week" },
+      { id: "week", label: "This Week" },
       { id: "month", label: "This Month" },
-      { id: "custom",label: "Custom Range" },
+      { id: "custom", label: "Custom Range" },
     ];
 
     const statCards = [
-      { label: "Completed Today",      value: stats.completedToday,    color: "bg-emerald-50 border-emerald-100 text-emerald-700", icon: "✅" },
-      { label: "Completed This Week",  value: stats.completedThisWeek,  color: "bg-blue-50 border-blue-100 text-blue-700",          icon: "📅" },
-      { label: "Completed This Month", value: stats.completedThisMonth, color: "bg-purple-50 border-purple-100 text-purple-700",    icon: "🗓️" },
-      { label: "Avg Completion Time",  value: stats.avgDuration,        color: "bg-amber-50 border-amber-100 text-amber-700",       icon: "⏱️" },
+      { label: "Completed Today", value: stats.completedToday, color: "bg-emerald-50 border-emerald-100 text-emerald-700", icon: "✅" },
+      { label: "Completed This Week", value: stats.completedThisWeek, color: "bg-blue-50 border-blue-100 text-blue-700", icon: "📅" },
+      { label: "Completed This Month", value: stats.completedThisMonth, color: "bg-purple-50 border-purple-100 text-purple-700", icon: "🗓️" },
+      { label: "Avg Completion Time", value: stats.avgDuration, color: "bg-amber-50 border-amber-100 text-amber-700", icon: "⏱️" },
     ];
 
     return (
@@ -583,13 +583,12 @@ const PriestDashboard = () => {
               <button
                 key={f.id}
                 onClick={() => { setFilter(f.id); setPage(1); }}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                  filter === f.id
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${filter === f.id
                     ? "bg-orange-500 text-white shadow-sm"
                     : darkMode
                       ? "bg-slate-800 text-slate-300 hover:bg-slate-700"
                       : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                }`}
+                  }`}
               >
                 {f.label}
               </button>
@@ -600,9 +599,8 @@ const PriestDashboard = () => {
               <span className={`text-xs font-semibold ${sub}`}>Sort:</span>
               <button
                 onClick={() => setSort(sort === "latest" ? "oldest" : "latest")}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all border ${
-                  darkMode ? "bg-slate-800 border-slate-700 text-slate-300" : "bg-white border-slate-200 text-slate-700"
-                }`}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all border ${darkMode ? "bg-slate-800 border-slate-700 text-slate-300" : "bg-white border-slate-200 text-slate-700"
+                  }`}
               >
                 {sort === "latest" ? "⬇️ Latest First" : "⬆️ Oldest First"}
               </button>
@@ -708,9 +706,8 @@ const PriestDashboard = () => {
                     <button
                       onClick={() => setPage((p) => Math.max(1, p - 1))}
                       disabled={page === 1}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors disabled:opacity-40 ${
-                        darkMode ? "bg-slate-800 text-slate-300 hover:bg-slate-700" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                      }`}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors disabled:opacity-40 ${darkMode ? "bg-slate-800 text-slate-300 hover:bg-slate-700" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                        }`}
                     >
                       ← Prev
                     </button>
@@ -718,13 +715,12 @@ const PriestDashboard = () => {
                       <button
                         key={p}
                         onClick={() => setPage(p)}
-                        className={`w-8 h-8 rounded-lg text-xs font-bold transition-colors ${
-                          p === page
+                        className={`w-8 h-8 rounded-lg text-xs font-bold transition-colors ${p === page
                             ? "bg-orange-500 text-white"
                             : darkMode
                               ? "bg-slate-800 text-slate-300 hover:bg-slate-700"
                               : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                        }`}
+                          }`}
                       >
                         {p}
                       </button>
@@ -732,9 +728,8 @@ const PriestDashboard = () => {
                     <button
                       onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                       disabled={page === totalPages}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors disabled:opacity-40 ${
-                        darkMode ? "bg-slate-800 text-slate-300 hover:bg-slate-700" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                      }`}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors disabled:opacity-40 ${darkMode ? "bg-slate-800 text-slate-300 hover:bg-slate-700" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                        }`}
                     >
                       Next →
                     </button>
