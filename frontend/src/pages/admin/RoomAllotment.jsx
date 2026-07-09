@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import axios from "axios";
 import {
   MdMeetingRoom,
   MdCheckCircle,
@@ -15,143 +16,6 @@ import {
 
 const formatCurrency = (val) => `₹ ${Number(val || 0).toLocaleString("en-IN")}`;
 
-const INITIAL_ROOMS = [
-  {
-    number: "101",
-    type: "Standard",
-    status: "Available",
-    price: 1200,
-    block: "Block A",
-    floor: "First Floor",
-    capacity: 2,
-    bedType: "Double",
-    amenities: ["Attached Bathroom", "Fan", "WiFi"],
-    checkinTime: "12:00 PM",
-    checkoutTime: "11:00 AM",
-  },
-  {
-    number: "102",
-    type: "Standard",
-    status: "Available",
-    price: 1200,
-    block: "Block A",
-    floor: "First Floor",
-    capacity: 2,
-    bedType: "Double",
-    amenities: ["Attached Bathroom", "Fan", "WiFi"],
-    checkinTime: "12:00 PM",
-    checkoutTime: "11:00 AM",
-  },
-  {
-    number: "103",
-    type: "Standard",
-    status: "Occupied",
-    price: 1200,
-    block: "Block A",
-    floor: "First Floor",
-    capacity: 2,
-    bedType: "Double",
-    amenities: ["Attached Bathroom", "Fan", "WiFi"],
-    checkinTime: "12:00 PM",
-    checkoutTime: "11:00 AM",
-    devotee: "Venkatesh Kumar",
-    phone: "9876543210",
-    days: 2,
-    payMode: "UPI",
-    checkinDate: "2026-07-07",
-  },
-  {
-    number: "201",
-    type: "Deluxe",
-    status: "Available",
-    price: 2000,
-    block: "Block B",
-    floor: "Second Floor",
-    capacity: 3,
-    bedType: "King",
-    amenities: ["Attached Bathroom", "AC", "TV", "WiFi", "Geyser"],
-    checkinTime: "12:00 PM",
-    checkoutTime: "11:00 AM",
-  },
-  {
-    number: "202",
-    type: "Deluxe",
-    status: "Occupied",
-    price: 2000,
-    block: "Block B",
-    floor: "Second Floor",
-    capacity: 3,
-    bedType: "King",
-    amenities: ["Attached Bathroom", "AC", "TV", "WiFi", "Geyser"],
-    checkinTime: "12:00 PM",
-    checkoutTime: "11:00 AM",
-    devotee: "Meera Iyer",
-    phone: "8765432109",
-    days: 3,
-    payMode: "Cash",
-    checkinDate: "2026-07-06",
-  },
-  {
-    number: "301",
-    type: "VIP Suite",
-    status: "Occupied",
-    price: 4500,
-    block: "Main Block",
-    floor: "Third Floor",
-    capacity: 4,
-    bedType: "King",
-    amenities: ["Attached Bathroom", "AC", "TV", "WiFi", "Geyser", "Refrigerator", "Sofa", "Room Service"],
-    checkinTime: "12:00 PM",
-    checkoutTime: "11:00 AM",
-    devotee: "Ramesh Sharma",
-    phone: "7654321098",
-    days: 1,
-    payMode: "Card",
-    checkinDate: "2026-07-08",
-  },
-  {
-    number: "302",
-    type: "VIP Suite",
-    status: "Available",
-    price: 4500,
-    block: "Main Block",
-    floor: "Third Floor",
-    capacity: 4,
-    bedType: "King",
-    amenities: ["Attached Bathroom", "AC", "TV", "WiFi", "Geyser", "Refrigerator", "Sofa", "Room Service"],
-    checkinTime: "12:00 PM",
-    checkoutTime: "11:00 AM",
-  },
-];
-
-const INITIAL_HISTORY = [
-  {
-    id: "B-8801",
-    devoteeName: "Suresh Prasad",
-    phone: "9988776655",
-    roomNumber: "101",
-    roomType: "Standard",
-    amount: 2400,
-    days: 2,
-    checkinDate: "2026-07-01",
-    checkoutDate: "2026-07-03",
-    payMode: "Cash",
-    status: "Completed",
-  },
-  {
-    id: "B-8802",
-    devoteeName: "Amit Patel",
-    phone: "8877665544",
-    roomNumber: "201",
-    roomType: "Deluxe",
-    amount: 6000,
-    days: 3,
-    checkinDate: "2026-07-02",
-    checkoutDate: "2026-07-05",
-    payMode: "UPI",
-    status: "Completed",
-  },
-];
 
 const AMENITY_LIST = [
   "Attached Bathroom",
@@ -173,15 +37,9 @@ const AMENITY_LIST = [
 const RoomAllotment = () => {
   const [activeTab, setActiveTab] = useState("grid"); // grid | add-room | history
 
-  const [rooms, setRooms] = useState(() => {
-    const saved = localStorage.getItem("templeRooms_v2");
-    return saved ? JSON.parse(saved) : INITIAL_ROOMS;
-  });
+  const [rooms, setRooms] = useState([]);
 
-  const [history, setHistory] = useState(() => {
-    const saved = localStorage.getItem("templeRoomHistory");
-    return saved ? JSON.parse(saved) : INITIAL_HISTORY;
-  });
+  const [history, setHistory] = useState([]);
 
   // Filter States
   const [search, setSearch] = useState("");
@@ -223,6 +81,76 @@ const RoomAllotment = () => {
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
+  const fetchRooms = async () => {
+    try {
+      const response = await axios.get("/api/rooms");
+      setRooms(response.data);
+      localStorage.setItem("templeRooms_v2", JSON.stringify(response.data));
+    } catch (err) {
+      console.error("Failed to fetch rooms:", err);
+    }
+  };
+
+  const fetchHistory = async () => {
+    try {
+      const response = await axios.get("/api/bookings/all?limit=1000");
+      const dbBookings = response.data.bookings || [];
+      const roomBookings = dbBookings
+        .filter((b) => b.service && b.service.startsWith("Room Allotment:"))
+        .map((b) => {
+          let roomNum = "";
+          let roomType = "";
+          const match = b.service.match(/Room Allotment:\s*Room\s*(\S+)\s*\(([^)]+)\)/i);
+          if (match) {
+            roomNum = match[1];
+            roomType = match[2];
+          }
+
+          // Use stored date fields if available, otherwise fall back to datetime/notes
+          const checkin = b.checkinDate
+            ? new Date(b.checkinDate).toISOString().split("T")[0]
+            : b.datetime
+            ? b.datetime.split("T")[0]
+            : "";
+          const checkout = b.checkoutDate
+            ? new Date(b.checkoutDate).toISOString().split("T")[0]
+            : new Date(new Date(checkin).getTime() + (b.days || 1) * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+
+          // Auto-determine status: if checkout is in the past → Completed, else Active
+          const now = new Date();
+          const isCheckedOut = b.status === "Completed" || new Date(b.checkoutDate || checkout) <= now;
+
+          return {
+            id: b.bookingNumber || `B-${String(b._id).slice(-4).toUpperCase()}`,
+            devoteeName: b.devoteeName,
+            phone: b.devoteePhone || b.contactNumber || "",
+            roomNumber: roomNum,
+            roomType: roomType,
+            amount: b.amount,
+            days: b.days || 1,
+            checkinDate: checkin,
+            checkoutDate: checkout,
+            payMode: b.paymentMethod || "UPI",
+            status: isCheckedOut ? "Completed" : "Active",
+          };
+        });
+
+      setHistory(roomBookings);
+    } catch (err) {
+      console.error("Failed to fetch room booking history:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchRooms();
+    fetchHistory();
+    const interval = setInterval(() => {
+      fetchRooms();
+      fetchHistory();
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
   const saveRooms = (updatedRooms) => {
     setRooms(updatedRooms);
     localStorage.setItem("templeRooms_v2", JSON.stringify(updatedRooms));
@@ -234,7 +162,7 @@ const RoomAllotment = () => {
   };
 
   // Add New Room Handler
-  const handleAddRoomSubmit = (e) => {
+  const handleAddRoomSubmit = async (e) => {
     e.preventDefault();
     if (!newRoomNumber.trim() || !newPrice) {
       setErrorMsg("Please fill in Room Number and Price.");
@@ -269,113 +197,80 @@ const RoomAllotment = () => {
       isActive: newIsActive,
     };
 
-    const updated = [...rooms, newRoom];
-    saveRooms(updated);
-    setSuccessMsg(`Room ${newRoom.number} added successfully!`);
-    setActiveTab("grid");
+    try {
+      const response = await axios.post("/api/rooms", newRoom);
+      setRooms([...rooms, response.data]);
+      setSuccessMsg(`Room ${newRoom.number} added successfully!`);
+      setActiveTab("grid");
 
-    // Reset Form Fields
-    setNewRoomNumber("");
-    setNewPrice("");
-    setNewExtraCharge("");
-    setNewSecurityDeposit("");
-    setNewRoomSize("");
-    setNewDescription("");
-    setNewAmenities([]);
-    setErrorMsg("");
-    setTimeout(() => setSuccessMsg(""), 4000);
+      // Reset Form Fields
+      setNewRoomNumber("");
+      setNewPrice("");
+      setNewExtraCharge("");
+      setNewSecurityDeposit("");
+      setNewRoomSize("");
+      setNewDescription("");
+      setNewAmenities([]);
+      setErrorMsg("");
+      setTimeout(() => setSuccessMsg(""), 4000);
+    } catch (err) {
+      setErrorMsg(err.response?.data?.error || "Failed to add room.");
+    }
   };
 
   // Allot Room Handler
-  const handleCheckinSubmit = (e) => {
+  const handleCheckinSubmit = async (e) => {
     e.preventDefault();
     if (!devoteeName.trim() || !phone.trim() || days <= 0) {
       setErrorMsg("Please complete devotee details.");
       return;
     }
 
-    const checkinDate = new Date().toISOString().split("T")[0];
+    const checkinDateVal = new Date().toISOString();
+    const checkoutDateVal = new Date(Date.now() + Number(days) * 24 * 60 * 60 * 1000).toISOString();
 
-    const updated = rooms.map((r) => {
-      if (r.number === selectedRoom.number) {
-        return {
-          ...r,
-          status: "Occupied",
-          devotee: devoteeName.trim(),
-          phone: phone.trim(),
-          days: Number(days),
-          payMode,
-          checkinDate,
-        };
-      }
-      return r;
-    });
+    try {
+      const allotPayload = {
+        roomNumber: selectedRoom.number,
+        devoteeName: devoteeName.trim(),
+        phone: phone.trim(),
+        days: Number(days),
+        payMode,
+        checkinDate: checkinDateVal,
+        checkoutDate: checkoutDateVal
+      };
 
-    saveRooms(updated);
+      await axios.post("/api/rooms/allot", allotPayload);
+      await fetchRooms();
+      await fetchHistory();
 
-    // Save to history list
-    const newBooking = {
-      id: `B-${Math.floor(1000 + Math.random() * 9000)}`,
-      devoteeName: devoteeName.trim(),
-      phone: phone.trim(),
-      roomNumber: selectedRoom.number,
-      roomType: selectedRoom.type,
-      amount: selectedRoom.price * Number(days),
-      days: Number(days),
-      checkinDate,
-      checkoutDate: new Date(Date.now() + Number(days) * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-      payMode,
-      status: "Active",
-    };
-
-    saveHistory([newBooking, ...history]);
-
-    setSuccessMsg(`Room ${selectedRoom.number} successfully allotted to ${devoteeName.trim()}!`);
-    setShowCheckinModal(false);
-    setErrorMsg("");
-    setTimeout(() => setSuccessMsg(""), 4000);
+      setSuccessMsg(`Room ${selectedRoom.number} successfully allotted to ${devoteeName.trim()}!`);
+      setShowCheckinModal(false);
+      setErrorMsg("");
+      setTimeout(() => setSuccessMsg(""), 4000);
+    } catch (err) {
+      setErrorMsg(err.response?.data?.error || "Failed to allot room.");
+    }
   };
 
   // Checkout Handler
-  const handleCheckout = (roomNumber) => {
+  const handleCheckout = async (roomNumber) => {
     const room = rooms.find((r) => r.number === roomNumber);
     if (!room) return;
 
     const confirmed = window.confirm(`Check out guest ${room.devotee} from Room ${roomNumber}?`);
     if (!confirmed) return;
 
-    // Update Room Status
-    const updatedRooms = rooms.map((r) => {
-      if (r.number === roomNumber) {
-        return {
-          ...r,
-          status: "Available",
-          devotee: undefined,
-          phone: undefined,
-          days: undefined,
-          payMode: undefined,
-          checkinDate: undefined,
-        };
-      }
-      return r;
-    });
-    saveRooms(updatedRooms);
+    try {
+      await axios.post(`/api/rooms/checkout/${roomNumber}`);
+      await fetchRooms();
+      await fetchHistory();
 
-    // Update history entry status to Completed
-    const updatedHistory = history.map((h) => {
-      if (h.roomNumber === roomNumber && h.status === "Active") {
-        return {
-          ...h,
-          status: "Completed",
-          checkoutDate: new Date().toISOString().split("T")[0],
-        };
-      }
-      return h;
-    });
-    saveHistory(updatedHistory);
-
-    setSuccessMsg(`Room ${roomNumber} checked out and marked Available.`);
-    setTimeout(() => setSuccessMsg(""), 4000);
+      setSuccessMsg(`Room ${roomNumber} checked out and marked Available.`);
+      setTimeout(() => setSuccessMsg(""), 4000);
+    } catch (err) {
+      console.error("Failed to checkout room:", err);
+    }
   };
 
   const toggleAmenity = (amenity) => {
@@ -387,26 +282,28 @@ const RoomAllotment = () => {
   };
 
   // Toggle Maintenance Status
-  const toggleMaintenance = (roomNumber, currentStatus) => {
-    const nextStatus = currentStatus === "Maintenance" ? "Available" : "Maintenance";
-    const updated = rooms.map((r) => {
-      if (r.number === roomNumber) {
-        return { ...r, status: nextStatus };
-      }
-      return r;
-    });
-    saveRooms(updated);
+  const toggleMaintenance = async (roomNumber, currentStatus) => {
+    try {
+      await axios.patch(`/api/rooms/maintenance/${roomNumber}`);
+      await fetchRooms();
+    } catch (err) {
+      console.error("Failed to toggle maintenance status:", err);
+    }
   };
 
   // Delete Room
-  const handleDeleteRoom = (roomNumber) => {
+  const handleDeleteRoom = async (roomNumber) => {
     const confirmed = window.confirm(`Are you sure you want to delete Room ${roomNumber}?`);
     if (!confirmed) return;
 
-    const updated = rooms.filter((r) => r.number !== roomNumber);
-    saveRooms(updated);
-    setSuccessMsg(`Room ${roomNumber} deleted successfully.`);
-    setTimeout(() => setSuccessMsg(""), 4000);
+    try {
+      await axios.delete(`/api/rooms/${roomNumber}`);
+      await fetchRooms();
+      setSuccessMsg(`Room ${roomNumber} deleted successfully.`);
+      setTimeout(() => setSuccessMsg(""), 4000);
+    } catch (err) {
+      console.error("Failed to delete room:", err);
+    }
   };
 
   // Metrics Calculations

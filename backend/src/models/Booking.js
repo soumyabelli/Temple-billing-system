@@ -82,6 +82,10 @@ const bookingSchema = new mongoose.Schema(
     rejectionReason: { type: String, trim: true, default: "" },
     pendingReason: { type: String, trim: true },
     pendingAt: { type: Date },
+    // Room booking specific fields
+    days: { type: Number },
+    checkinDate: { type: Date },
+    checkoutDate: { type: Date },
     // Full audit trail of every status change
     bookingHistory: { type: [bookingHistorySchema], default: [] },
   },

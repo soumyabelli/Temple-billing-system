@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import { jsPDF } from "jspdf";
 import templeImage from "../../assets/temple.jpg.png";
 import { useAuth } from "../../context/AuthContext";
@@ -135,34 +136,6 @@ const INITIAL_ROOMS = [
   },
 ];
 
-const INITIAL_HISTORY = [
-  {
-    id: "B-8801",
-    devoteeName: "Suresh Prasad",
-    phone: "9988776655",
-    roomNumber: "101",
-    roomType: "Standard",
-    amount: 2400,
-    days: 2,
-    checkinDate: "2026-07-01",
-    checkoutDate: "2026-07-03",
-    payMode: "Cash",
-    status: "Completed",
-  },
-  {
-    id: "B-8802",
-    devoteeName: "Amit Patel",
-    phone: "8877665544",
-    roomNumber: "201",
-    roomType: "Deluxe",
-    amount: 6000,
-    days: 3,
-    checkinDate: "2026-07-02",
-    checkoutDate: "2026-07-05",
-    payMode: "UPI",
-    status: "Completed",
-  },
-];
 
 const menuItems = [
   { label: "Dashboard", icon: "home" },
@@ -406,11 +379,52 @@ const DevoteeDashboard = () => {
     const saved = localStorage.getItem("templeRooms_v2");
     return saved ? JSON.parse(saved) : INITIAL_ROOMS;
   });
-  const [roomHistory, setRoomHistory] = useState(() => {
-    const saved = localStorage.getItem("templeRoomHistory");
-    return saved ? JSON.parse(saved) : INITIAL_HISTORY;
-  });
+  const [roomHistory, setRoomHistory] = useState([]);
   const [showAllRooms, setShowAllRooms] = useState(false);
+
+  const mergedRoomHistory = useMemo(() => {
+    const dbRoomBookings = bookingsData
+      .filter((b) => b.service && b.service.startsWith("Room Allotment:"))
+      .map((b) => {
+        let roomNum = "";
+        let roomType = "";
+        const match = b.service.match(/Room Allotment:\s*Room\s*(\S+)\s*\(([^)]+)\)/i);
+        if (match) {
+          roomNum = match[1];
+          roomType = match[2];
+        }
+
+        // Prefer stored date fields over parsing notes
+        const checkin = b.checkinDate
+          ? new Date(b.checkinDate).toISOString().split("T")[0]
+          : b.datetime
+          ? b.datetime.split("T")[0]
+          : "";
+        const checkout = b.checkoutDate
+          ? new Date(b.checkoutDate).toISOString().split("T")[0]
+          : new Date(new Date(checkin).getTime() + (b.days || 1) * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+
+        // Auto status: if checkout date passed or status is Completed → Completed
+        const now = new Date();
+        const isCompleted = b.status === "Completed" || new Date(b.checkoutDate || checkout) <= now;
+
+        return {
+          id: b.bookingNumber || `B-${String(b._id).slice(-4).toUpperCase()}`,
+          devoteeName: b.devoteeName,
+          phone: b.devoteePhone || b.contactNumber || "",
+          roomNumber: roomNum,
+          roomType: roomType,
+          amount: b.amount,
+          days: b.days || 1,
+          checkinDate: checkin,
+          checkoutDate: checkout,
+          payMode: b.paymentMethod || "UPI",
+          status: isCompleted ? "Completed" : "Active",
+        };
+      });
+
+    return dbRoomBookings;
+  }, [bookingsData]);
 
   const roomTypesList = useMemo(() => {
     const list = {};
@@ -656,6 +670,9 @@ const DevoteeDashboard = () => {
   }, []);
 
   useEffect(() => {
+    // Clear stale localStorage room data from old hardcoded records
+    localStorage.removeItem("templeRoomHistory");
+
     const loadDevoteeData = async () => {
       try {
         const [bookingsRes, donationsRes, notificationsRes, profileRes, eventsRes, prasadamRes] = await Promise.all([
@@ -723,9 +740,16 @@ const DevoteeDashboard = () => {
         );
         setPrasadamOrders(prasadamRes.orders || []);
 
-        const roomsSaved = localStorage.getItem("templeRooms_v2");
-        if (roomsSaved) {
-          setAvailableRooms(JSON.parse(roomsSaved));
+        try {
+          const roomsRes = await axios.get("/api/rooms");
+          setAvailableRooms(roomsRes.data);
+          localStorage.setItem("templeRooms_v2", JSON.stringify(roomsRes.data));
+        } catch (err) {
+          console.warn("Unable to load rooms from backend", err);
+          const roomsSaved = localStorage.getItem("templeRooms_v2");
+          if (roomsSaved) {
+            setAvailableRooms(JSON.parse(roomsSaved));
+          }
         }
         const historySaved = localStorage.getItem("templeRoomHistory");
         if (historySaved) {
@@ -749,6 +773,19 @@ const DevoteeDashboard = () => {
   useEffect(() => {
     const timer = setInterval(() => setCurrentDateTime(new Date()), 1000);
     return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const fetchLiveRooms = async () => {
+      try {
+        const roomsRes = await axios.get("/api/rooms");
+        setAvailableRooms(roomsRes.data);
+      } catch (err) {
+        console.warn("Failed to fetch live rooms:", err);
+      }
+    };
+    const interval = setInterval(fetchLiveRooms, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleLogout = () => {
@@ -1149,16 +1186,30 @@ const DevoteeDashboard = () => {
       const { booking: createdBooking, order, key, simulated } = bookingRes;
 
       const completeBookingLocally = async () => {
-        setAvailableRooms(updatedRooms);
-        localStorage.setItem("templeRooms_v2", JSON.stringify(updatedRooms));
-        setRoomHistory(updatedHistory);
-        localStorage.setItem("templeRoomHistory", JSON.stringify(updatedHistory));
+        try {
+          await axios.post("/api/rooms/book", {
+            roomNumber: targetRoom.number,
+            devoteeName: activeName,
+            phone: activePhone,
+            days: diffDays,
+            payMode: roomPaymentMethod,
+            checkinDate: roomCheckIn,
+            checkoutDate: roomCheckOut
+          });
+        } catch (err) {
+          console.warn("Failed to book room on backend database:", err);
+        }
+
         setRoomSuccess(`Room ${targetRoom.number} booking successful! Duration: ${diffDays} day(s). Amount paid: ${formatCurrency(finalAmount)}.`);
         setRoomCheckIn("");
         setRoomCheckOut("");
         try {
-          const bookingsRes = await getDevoteeBookings(activeEmail);
+          const [bookingsRes, roomsRes] = await Promise.all([
+            getDevoteeBookings(activeEmail),
+            axios.get("/api/rooms"),
+          ]);
           setBookingsData(bookingsRes.bookings || []);
+          setAvailableRooms(roomsRes.data);
         } catch (e) {}
       };
 
@@ -2352,7 +2403,7 @@ const DevoteeDashboard = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {roomHistory.filter(h => 
+                    {mergedRoomHistory.filter(h => 
                       h.devoteeName?.toLowerCase() === String(profileData.name || user?.name || "").trim().toLowerCase() ||
                       (profileData.phone && h.phone === profileData.phone) ||
                       (profileData.email && h.email === profileData.email)
@@ -2363,7 +2414,7 @@ const DevoteeDashboard = () => {
                         </td>
                       </tr>
                     ) : (
-                      roomHistory
+                      mergedRoomHistory
                         .filter(h => 
                           h.devoteeName?.toLowerCase() === String(profileData.name || user?.name || "").trim().toLowerCase() ||
                           (profileData.phone && h.phone === profileData.phone) ||

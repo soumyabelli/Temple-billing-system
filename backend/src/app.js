@@ -18,6 +18,8 @@ const prasadamRoutes = require("./routes/prasadamRoutes");
 const bookingRoutes = require("./routes/bookingRoutes");
 const attendanceSettingsRoutes = require("./routes/attendanceSettingsRoutes");
 const transferRoutes = require("./routes/transferRoutes");
+const roomRoutes = require("./routes/roomRoutes");
+const Room = require("./models/Room");
 
 const app = express();
 
@@ -46,5 +48,50 @@ app.use("/api/prasadam", prasadamRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/attendance/settings", attendanceSettingsRoutes);
 app.use("/api/transfers", transferRoutes);
+app.use("/api/rooms", roomRoutes);
+
+// Automatic Check-in/out background scheduler running every 60 seconds
+setInterval(async () => {
+  try {
+    const now = new Date();
+
+    // 1. Process automatic checkouts
+    // Find occupied rooms whose checkout time has passed
+    const roomsToCheckout = await Room.find({
+      status: "Occupied",
+      checkoutDate: { $lte: now }
+    });
+
+    for (const room of roomsToCheckout) {
+      console.log(`[Auto-Checkout] Room ${room.number} checkout time reached.`);
+      room.status = "Available";
+      room.devotee = undefined;
+      room.phone = undefined;
+      room.days = undefined;
+      room.payMode = undefined;
+      room.checkinDate = undefined;
+      room.checkoutDate = undefined;
+      await room.save();
+    }
+
+    // 2. Process automatic checkins
+    // Find available rooms that have devotee details set and checkin time has reached (but checkout time has not)
+    const roomsToCheckin = await Room.find({
+      status: "Available",
+      checkinDate: { $lte: now },
+      checkoutDate: { $gt: now },
+      devotee: { $exists: true, $ne: null }
+    });
+
+    for (const room of roomsToCheckin) {
+      console.log(`[Auto-Checkin] Room ${room.number} checkin time reached.`);
+      room.status = "Occupied";
+      await room.save();
+    }
+
+  } catch (err) {
+    console.error("Background room scheduler error:", err);
+  }
+}, 60000);
 
 module.exports = app;
