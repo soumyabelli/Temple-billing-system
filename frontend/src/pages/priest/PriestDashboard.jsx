@@ -36,7 +36,6 @@ import {
 import MyDuties from "./MyDuties";
 import PriestNotifications from "./PriestNotifications";
 import PriestProfile from "./PriestProfile";
-import PriestSettings from "./PriestSettings";
 import PriestInventory from "./PriestInventory";
 import Attendance from "../staff/Attendance";
 import LeaveRequest from "../staff/LeaveRequest";
@@ -973,56 +972,6 @@ const PriestDashboard = () => {
     </div>
   );
 
-  // 9. SETTINGS VIEW
-  const SettingsView = ({ darkMode }) => (
-    <div className={`max-w-3xl mx-auto rounded-2xl p-6 border transition-colors space-y-6 ${darkMode ? "bg-[#1f2937] border-slate-700 text-slate-100" : "bg-white border-[#ece8e1] text-[#1d1b19]"
-      } fade-in`}>
-      <div>
-        <h2 className="text-2xl font-extrabold flex items-center gap-2">
-          <FaCog className="text-orange-500" /> Priest Dashboard Settings
-        </h2>
-        <p className={`text-sm mt-1 ${darkMode ? "text-slate-300" : "text-slate-600"}`}>
-          Configure parameters, SMS triggers, and dashboard behaviors.
-        </p>
-      </div>
-
-      <div className="space-y-4 divide-y divide-slate-100 dark:divide-slate-800 text-sm">
-        {/* Toggle options */}
-        <div className="py-4 flex items-center justify-between">
-          <div>
-            <h4 className="font-bold">SMS Notifications to Devotees</h4>
-            <p className={`text-xs ${darkMode ? "text-slate-400" : "text-slate-500"} mt-0.5`}>Send automated WhatsApp/SMS alerts when pooja status is modified.</p>
-          </div>
-          <input type="checkbox" defaultChecked className="w-9 h-5 rounded-full bg-orange-500 accent-orange-500 shrink-0" />
-        </div>
-
-        <div className="py-4 flex items-center justify-between">
-          <div>
-            <h4 className="font-bold">Daily Seva Duty Reminders</h4>
-            <p className={`text-xs ${darkMode ? "text-slate-400" : "text-slate-500"} mt-0.5`}>Receive reminder alerts on your phone 30 minutes before shifts.</p>
-          </div>
-          <input type="checkbox" defaultChecked className="w-9 h-5 rounded-full bg-orange-500 accent-orange-500 shrink-0" />
-        </div>
-
-        <div className="py-4 flex items-center justify-between">
-          <div>
-            <h4 className="font-bold">Show Calendar Widget</h4>
-            <p className={`text-xs ${darkMode ? "text-slate-400" : "text-slate-500"} mt-0.5`}>Display monthly duty calendar grid in place of timeline list.</p>
-          </div>
-          <input type="checkbox" className="w-9 h-5 rounded-full bg-orange-500 accent-orange-500 shrink-0" />
-        </div>
-
-        <div className="py-4 flex items-center justify-between">
-          <div>
-            <h4 className="font-bold">Agama Reference Module</h4>
-            <p className={`text-xs ${darkMode ? "text-slate-400" : "text-slate-500"} mt-0.5`}>Display side panel showing Veda mantras corresponding to active pooja.</p>
-          </div>
-          <input type="checkbox" defaultChecked className="w-9 h-5 rounded-full bg-orange-500 accent-orange-500 shrink-0" />
-        </div>
-      </div>
-    </div>
-  );
-
   if (loading) {
     return (
       <PriestLayout>
@@ -1072,8 +1021,6 @@ const PriestDashboard = () => {
             return <PriestNotifications darkMode={darkMode} />;
           case "Profile":
             return <PriestProfile darkMode={darkMode} />;
-          case "Settings":
-            return <PriestSettings darkMode={darkMode} />;
           default:
             return <DashboardView darkMode={darkMode} />;
         }

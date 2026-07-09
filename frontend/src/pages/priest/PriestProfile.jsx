@@ -1,187 +1,351 @@
-import { useState, useEffect } from "react";
-import { getProfile, updateProfile } from "../../services/priestService";
-import { FiUser, FiPhone, FiMapPin, FiAward, FiBook, FiSave } from "react-icons/fi";
+import { useCallback, useEffect, useState } from "react";
+import { FiSave } from "react-icons/fi";
+import { useAuth } from "../../context/AuthContext";
+import {
+  changeEmployeePassword,
+  getEmployeeProfile,
+  updateEmployeeProfile,
+} from "../../services/employeeService";
+import "../staff/StaffDashboard.css"; // Reuse staff profile CSS
+
+const BLOOD_GROUPS = ["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"];
+const STAFF_PROFILE_EDITABLE_FIELDS = ["name", "email", "bloodGroup", "dob", "phone", "emergencyContact", "address", "photo"];
+
+const buildEditableProfilePayload = (profile = {}) =>
+  STAFF_PROFILE_EDITABLE_FIELDS.reduce((payload, field) => {
+    payload[field] = profile[field] ?? "";
+    return payload;
+  }, {});
+
+const getStaffProfileDetails = (profile = {}) => {
+  const details = [
+    { label: "Role", value: profile.role || "-" },
+    { label: "Status", value: profile.status || "-" },
+    { label: "Gender", value: profile.gender || "-" },
+    { label: "Aadhaar", value: profile.aadhaar || "-" },
+    { label: "Joining Date", value: profile.joiningDate ? new Date(profile.joiningDate).toLocaleDateString("en-IN") : "-" },
+    { label: "Shift", value: profile.currentDuty?.shift || profile.defaultShift || profile.shift || "-" },
+    { label: "Department", value: profile.department || "-" },
+    { label: "Employment Type", value: profile.employmentType || "-" },
+    { label: "Salary", value: profile.salary || "-" },
+    { label: "Veda Shakha", value: profile.vedaShakha || "-" },
+    { label: "Specializations", value: profile.specializations?.length ? profile.specializations.join(", ") : "-" },
+    { label: "Languages", value: profile.languages?.length ? profile.languages.join(", ") : "-" },
+  ];
+  return details.filter(d => d.value !== "-" && d.value !== "");
+};
+
+const toProfileForm = (profile = {}) => ({
+  name: profile.name || "",
+  email: profile.email || "",
+  role: profile.role || "priest",
+  gender: profile.gender || "Male",
+  dob: profile.dob || "",
+  bloodGroup: profile.bloodGroup || "O+",
+  aadhaar: profile.aadhaar || "",
+  phone: profile.phone || "",
+  emergencyContact: profile.emergencyContact || "",
+  address: profile.address || "",
+  photo: profile.photo || "",
+});
 
 const PriestProfile = () => {
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const { user, updateUser } = useAuth();
+  const priestId = user?.id || user?._id;
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [profileMessage, setProfileMessage] = useState("");
+  const [passwordMessage, setPasswordMessage] = useState("");
+  const [staff, setStaff] = useState(null);
 
-  const [formData, setFormData] = useState({
-    phone: "",
-    address: "",
+  const [profileForm, setProfileForm] = useState(toProfileForm());
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
   });
 
-  const loadProfile = async () => {
+  const fetchProfileData = useCallback(async () => {
+    if (!priestId) return;
     try {
-      setLoading(true);
-      const data = await getProfile();
-      setProfile(data);
-      setFormData({
-        phone: data.phone || "",
-        address: data.address || "",
-      });
-    } catch (err) {
-      setError("Failed to load profile");
+      setProfileLoading(true);
+      setProfileMessage("");
+      const response = await getEmployeeProfile(priestId);
+      setStaff(response.profile);
+      setProfileForm(toProfileForm(response.profile));
+      if (response.authUser && updateUser) {
+        updateUser(response.authUser);
+      }
+    } catch (apiError) {
+      setProfileMessage(apiError.response?.data?.message || "Failed to load profile details");
     } finally {
-      setLoading(false);
+      setProfileLoading(false);
     }
-  };
+  }, [priestId, updateUser]);
 
   useEffect(() => {
-    loadProfile();
-  }, []);
+    fetchProfileData();
+  }, [fetchProfileData]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+  const handleProfileInputChange = (field, value) => {
+    setProfileForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleProfilePhotoChange = (file) => {
+    if (!file) {
+      setProfileForm((prev) => ({ ...prev, photo: "" }));
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setProfileForm((prev) => ({ ...prev, photo: String(reader.result || "") }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleProfileSave = async (event) => {
+    event.preventDefault();
+    if (!profileForm.name.trim() || !profileForm.email.trim()) {
+      setProfileMessage("Name and email are required");
+      return;
+    }
+
     try {
-      setSaving(true);
-      setError("");
-      setSuccess("");
-      await updateProfile(formData);
-      setSuccess("Profile updated successfully");
-      loadProfile();
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to update profile");
+      setProfileSaving(true);
+      setProfileMessage("");
+      const response = await updateEmployeeProfile(priestId, buildEditableProfilePayload(profileForm));
+      setStaff(response.profile);
+      setProfileForm(toProfileForm(response.profile));
+      if (response.authUser && updateUser) {
+        updateUser(response.authUser);
+      }
+      setProfileMessage("Profile updated successfully");
+    } catch (apiError) {
+      setProfileMessage(apiError.response?.data?.message || "Failed to update profile");
     } finally {
-      setSaving(false);
+      setProfileSaving(false);
     }
   };
 
-  if (loading) return <div className="p-10 text-center text-slate-500">Loading profile...</div>;
-  if (!profile) return <div className="p-10 text-center text-rose-500">Failed to load profile.</div>;
+  const handlePasswordSave = async (event) => {
+    event.preventDefault();
+    if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
+      setPasswordMessage("Please fill all password fields");
+      return;
+    }
+    if (passwordForm.newPassword.length < 6) {
+      setPasswordMessage("New password must be at least 6 characters");
+      return;
+    }
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordMessage("New passwords do not match");
+      return;
+    }
+
+    try {
+      setPasswordSaving(true);
+      setPasswordMessage("");
+      await changeEmployeePassword(priestId, {
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword,
+      });
+      setPasswordMessage("Password changed successfully");
+      setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+    } catch (apiError) {
+      setPasswordMessage(apiError.response?.data?.message || "Failed to change password");
+    } finally {
+      setPasswordSaving(false);
+    }
+  };
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-5xl mx-auto">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">My Profile</h1>
-        <p className="text-slate-500">Manage your personal information and temple credentials.</p>
-      </div>
-
-      {error && <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm font-medium text-rose-700">{error}</div>}
-      {success && <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-700">{success}</div>}
-
-      <div className="grid gap-6 md:grid-cols-3">
-        {/* Left Column: Read-only Credentials */}
-        <div className="md:col-span-1 space-y-6">
-          <div className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-sm flex flex-col items-center text-center">
-            <div className="h-24 w-24 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center text-4xl mb-4 border-4 border-white shadow-md">
-              {profile.photo ? <img src={profile.photo} alt="Profile" className="h-full w-full rounded-full object-cover" /> : <FiUser />}
-            </div>
-            <h2 className="text-xl font-bold text-slate-900">{profile.name}</h2>
-            <p className="text-sm font-medium text-amber-600 mb-4">{profile.vedaShakha || "Priest"}</p>
-            <div className="w-full text-left text-sm text-slate-600 space-y-3">
-              <div className="flex justify-between border-b border-slate-100 pb-2">
-                <span className="text-slate-500">Employee ID</span>
-                <span className="font-mono font-medium">{profile.employeeId.slice(-6).toUpperCase()}</span>
-              </div>
-              <div className="flex justify-between border-b border-slate-100 pb-2">
-                <span className="text-slate-500">Experience</span>
-                <span className="font-medium">{profile.experience}</span>
-              </div>
-              <div className="flex justify-between border-b border-slate-100 pb-2">
-                <span className="text-slate-500">Joined</span>
-                <span className="font-medium">{profile.joiningDate}</span>
-              </div>
-            </div>
+    <div className="staff-dashboard-page" style={{ minHeight: "auto", background: "none", padding: 0, width: "100%", display: "block" }}>
+      <section className="profile-settings-page" style={{ maxWidth: "100%", margin: 0, padding: 0 }}>
+        <div className="profile-settings-header">
+          <div>
+            <h2>Profile Settings</h2>
+            <p className="profile-section-intro">
+              Update your personal details here. Employment details below stay synced with admin changes.
+            </p>
           </div>
-
-          <div className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 className="font-bold text-slate-900 flex items-center gap-2 mb-4"><FiAward className="text-amber-500" /> Specializations</h3>
-            <div className="flex flex-wrap gap-2">
-              {profile.specializations?.map((spec, i) => (
-                <span key={i} className="inline-block rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 border border-amber-100">
-                  {spec}
-                </span>
-              ))}
-              {(!profile.specializations || profile.specializations.length === 0) && <span className="text-sm text-slate-500">None added</span>}
-            </div>
-          </div>
-
-          <div className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 className="font-bold text-slate-900 flex items-center gap-2 mb-4"><FiBook className="text-amber-500" /> Languages Known</h3>
-            <div className="flex flex-wrap gap-2">
-              {profile.languages?.map((lang, i) => (
-                <span key={i} className="inline-block rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-                  {lang}
-                </span>
-              ))}
-              {(!profile.languages || profile.languages.length === 0) && <span className="text-sm text-slate-500">None added</span>}
-            </div>
-          </div>
+          <button type="button" onClick={fetchProfileData} disabled={profileLoading}>
+            {profileLoading ? "Refreshing..." : "Refresh"}
+          </button>
         </div>
 
-        {/* Right Column: Editable Info */}
-        <div className="md:col-span-2">
-          <div className="rounded-[24px] border border-slate-200 bg-white shadow-sm overflow-hidden">
-            <div className="border-b border-slate-100 px-6 py-5">
-              <h3 className="font-bold text-slate-900">Personal Information</h3>
-            </div>
-            <form onSubmit={handleSubmit} className="p-6 space-y-6">
-              
-              <div className="grid gap-6 sm:grid-cols-2">
+        <div className="profile-settings-grid">
+          <div className="table-card">
+            <h3 className="section-title">My Personal Details</h3>
+            <p className="section-subtitle">You can update your own contact details, photo, and login email here.</p>
+            <form onSubmit={handleProfileSave} className="leave-form">
+              <div className="date-grid">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
+                  <label htmlFor="profile-name">Full Name</label>
                   <input
-                    type="email"
-                    value={profile.email}
-                    disabled
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-500 outline-none"
+                    id="profile-name"
+                    type="text"
+                    value={profileForm.name}
+                    onChange={(e) => handleProfileInputChange("name", e.target.value)}
                   />
-                  <p className="mt-1 text-xs text-slate-500">Email cannot be changed.</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Phone Number</label>
-                  <div className="relative">
-                    <FiPhone className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input
-                      type="text"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleChange}
-                      placeholder="10-digit mobile number"
-                      maxLength={10}
-                      className="w-full rounded-xl border border-slate-200 py-2.5 pl-10 pr-4 text-sm outline-none transition focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Residential Address</label>
-                <div className="relative">
-                  <FiMapPin className="absolute left-3 top-3 text-slate-400" />
-                  <textarea
-                    name="address"
-                    value={formData.address}
-                    onChange={handleChange}
-                    placeholder="Enter your full address"
-                    rows={3}
-                    className="w-full rounded-xl border border-slate-200 py-2.5 pl-10 pr-4 text-sm outline-none transition focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+                  <label htmlFor="profile-email">Email</label>
+                  <input
+                    id="profile-email"
+                    type="email"
+                    value={profileForm.email}
+                    onChange={(e) => handleProfileInputChange("email", e.target.value)}
                   />
                 </div>
               </div>
 
-              <div className="border-t border-slate-100 pt-6 flex justify-end">
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="flex items-center gap-2 rounded-xl bg-slate-900 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:opacity-70"
-                >
-                  <FiSave /> {saving ? "Saving..." : "Save Changes"}
+              <div className="profile-photo-upload">
+                <div className="profile-photo-preview">
+                  {profileForm.photo ? (
+                    <img src={profileForm.photo} alt={profileForm.name || "Profile preview"} />
+                  ) : (
+                    <span>{(profileForm.name || staff?.name || "S").charAt(0).toUpperCase()}</span>
+                  )}
+                </div>
+                <div className="profile-photo-upload-content">
+                  <label htmlFor="profile-photo">Profile Picture</label>
+                  <input
+                    id="profile-photo"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleProfilePhotoChange(e.target.files?.[0])}
+                  />
+                  <p>Optional. Upload a JPG or PNG so admin can see your photo in employee details.</p>
+                </div>
+              </div>
+
+              <div className="date-grid">
+                <div>
+                  <label htmlFor="profile-blood">Blood Group</label>
+                  <select
+                    id="profile-blood"
+                    value={profileForm.bloodGroup}
+                    onChange={(e) => handleProfileInputChange("bloodGroup", e.target.value)}
+                  >
+                    {BLOOD_GROUPS.map((bloodGroup) => (
+                      <option key={bloodGroup} value={bloodGroup}>
+                        {bloodGroup}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="profile-dob">Date of Birth</label>
+                  <input
+                    id="profile-dob"
+                    type="date"
+                    value={profileForm.dob}
+                    onChange={(e) => handleProfileInputChange("dob", e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="date-grid">
+                <div>
+                  <label htmlFor="profile-phone">Phone</label>
+                  <input
+                    id="profile-phone"
+                    type="text"
+                    value={profileForm.phone}
+                    onChange={(e) => handleProfileInputChange("phone", e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="profile-emergency">Emergency Contact</label>
+                  <input
+                    id="profile-emergency"
+                    type="text"
+                    value={profileForm.emergencyContact}
+                    onChange={(e) => handleProfileInputChange("emergencyContact", e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <label htmlFor="profile-address">Address</label>
+              <textarea
+                id="profile-address"
+                rows="3"
+                value={profileForm.address}
+                onChange={(e) => handleProfileInputChange("address", e.target.value)}
+              />
+
+              {profileMessage ? <p className="profile-note">{profileMessage}</p> : null}
+
+              <div className="form-actions">
+                <button type="submit" disabled={profileSaving}>
+                  <FiSave />
+                  {profileSaving ? "Saving..." : "Save Profile"}
+                </button>
+              </div>
+            </form>
+
+            <div className="profile-admin-details">
+              <div className="profile-admin-details-head">
+                <div>
+                  <h4>Admin Managed Details</h4>
+                  <p>These values are read-only here and stay in sync with the employee record.</p>
+                </div>
+              </div>
+              <div className="profile-info-grid">
+                {getStaffProfileDetails(staff || {}).map((detail, index) => (
+                  <div key={index} className="profile-info-card">
+                    <span>{detail.label}</span>
+                    <strong>{detail.value}</strong>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="table-card">
+            <h3 className="section-title">Change Password</h3>
+            <p className="section-subtitle">Update your login password securely.</p>
+            <form onSubmit={handlePasswordSave} className="leave-form">
+              <div>
+                <label htmlFor="current-password">Current Password</label>
+                <input
+                  id="current-password"
+                  type="password"
+                  value={passwordForm.currentPassword}
+                  onChange={(e) => setPasswordForm((prev) => ({ ...prev, currentPassword: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label htmlFor="new-password">New Password</label>
+                <input
+                  id="new-password"
+                  type="password"
+                  value={passwordForm.newPassword}
+                  onChange={(e) => setPasswordForm((prev) => ({ ...prev, newPassword: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label htmlFor="confirm-password">Confirm New Password</label>
+                <input
+                  id="confirm-password"
+                  type="password"
+                  value={passwordForm.confirmPassword}
+                  onChange={(e) => setPasswordForm((prev) => ({ ...prev, confirmPassword: e.target.value }))}
+                />
+              </div>
+              {passwordMessage ? <p className="profile-note">{passwordMessage}</p> : null}
+              <div className="form-actions" style={{ marginTop: "1rem" }}>
+                <button type="submit" disabled={passwordSaving}>
+                  <FiSave />
+                  {passwordSaving ? "Updating..." : "Update Password"}
                 </button>
               </div>
             </form>
           </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 };

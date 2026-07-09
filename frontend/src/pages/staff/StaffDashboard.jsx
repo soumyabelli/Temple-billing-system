@@ -45,25 +45,24 @@ const buildEditableProfilePayload = (profile = {}) =>
     return payload;
   }, {});
 
-const getStaffProfileDetails = (profile = {}) => [
-  { label: "Role", value: profile.role || "-" },
-  { label: "Status", value: profile.status || "-" },
-  { label: "Gender", value: profile.gender || "-" },
-  { label: "Aadhaar", value: profile.aadhaar || "-" },
-  { label: "Joining Date", value: profile.joiningDate || "-" },
-  { label: "Shift", value: profile.currentDuty?.shift || profile.defaultShift || profile.shift || "-" },
-  { label: "Department", value: profile.department || "-" },
-  { label: "Employment Type", value: profile.employmentType || "-" },
-  { label: "Salary", value: profile.salary || "-" },
-  { label: "Current Duty", value: profile.currentDuty?.dutyName || profile.defaultDuty || "-" },
-  { label: "Attendance Status", value: profile.attendanceStatus || "Not Marked" },
-  { label: "Leave Balance", value: `${profile.leaveBalance ?? 0} days` },
-  { label: "Duty Location", value: profile.currentDuty?.dutyLocation || profile.dutyLocation || "-" },
-  { label: "Created Date", value: profile.createdAt ? new Date(profile.createdAt).toLocaleDateString("en-IN") : "-" },
-  { label: "Updated Date", value: profile.updatedAt ? new Date(profile.updatedAt).toLocaleDateString("en-IN") : "-" },
-  { label: "Created By", value: profile.createdBy || "Admin" },
-  { label: "Last Login", value: profile.lastLogin ? new Date(profile.lastLogin).toLocaleString("en-IN") : "-" },
-];
+const getStaffProfileDetails = (profile = {}) => {
+  const details = [
+    { label: "Role", value: profile.role || "-" },
+    { label: "Status", value: profile.status || "-" },
+    { label: "Gender", value: profile.gender || "-" },
+    { label: "Aadhaar", value: profile.aadhaar || "-" },
+    { label: "Joining Date", value: profile.joiningDate ? new Date(profile.joiningDate).toLocaleDateString("en-IN") : "-" },
+    { label: "Shift", value: profile.currentDuty?.shift || profile.defaultShift || profile.shift || "-" },
+    { label: "Department", value: profile.department || "-" },
+    { label: "Employment Type", value: profile.employmentType || "-" },
+    { label: "Salary", value: profile.salary || "-" },
+    { label: "Current Duty", value: profile.currentDuty?.dutyName || profile.defaultDuty || "-" },
+    { label: "Attendance Status", value: profile.attendanceStatus || "Not Marked" },
+    { label: "Leave Balance", value: `${profile.leaveBalance ?? 0} days` },
+    { label: "Duty Location", value: profile.currentDuty?.dutyLocation || profile.dutyLocation || "-" },
+  ];
+  return details.filter(d => d.value !== "-" && d.value !== "");
+};
 
 const formatHeaderDate = () =>
   new Date().toLocaleDateString("en-IN", {

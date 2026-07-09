@@ -65,7 +65,7 @@
   display: inline-block;
   margin-top: 6px;
   color: #a05c21;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -155,7 +155,7 @@
   margin: 16px 0 0;
   text-align: center;
   color: rgba(255, 247, 238, 0.88);
-  font-size: 12px;
+  font-size: 15px;
   line-height: 1.6;
 }
 
@@ -213,7 +213,7 @@
   border: 1px solid rgba(229, 197, 154, 0.72);
   background: rgba(255, 250, 244, 0.9);
   color: #6b452f;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -248,7 +248,7 @@
   border-radius: 999px;
   background: #ff7f18;
   color: #fff;
-  font-size: 11px;
+  font-size: 15px;
   font-weight: 700;
   box-shadow: 0 10px 16px rgba(255, 127, 24, 0.28);
 }
@@ -272,7 +272,7 @@
   justify-content: center;
   background: linear-gradient(160deg, #7c4a2e 0%, #bf845b 100%);
   color: #fff;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 700;
 }
 
@@ -284,17 +284,17 @@
 
 .accountant-user__meta strong {
   color: #5a3726;
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .accountant-user__meta span {
   color: #8b6d5f;
-  font-size: 12px;
+  font-size: 15px;
 }
 
 .accountant-user__caret {
   color: #8a6b59;
-  font-size: 12px;
+  font-size: 15px;
 }
 
 .accountant-overview {
@@ -327,7 +327,7 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   white-space: nowrap;
   box-shadow: 0 10px 20px rgba(122, 74, 36, 0.06);
@@ -369,7 +369,7 @@
 .accountant-stat-card__title {
   margin: 0;
   color: #7a685b;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
 }
 
@@ -385,7 +385,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
 }
 
@@ -430,7 +430,7 @@
 .accountant-panel__eyebrow {
   margin: 0 0 5px;
   color: #ff7f18;
-  font-size: 12px;
+  font-size: 15px;
   font-weight: 800;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -452,14 +452,14 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
   white-space: nowrap;
 }
 
 .accountant-panel__link {
   color: #ff7f18;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 800;
   cursor: default;
 }
@@ -489,7 +489,7 @@
 .accountant-view__eyebrow {
   margin: 0 0 6px;
   color: #ff7f18;
-  font-size: 12px;
+  font-size: 15px;
   font-weight: 800;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -536,7 +536,7 @@
   gap: 8px;
   border-radius: 999px;
   padding: 10px 14px;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
   white-space: nowrap;
   box-shadow: 0 10px 20px rgba(122, 74, 36, 0.06);
@@ -549,7 +549,7 @@
   gap: 8px;
   border-radius: 14px;
   padding: 11px 14px;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 800;
   box-shadow: 0 10px 20px rgba(122, 74, 36, 0.06);
 }
@@ -587,7 +587,7 @@
   border: 0;
   outline: 0;
   background: transparent;
-  font-size: 14px;
+  font-size: 16px;
   color: #5a3726;
 }
 
@@ -621,7 +621,7 @@
 .accountant-summaryCard__label {
   margin: 0;
   color: #7a685b;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -639,7 +639,7 @@
   display: block;
   margin-top: 6px;
   color: #8a7366;
-  font-size: 12px;
+  font-size: 15px;
 }
 
 .accountant-twoColumn {
@@ -681,7 +681,7 @@
   gap: 6px;
   border-radius: 12px;
   padding: 8px 10px;
-  font-size: 12px;
+  font-size: 15px;
   font-weight: 800;
   white-space: nowrap;
   background: #fff9f1;
@@ -711,7 +711,7 @@
   justify-content: space-between;
   gap: 10px;
   background: linear-gradient(180deg, #fff9f3 0%, #fff2e4 100%);
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 800;
 }
 
@@ -724,7 +724,7 @@
 .accountant-tab {
   border-radius: 999px;
   padding: 10px 14px;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 800;
   white-space: nowrap;
   background: #fff9f1;
@@ -753,7 +753,7 @@
 .accountant-reportCard__label {
   display: block;
   color: #5a3726;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 800;
   line-height: 1.4;
 }
@@ -762,7 +762,7 @@
   display: block;
   margin-top: 6px;
   color: #8a7366;
-  font-size: 12px;
+  font-size: 15px;
 }
 
 .accountant-notificationList {
@@ -808,7 +808,7 @@
 .accountant-notificationItem__meta p {
   margin: 4px 0 0;
   color: #8a7366;
-  font-size: 12px;
+  font-size: 15px;
 }
 
 .accountant-notificationItem__side {
@@ -817,7 +817,7 @@
   align-items: flex-end;
   gap: 6px;
   color: #8a7366;
-  font-size: 12px;
+  font-size: 15px;
 }
 
 .accountant-profileLayout {
@@ -860,7 +860,7 @@
 .accountant-profileCard p {
   margin: 0;
   color: #8a7366;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -885,7 +885,7 @@
 .accountant-profileField span {
   display: block;
   color: #8a7366;
-  font-size: 12px;
+  font-size: 15px;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -895,7 +895,7 @@
   display: block;
   margin-top: 6px;
   color: #5a3726;
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .accountant-profileActions {
@@ -911,7 +911,7 @@
   align-items: center;
   justify-content: flex-start;
   gap: 10px;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 800;
   background: rgba(255, 255, 255, 0.94);
   box-shadow: 0 12px 24px rgba(122, 74, 36, 0.08);
@@ -923,7 +923,7 @@
   justify-content: center;
   border-radius: 999px;
   padding: 4px 10px;
-  font-size: 11px;
+  font-size: 15px;
   font-weight: 800;
   background: #f7f1ea;
   color: #5a3726;
@@ -990,7 +990,7 @@
 .accountant-chart-card__summary span {
   display: block;
   color: #8a7366;
-  font-size: 12px;
+  font-size: 15px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -1048,7 +1048,7 @@
 
 .accountant-bar-chart__column span {
   color: #716255;
-  font-size: 12px;
+  font-size: 15px;
   font-weight: 600;
 }
 
@@ -1099,7 +1099,7 @@
 .accountant-donut__center span {
   margin-top: 6px;
   color: #8a7366;
-  font-size: 12px;
+  font-size: 15px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -1117,7 +1117,7 @@
   justify-content: space-between;
   gap: 10px;
   color: #5b4a3e;
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .accountant-donut__legend-label {
@@ -1189,7 +1189,7 @@
 .accountant-transaction__receipt {
   margin: 4px 0 0;
   color: #8a7366;
-  font-size: 12px;
+  font-size: 15px;
 }
 
 .accountant-transaction__amount {
@@ -1202,7 +1202,7 @@
 .accountant-transaction__time {
   margin-top: 5px;
   color: #8a7366;
-  font-size: 12px;
+  font-size: 15px;
   text-align: right;
 }
 
@@ -1223,7 +1223,7 @@
   background: #fff8ef;
   border: 1px solid rgba(244, 220, 196, 0.95);
   color: #5b4a3e;
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .accountant-summary__row strong {
@@ -1252,7 +1252,7 @@
   padding: 11px 12px;
   text-align: left;
   border-bottom: 1px solid #f2e4d5;
-  font-size: 13px;
+  font-size: 15px;
 }
 
 .accountant-table th {
@@ -1312,7 +1312,7 @@
 .accountant-panel__note {
   margin: 14px 0 0;
   color: #8a7366;
-  font-size: 12px;
+  font-size: 15px;
 }
 
 @media (max-width: 1480px) {

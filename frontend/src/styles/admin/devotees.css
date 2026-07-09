@@ -94,7 +94,7 @@
 
 .growth {
   color: #16a34a !important;
-  font-size: 14px;
+  font-size: 16px;
   margin-top: 6px;
   font-weight: 600;
 }
@@ -176,7 +176,7 @@
   color: #16a34a;
   padding: 6px 14px;
   border-radius: 999px;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
 }
 
@@ -185,7 +185,7 @@
   color: #f59e0b;
   padding: 6px 14px;
   border-radius: 999px;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
 }
 
@@ -315,5 +315,5 @@
 .footer-text {
   margin-top: 22px;
   color: #6b7280;
-  font-size: 14px;
+  font-size: 16px;
 }

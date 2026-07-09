@@ -24,6 +24,5 @@ export const priestSidebarItems = [
   { title: "Apply Leave", icon: FaFileSignature, path: "/priest/apply-leave" },
   { title: "Notifications", icon: MdNotifications, path: "/priest/notifications" },
   { title: "Profile", icon: MdOutlinePerson, path: "/priest/profile" },
-  { title: "Settings", icon: MdOutlineSettings, path: "/priest/settings" },
   { title: "Logout", icon: MdLogout, path: "/logout" },
 ];

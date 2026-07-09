@@ -50,7 +50,7 @@
 
 .attendance-user-meta span {
   color: var(--muted);
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
 }
 
@@ -78,7 +78,7 @@
 
 .attendance-today-item span {
   color: var(--muted);
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
 }
 
@@ -91,7 +91,7 @@
 .attendance-today-item p {
   margin: 0;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 15px;
 }
 
 .attendance-stat-card {
@@ -225,7 +225,7 @@
 
 .attendance-table th {
   color: #2e2a24;
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .attendance-table td {
@@ -239,7 +239,7 @@
   min-width: 76px;
   padding: 7px 14px;
   border-radius: 999px;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
 }
 
@@ -304,7 +304,7 @@
 
 .attendance-overview-item span {
   color: var(--muted);
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
 }
 
@@ -402,7 +402,7 @@
   text-align: center;
   color: var(--muted);
   font-weight: 700;
-  font-size: 13px;
+  font-size: 15px;
 }
 
 .attendance-day {
@@ -555,7 +555,7 @@
 
 .attendance-action-copy span {
   color: var(--muted);
-  font-size: 13px;
+  font-size: 15px;
 }
 
 .attendance-action-chevron {
@@ -567,7 +567,7 @@
   margin-top: 2px;
   padding: 10px 2px 0;
   color: #6c6155;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
 }
 
@@ -600,7 +600,7 @@
 .attendance-modal__eyebrow {
   margin: 0 0 6px;
   color: #ff7a00;
-  font-size: 12px;
+  font-size: 15px;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -642,14 +642,14 @@
 
 .attendance-modal__summary span {
   color: var(--muted);
-  font-size: 12px;
+  font-size: 15px;
   font-weight: 700;
   text-transform: uppercase;
 }
 
 .attendance-modal__summary strong {
   color: var(--text);
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .attendance-modal__leave {
@@ -664,11 +664,11 @@
 }
 
 .attendance-modal__leave strong {
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .attendance-modal__leave span {
-  font-size: 13px;
+  font-size: 15px;
   color: inherit;
 }
 
@@ -706,7 +706,7 @@
 .attendance-modal__note {
   margin: 14px 0 0;
   color: #6c6155;
-  font-size: 13px;
+  font-size: 15px;
   line-height: 1.5;
 }
 

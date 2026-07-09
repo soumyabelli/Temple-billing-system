@@ -36,8 +36,8 @@ body{background:var(--bg)}
 .header-right svg{font-size:20px;color:#6b7280}
 .profile{display:flex;align-items:center;gap:10px}
 .profile img{width:44px;height:44px;border-radius:50%;border:2px solid rgba(255,255,255,0.12)}
-.profile h4{font-size:14px;color:#111;margin:0}
-.profile p{font-size:12px;color:#6b7280;margin:0}
+.profile h4{font-size: 16px;color:#111;margin:0}
+.profile p{font-size: 15px;color:#6b7280;margin:0}
 
 /* WELCOME */
 .welcome h1{font-size:22px;color:#111}
@@ -46,7 +46,7 @@ body{background:var(--bg)}
 /* TOP CARDS */
 .cards{margin-top:20px;display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
 .card{padding:20px;border-radius:16px;color:#fff;position:relative;overflow:hidden;box-shadow:var(--card-shadow)}
-.card h4{font-size:13px;opacity:0.9}
+.card h4{font-size: 15px;opacity:0.9}
 .card h2{font-size:28px;margin-top:6px}
 .card p{margin-top:10px;font-weight:600;opacity:0.95}
 
