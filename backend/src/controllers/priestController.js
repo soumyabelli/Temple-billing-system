@@ -1317,4 +1317,63 @@ exports.getPriestsList = async (req, res) => {
   }
 };
 
+exports.getIncomingTransfers = async (req, res) => {
+  try {
+    const priestId = req.user.id;
+    const transfers = await TransferRequest.find({
+      requestedPriest: priestId,
+      status: "Pending"
+    }).populate("originalPriest", "name").populate("referenceId");
+    
+    return res.status(200).json(transfers);
+  } catch (error) {
+    console.error("Error fetching incoming transfers:", error);
+    return res.status(500).json({ message: "Failed to fetch incoming transfers" });
+  }
+};
+
+exports.respondToTransfer = async (req, res) => {
+  try {
+    const priestId = req.user.id;
+    const { id } = req.params;
+    const { status } = req.body; // "Approved" or "Rejected"
+
+    const transfer = await TransferRequest.findById(id);
+    if (!transfer) return res.status(404).json({ message: "Transfer request not found" });
+    if (transfer.requestedPriest.toString() !== priestId) return res.status(403).json({ message: "Not authorized" });
+
+    transfer.status = status;
+    await transfer.save();
+
+    const Booking = require("../models/Booking");
+    const Task = require("../models/Task");
+
+    if (status === "Approved") {
+      if (transfer.referenceType === "Booking") {
+        await Booking.findByIdAndUpdate(transfer.referenceId, { 
+          assignedPriest: priestId,
+          status: "Assigned" 
+        });
+      } else {
+        await Task.findByIdAndUpdate(transfer.referenceId, {
+          assignedPriest: priestId,
+          status: "Assigned"
+        });
+      }
+    } else {
+      if (transfer.referenceType === "Booking") {
+        await Booking.findByIdAndUpdate(transfer.referenceId, { status: "Assigned" });
+      } else {
+        await Task.findByIdAndUpdate(transfer.referenceId, { status: "Assigned" });
+      }
+    }
+
+    return res.status(200).json({ message: `Transfer request ${status.toLowerCase()} successfully.` });
+  } catch (error) {
+    console.error("Error responding to transfer:", error);
+    return res.status(500).json({ message: "Failed to respond to transfer" });
+  }
+};
+
+
 

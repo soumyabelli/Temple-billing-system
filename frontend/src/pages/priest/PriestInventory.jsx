@@ -224,7 +224,7 @@ const PriestInventory = () => {
   };
 
   return (
-    <div className="staff-dashboard-page" style={{ minHeight: "auto", background: "none", padding: 0 }}>
+    <div className="staff-dashboard-page" style={{ minHeight: "auto", background: "none", padding: 0, width: "100%", display: "block" }}>
       <section className="inventory-page">
         <div className="leave-head">
           <div>

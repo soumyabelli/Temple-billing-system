@@ -10,6 +10,7 @@ const MyDuties = ({ darkMode }) => {
   const [duties, setDuties] = useState([]);
   const [priests, setPriests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [incomingTransfers, setIncomingTransfers] = useState([]);
 
   // Modal states
   const [showTransferModal, setShowTransferModal] = useState(false);
@@ -46,6 +47,17 @@ const MyDuties = ({ darkMode }) => {
     }
   };
 
+  const fetchIncomingTransfers = async () => {
+    try {
+      const res = await axios.get(`${API_BASE}/priest/my-duties/incoming-transfers`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      setIncomingTransfers(res.data);
+    } catch (error) {
+      console.error("Error fetching incoming transfers:", error);
+    }
+  };
+
   const fetchPriests = async () => {
     try {
       const res = await axios.get(`${API_BASE}/priest/priests-list`, {
@@ -60,7 +72,21 @@ const MyDuties = ({ darkMode }) => {
   useEffect(() => {
     fetchDuties();
     fetchPriests();
+    fetchIncomingTransfers();
   }, []);
+
+  const handleRespondTransfer = async (transferId, status) => {
+    try {
+      await axios.post(`${API_BASE}/priest/my-duties/transfer/${transferId}/respond`, { status }, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      showNotification(`Transfer request ${status.toLowerCase()} successfully.`);
+      fetchIncomingTransfers();
+      fetchDuties(); // Refresh duties in case a duty was added to my schedule
+    } catch (error) {
+      showNotification(error.response?.data?.message || "Failed to respond", "error");
+    }
+  };
 
 
   const submitTransfer = async (e) => {
@@ -224,6 +250,56 @@ const MyDuties = ({ darkMode }) => {
         )}
       </div>
 
+      {/* Incoming Transfer Requests */}
+      {incomingTransfers.length > 0 && (
+        <div className={`rounded-2xl p-6 border transition-colors mt-8 ${darkMode ? "bg-slate-900/60 backdrop-blur-xl border-slate-700/50 shadow-xl shadow-slate-900/20" : "bg-white border-[#ece8e1] shadow-xl shadow-slate-200/50"}`}>
+          <div className="flex items-center justify-between mb-6">
+            <h3 className={`text-lg font-bold flex items-center gap-2 ${darkMode ? "text-slate-100" : "text-[#1d1b19]"}`}>
+              <FaExchangeAlt className="text-orange-500" /> Incoming Duty Transfers
+            </h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm min-w-[700px]">
+              <thead>
+                <tr className={`border-b ${darkMode ? "border-slate-700 bg-slate-800/50" : "border-slate-200 bg-slate-50"}`}>
+                  <th className={`text-left px-4 py-3 text-xs font-bold uppercase tracking-wider ${darkMode ? "text-slate-400" : "text-slate-500"}`}>Requested By</th>
+                  <th className={`text-left px-4 py-3 text-xs font-bold uppercase tracking-wider ${darkMode ? "text-slate-400" : "text-slate-500"}`}>Reason</th>
+                  <th className={`text-left px-4 py-3 text-xs font-bold uppercase tracking-wider ${darkMode ? "text-slate-400" : "text-slate-500"}`}>Remarks</th>
+                  <th className={`text-center px-4 py-3 text-xs font-bold uppercase tracking-wider ${darkMode ? "text-slate-400" : "text-slate-500"}`}>Actions</th>
+                </tr>
+              </thead>
+              <tbody className={`divide-y ${darkMode ? "divide-slate-800" : "divide-slate-100"}`}>
+                {incomingTransfers.map((req) => (
+                  <tr key={req._id} className={`transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-800/40 ${darkMode ? "text-slate-300" : "text-slate-700"}`}>
+                    <td className={`px-4 py-4 font-bold ${darkMode ? "text-slate-200" : "text-slate-800"}`}>
+                      {req.originalPriest?.name || "Unknown"}
+                    </td>
+                    <td className="px-4 py-4">{req.reason}</td>
+                    <td className="px-4 py-4">{req.remarks || "-"}</td>
+                    <td className="px-4 py-4 text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <button
+                          onClick={() => handleRespondTransfer(req._id, "Approved")}
+                          className="px-3 py-1.5 border border-emerald-500/50 text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 text-[11px] font-bold rounded-lg hover:bg-emerald-500/10 transition-all active:scale-95"
+                        >
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => handleRespondTransfer(req._id, "Rejected")}
+                          className="px-3 py-1.5 border border-rose-500/50 text-rose-600 dark:text-rose-400 bg-rose-500/5 text-[11px] font-bold rounded-lg hover:bg-rose-500/10 transition-all active:scale-95"
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       {/* Transfer Duty Modal */}
       {showTransferModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -260,7 +336,7 @@ const MyDuties = ({ darkMode }) => {
                 >
                   <option value="">-- Choose a Priest --</option>
                   {priests
-                    .filter(p => p._id !== user.id)
+                    .filter(p => p._id !== user.id && p._id !== user._id)
                     .map(p => (
                       <option key={p._id} value={p._id}>{p.name} ({p.email})</option>
                     ))}

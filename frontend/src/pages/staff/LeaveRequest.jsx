@@ -112,7 +112,7 @@ const LeaveRequest = ({ darkMode }) => {
   const field = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
 
   return (
-    <div className={`leave-container ${darkMode ? "dark" : ""}`}>
+    <div className={`leave-container ${darkMode ? "dark" : ""}`} style={{ width: "100%", display: "block" }}>
       <section className="apply-leave-page">
         <h2>Apply Leave</h2>
         <p>Submit your leave request to admin.</p>
