@@ -1084,3 +1084,17 @@ Thank you!
 To: 9945650664
 Message: Pooja booking confirmed! Service: Abhisheka on 2026-07-06T10:23. Amount: ₹801. -Temple
 
+[2026-07-09T03:56:12.536Z] EMAIL
+To: testdevotee.20260m709@example.com
+Subject: Verify Your Temple Devotee Registration
+Please click the following link to verify your email and complete devotee registration: http://localhost:5000/api/auth/verify-registration?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiVGVzdCBEZXZvdGVlIiwiZW1haWwiOiJ0ZXN0ZGV2b3RlZS4yMDI2MG03MDlAZXhhbXBsZS5jb20iLCJwaG9uZSI6Ijk4NzY1NDMyMTAiLCJhZGRyZXNzIjoiVGVzdCBBZGRyZXNzIiwicGxhY2UiOiJUZXN0IENpdHkiLCJwYXNzd29yZCI6IiQyYiQxMCQ0S2lPbWZjOUNCQ2MwVk9PRVNNbzFPSS5JeFRyNDRJUGVLdG4vbVZvRXU1cUJvay9xOFlnLiIsInJvbGUiOiJkZXZvdGVlIiwiaWF0IjoxNzgzNTY5MzY3LCJleHAiOjE3ODM1NzAyNjd9.weWOAbzIUZipN-B-N3paalmGdBPmlnqeCymqEGm5kVI
+
+[2026-07-09T05:08:19.234Z] EMAIL
+To: reena@gmail.com
+Subject: Pooja Booking Confirmation
+Pooja Booking Confirmation
+Service: Room Allotment: Room 103 (Standard)
+Date & Time: 2026-07-10T10:37
+Amount: ₹1200
+Thank you!
+

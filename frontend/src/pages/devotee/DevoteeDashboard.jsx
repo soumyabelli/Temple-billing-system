@@ -382,6 +382,16 @@ const SidebarItem = ({ label, icon, active, onClick }) => (
   </button>
 );
 
+const loadRazorpayScript = () =>
+  new Promise((resolve) => {
+    if (window.Razorpay) return resolve(true);
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+
 const DevoteeDashboard = () => {
   const navigate = useNavigate();
   const { user, logoutUser, updateUser } = useAuth();
@@ -400,6 +410,7 @@ const DevoteeDashboard = () => {
     const saved = localStorage.getItem("templeRoomHistory");
     return saved ? JSON.parse(saved) : INITIAL_HISTORY;
   });
+  const [showAllRooms, setShowAllRooms] = useState(false);
 
   const roomTypesList = useMemo(() => {
     const list = {};
@@ -927,15 +938,7 @@ const DevoteeDashboard = () => {
       return;
     }
 
-    const loadRazorpayScript = () =>
-      new Promise((resolve) => {
-        if (window.Razorpay) return resolve(true);
-        const script = document.createElement("script");
-        script.src = "https://checkout.razorpay.com/v1/checkout.js";
-        script.onload = () => resolve(true);
-        script.onerror = () => resolve(false);
-        document.body.appendChild(script);
-      });
+    // loadRazorpayScript is defined at file level
 
     const isConfirmed = window.confirm("Once paid, there is no return of money (non-refundable). Do you want to confirm booking?");
     if (!isConfirmed) return;
@@ -1113,9 +1116,6 @@ const DevoteeDashboard = () => {
         return r;
       });
 
-      setAvailableRooms(updatedRooms);
-      localStorage.setItem("templeRooms_v2", JSON.stringify(updatedRooms));
-
       // Append new booking to room history
       const newBooking = {
         id: `B-${Math.floor(1000 + Math.random() * 9000)}`,
@@ -1132,8 +1132,6 @@ const DevoteeDashboard = () => {
       };
 
       const updatedHistory = [newBooking, ...roomHistory];
-      setRoomHistory(updatedHistory);
-      localStorage.setItem("templeRoomHistory", JSON.stringify(updatedHistory));
 
       // Create a devotee booking ledger record in backend
       const payload = {
@@ -1147,17 +1145,76 @@ const DevoteeDashboard = () => {
         notes: `Check-in: ${formatDateTimeDisplay(roomCheckIn)} | Check-out: ${formatDateTimeDisplay(roomCheckOut)}`,
       };
 
-      await createDevoteeBooking(payload);
+      const bookingRes = await createDevoteeBooking(payload);
+      const { booking: createdBooking, order, key, simulated } = bookingRes;
 
-      setRoomSuccess(`Room ${targetRoom.number} booking successful! Duration: ${diffDays} day(s). Amount paid: ${formatCurrency(finalAmount)}.`);
-      setRoomCheckIn("");
-      setRoomCheckOut("");
-      
-      // Reload bookings lists
-      try {
-        const bookingsRes = await getDevoteeBookings(activeEmail);
-        setBookingsData(bookingsRes.bookings || []);
-      } catch (e) {}
+      const completeBookingLocally = async () => {
+        setAvailableRooms(updatedRooms);
+        localStorage.setItem("templeRooms_v2", JSON.stringify(updatedRooms));
+        setRoomHistory(updatedHistory);
+        localStorage.setItem("templeRoomHistory", JSON.stringify(updatedHistory));
+        setRoomSuccess(`Room ${targetRoom.number} booking successful! Duration: ${diffDays} day(s). Amount paid: ${formatCurrency(finalAmount)}.`);
+        setRoomCheckIn("");
+        setRoomCheckOut("");
+        try {
+          const bookingsRes = await getDevoteeBookings(activeEmail);
+          setBookingsData(bookingsRes.bookings || []);
+        } catch (e) {}
+      };
+
+      if (!simulated && order) {
+        const loaded = await loadRazorpayScript();
+        if (!loaded) {
+          setRoomError("Unable to load payment gateway. Try again later.");
+          setRoomLoading(false);
+          return;
+        }
+
+        const options = {
+          key: key || "",
+          amount: order.amount,
+          currency: order.currency,
+          name: "Temple Room Booking",
+          description: `Room ${targetRoom.number} (${roomType})`,
+          order_id: order.id,
+          prefill: {
+            name: activeName,
+            email: activeEmail,
+            contact: activePhone,
+          },
+          handler: async function (resp) {
+            try {
+              setRoomLoading(true);
+              await verifyBookingPayment({
+                razorpay_order_id: resp.razorpay_order_id,
+                razorpay_payment_id: resp.razorpay_payment_id,
+                razorpay_signature: resp.razorpay_signature,
+                bookingId: createdBooking._id,
+              });
+
+              await completeBookingLocally();
+            } catch (err) {
+              console.warn("verifyBookingPayment failed for room", err);
+              setRoomError(err?.response?.data?.error || "Payment verification failed. Please contact support.");
+            } finally {
+              setRoomLoading(false);
+            }
+          },
+          modal: {
+            ondismiss: function () {
+              setRoomLoading(false);
+            },
+          },
+          theme: {
+            color: "#d97706",
+          },
+        };
+
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+      } else {
+        await completeBookingLocally();
+      }
 
     } catch (error) {
       console.warn("Unable to create room booking", error);
@@ -2124,56 +2181,64 @@ const DevoteeDashboard = () => {
                 <div className="lg:col-span-2 space-y-4">
                   <h3 className="text-xl font-bold text-slate-800 mb-2">Available Rooms</h3>
                   <div className="grid gap-4 sm:grid-cols-2">
-                    {availableRooms.map((room) => {
-                      const isSelected = selectedRoomNumber === room.number;
-                      return (
-                        <div
-                          key={room.number}
-                          onClick={() => {
-                            if (room.status === "Available") {
+                    {availableRooms
+                      .filter((room) => room.status === "Available")
+                      .slice(0, showAllRooms ? undefined : 4)
+                      .map((room) => {
+                        const isSelected = selectedRoomNumber === room.number;
+                        return (
+                          <div
+                            key={room.number}
+                            onClick={() => {
                               setSelectedRoomNumber(room.number);
                               setRoomType(room.type);
                               setRoomAmount(room.price);
-                            }
-                          }}
-                          className={`rounded-2xl border p-5 transition duration-300 backdrop-blur-md ${
-                            room.status !== "Available"
-                              ? "opacity-50 cursor-not-allowed border-slate-200 bg-slate-100/10"
-                              : isSelected
-                              ? "cursor-pointer border-[#ff9f2f] bg-white/60 shadow-md ring-2 ring-[#ff9f2f]"
-                              : "cursor-pointer border-white/40 bg-white/20 hover:bg-white/40"
-                          }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs uppercase tracking-wider font-semibold text-[#8b5a0a]">
-                              {room.block} - {room.floor}
-                            </span>
-                            <span className={`rounded px-2 py-0.5 text-xs font-bold ${
-                              room.status === "Available" ? "bg-[#0f766e]/10 text-[#0f766e]" : "bg-red-100 text-red-800"
-                            }`}>
-                              {room.status === "Available" ? `${formatCurrency(room.price)} / day` : "Occupied"}
-                            </span>
-                          </div>
-                          <p className="mt-3 text-xl font-extrabold text-slate-900">Room {room.number} ({room.type})</p>
-                          <p className="text-xs text-slate-500 mt-1">Bed Type: {room.bedType || "Double"} | Capacity: {room.capacity || 2} Persons</p>
+                            }}
+                            className={`rounded-2xl border p-5 transition duration-300 backdrop-blur-md ${
+                              isSelected
+                                ? "cursor-pointer border-[#ff9f2f] bg-white/60 shadow-md ring-2 ring-[#ff9f2f]"
+                                : "cursor-pointer border-white/40 bg-white/20 hover:bg-white/40"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs uppercase tracking-wider font-semibold text-[#8b5a0a]">
+                                {room.block} - {room.floor}
+                              </span>
+                              <span className="rounded px-2 py-0.5 text-xs font-bold bg-[#0f766e]/10 text-[#0f766e]">
+                                {formatCurrency(room.price)} / day
+                              </span>
+                            </div>
+                            <p className="mt-3 text-xl font-extrabold text-slate-900">Room {room.number} ({room.type})</p>
+                            <p className="text-xs text-slate-500 mt-1">Bed Type: {room.bedType || "Double"} | Capacity: {room.capacity || 2} Persons</p>
 
-                          <div className="mt-4 border-t border-slate-200/50 pt-3">
-                            <p className="text-xs font-bold text-slate-700">Amenities Included:</p>
-                            <div className="mt-1 flex flex-wrap gap-1">
-                              {(room.amenities || []).slice(0, 4).map((amenity) => (
-                                <span
-                                  key={amenity}
-                                  className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-600 font-medium"
-                                >
-                                  {amenity}
-                                </span>
-                              ))}
+                            <div className="mt-4 border-t border-slate-200/50 pt-3">
+                              <p className="text-xs font-bold text-slate-700">Amenities Included:</p>
+                              <div className="mt-1 flex flex-wrap gap-1">
+                                {(room.amenities || []).slice(0, 4).map((amenity) => (
+                                  <span
+                                    key={amenity}
+                                    className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-600 font-medium"
+                                  >
+                                    {amenity}
+                                  </span>
+                                ))}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
                   </div>
+                  {availableRooms.filter((room) => room.status === "Available").length > 4 && (
+                    <div className="mt-4 text-center">
+                      <button
+                        type="button"
+                        onClick={() => setShowAllRooms(!showAllRooms)}
+                        className="inline-flex items-center justify-center px-6 py-2.5 rounded-full border-2 border-[#ff9f2f] bg-transparent text-[#ff9f2f] hover:bg-[#ff9f2f] hover:text-white font-bold text-sm transition-all duration-300 shadow-md"
+                      >
+                        {showAllRooms ? "Show Less" : "Show All Rooms"}
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* RIGHT: ROOM BOOKING FORM */}
@@ -2196,9 +2261,9 @@ const DevoteeDashboard = () => {
                         className={glassInput}
                       >
                         <option value="">-- Select Room --</option>
-                        {availableRooms.map((r) => (
-                          <option key={r.number} value={r.number} disabled={r.status !== "Available"}>
-                            Room {r.number} ({r.type} - {formatCurrency(r.price)} / day) {r.status !== "Available" ? "[Occupied]" : ""}
+                        {availableRooms.filter((r) => r.status === "Available").map((r) => (
+                          <option key={r.number} value={r.number}>
+                            Room {r.number} ({r.type} - {formatCurrency(r.price)} / day)
                           </option>
                         ))}
                       </select>
