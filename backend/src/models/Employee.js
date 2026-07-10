@@ -118,6 +118,10 @@ const employeeSchema = new mongoose.Schema({
     type: String,
   },
 
+  biometricId: {
+    type: String,
+  },
+
   currentDuty: {
     dutyName: { type: String, default: "", trim: true },
     shift: { type: String, default: "", trim: true },

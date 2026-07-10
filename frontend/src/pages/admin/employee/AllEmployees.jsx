@@ -452,7 +452,6 @@ const AllEmployees = () => {
                 <span>{metric.icon}</span>
               </div>
             </div>
-            <div className="mt-4 text-sm text-slate-500">{metric.delta} this month</div>
           </motion.div>
         ))}
       </div>
@@ -741,29 +740,7 @@ const AllEmployees = () => {
             </SectionCard>
           </div>
 
-          <SectionCard
-            title="Payroll Trends"
-            subtitle="Monthly salary spend and growth."
-            className="h-full"
-            topRight={
-              <select value={payrollRoleFilter} onChange={(e) => setPayrollRoleFilter(e.target.value)} className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs outline-none">
-                {roleFilterOptions.map((role) => <option key={role}>{role}</option>)}
-              </select>
-            }
-          >
-            <ResponsiveContainer width="100%" height={260}>
-              <AreaChart data={payrollTrendData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="payrollGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#eab308" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#eab308" stopOpacity={0.08} />
-                  </linearGradient>
-                </defs>
-                <Tooltip cursor={{ stroke: "#cbd5e1", strokeWidth: 1 }} />
-                <Area type="monotone" dataKey="salary" stroke="#f59e0b" fill="url(#payrollGradient)" strokeWidth={3} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </SectionCard>
+
         </div>
 
         <div className="space-y-5">
@@ -792,21 +769,7 @@ const AllEmployees = () => {
             </div>
           </SectionCard>
 
-          <SectionCard title="Upcoming Birthdays" subtitle="Celebrate temple staff members." className="overflow-hidden">
-            <div className="space-y-4">
-              {upcomingBirthdays.map((item) => (
-                <div key={item.name} className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="font-semibold text-slate-900">{item.name}</p>
-                      <p className="text-sm text-slate-500">{item.role}</p>
-                    </div>
-                    <span className="rounded-full bg-cyan-100 px-3 py-1 text-xs font-semibold text-cyan-700">{item.date}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </SectionCard>
+
 
           <SectionCard title="Employee Distribution" subtitle="Live role proportion in the temple workforce." className="text-center">
             <ResponsiveContainer width="100%" height={280}>

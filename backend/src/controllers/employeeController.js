@@ -93,6 +93,7 @@ exports.createEmployee = async (req, res) => {
       joiningDate,
       employmentType,
       photo,
+      biometricId,
     } = req.body;
 
     const normalizedEmail = String(email || "").toLowerCase().trim();
@@ -242,6 +243,7 @@ if (joiningDateObj > today) {
       employmentType,
       defaultDuty: normalizedDefaultDuty,
       dutyLocation: normalizedDutyLocation,
+      biometricId,
       photo,
     });
 

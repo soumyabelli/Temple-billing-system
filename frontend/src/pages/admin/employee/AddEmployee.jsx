@@ -32,6 +32,7 @@ const initialForm = {
   defaultShift: "Morning",
   defaultDuty: "",
   dutyLocation: "Main Temple Hall",
+  biometricId: "",
   // Step 3 – Account Details
 };
 
@@ -244,6 +245,7 @@ const AddEmployee = () => {
   defaultShift: form.defaultShift,
   defaultDuty: form.defaultDuty,
   dutyLocation: form.dutyLocation,
+  biometricId: form.biometricId.trim(),
   currentDuty: {
     dutyName: form.defaultDuty,
     shift: form.defaultShift,
@@ -623,7 +625,7 @@ const AddEmployee = () => {
                 </label>
 
                 {/* Duty Location */}
-                <label className="block space-y-2 text-sm text-slate-700 md:col-span-2">
+                <label className="block space-y-2 text-sm text-slate-700">
                   Duty Location <span className="text-rose-500">*</span>
                   <select
                     value={form.dutyLocation}
@@ -637,6 +639,19 @@ const AddEmployee = () => {
                     ))}
                   </select>
                   {errors.dutyLocation && <p className="text-rose-500 text-xs mt-1">{errors.dutyLocation}</p>}
+                </label>
+
+                {/* Biometric Information */}
+                <label className="block space-y-2 text-sm text-slate-700">
+                  Biometric Information
+                  <input
+                    type="text"
+                    value={form.biometricId}
+                    onChange={handleChange("biometricId")}
+                    placeholder="e.g. Device ID or Info"
+                    className={`w-full rounded-3xl border ${errors.biometricId ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition`}
+                  />
+                  {errors.biometricId && <p className="text-rose-500 text-xs mt-1">{errors.biometricId}</p>}
                 </label>
 
                 {/* Auto-assignment info banner */}
@@ -714,9 +729,13 @@ const AddEmployee = () => {
                       <p className="text-slate-500 text-xs">Default Duty</p>
                       <p className="font-semibold text-slate-800">{form.defaultDuty || "—"}</p>
                     </div>
-                    <div className="col-span-2">
+                    <div>
                       <p className="text-slate-500 text-xs">Duty Location</p>
                       <p className="font-semibold text-slate-800">{form.dutyLocation}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-500 text-xs">Biometric Info</p>
+                      <p className="font-semibold text-slate-800">{form.biometricId || "—"}</p>
                     </div>
                   </div>
                 </div>
@@ -801,6 +820,7 @@ const AddEmployee = () => {
                 <InfoRow label="Default Shift" value={form.defaultShift} highlight />
                 <InfoRow label="Default Duty" value={form.defaultDuty || "—"} highlight />
                 <InfoRow label="Duty Location" value={form.dutyLocation || "—"} highlight />
+                <InfoRow label="Biometric Info" value={form.biometricId || "—"} highlight />
               </div>
             </div>
 
