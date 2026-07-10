@@ -19,6 +19,7 @@ import CashierPageShell from "../../components/cashier/CashierPageShell";
 import { getDevoteesForCashier } from "../../services/authService";
 import {
   fetchBookings,
+  fetchRoomBookings,
   fetchDonations,
   fetchInventoryItems,
   fetchPrasadamOrders,
@@ -63,6 +64,7 @@ const CashierDashboardPage = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [bookings, setBookings] = useState([]);
+  const [roomBookings, setRoomBookings] = useState([]);
   const [donations, setDonations] = useState([]);
   const [prasadamOrders, setPrasadamOrders] = useState([]);
   const [bills, setBills] = useState([]);
@@ -104,8 +106,9 @@ const CashierDashboardPage = () => {
     (async () => {
       setLoading(true);
       try {
-        const [bookingRows, donationRows, prasadamRows, billRows, inventoryRows, devoteeRows] = await Promise.allSettled([
+        const [bookingRows, roomBookingRows, donationRows, prasadamRows, billRows, inventoryRows, devoteeRows] = await Promise.allSettled([
           fetchBookings(),
+          fetchRoomBookings(),
           fetchDonations(),
           fetchPrasadamOrders(),
           fetchBills(),
@@ -116,6 +119,7 @@ const CashierDashboardPage = () => {
         if (!mounted) return;
 
         setBookings(bookingRows.status === "fulfilled" ? bookingRows.value : []);
+        setRoomBookings(roomBookingRows.status === "fulfilled" ? roomBookingRows.value : []);
         setDonations(donationRows.status === "fulfilled" ? donationRows.value : []);
         setPrasadamOrders(prasadamRows.status === "fulfilled" ? prasadamRows.value : []);
         setBills(billRows.status === "fulfilled" ? billRows.value : []);
@@ -433,6 +437,15 @@ const CashierDashboardPage = () => {
       value: formatCurrency(sumBy(prasadamOrders, (order) => order.amount || order.totalPrice)),
       note: `${prasadamOrders.length} orders total`,
       tone: "blue",
+    },
+    {
+      title: "Room Booked Revenue",
+      value: formatCurrency(sumBy(
+        roomBookings.filter(rb => ["paid", "completed"].includes(String(rb.status || "").toLowerCase())),
+        (rb) => rb.amount || 0
+      )),
+      note: `${roomBookings.filter(rb => ["paid", "completed"].includes(String(rb.status || "").toLowerCase())).length} paid room booking${roomBookings.filter(rb => ["paid", "completed"].includes(String(rb.status || "").toLowerCase())).length !== 1 ? "s" : ""}`,
+      tone: "purple",
     },
   ];
 

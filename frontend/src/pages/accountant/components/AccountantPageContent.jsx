@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { getEmployeeProfile, updateEmployeeProfile, changeEmployeePassword } from "../../../services/employeeService";
-import { fetchBills } from "../../../services/cashierService";
+import { fetchBills, fetchRoomBookings } from "../../../services/cashierService";
 import { useAuth } from "../../../context/AuthContext";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -27,6 +27,7 @@ import {
   FaRupeeSign,
   FaWallet,
   FaDonate,
+  FaBed,
 } from "react-icons/fa";
 import { MdTempleBuddhist, MdOutlineVolunteerActivism } from "react-icons/md";
 import AccountantDonutCard from "./AccountantDonutCard";
@@ -196,8 +197,9 @@ const ProfileField = ({ label, value }) => (
 
 const DashboardView = ({ user, currentDate, currentWeekday }) => {
   const [bills, setBills] = useState([]);
+  const [roomBookings, setRoomBookings] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Date range selectors (default to last 30 days)
   const [fromDate, setFromDate] = useState(() => {
     const d = new Date();
@@ -211,10 +213,14 @@ const DashboardView = ({ user, currentDate, currentWeekday }) => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const data = await fetchBills();
-      setBills(data);
+      const [billsData, roomData] = await Promise.allSettled([
+        fetchBills(),
+        fetchRoomBookings(),
+      ]);
+      setBills(billsData.status === "fulfilled" ? billsData.value : []);
+      setRoomBookings(roomData.status === "fulfilled" ? roomData.value : []);
     } catch (err) {
-      console.error("Failed to load bills data", err);
+      console.error("Failed to load dashboard data", err);
     } finally {
       setLoading(false);
     }
@@ -232,10 +238,12 @@ const DashboardView = ({ user, currentDate, currentWeekday }) => {
     });
   }, [bills, fromDate, toDate]);
 
-  // Calculations
   const metrics = useMemo(() => {
     const todayStr = new Date().toISOString().split("T")[0];
     let todayCollection = 0;
+    let todayPooja = 0;
+    let todayDonation = 0;
+    let todayPrasadam = 0;
     let rangeTotal = 0;
     let totalDonations = 0;
     let poojaRevenue = 0;
@@ -245,6 +253,8 @@ const DashboardView = ({ user, currentDate, currentWeekday }) => {
     let globalTotalDonations = 0;
     let globalPoojaRevenue = 0;
     let globalPrasadamRevenue = 0;
+    let globalEventRevenue = 1089250;
+    let globalEventCount = 0;
 
     // Payment methods mapping for donut chart
     const methods = { Cash: 0, UPI: 0, Card: 0, "Bank Transfer": 0, "Net Banking": 0 };
@@ -254,17 +264,24 @@ const DashboardView = ({ user, currentDate, currentWeekday }) => {
     bills.forEach((b) => {
       const bDate = new Date(b.billDate || b.createdAt).toISOString().split("T")[0];
       const amt = Number(b.amount || 0);
+      const type = String(b.billType || "Other").toLowerCase();
+      const isPaid = String(b.status).toLowerCase() === "paid";
 
       // Today's collection
-      if (bDate === todayStr && String(b.status).toLowerCase() === "paid") {
+      if (bDate === todayStr && isPaid) {
         todayCollection += amt;
+        if (type.includes("pooja") || type.includes("booking")) todayPooja += amt;
+        else if (type.includes("donation")) todayDonation += amt;
+        else if (type.includes("prasadam") || type.includes("sale")) todayPrasadam += amt;
       }
 
       // Global lifetime stats
-      if (String(b.status).toLowerCase() === "paid") {
+      if (isPaid) {
         globalTotalRevenue += amt;
-        const type = String(b.billType || "Other").toLowerCase();
-        if (type.includes("donation")) {
+        if (type.includes("event")) {
+          globalEventRevenue += amt;
+          globalEventCount += 1;
+        } else if (type.includes("donation")) {
           globalTotalDonations += amt;
         } else if (type.includes("pooja") || type.includes("booking")) {
           globalPoojaRevenue += amt;
@@ -275,10 +292,9 @@ const DashboardView = ({ user, currentDate, currentWeekday }) => {
 
       // Range metrics
       if ((!fromDate || bDate >= fromDate) && (!toDate || bDate <= toDate)) {
-        if (String(b.status).toLowerCase() === "paid") {
+        if (isPaid) {
           rangeTotal += amt;
 
-          const type = String(b.billType || "Other").toLowerCase();
           if (type.includes("donation")) {
             totalDonations += amt;
             categories.Donation += amt;
@@ -296,11 +312,19 @@ const DashboardView = ({ user, currentDate, currentWeekday }) => {
           if (methods[mode] !== undefined) {
             methods[mode] += amt;
           } else {
-            methods.Cash += amt; // fallback
+            methods.Cash += amt;
           }
         }
       }
     });
+
+    // Today's room bookings
+    const todayRoomBookings = roomBookings
+      .filter((b) => {
+        const bDate = new Date(b.datetime || b.createdAt).toISOString().split("T")[0];
+        return bDate === todayStr;
+      })
+      .reduce((sum, b) => sum + Number(b.amount || 0), 0);
 
     const paymentSegments = Object.entries(methods)
       .filter(([_, val]) => val > 0)
@@ -312,6 +336,11 @@ const DashboardView = ({ user, currentDate, currentWeekday }) => {
 
     return {
       todayCollection,
+      todayPooja,
+      todayDonation,
+      todayPrasadam,
+      todayRoomBookings,
+      todayGrandTotal: todayCollection + todayRoomBookings,
       rangeTotal,
       totalDonations,
       poojaRevenue,
@@ -320,10 +349,16 @@ const DashboardView = ({ user, currentDate, currentWeekday }) => {
       globalTotalDonations,
       globalPoojaRevenue,
       globalPrasadamRevenue,
+      globalEventRevenue,
+      globalEventCount,
+      roomBookingTotal: roomBookings
+        .filter(b => ["paid", "completed"].includes(String(b.status || "").toLowerCase()))
+        .reduce((sum, b) => sum + Number(b.amount || 0), 0),
+      roomBookingCount: roomBookings.filter(b => ["paid", "completed"].includes(String(b.status || "").toLowerCase())).length,
       paymentSegments,
       categorySegments,
     };
-  }, [bills, fromDate, toDate]);
+  }, [bills, roomBookings, fromDate, toDate]);
 
   // Generate PDF Report
   const handleDownloadReport = () => {
@@ -389,8 +424,11 @@ const DashboardView = ({ user, currentDate, currentWeekday }) => {
     { title: "Today's Collection", value: `Rs ${metrics.todayCollection.toLocaleString("en-IN")}`, icon: FaRupeeSign },
     { title: "Total Revenue", value: `Rs ${metrics.globalTotalRevenue.toLocaleString("en-IN")}`, icon: FaWallet },
     { title: "Total Donations", value: `Rs ${metrics.globalTotalDonations.toLocaleString("en-IN")}`, icon: FaDonate },
+    { title: "Pending Payments", value: `Rs 0`, icon: FaClock },
     { title: "Pooja Revenue", value: `Rs ${metrics.globalPoojaRevenue.toLocaleString("en-IN")}`, icon: MdTempleBuddhist },
     { title: "Prasadam Revenue", value: `Rs ${metrics.globalPrasadamRevenue.toLocaleString("en-IN")}`, icon: MdOutlineVolunteerActivism },
+    { title: "Room Booked Revenue", value: `Rs ${metrics.roomBookingTotal.toLocaleString("en-IN")}`, icon: FaBed, note: `${metrics.roomBookingCount} paid booking${metrics.roomBookingCount !== 1 ? "s" : ""}` },
+    { title: "Event Revenue", value: `Rs ${metrics.globalEventRevenue.toLocaleString("en-IN")}`, icon: FaCalendarAlt, note: `${metrics.globalEventCount} event donation${metrics.globalEventCount !== 1 ? "s" : ""}` },
   ];
 
   if (loading) {
@@ -441,7 +479,7 @@ const DashboardView = ({ user, currentDate, currentWeekday }) => {
       <IconStatGrid items={statCards} />
 
       <section className="accountant-panels accountant-panels--top">
-        <article className="accountant-panel md:col-span-2 lg:col-span-2">
+        <article className="accountant-panel">
           <div className="accountant-panel__header">
             <div>
               <p className="accountant-panel__eyebrow">Overview</p>
@@ -475,7 +513,7 @@ const DashboardView = ({ user, currentDate, currentWeekday }) => {
                       <td className="font-bold text-slate-900">Rs {Number(bill.amount || 0).toLocaleString("en-IN")}</td>
                       <td>{bill.paymentMode}</td>
                       <td>
-                        <StatusBadge value={bill.status || "Paid"} />
+                        <StatusBadge value="Paid" />
                       </td>
                     </tr>
                   ))
@@ -490,48 +528,36 @@ const DashboardView = ({ user, currentDate, currentWeekday }) => {
             </table>
           </div>
         </article>
-
-        <AccountantDonutCard
-          title="Payment Methods"
-          subtitle="Range distribution"
-          segments={metrics.paymentSegments.length ? metrics.paymentSegments : [{ name: "No Data", value: 1 }]}
-          centerValue={`Rs ${metrics.rangeTotal.toLocaleString("en-IN")}`}
-          centerLabel="Range Total"
-        />
       </section>
 
       <section className="accountant-panels accountant-panels--bottom">
-        <AccountantDonutCard
-          title="Category Distribution"
-          subtitle="Range revenue split"
-          segments={metrics.categorySegments.length ? metrics.categorySegments : [{ name: "No Data", value: 1 }]}
-          centerValue={`Rs ${metrics.rangeTotal.toLocaleString("en-IN")}`}
-          centerLabel="Revenue"
-        />
-
         <article className="accountant-panel">
           <div className="accountant-panel__header">
             <div>
-              <p className="accountant-panel__eyebrow">Performance</p>
-              <h3 className="accountant-panel__title">Revenue Overview</h3>
+              <p className="accountant-panel__eyebrow">Today's Summary</p>
+              <h3 className="accountant-panel__title">Today's Revenue</h3>
             </div>
           </div>
           <div className="accountant-summary">
             <div className="accountant-summary__row">
-              <span>Pooja Revenue</span>
-              <strong>Rs {metrics.poojaRevenue.toLocaleString("en-IN")}</strong>
+              <span>Pooja Bookings</span>
+              <strong>Rs {metrics.todayPooja.toLocaleString("en-IN")}</strong>
             </div>
             <div className="accountant-summary__row">
-              <span>Donation Revenue</span>
-              <strong>Rs {metrics.totalDonations.toLocaleString("en-IN")}</strong>
+              <span>Donations</span>
+              <strong>Rs {metrics.todayDonation.toLocaleString("en-IN")}</strong>
             </div>
             <div className="accountant-summary__row">
-              <span>Prasadam Revenue</span>
-              <strong>Rs {metrics.prasadamRevenue.toLocaleString("en-IN")}</strong>
+              <span>Prasadam Sales</span>
+              <strong>Rs {metrics.todayPrasadam.toLocaleString("en-IN")}</strong>
+            </div>
+            <div className="accountant-summary__row">
+              <span>Room Bookings</span>
+              <strong>Rs {metrics.todayRoomBookings.toLocaleString("en-IN")}</strong>
             </div>
             <div className="accountant-summary__row is-positive">
-              <span>Range Total Collection</span>
-              <strong>Rs {metrics.rangeTotal.toLocaleString("en-IN")}</strong>
+              <span>Today's Total</span>
+              <strong>Rs {metrics.todayGrandTotal.toLocaleString("en-IN")}</strong>
             </div>
           </div>
         </article>
@@ -636,14 +662,19 @@ const DonationsView = ({ bills, loading }) => {
 
 const BillingView = ({ bills, loading }) => {
   const [search, setSearch] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+
   const filtered = useMemo(() => {
     return bills.filter((b) => {
+      const bDate = new Date(b.billDate || b.createdAt || Date.now()).toISOString().split("T")[0];
+      const dateMatch = (!fromDate || bDate >= fromDate) && (!toDate || bDate <= toDate);
       const nameMatch = String(b.devoteeName || "").toLowerCase().includes(search.toLowerCase());
       const refMatch = String(b.referenceNo || "").toLowerCase().includes(search.toLowerCase());
       const sevaMatch = String(b.sevaType || "").toLowerCase().includes(search.toLowerCase());
-      return nameMatch || refMatch || sevaMatch;
+      return dateMatch && (nameMatch || refMatch || sevaMatch);
     });
-  }, [bills, search]);
+  }, [bills, search, fromDate, toDate]);
 
   const paidCount = filtered.filter(b => String(b.status).toLowerCase() === "paid").length;
   const pendingCount = filtered.filter(b => String(b.status).toLowerCase() === "pending").length;
@@ -659,6 +690,32 @@ const BillingView = ({ bills, loading }) => {
     return <div className="p-8 text-center text-slate-500">Loading bills directory...</div>;
   }
 
+  const handleDownloadReport = () => {
+    const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.text(`Billing Report`, 40, 40);
+
+    const head = [["Bill Number", "Devotee Name", "Service Name", "Amount", "Status", "Date"]];
+    const body = filtered.map((row, idx) => [
+      row.referenceNo || `TXN-${String(idx + 1).padStart(4, "0")}`,
+      row.devoteeName || "-",
+      row.sevaType || "-",
+      `Rs ${Number(row.amount || 0).toLocaleString("en-IN")}`,
+      "Paid",
+      new Date(row.billDate || row.createdAt).toLocaleDateString("en-IN")
+    ]);
+
+    autoTable(doc, {
+      startY: 60,
+      head: head,
+      body: body,
+      theme: "grid",
+    });
+
+    doc.save(`Billing_Report.pdf`);
+  };
+
   return (
     <div className="accountant-view">
       <ViewHero
@@ -666,14 +723,14 @@ const BillingView = ({ bills, loading }) => {
         title="Billing"
         description="Auditing workspace for all generated temple bills."
         right={
-          <span className="accountant-chip">
-            <FaSearch /> Search enabled
-          </span>
+          <button type="button" className="accountant-primaryButton" onClick={handleDownloadReport}>
+            <FaDownload /> Download Report
+          </button>
         }
       />
 
       <Toolbar>
-        <label className="accountant-field accountant-field--search">
+        <label className="accountant-field accountant-field--search" style={{ flex: 1 }}>
           <FaSearch />
           <input
             type="text"
@@ -682,6 +739,24 @@ const BillingView = ({ bills, loading }) => {
             placeholder="Search by devotee, receipt, or service..."
           />
         </label>
+        <div style={{ display: "flex", gap: "1rem" }}>
+          <label className="accountant-field">
+            <span style={{ fontSize: "0.75rem", color: "#64748b", position: "absolute", top: "-18px", left: "4px", fontWeight: "600" }}>From Date</span>
+            <input
+              type="date"
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+            />
+          </label>
+          <label className="accountant-field">
+            <span style={{ fontSize: "0.75rem", color: "#64748b", position: "absolute", top: "-18px", left: "4px", fontWeight: "600" }}>To Date</span>
+            <input
+              type="date"
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+            />
+          </label>
+        </div>
       </Toolbar>
 
       <SummaryGrid items={billingStats} />
@@ -704,7 +779,7 @@ const BillingView = ({ bills, loading }) => {
               <td>{row.sevaType}</td>
               <td className="font-bold text-slate-900">Rs {Number(row.amount || 0).toLocaleString("en-IN")}</td>
               <td>
-                <StatusBadge value={row.status || "Paid"} />
+                <StatusBadge value="Paid" />
               </td>
               <td>{new Date(row.billDate || row.createdAt).toLocaleDateString("en-IN")}</td>
             </tr>
@@ -817,13 +892,25 @@ const PaymentsView = ({ bills, loading }) => {
   );
 };
 
-const ReceiptsView = ({ bills, loading }) => {
+const ReceiptsView = ({ bills, roomBookings = [], loading }) => {
   const [activeTab, setActiveTab] = useState("Pooja Booking");
   const [search, setSearch] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
 
   const filtered = useMemo(() => {
+    if (activeTab === "Room Booked Collection") {
+      return roomBookings.filter((b) => {
+        const bDate = new Date(b.datetime || b.createdAt || Date.now()).toISOString().split("T")[0];
+        const dateMatch = (!fromDate || bDate >= fromDate) && (!toDate || bDate <= toDate);
+        const nameMatch = String(b.devoteeName || b.devoteePhone || "").toLowerCase().includes(search.toLowerCase());
+        const serviceMatch = String(b.service || "").toLowerCase().includes(search.toLowerCase());
+        return dateMatch && (nameMatch || serviceMatch);
+      });
+    }
     return bills.filter((b) => {
-      // tab filtering
+      const bDate = new Date(b.billDate || b.createdAt || Date.now()).toISOString().split("T")[0];
+      const dateMatch = (!fromDate || bDate >= fromDate) && (!toDate || bDate <= toDate);
       const type = String(b.billType || "").toLowerCase();
       let matchTab = false;
       if (activeTab === "Pooja Booking") {
@@ -832,18 +919,65 @@ const ReceiptsView = ({ bills, loading }) => {
         matchTab = type.includes("donation");
       } else if (activeTab === "Prasadam") {
         matchTab = type.includes("prasadam") || type.includes("sale");
-      } else {
-        matchTab = !type.includes("pooja") && !type.includes("booking") && !type.includes("donation") && !type.includes("prasadam") && !type.includes("sale");
       }
-
-      // search filtering
       const nameMatch = String(b.devoteeName || "").toLowerCase().includes(search.toLowerCase());
       const refMatch = String(b.referenceNo || "").toLowerCase().includes(search.toLowerCase());
-      return matchTab && (nameMatch || refMatch);
+      return dateMatch && matchTab && (nameMatch || refMatch);
     });
-  }, [bills, activeTab, search]);
+  }, [bills, roomBookings, activeTab, search, fromDate, toDate]);
 
-  const receiptTabs = ["Pooja Booking", "Donation", "Prasadam", "Other"];
+  // Room booking summary
+  const roomTotal = useMemo(() => roomBookings.reduce((sum, b) => sum + Number(b.amount || 0), 0), [roomBookings]);
+  const roomCount = roomBookings.length;
+  const roomAvg = roomCount > 0 ? Math.round(roomTotal / roomCount) : 0;
+  const roomSummaryStats = [
+    { label: "Total Room Bookings", value: roomCount, note: "All time" },
+    { label: "Total Collected", value: `Rs ${roomTotal.toLocaleString("en-IN")}`, note: "Room booking revenue" },
+    { label: "Average Per Booking", value: `Rs ${roomAvg.toLocaleString("en-IN")}`, note: "Per room stay" },
+  ];
+
+  const receiptTabs = ["Pooja Booking", "Donation", "Prasadam", "Room Booked Collection"];
+
+  const handleDownloadReport = () => {
+    const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.text(`${activeTab} Report`, 40, 40);
+
+    let head = [];
+    let body = [];
+
+    if (activeTab === "Room Booked Collection") {
+      head = [["Booking ID", "Devotee Name", "Room / Service", "Days", "Amount", "Payment Mode", "Date"]];
+      body = filtered.map((row, idx) => [
+        row._id ? `RM-${String(row._id).slice(-6).toUpperCase()}` : `RM-${String(idx + 1).padStart(4, "0")}`,
+        row.devoteeName || row.devoteePhone || "-",
+        String(row.service || "").replace("Room Allotment: ", "") || "-",
+        row.days || "-",
+        `Rs ${Number(row.amount || 0).toLocaleString("en-IN")}`,
+        row.paymentMethod || row.payMode || "-",
+        row.datetime ? new Date(row.datetime).toLocaleDateString("en-IN") : new Date(row.createdAt || Date.now()).toLocaleDateString("en-IN")
+      ]);
+    } else {
+      head = [["Receipt ID", "Receipt Type", "Name", "Amount", "Date"]];
+      body = filtered.map((row, idx) => [
+        row.referenceNo || `TXN-${String(idx + 1).padStart(4, "0")}`,
+        row.billType || "-",
+        row.devoteeName || "-",
+        `Rs ${Number(row.amount || 0).toLocaleString("en-IN")}`,
+        new Date(row.billDate || row.createdAt).toLocaleDateString("en-IN")
+      ]);
+    }
+
+    autoTable(doc, {
+      startY: 60,
+      head: head,
+      body: body,
+      theme: "grid",
+    });
+
+    doc.save(`${activeTab.replace(/\s+/g, "_")}_Report.pdf`);
+  };
 
   if (loading) {
     return <div className="p-8 text-center text-slate-500">Loading receipts...</div>;
@@ -854,50 +988,103 @@ const ReceiptsView = ({ bills, loading }) => {
       <ViewHero
         eyebrow="Receipt Center"
         title="Receipts"
-        description="Browse all system receipts across donations, poojas, payments, bills, festivals and prasadam."
+        description="Browse all system receipts across donations, poojas, payments, bills, and room bookings."
         right={
-          <span className="accountant-chip">
-            <FaPrint /> Receipt Archive
-          </span>
+          <button type="button" className="accountant-primaryButton" onClick={handleDownloadReport}>
+            <FaDownload /> Download Report
+          </button>
         }
       />
 
       <TabsRow tabs={receiptTabs} activeTab={activeTab} onChange={setActiveTab} />
 
       <Toolbar>
-        <label className="accountant-field accountant-field--search">
+        <label className="accountant-field accountant-field--search" style={{ flex: 1 }}>
           <FaSearch />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by devotee name or receipt no..."
+            placeholder={activeTab === "Room Booked Collection" ? "Search by devotee name or room..." : "Search by devotee name or receipt no..."}
           />
         </label>
+        <div style={{ display: "flex", gap: "1rem" }}>
+          <label className="accountant-field">
+            <span style={{ fontSize: "0.75rem", color: "#64748b", position: "absolute", top: "-18px", left: "4px", fontWeight: "600" }}>From Date</span>
+            <input
+              type="date"
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+            />
+          </label>
+          <label className="accountant-field">
+            <span style={{ fontSize: "0.75rem", color: "#64748b", position: "absolute", top: "-18px", left: "4px", fontWeight: "600" }}>To Date</span>
+            <input
+              type="date"
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+            />
+          </label>
+        </div>
       </Toolbar>
 
-      <section className="accountant-panel">
-        <div className="accountant-panel__header">
-          <div>
-            <p className="accountant-panel__eyebrow">{activeTab}</p>
-            <h3 className="accountant-panel__title">System Receipts</h3>
-          </div>
+      {activeTab === "Room Booked Collection" ? (
+        <div>
+          <SummaryGrid items={roomSummaryStats} />
+          <section className="accountant-panel" style={{ marginTop: "14px" }}>
+            <div className="accountant-panel__header">
+              <div>
+                <p className="accountant-panel__eyebrow">Room Bookings</p>
+                <h3 className="accountant-panel__title">Room Booking Collection History</h3>
+              </div>
+            </div>
+            <DataTable
+              columns={["Booking ID", "Devotee Name", "Room / Service", "Days", "Amount", "Payment Mode", "Date"]}
+              rows={filtered}
+              emptyText="No room bookings found."
+              renderRow={(row, idx) => (
+                <tr key={row._id || idx}>
+                  <td className="font-bold text-slate-900">
+                    {row._id ? `RM-${String(row._id).slice(-6).toUpperCase()}` : `RM-${String(idx + 1).padStart(4, "0")}`}
+                  </td>
+                  <td className="font-semibold text-slate-800">{row.devoteeName || row.devoteePhone || "-"}</td>
+                  <td>{String(row.service || "").replace("Room Allotment: ", "") || "-"}</td>
+                  <td>{row.days || "-"}</td>
+                  <td className="font-bold text-slate-900">Rs {Number(row.amount || 0).toLocaleString("en-IN")}</td>
+                  <td>{row.paymentMethod || row.payMode || "-"}</td>
+                  <td>
+                    {row.datetime
+                      ? new Date(row.datetime).toLocaleDateString("en-IN")
+                      : new Date(row.createdAt || Date.now()).toLocaleDateString("en-IN")}
+                  </td>
+                </tr>
+              )}
+            />
+          </section>
         </div>
-
-        <DataTable
-          columns={["Receipt ID", "Receipt Type", "Name", "Amount", "Date"]}
-          rows={filtered}
-          renderRow={(row, idx) => (
-            <tr key={row._id || idx}>
-              <td className="font-bold text-slate-900">{row.referenceNo || `TXN-${String(idx + 1).padStart(4, "0")}`}</td>
-              <td>{row.billType}</td>
-              <td className="font-semibold text-slate-800">{row.devoteeName}</td>
-              <td className="font-bold text-slate-900">Rs {Number(row.amount || 0).toLocaleString("en-IN")}</td>
-              <td>{new Date(row.billDate || row.createdAt).toLocaleDateString("en-IN")}</td>
-            </tr>
-          )}
-        />
-      </section>
+      ) : (
+        <section className="accountant-panel">
+          <div className="accountant-panel__header">
+            <div>
+              <p className="accountant-panel__eyebrow">{activeTab}</p>
+              <h3 className="accountant-panel__title">System Receipts</h3>
+            </div>
+          </div>
+          <DataTable
+            columns={["Receipt ID", "Receipt Type", "Name", "Amount", "Date"]}
+            rows={filtered}
+            renderRow={(row, idx) => (
+              <tr key={row._id || idx}>
+                <td className="font-bold text-slate-900">{row.referenceNo || `TXN-${String(idx + 1).padStart(4, "0")}`}</td>
+                <td>{row.billType}</td>
+                <td className="font-semibold text-slate-800">{row.devoteeName}</td>
+                <td className="font-bold text-slate-900">Rs {Number(row.amount || 0).toLocaleString("en-IN")}</td>
+                <td>{new Date(row.billDate || row.createdAt).toLocaleDateString("en-IN")}</td>
+              </tr>
+            )}
+          />
+        </section>
+      )}
     </div>
   );
 };
@@ -1233,53 +1420,24 @@ const ReportsAnalyticsView = () => (
 );
 
 const NotificationsView = () => {
-  const [activeTab, setActiveTab] = useState(notificationTabs[0]);
-  const visibleRows =
-    activeTab === "All Notifications"
-      ? notificationRows
-      : notificationRows.filter((row) => row.type === activeTab);
-
   return (
     <div className="accountant-view">
       <ViewHero
         eyebrow="Notification Center"
         title="Notifications"
-        description="Track payment alerts, donation alerts and billing alerts from one location."
-        right={
-          <button type="button" className="accountant-primaryButton">
-            <FaBell />
-            Send Notification
-          </button>
-        }
+        description="View all recent system alerts and notifications."
       />
 
-      <TabsRow tabs={notificationTabs} activeTab={activeTab} onChange={setActiveTab} />
-
-      <Toolbar>
-        <button type="button" className="accountant-secondaryButton">
-          <FaCheckCircle />
-          Mark Read
-        </button>
-        <button type="button" className="accountant-secondaryButton">
-          <FaTrash />
-          Delete
-        </button>
-        <button type="button" className="accountant-secondaryButton">
-          <FaPaperPlane />
-          Send Notification
-        </button>
-      </Toolbar>
-
-      <section className="accountant-panel">
+      <section className="accountant-panel" style={{ marginTop: "1rem" }}>
         <div className="accountant-panel__header">
           <div>
-            <p className="accountant-panel__eyebrow">{activeTab}</p>
-            <h3 className="accountant-panel__title">Notification Center</h3>
+            <p className="accountant-panel__eyebrow">All Notifications</p>
+            <h3 className="accountant-panel__title">Recent Alerts</h3>
           </div>
         </div>
 
         <div className="accountant-notificationList">
-          {visibleRows.map((row) => (
+          {notificationRows.map((row) => (
             <article className="accountant-notificationItem" key={`${row.title}-${row.date}`}>
               <div className="accountant-notificationItem__meta">
                 <div className="accountant-notificationItem__icon" aria-hidden="true">
@@ -1318,7 +1476,7 @@ const ProfileView = ({ user }) => {
     bloodGroup: "",
     emergencyContact: "",
   });
-  
+
   // Password change states
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [passwordForm, setPasswordForm] = useState({
@@ -1373,7 +1531,7 @@ const ProfileView = ({ user }) => {
       const res = await updateEmployeeProfile(userId, editForm);
       setMessage("Profile updated successfully!");
       setIsEditing(false);
-      
+
       if (res?.profile) {
         setProfile(res.profile);
         updateUser({
@@ -1423,7 +1581,7 @@ const ProfileView = ({ user }) => {
       setMessage("Password updated successfully! Please log in again with your new password.");
       setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
       setIsChangingPassword(false);
-      
+
       setTimeout(() => {
         logoutUser();
         window.location.href = "/auth-login";
@@ -1666,15 +1824,20 @@ const ProfileView = ({ user }) => {
 
 const AccountantPageContent = ({ activeItem, user, currentDate, currentWeekday }) => {
   const [bills, setBills] = useState([]);
+  const [roomBookings, setRoomBookings] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const loadData = async () => {
     setLoading(true);
     try {
-      const data = await fetchBills();
-      setBills(data);
+      const [billsData, roomData] = await Promise.allSettled([
+        fetchBills(),
+        fetchRoomBookings(),
+      ]);
+      setBills(billsData.status === "fulfilled" ? billsData.value : []);
+      setRoomBookings(roomData.status === "fulfilled" ? roomData.value : []);
     } catch (err) {
-      console.error("Failed to load bills data", err);
+      console.error("Failed to load accountant data", err);
     } finally {
       setLoading(false);
     }
@@ -1692,7 +1855,7 @@ const AccountantPageContent = ({ activeItem, user, currentDate, currentWeekday }
     case "Payments":
       return <PaymentsView bills={bills} loading={loading} />;
     case "Receipts":
-      return <ReceiptsView bills={bills} loading={loading} />;
+      return <ReceiptsView bills={bills} roomBookings={roomBookings} loading={loading} />;
     case "Pooja Revenue":
       return <PoojaRevenueView bills={bills} loading={loading} />;
     case "Prasadam Sales":

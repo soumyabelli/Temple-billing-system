@@ -4,6 +4,7 @@ const StatCard = ({ title, value, note, tone = "orange" }) => {
     gold: "bg-[#fffbe0] border-[#efd98f] text-[#805500]",
     green: "bg-[#eefaf0] border-[#bfe6c6] text-[#116530]",
     blue: "bg-[#edf4ff] border-[#bed0ff] text-[#234ea5]",
+    purple: "bg-[#f5f3ff] border-[#c4b5fd] text-[#5b21b6]",
   };
 
   return (

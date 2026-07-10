@@ -18,15 +18,9 @@ import { TbReportAnalytics } from "react-icons/tb";
 
 export const accountantSidebarPrimary = [
   { label: "Dashboard", icon: FaHome },
-  { label: "Donations", icon: FaDonate },
   { label: "Billing", icon: FaFileInvoiceDollar },
-  { label: "Payments", icon: MdPayments },
   { label: "Receipts", icon: FaReceipt },
-  { label: "Pooja Revenue", icon: MdTempleBuddhist },
-  { label: "Prasadam Sales", icon: MdOutlineVolunteerActivism },
   { label: "Inventory Finance", icon: FaBoxes },
-  { label: "Devotee Payments", icon: FaUsers },
-  { label: "Reports & Analytics", icon: TbReportAnalytics },
 ];
 
 export const accountantSidebarUtility = [
@@ -444,11 +438,8 @@ export const notificationTabs = [
 ];
 
 export const notificationRows = [
-  { title: "Payment Alert", type: "Payment Alerts", message: "TXN1254 is pending verification.", date: "23 May 2025", status: "Unread" },
-  { title: "Donation Alert", type: "Donation Alerts", message: "New donation of Rs 10,000 recorded.", date: "23 May 2025", status: "Unread" },
-  { title: "Billing Alert", type: "Billing Alerts", message: "Bill BILL1256 is overdue.", date: "22 May 2025", status: "Read" },
-  { title: "Payment Alert", type: "Payment Alerts", message: "UPI settlement received from bank.", date: "22 May 2025", status: "Read" },
-  { title: "Donation Alert", type: "Donation Alerts", message: "Annadanam donation campaign is active.", date: "21 May 2025", status: "Unread" },
+  { title: "Event Alert", type: "Event Alerts", message: "Admin created a new event: Annual Brahmotsavam.", date: "Today", status: "Unread" },
+  { title: "Event Alert", type: "Event Alerts", message: "Admin postponed event: Temple Anniversary.", date: "Yesterday", status: "Read" },
 ];
 
 export const profileDetails = {

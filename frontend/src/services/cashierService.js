@@ -86,6 +86,14 @@ export const fetchBookings = async () => {
   return response.data?.bookings || [];
 };
 
+export const fetchRoomBookings = async () => {
+  const response = await axios.get(`${API_BASE}/devotee/bookings`);
+  const all = response.data?.bookings || [];
+  return all.filter((b) =>
+    String(b.service || "").toLowerCase().includes("room allotment")
+  );
+};
+
 export const createBooking = async (payload) => {
   const response = await axios.post(`${API_BASE}/devotee/bookings`, payload);
   return response.data || null;

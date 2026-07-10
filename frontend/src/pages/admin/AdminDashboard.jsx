@@ -190,12 +190,7 @@ const AdminDashboard = () => {
         hideTrend: true,
         ...cardIcons.prasadam,
       },
-      {
-        title: "Pending Payments",
-        amount: formatRs(pendingPayments),
-        hideTrend: true,
-        ...cardIcons.pending,
-      },
+
       {
         title: "Total Devotees",
         amount: String(devoteeUsers.length),

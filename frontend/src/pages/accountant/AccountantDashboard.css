@@ -404,11 +404,11 @@
 }
 
 .accountant-panels--top {
-  grid-template-columns: 1.18fr 1fr 1.05fr;
+  grid-template-columns: 1fr;
 }
 
 .accountant-panels--bottom {
-  grid-template-columns: 0.95fr 0.95fr 1.1fr;
+  grid-template-columns: 1fr;
 }
 
 .accountant-panel {
