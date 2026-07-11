@@ -100,6 +100,16 @@ const employeeSchema = new mongoose.Schema({
   required: true,
 },
 
+  bankName: {
+    type: String,
+    required: true,
+  },
+
+  accountNumber: {
+    type: String,
+    required: true,
+  },
+
   employmentType: {
   type: String,
   enum: ["Full Time", "Part Time", "Contract"],

@@ -34,6 +34,8 @@ const initialForm = {
   dutyLocation: "Main Temple Hall",
   biometricId: "",
   // Step 3 – Account Details
+  bankName: "",
+  accountNumber: "",
 };
 
 const draftKey = "adminEmployeeDraft";
@@ -222,6 +224,18 @@ const AddEmployee = () => {
     e.preventDefault();
     setMessage(null);
 
+    // Validate bank details before saving
+    if (!form.bankName || form.bankName.trim() === "") {
+      setMessage({ type: "error", text: "Bank Name is required." });
+      return;
+    }
+
+    const acc = form.accountNumber ? form.accountNumber.trim() : "";
+    if (!acc || !/^[0-9]{9,18}$/.test(acc)) {
+      setMessage({ type: "error", text: "Valid Account Number (9-18 digits) is required." });
+      return;
+    }
+
     setIsSaving(true);
     try {
       const photoDataUrl = await readFileAsDataUrl(form.photo);
@@ -257,6 +271,8 @@ const AddEmployee = () => {
   },
 
   photo: photoDataUrl,
+  bankName: form.bankName.trim(),
+  accountNumber: form.accountNumber.trim(),
 };
       const response = await createEmployee(payload);
       setCredentials(response.credentials);
@@ -681,6 +697,28 @@ const AddEmployee = () => {
                       Employee ID, username, and temporary password will be generated and sent to the employee's email automatically after Save Employee.
                     </div>
 
+                    <label className="block space-y-2 text-sm text-slate-700">
+                      <span className="font-medium">Bank Name *</span>
+                      <input
+                        type="text"
+                        value={form.bankName}
+                        onChange={handleChange("bankName")}
+                        placeholder="e.g. State Bank of India"
+                        className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition"
+                      />
+                    </label>
+
+                    <label className="block space-y-2 text-sm text-slate-700">
+                      <span className="font-medium">Account Number *</span>
+                      <input
+                        type="text"
+                        value={form.accountNumber}
+                        onChange={handleChange("accountNumber")}
+                        placeholder="e.g. 123456789012"
+                        className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition"
+                      />
+                    </label>
+
                 {/* Summary Review */}
                 <div className="md:col-span-2 rounded-3xl border border-slate-200 bg-slate-50 p-5 space-y-3">
                   <p className="text-sm font-semibold text-slate-700 mb-3">Review Before Saving</p>
@@ -736,6 +774,14 @@ const AddEmployee = () => {
                     <div>
                       <p className="text-slate-500 text-xs">Biometric Info</p>
                       <p className="font-semibold text-slate-800">{form.biometricId || "—"}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-500 text-xs">Bank Name</p>
+                      <p className="font-semibold text-slate-800">{form.bankName || "—"}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-500 text-xs">Account Number</p>
+                      <p className="font-semibold text-slate-800">{form.accountNumber || "—"}</p>
                     </div>
                   </div>
                 </div>

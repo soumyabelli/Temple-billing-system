@@ -94,6 +94,8 @@ exports.createEmployee = async (req, res) => {
       employmentType,
       photo,
       biometricId,
+      bankName,
+      accountNumber,
     } = req.body;
 
     const normalizedEmail = String(email || "").toLowerCase().trim();
@@ -142,6 +144,14 @@ exports.createEmployee = async (req, res) => {
     message: "Valid emergency contact is required."
   });
 }
+
+    if (!bankName || bankName.trim() === "") {
+      return res.status(400).json({ message: "Bank Name is required." });
+    }
+
+    if (!accountNumber || accountNumber.trim() === "" || !/^[0-9]{9,18}$/.test(accountNumber)) {
+      return res.status(400).json({ message: "Valid Account Number (9-18 digits) is required." });
+    }
 
     // joiningDate is optional and may be a future date (planned join).
     // If provided, ensure it's a valid date and consistent with DOB.
@@ -245,6 +255,8 @@ if (joiningDateObj > today) {
       dutyLocation: normalizedDutyLocation,
       biometricId,
       photo,
+      bankName: bankName.trim(),
+      accountNumber: accountNumber.trim(),
     });
 
     await User.create({
@@ -342,6 +354,22 @@ exports.updateEmployee = async (req, res) => {
       }
       updateData.email = normalizedEmail;
     }
+
+    if (updateData.bankName !== undefined) {
+      if (!updateData.bankName || String(updateData.bankName).trim() === "") {
+        return res.status(400).json({ message: "Bank Name is required." });
+      }
+      updateData.bankName = String(updateData.bankName).trim();
+    }
+
+    if (updateData.accountNumber !== undefined) {
+      const acc = String(updateData.accountNumber).trim();
+      if (!acc || !/^[0-9]{9,18}$/.test(acc)) {
+        return res.status(400).json({ message: "Valid Account Number (9-18 digits) is required." });
+      }
+      updateData.accountNumber = acc;
+    }
+
 
     if (updateData.password) {
       updateData.password = await bcrypt.hash(updateData.password, 10);

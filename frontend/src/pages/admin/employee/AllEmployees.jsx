@@ -586,6 +586,14 @@ const AllEmployees = () => {
               <p className="mt-1 font-semibold text-slate-900">{formatCurrency(selectedEmployee.salary)}</p>
             </div>
             <div className="rounded-3xl border border-slate-200 bg-white p-4">
+              <p className="text-sm text-slate-500">Bank Name</p>
+              <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.bankName || "-"}</p>
+            </div>
+            <div className="rounded-3xl border border-slate-200 bg-white p-4">
+              <p className="text-sm text-slate-500">Account Number</p>
+              <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.accountNumber || "-"}</p>
+            </div>
+            <div className="rounded-3xl border border-slate-200 bg-white p-4">
               <p className="text-sm text-slate-500">Current Duty</p>
               <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.currentDuty?.dutyName || selectedEmployee.defaultDuty || "-"}</p>
             </div>
