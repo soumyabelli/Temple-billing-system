@@ -33,6 +33,7 @@ import { MdTempleBuddhist, MdOutlineVolunteerActivism } from "react-icons/md";
 import AccountantDonutCard from "./AccountantDonutCard";
 import AccountantRevenueChart from "./AccountantRevenueChart";
 import Attendance from "../../staff/Attendance";
+import LeaveHistory from "../../staff/LeaveHistory";
 import LeaveRequest from "../../staff/LeaveRequest";
 import {
   accountantStats,
@@ -1822,7 +1823,7 @@ const ProfileView = ({ user }) => {
   );
 };
 
-const AccountantPageContent = ({ activeItem, user, currentDate, currentWeekday }) => {
+const AccountantPageContent = ({ activeItem, setActiveItem, user, currentDate, currentWeekday }) => {
   const [bills, setBills] = useState([]);
   const [roomBookings, setRoomBookings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1877,7 +1878,13 @@ const AccountantPageContent = ({ activeItem, user, currentDate, currentWeekday }
     case "Apply Leave":
       return (
         <div style={{ padding: "2rem" }}>
-          <LeaveRequest />
+          <LeaveRequest onBack={() => setActiveItem("Leave Requests")} />
+        </div>
+      );
+    case "Leave Requests":
+      return (
+        <div style={{ padding: "2rem" }}>
+          <LeaveHistory onApply={() => setActiveItem("Apply Leave")} />
         </div>
       );
     case "Profile":

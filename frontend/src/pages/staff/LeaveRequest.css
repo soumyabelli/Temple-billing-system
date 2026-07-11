@@ -135,3 +135,119 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* History View Styles */
+.leave-history-container {
+  background: white;
+  padding: 30px;
+  border-radius: 16px;
+  border: 1px solid #ece3d8;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+}
+
+.leave-container.dark .leave-history-container {
+  background: #1f2937;
+  border-color: #374151;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.leave-history-container h1 {
+  font-size: 26px;
+  margin: 0;
+}
+
+.leave-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.leave-card {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  border: 1px solid #e9ecef;
+}
+
+.leave-container.dark .leave-card {
+  background: #374151;
+  border-color: #4b5563;
+}
+
+.leave-card.green {
+  background: #eaf8ed;
+  border-color: #c3e6cb;
+  color: #1d9c47;
+}
+
+.leave-card.red {
+  background: #fde9e9;
+  border-color: #f5c6cb;
+  color: #d13737;
+}
+
+.leave-card.orange {
+  background: #fff1df;
+  border-color: #ffeeba;
+  color: #ff7a00;
+}
+
+.leave-container.dark .leave-card.green { background: rgba(29, 156, 71, 0.1); border-color: transparent; }
+.leave-container.dark .leave-card.red { background: rgba(209, 55, 55, 0.1); border-color: transparent; }
+.leave-container.dark .leave-card.orange { background: rgba(255, 122, 0, 0.1); border-color: transparent; }
+
+.leave-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.leave-table th, .leave-table td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid #ece3d8;
+}
+
+.leave-container.dark .leave-table th, 
+.leave-container.dark .leave-table td {
+  border-bottom-color: #4b5563;
+}
+
+.leave-table th {
+  font-weight: 700;
+  color: #71695e;
+  background: #f6f2ea;
+}
+
+.leave-container.dark .leave-table th {
+  background: #111827;
+  color: #9ca3af;
+}
+
+span.Approved {
+  background: #eaf8ed;
+  color: #1d9c47;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+span.Rejected {
+  background: #fde9e9;
+  color: #d13737;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+span.Pending {
+  background: #fff1df;
+  color: #ff7a00;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+}

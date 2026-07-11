@@ -1104,15 +1104,34 @@ exports.getMyDuties = async (req, res) => {
   try {
     const priestId = req.user.id;
     const user = await User.findById(priestId);
+    
+    // Fetch Priest Employee Record to get default duty
+    const employee = await Employee.findOne({ userId: priestId });
 
     // 1. Fetch Bookings assigned to Priest
     const bookings = await Booking.find({ assignedPriest: priestId });
-    // 2. Fetch Tasks (Sevas/Special/Festival) assigned to Priest
-    const tasks = await Task.find({
-      $or: [{ staffId: priestId }, { staffEmail: user.email }]
-    });
-
+    
     const unifiedDuties = [];
+
+    // Add Priest's Default/Assigned Duty
+    if (employee && (employee.defaultDuty || employee.currentDuty?.dutyName)) {
+      const dutyName = employee.currentDuty?.dutyName || employee.defaultDuty;
+      if (dutyName) {
+        unifiedDuties.push({
+          id: employee._id.toString() + "_duty",
+          referenceType: "Task", // Use Task so it works with start/complete logic if needed
+          poojaName: dutyName,
+          devotee: "N/A",
+          date: formatDateTime(new Date()),
+          rawDate: new Date(),
+          time: employee.currentDuty?.reportingTime || employee.defaultShift || "06:00 AM",
+          area: employee.dutyLocation || employee.currentDuty?.dutyLocation || "Main Temple",
+          priority: "High",
+          assignedBy: "Admin",
+          status: "Assigned",
+        });
+      }
+    }
 
     bookings.forEach(b => {
       unifiedDuties.push({
@@ -1127,31 +1146,6 @@ exports.getMyDuties = async (req, res) => {
         priority: "High", // Default for booked poojas
         assignedBy: "Admin",
         status: b.status,
-      });
-    });
-
-    tasks.forEach(t => {
-      const taskDate = t.dateKey || new Date().toISOString().slice(0, 10);
-      const timeStr = t.time || t.startTime || "09:00 AM";
-      // Merge date and time for rawDate sorting
-      let rawDate = new Date(`${taskDate}T12:00:00`);
-      try {
-        const parsedTime = new Date(`${taskDate} ${timeStr}`);
-        if (!isNaN(parsedTime)) rawDate = parsedTime;
-      } catch (e) {}
-
-      unifiedDuties.push({
-        id: t._id,
-        referenceType: "Task",
-        poojaName: t.title || t.dutyName || t.duty || "Seva",
-        devotee: "N/A", // Sevas typically don't have a specific devotee attached in Tasks
-        date: formatDateTime(rawDate),
-        rawDate,
-        time: timeStr,
-        area: t.area || t.dutyArea || "General",
-        priority: t.priority || "Medium",
-        assignedBy: t.assignedBy || "Admin",
-        status: t.status,
       });
     });
 

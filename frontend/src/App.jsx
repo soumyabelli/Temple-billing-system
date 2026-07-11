@@ -550,6 +550,7 @@ function App() {
         <Route path="payments" element={<PaymentsPage />} />
         <Route path="reports" element={<ReportsPage />} />
         <Route path="attendance" element={<Attendance />} />
+        <Route path="leave-requests" element={<div style={{ padding: "2rem" }}><LeaveHistory /></div>} />
         <Route path="apply-leave" element={<div style={{ padding: "2rem" }}><LeaveRequest /></div>} />
         <Route path="inventory" element={<InventoryPage />} />
         <Route path="notifications" element={<NotificationsPage />} />
@@ -575,6 +576,14 @@ function App() {
       />
       <Route
         path="/priest/apply-leave"
+        element={
+          <ProtectedRoute allowedRoles={["priest"]}>
+            <PriestDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/priest/leave-requests"
         element={
           <ProtectedRoute allowedRoles={["priest"]}>
             <PriestDashboard />

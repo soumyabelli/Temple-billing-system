@@ -81,6 +81,7 @@ const AccountantDashboard = () => {
         <div className="accountant-content">
           <AccountantPageContent
             activeItem={activeItem}
+            setActiveItem={setActiveItem}
             user={user}
             currentDate={currentDate}
             currentWeekday={currentWeekday}

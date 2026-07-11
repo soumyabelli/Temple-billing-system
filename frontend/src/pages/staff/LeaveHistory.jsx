@@ -3,8 +3,9 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 
 import "./LeaveRequest.css";
+import { useNavigate } from "react-router-dom";
 
-const staff = JSON.parse(localStorage.getItem("user"));
+const staff = JSON.parse(localStorage.getItem("user") || "null");
 
 const parseDate = (value) => {
   if (!value) return null;
@@ -29,7 +30,8 @@ const formatPeriod = (fromDate, toDate) => {
   return `${fromLabel} - ${toLabel}`;
 };
 
-const LeaveHistory = () => {
+const LeaveHistory = ({ darkMode, onApply }) => {
+  const navigate = useNavigate();
 
   const [leaves, setLeaves] = useState([]);
 
@@ -38,9 +40,10 @@ const LeaveHistory = () => {
   }, []);
 
   const fetchLeaves = async () => {
-
+    if (!staff?.id && !staff?._id) return;
+    const staffId = staff?.id || staff?._id;
     const res = await axios.get(
-      `http://localhost:5000/api/leaves/${staff.id}`
+      `http://localhost:5000/api/leaves/${staffId}`
     );
 
     setLeaves(res.data);
@@ -60,9 +63,29 @@ const LeaveHistory = () => {
 
   return (
 
-    <div className="leave-history-container">
+    <div className={`leave-history-container ${darkMode ? "dark" : ""}`}>
 
-      <h1>Leave Requests</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <h1>Leave Requests</h1>
+        <button 
+          onClick={() => {
+            if (onApply) onApply();
+            else navigate("/cashier/apply-leave");
+          }}
+          style={{
+            background: "linear-gradient(120deg, #ff7e00, #ff9f2f)",
+            color: "#fff",
+            border: "none",
+            borderRadius: "10px",
+            padding: "12px 24px",
+            fontWeight: "800",
+            cursor: "pointer",
+            fontSize: "15px"
+          }}
+        >
+          Apply Leave
+        </button>
+      </div>
 
       {/* TOP CARDS */}
 
@@ -70,7 +93,7 @@ const LeaveHistory = () => {
 
         <div className="leave-card">
           <h2>{leaves.length}</h2>
-          <p>Total Leaves</p>
+          <p>Total Applied</p>
         </div>
 
         <div className="leave-card green">

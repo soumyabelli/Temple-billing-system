@@ -72,7 +72,7 @@ const PriestLayout = ({ children, onLogoutClick }) => {
         />
 
         <main className="mt-6">
-          {typeof children === "function" ? children({ activeItem, darkMode }) : children}
+          {typeof children === "function" ? children({ activeItem, setActiveItem, darkMode }) : children}
         </main>
       </div>
 

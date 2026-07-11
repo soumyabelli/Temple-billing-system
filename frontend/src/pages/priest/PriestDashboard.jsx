@@ -38,6 +38,7 @@ import PriestNotifications from "./PriestNotifications";
 import PriestProfile from "./PriestProfile";
 import PriestInventory from "./PriestInventory";
 import Attendance from "../staff/Attendance";
+import LeaveHistory from "../staff/LeaveHistory";
 import LeaveRequest from "../staff/LeaveRequest";
 import priestAvatar from "../../assets/logo.png";
 
@@ -1005,7 +1006,7 @@ const PriestDashboard = () => {
 
   return (
     <PriestLayout>
-      {({ activeItem, darkMode }) => {
+      {({ activeItem, setActiveItem, darkMode }) => {
         switch (activeItem) {
           case "Dashboard":
             return <DashboardView darkMode={darkMode} />;
@@ -1015,8 +1016,10 @@ const PriestDashboard = () => {
             return <PriestInventory darkMode={darkMode} />;
           case "Attendance":
             return <Attendance darkMode={darkMode} />;
+          case "Leave Requests":
+            return <LeaveHistory darkMode={darkMode} onApply={() => setActiveItem("Apply Leave")} />;
           case "Apply Leave":
-            return <LeaveRequest darkMode={darkMode} />;
+            return <LeaveRequest darkMode={darkMode} onBack={() => setActiveItem("Leave Requests")} />;
           case "Notifications":
             return <PriestNotifications darkMode={darkMode} />;
           case "Profile":

@@ -21,6 +21,7 @@ export const priestSidebarItems = [
   { title: "My Duties", icon: FaClipboardList, path: "/priest/my-duties" },
   { title: "Inventory Requests", icon: FaBoxOpen, path: "/priest/inventory-requests" },
   { title: "Attendance", icon: FaClock, path: "/priest/attendance" },
+  { title: "Leave Requests", icon: FaCalendarAlt, path: "/priest/leave-requests" },
   { title: "Apply Leave", icon: FaFileSignature, path: "/priest/apply-leave" },
   { title: "Notifications", icon: MdNotifications, path: "/priest/notifications" },
   { title: "Profile", icon: MdOutlinePerson, path: "/priest/profile" },

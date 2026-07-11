@@ -13,6 +13,7 @@ import {
   FaSignOutAlt,
   FaClock,
   FaFileSignature,
+  FaFileAlt,
 } from "react-icons/fa";
 
 export const cashierSidebarItems = [
@@ -24,6 +25,7 @@ export const cashierSidebarItems = [
   { title: "Receipts", icon: FaReceipt, path: "/cashier/receipts" },
   { title: "Register Devotees", icon: FaUsers, path: "/cashier/register-devotees" },
   { title: "Attendance", icon: FaClock, path: "/cashier/attendance" },
+  { title: "Leave Requests", icon: FaFileAlt, path: "/cashier/leave-requests" },
   { title: "Apply Leave", icon: FaFileSignature, path: "/cashier/apply-leave" },
   { title: "Notifications", icon: FaBell, path: "/cashier/notifications" },
   { title: "Profile", icon: FaUserCircle, path: "/cashier/profile" },
