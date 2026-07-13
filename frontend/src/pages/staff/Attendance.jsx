@@ -614,6 +614,11 @@ const Attendance = () => {
                 <p>{todayDutyArea}</p>
               </div>
               <div className="attendance-today-item">
+                <span>Assigned Location</span>
+                <strong>{todaySnapshot.attendanceLocationName || "Global Temple"}</strong>
+                <p>Location needed for Check-in</p>
+              </div>
+              <div className="attendance-today-item">
                 <span>Today Status</span>
                 <strong>{attendanceDialogStatus}</strong>
                 <p>

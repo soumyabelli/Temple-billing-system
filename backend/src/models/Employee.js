@@ -166,6 +166,12 @@ const employeeSchema = new mongoose.Schema({
     default: [],
   },
 
+  attendanceLocation: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "AttendanceLocation",
+    default: null,
+  },
+
   status: {
     type: String,
     enum: ["Active", "On Leave", "Inactive", "Suspended", "Resigned", "Retired"],

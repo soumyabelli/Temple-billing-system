@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { jsPDF } from "jspdf";
-import { FiCalendar, FiClock, FiDownload, FiEdit2, FiSave, FiUsers } from "react-icons/fi";
+import { FiCalendar, FiClock, FiDownload, FiEdit2, FiSave, FiUsers, FiCheckCircle, FiXCircle } from "react-icons/fi";
 import { FaCalendarCheck, FaRegTimesCircle, FaUserClock } from "react-icons/fa";
 
 import SectionCard from "../../../components/admin/employee/SectionCard";
@@ -620,6 +620,7 @@ const Attendances = () => {
                 <th className="px-4 py-3">Check In</th>
                 <th className="px-4 py-3">Check Out</th>
                 <th className="px-4 py-3">Working Hours</th>
+                <th className="px-4 py-3">Verification</th>
                 <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3">Action</th>
               </tr>
@@ -661,6 +662,20 @@ const Attendances = () => {
                     <td className="px-4 py-4 text-slate-600">{record.checkIn || "--"}</td>
                     <td className="px-4 py-4 text-slate-600">{record.checkOut || "--"}</td>
                     <td className="px-4 py-4 text-slate-700">{record.workingHours || "--"}</td>
+                    <td className="px-4 py-4">
+                      <div className="flex flex-col gap-1 text-[10px] font-semibold uppercase">
+                        {record.faceVerified ? (
+                          <span className="text-emerald-600 flex items-center gap-1"><FiCheckCircle size={12}/> Face</span>
+                        ) : (
+                          <span className="text-slate-400 flex items-center gap-1"><FiXCircle size={12}/> Face</span>
+                        )}
+                        {record.locationVerified ? (
+                          <span className="text-emerald-600 flex items-center gap-1"><FiCheckCircle size={12}/> Loc</span>
+                        ) : (
+                          <span className="text-slate-400 flex items-center gap-1"><FiXCircle size={12}/> Loc</span>
+                        )}
+                      </div>
+                    </td>
                     <td className="px-4 py-4">
                       <span
                         className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${statusColors[record.status] || "border-slate-200 bg-slate-100 text-slate-700"}`}
@@ -710,6 +725,7 @@ const Attendances = () => {
                 <th className="px-4 py-3">Check In</th>
                 <th className="px-4 py-3">Check Out</th>
                 <th className="px-4 py-3">Hours</th>
+                <th className="px-4 py-3">Verification</th>
                 <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3">Action</th>
               </tr>
@@ -737,6 +753,20 @@ const Attendances = () => {
                     <td className="px-4 py-4 text-slate-600">{record.checkIn || "--"}</td>
                     <td className="px-4 py-4 text-slate-600">{record.checkOut || "--"}</td>
                     <td className="px-4 py-4 text-slate-700">{record.workingHours || "--"}</td>
+                    <td className="px-4 py-4">
+                      <div className="flex flex-col gap-1 text-[10px] font-semibold uppercase">
+                        {record.faceVerified ? (
+                          <span className="text-emerald-600 flex items-center gap-1"><FiCheckCircle size={12}/> Face</span>
+                        ) : (
+                          <span className="text-slate-400 flex items-center gap-1"><FiXCircle size={12}/> Face</span>
+                        )}
+                        {record.locationVerified ? (
+                          <span className="text-emerald-600 flex items-center gap-1"><FiCheckCircle size={12}/> Loc</span>
+                        ) : (
+                          <span className="text-slate-400 flex items-center gap-1"><FiXCircle size={12}/> Loc</span>
+                        )}
+                      </div>
+                    </td>
                     <td className="px-4 py-4">
                       <span
                         className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${statusColors[record.status] || "border-slate-200 bg-slate-100 text-slate-700"}`}

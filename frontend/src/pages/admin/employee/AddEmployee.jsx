@@ -32,11 +32,17 @@ const initialForm = {
   defaultShift: "Morning",
   defaultDuty: "",
   dutyLocation: "Main Temple Hall",
-  biometricId: "",
+  attendanceLocation: "",
+  faceRegistered: false,
+  faceDescriptor: [],
+  
   // Step 3 – Account Details
   bankName: "",
   accountNumber: "",
 };
+
+import axios from "axios";
+import { getStoredToken } from "../../../services/authService";
 
 const draftKey = "adminEmployeeDraft";
 
@@ -100,7 +106,27 @@ const AddEmployee = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [credentials, setCredentials] = useState(null);
   const [createdEmployee, setCreatedEmployee] = useState(null);
-  const [showFaceRegistration, setShowFaceRegistration] = useState(false);
+  const [locations, setLocations] = useState([]);
+
+  useEffect(() => {
+    const fetchLocations = async () => {
+      try {
+        const token = getStoredToken();
+        const res = await axios.get("http://localhost:5000/api/attendance-locations", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.data.success) {
+          setLocations(res.data.locations);
+          if (res.data.locations.length > 0 && !form.attendanceLocation) {
+             setForm(prev => ({ ...prev, attendanceLocation: res.data.locations[0]._id }));
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch attendance locations", err);
+      }
+    };
+    fetchLocations();
+  }, []);
 
   // Departments list derived from selected role
   const departmentList = useMemo(() => roleDepartmentMap[form.role] || [], [form.role]);
@@ -259,7 +285,10 @@ const AddEmployee = () => {
   defaultShift: form.defaultShift,
   defaultDuty: form.defaultDuty,
   dutyLocation: form.dutyLocation,
-  biometricId: form.biometricId.trim(),
+  attendanceLocation: form.attendanceLocation,
+  faceRegistered: form.faceRegistered,
+  faceDescriptor: form.faceDescriptor,
+  profilePhoto: form.profilePhoto || photoDataUrl,
   currentDuty: {
     dutyName: form.defaultDuty,
     shift: form.defaultShift,
@@ -657,18 +686,45 @@ const AddEmployee = () => {
                   {errors.dutyLocation && <p className="text-rose-500 text-xs mt-1">{errors.dutyLocation}</p>}
                 </label>
 
-                {/* Biometric Information */}
+                {/* Attendance Location */}
                 <label className="block space-y-2 text-sm text-slate-700">
-                  Biometric Information
-                  <input
-                    type="text"
-                    value={form.biometricId}
-                    onChange={handleChange("biometricId")}
-                    placeholder="e.g. Device ID or Info"
-                    className={`w-full rounded-3xl border ${errors.biometricId ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition`}
-                  />
-                  {errors.biometricId && <p className="text-rose-500 text-xs mt-1">{errors.biometricId}</p>}
+                  Attendance Location
+                  <select
+                    value={form.attendanceLocation}
+                    onChange={handleChange("attendanceLocation")}
+                    className={`w-full rounded-3xl border ${errors.attendanceLocation ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition`}
+                  >
+                    <option value="">None (Global Settings)</option>
+                    {locations.map((loc) => (
+                      <option key={loc._id} value={loc._id}>
+                        {loc.locationName}
+                      </option>
+                    ))}
+                  </select>
                 </label>
+
+                {/* Face Registration */}
+                <div className="md:col-span-2 space-y-2">
+                  <span className="text-sm text-slate-700 font-medium">Face Registration</span>
+                  {form.faceRegistered ? (
+                     <div className="rounded-3xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-emerald-800 flex justify-between items-center">
+                        <div>
+                          <p className="font-bold">Face Registered</p>
+                          <p className="text-xs">Face data has been captured successfully.</p>
+                        </div>
+                        <button type="button" onClick={() => setForm(prev => ({ ...prev, faceRegistered: false, faceDescriptor: [], profilePhoto: null }))} className="text-sm font-semibold underline">Retake</button>
+                     </div>
+                  ) : (
+                     <FaceRegistration onRegistrationComplete={(data) => {
+                        setForm(prev => ({
+                           ...prev,
+                           faceRegistered: data.faceRegistered,
+                           faceDescriptor: data.faceDescriptor,
+                           profilePhoto: data.profilePhoto
+                        }));
+                     }} />
+                  )}
+                </div>
 
                 {/* Auto-assignment info banner */}
                 <div className="md:col-span-2 rounded-3xl border border-amber-200 bg-amber-50 px-5 py-4">
@@ -772,8 +828,8 @@ const AddEmployee = () => {
                       <p className="font-semibold text-slate-800">{form.dutyLocation}</p>
                     </div>
                     <div>
-                      <p className="text-slate-500 text-xs">Biometric Info</p>
-                      <p className="font-semibold text-slate-800">{form.biometricId || "—"}</p>
+                      <p className="text-slate-500 text-xs">Face Registered</p>
+                      <p className="font-semibold text-slate-800">{form.faceRegistered ? "Yes" : "No"}</p>
                     </div>
                     <div>
                       <p className="text-slate-500 text-xs">Bank Name</p>
@@ -866,7 +922,8 @@ const AddEmployee = () => {
                 <InfoRow label="Default Shift" value={form.defaultShift} highlight />
                 <InfoRow label="Default Duty" value={form.defaultDuty || "—"} highlight />
                 <InfoRow label="Duty Location" value={form.dutyLocation || "—"} highlight />
-                <InfoRow label="Biometric Info" value={form.biometricId || "—"} highlight />
+                <InfoRow label="Attendance Location" value={locations.find(l => l._id === form.attendanceLocation)?.locationName || "Global"} highlight />
+                <InfoRow label="Face Registered" value={form.faceRegistered ? "Yes" : "No"} highlight />
               </div>
             </div>
 
@@ -881,7 +938,7 @@ const AddEmployee = () => {
           </div>
         </SectionCard>
       </div>
-      {credentials && !showFaceRegistration && (
+      {credentials && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/40 px-4">
           <div className="w-full max-w-md rounded-[28px] border border-slate-200 bg-white p-6 shadow-2xl">
             <p className="text-sm uppercase tracking-[0.2em] text-emerald-600">Success</p>
@@ -893,10 +950,10 @@ const AddEmployee = () => {
             <div className="mt-5 flex flex-wrap justify-end gap-3">
               <button
                 type="button"
-                onClick={() => setShowFaceRegistration(true)}
-                className="rounded-full bg-indigo-600 px-5 py-2 text-sm font-semibold text-white shadow hover:bg-indigo-700 transition"
+                onClick={copyCredentials}
+                className="rounded-full bg-slate-200 px-5 py-2 text-sm font-semibold text-slate-700 shadow hover:bg-slate-300 transition"
               >
-                Register Face Now
+                Copy Credentials
               </button>
               <button
                 type="button"
@@ -906,30 +963,6 @@ const AddEmployee = () => {
                 Finish
               </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {showFaceRegistration && createdEmployee && (
-        <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto py-10 bg-slate-950/40 px-4">
-          <div className="w-full max-w-2xl rounded-[32px] border border-slate-200 bg-slate-50 p-6 shadow-2xl relative">
-             <div className="mb-4 flex justify-between items-center border-b border-slate-200 pb-4">
-                <div>
-                  <h3 className="text-xl font-bold text-slate-900">Register Employee Face</h3>
-                  <p className="text-sm text-slate-500">Capture face data for attendance verification.</p>
-                </div>
-                <button 
-                  type="button" 
-                  onClick={() => navigate("/admin/employees")} 
-                  className="rounded-full bg-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-300 transition"
-                >
-                  Skip for now
-                </button>
-             </div>
-             <FaceRegistration
-                employee={createdEmployee}
-                onComplete={() => navigate("/admin/employees")}
-             />
           </div>
         </div>
       )}

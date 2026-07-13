@@ -14,11 +14,13 @@ import {
   FaBoxOpen,
   FaClock,
   FaFileSignature,
+  FaExchangeAlt,
 } from "react-icons/fa";
 
 export const priestSidebarItems = [
   { title: "Dashboard", icon: MdDashboard, path: "/priest" },
   { title: "My Duties", icon: FaClipboardList, path: "/priest/my-duties" },
+  { title: "Duty Transfer Requests", icon: FaExchangeAlt, path: "/priest/transfer-requests" },
   { title: "Inventory Requests", icon: FaBoxOpen, path: "/priest/inventory-requests" },
   { title: "Attendance", icon: FaClock, path: "/priest/attendance" },
   { title: "Leave Requests", icon: FaCalendarAlt, path: "/priest/leave-requests" },

@@ -40,6 +40,7 @@ import PriestInventory from "./PriestInventory";
 import Attendance from "../staff/Attendance";
 import LeaveHistory from "../staff/LeaveHistory";
 import LeaveRequest from "../staff/LeaveRequest";
+import DutyTransferRequests from "./DutyTransferRequests";
 import priestAvatar from "../../assets/logo.png";
 
 const API_BASE = "http://localhost:5000/api";
@@ -1020,6 +1021,8 @@ const PriestDashboard = () => {
             return <LeaveHistory darkMode={darkMode} onApply={() => setActiveItem("Apply Leave")} />;
           case "Apply Leave":
             return <LeaveRequest darkMode={darkMode} onBack={() => setActiveItem("Leave Requests")} />;
+          case "Duty Transfer Requests":
+            return <DutyTransferRequests darkMode={darkMode} />;
           case "Notifications":
             return <PriestNotifications darkMode={darkMode} />;
           case "Profile":

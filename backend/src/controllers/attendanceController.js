@@ -246,9 +246,13 @@ const resolveStaffContext = async ({ staffId, staffName, staffEmail }) => {
     (normalizedEmail ? await User.findOne({ email: normalizedEmail }) : null);
 
   let employee =
-    (await findByIdIfValid(Employee, staffId)) ||
-    (user?.email ? await Employee.findOne({ email: user.email }) : null) ||
-    (normalizedEmail ? await Employee.findOne({ email: normalizedEmail }) : null);
+    (await Employee.findById(staffId).populate("attendanceLocation")) ||
+    (user?.email ? await Employee.findOne({ email: user.email }).populate("attendanceLocation") : null) ||
+    (normalizedEmail ? await Employee.findOne({ email: normalizedEmail }).populate("attendanceLocation") : null);
+
+  if (employee && !employee.populated("attendanceLocation")) {
+    await employee.populate("attendanceLocation");
+  }
 
   if (!user && employee?.email) {
     user = await User.findOne({ email: employee.email });
@@ -264,6 +268,7 @@ const resolveStaffContext = async ({ staffId, staffName, staffEmail }) => {
     defaultShift: employee?.defaultShift || employee?.shift || "Morning",
     defaultDuty: employee?.defaultDuty || "",
     dutyLocation: employee?.dutyLocation || "",
+    attendanceLocationName: employee?.attendanceLocation?.locationName || "Not Assigned",
     department: employee?.department || "",
     role: user?.role || employee?.role || "staff",
   };
@@ -697,6 +702,7 @@ const buildDashboardResponse = async (staffId, monthValue) => {
       shiftEndTime: dailyContext.shiftEndTime || "",
       defaultDuty: dailyContext.defaultDuty,
       dutyLocation: dailyContext.dutyLocation,
+      attendanceLocationName: staff.attendanceLocationName,
       checkIn: todayAttendance?.checkIn || "--",
       checkOut: todayAttendance?.checkOut || "--",
       workingHours: todayAttendance?.workingHours || "--",
@@ -917,6 +923,10 @@ const buildAdminAttendanceDashboard = async (monthValue, filterEmployeeId = null
       correctedBy: attendance?.correctedBy || "",
       correctionDate: attendance?.correctionDate || null,
       correctionReason: attendance?.correctionReason || "",
+      faceVerified: attendance?.faceVerified || false,
+      locationVerified: attendance?.locationVerified || false,
+      distanceFromTemple: attendance?.distanceFromTemple || null,
+      checkInPhoto: attendance?.checkInPhoto || "",
     };
   });
 
@@ -974,6 +984,10 @@ const buildAdminAttendanceDashboard = async (monthValue, filterEmployeeId = null
         correctedBy: doc.correctedBy || "",
         correctionDate: doc.correctionDate || null,
         correctionReason: doc.correctionReason || "",
+        faceVerified: doc.faceVerified || false,
+        locationVerified: doc.locationVerified || false,
+        distanceFromTemple: doc.distanceFromTemple || null,
+        checkInPhoto: doc.checkInPhoto || "",
       };
     });
 
@@ -1239,7 +1253,7 @@ exports.markAttendance = async (req, res) => {
       });
     }
 
-    const employee = await Employee.findOne({ email: staff.staffEmail }) || await Employee.findById(staff.employeeId);
+    const employee = await Employee.findOne({ email: staff.staffEmail }).populate("attendanceLocation") || await Employee.findById(staff.employeeId).populate("attendanceLocation");
     if (!employee) {
       return res.status(404).json({ success: false, message: "Employee profile not found" });
     }
@@ -1300,18 +1314,23 @@ exports.markAttendance = async (req, res) => {
     }
 
     if (latitude !== undefined && longitude !== undefined && latitude !== null && longitude !== null) {
-      if (settings.templeLatitude === 0 && settings.templeLongitude === 0) {
-        locationVerified = true;
+      if (employee.attendanceLocation) {
+        distanceFromTemple = getHaversineDistance(latitude, longitude, employee.attendanceLocation.latitude, employee.attendanceLocation.longitude);
+        if (distanceFromTemple <= employee.attendanceLocation.allowedRadius) locationVerified = true;
       } else {
-        distanceFromTemple = getHaversineDistance(latitude, longitude, settings.templeLatitude, settings.templeLongitude);
-        if (distanceFromTemple <= settings.allowedRadius) locationVerified = true;
+        if (settings.templeLatitude === 0 && settings.templeLongitude === 0) {
+          locationVerified = true;
+        } else {
+          distanceFromTemple = getHaversineDistance(latitude, longitude, settings.templeLatitude, settings.templeLongitude);
+          if (distanceFromTemple <= settings.allowedRadius) locationVerified = true;
+        }
       }
     }
 
     if (!faceVerified || !locationVerified) {
-      return res.status(403).json({
+      return res.status(400).json({
         success: false,
-        message: !faceVerified ? "Face does not match. Attendance cannot be marked." : "You are outside temple premises. Attendance cannot be marked."
+        message: !faceVerified ? "Face Verification Failed" : "You are outside the allowed attendance area"
       });
     }
 

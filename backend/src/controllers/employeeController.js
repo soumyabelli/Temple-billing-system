@@ -96,6 +96,10 @@ exports.createEmployee = async (req, res) => {
       biometricId,
       bankName,
       accountNumber,
+      attendanceLocation,
+      faceRegistered,
+      faceDescriptor,
+      profilePhoto,
     } = req.body;
 
     const normalizedEmail = String(email || "").toLowerCase().trim();
@@ -255,8 +259,12 @@ if (joiningDateObj > today) {
       dutyLocation: normalizedDutyLocation,
       biometricId,
       photo,
+      profilePhoto,
       bankName: bankName.trim(),
       accountNumber: accountNumber.trim(),
+      attendanceLocation: attendanceLocation || null,
+      faceRegistered: faceRegistered || false,
+      faceDescriptor: faceDescriptor || [],
     });
 
     await User.create({

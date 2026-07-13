@@ -1326,6 +1326,69 @@ exports.getIncomingTransfers = async (req, res) => {
   }
 };
 
+exports.getMyTransfers = async (req, res) => {
+  try {
+    const priestId = req.user.id;
+    const transfers = await TransferRequest.find({
+      $or: [{ originalPriest: priestId }, { requestedPriest: priestId }]
+    })
+      .populate("originalPriest", "name email")
+      .populate("requestedPriest", "name email")
+      .sort({ createdAt: -1 });
+
+    const Booking = require("../models/Booking");
+    const Task = require("../models/Task");
+
+    const formattedRequests = await Promise.all(
+      transfers.map(async (req) => {
+        let dutyName = "Unknown";
+        let devotee = "N/A";
+        let date = "N/A";
+        let time = "N/A";
+
+        if (req.referenceType === "Booking") {
+          const booking = await Booking.findById(req.referenceId);
+          if (booking) {
+            dutyName = booking.service;
+            devotee = booking.devoteeName;
+            date = new Date(booking.datetime).toLocaleDateString();
+            time = new Date(booking.datetime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          }
+        } else if (req.referenceType === "Task") {
+          const task = await Task.findById(req.referenceId);
+          if (task) {
+            dutyName = task.title || task.dutyName || task.duty;
+            date = task.dateKey || new Date(task.createdAt).toLocaleDateString();
+            time = task.time || task.startTime || "N/A";
+          }
+        }
+
+        return {
+          id: req._id,
+          referenceType: req.referenceType,
+          referenceId: req.referenceId,
+          originalPriest: req.originalPriest,
+          requestedPriest: req.requestedPriest,
+          dutyName,
+          devotee,
+          date,
+          time,
+          reason: req.reason,
+          remarks: req.remarks,
+          status: req.status,
+          requestedAt: req.createdAt,
+          type: req.originalPriest._id.toString() === priestId ? "Outgoing" : "Incoming"
+        };
+      })
+    );
+
+    return res.status(200).json(formattedRequests);
+  } catch (error) {
+    console.error("Error fetching transfers:", error);
+    return res.status(500).json({ message: "Failed to fetch transfers" });
+  }
+};
+
 exports.respondToTransfer = async (req, res) => {
   try {
     const priestId = req.user.id;

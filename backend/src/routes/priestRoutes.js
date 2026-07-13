@@ -33,6 +33,7 @@ const {
   requestTransfer,
   getPriestsList,
   getIncomingTransfers,
+  getMyTransfers,
   respondToTransfer,
 } = require("../controllers/priestController");
 const {
@@ -64,6 +65,7 @@ router.put("/my-duties/start", startMyDuty);
 router.put("/my-duties/complete", completeMyDuty);
 router.post("/my-duties/transfer", requestTransfer);
 router.get("/my-duties/incoming-transfers", getIncomingTransfers);
+router.get("/my-duties/transfers", getMyTransfers);
 router.post("/my-duties/transfer/:id/respond", respondToTransfer);
 router.get("/priests-list", getPriestsList);
 

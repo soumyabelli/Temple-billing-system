@@ -663,6 +663,14 @@ function App() {
         }
       />
       <Route
+        path="/priest/transfer-requests"
+        element={
+          <ProtectedRoute allowedRoles={["priest"]}>
+            <PriestDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/priest/inventory-requests"
         element={
           <ProtectedRoute allowedRoles={["priest"]}>
