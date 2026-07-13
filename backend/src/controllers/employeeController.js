@@ -6,14 +6,9 @@ const Notification = require("../models/Notification");
 
 const ALLOWED_AUTH_ROLES = ["admin", "accountant", "cashier", "priest", "staff"];
 const STAFF_PROFILE_EDITABLE_FIELDS = [
-  "name",
-  "email",
-  "bloodGroup",
-  "dob",
-  "phone",
-  "emergencyContact",
-  "address",
-  "photo",
+  "name", "email", "gender", "dob", "bloodGroup", 
+  "phone", "emergencyContact", "address", "photo", "profilePhoto",
+  "bankName", "accountNumber",
 ];
 
 const isValidEmail = (email) => /^\S+@\S+\.\S+$/.test(String(email || "").trim());
@@ -568,7 +563,12 @@ exports.deleteEmployee = async (req, res) => {
       return res.status(404).json({ message: "Employee not found" });
     }
 
-    await User.findOneAndDelete({ email: employee.email });
+    await User.deleteMany({
+      $or: [
+        { email: employee.email },
+        { employeeId: employee.employeeId }
+      ]
+    });
     res.json({ message: "Employee deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });

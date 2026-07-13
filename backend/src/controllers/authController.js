@@ -462,6 +462,12 @@ const loginUser = async (req, res) => {
           await Employee.findOne({ email: user.email })
         )
       : null;
+
+    // Block login if employee record was deleted
+    if (user.role !== "devotee" && !employee) {
+      return res.status(403).json({ message: "Login disabled: Employee record not found." });
+    }
+
     const effectiveStatus = employee?.status || user.status || "Active";
     if (user.accountEnabled === false || !canLoginForStatus(effectiveStatus)) {
       return res.status(403).json({

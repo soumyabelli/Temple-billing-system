@@ -9,7 +9,21 @@ import {
 import "../staff/StaffDashboard.css"; // Reuse staff profile CSS
 
 const BLOOD_GROUPS = ["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"];
-const STAFF_PROFILE_EDITABLE_FIELDS = ["name", "email", "bloodGroup", "dob", "phone", "emergencyContact", "address", "photo"];
+const STAFF_PROFILE_EDITABLE_FIELDS = ["name", "email", "bloodGroup", "dob", "phone", "emergencyContact", "address", "photo", "bankName", "accountNumber"];
+
+const bankOptions = [
+  "State Bank of India (SBI)",
+  "HDFC Bank",
+  "ICICI Bank",
+  "Axis Bank",
+  "Punjab National Bank (PNB)",
+  "Bank of Baroda",
+  "Canara Bank",
+  "Union Bank of India",
+  "Kotak Mahindra Bank",
+  "IndusInd Bank",
+  "Other",
+];
 
 const buildEditableProfilePayload = (profile = {}) =>
   STAFF_PROFILE_EDITABLE_FIELDS.reduce((payload, field) => {
@@ -47,6 +61,8 @@ const toProfileForm = (profile = {}) => ({
   emergencyContact: profile.emergencyContact || "",
   address: profile.address || "",
   photo: profile.photo || "",
+  bankName: profile.bankName || "",
+  accountNumber: profile.accountNumber || "",
 });
 
 const PriestProfile = () => {
@@ -109,6 +125,15 @@ const PriestProfile = () => {
     event.preventDefault();
     if (!profileForm.name.trim() || !profileForm.email.trim()) {
       setProfileMessage("Name and email are required");
+      return;
+    }
+    if (!profileForm.bankName || profileForm.bankName.trim() === "") {
+      setProfileMessage("Bank Name is required");
+      return;
+    }
+    const acc = profileForm.accountNumber ? profileForm.accountNumber.trim() : "";
+    if (!acc || !/^[0-9]{9,18}$/.test(acc)) {
+      setProfileMessage("Valid Account Number (9-18 digits) is required");
       return;
     }
 
@@ -275,6 +300,31 @@ const PriestProfile = () => {
                 value={profileForm.address}
                 onChange={(e) => handleProfileInputChange("address", e.target.value)}
               />
+
+              <div className="date-grid" style={{ marginTop: "1rem" }}>
+                <div>
+                  <label htmlFor="profile-bankName">Bank Name</label>
+                  <select
+                    id="profile-bankName"
+                    value={profileForm.bankName}
+                    onChange={(e) => handleProfileInputChange("bankName", e.target.value)}
+                  >
+                    <option value="" disabled>Select Bank</option>
+                    {bankOptions.map((bank) => (
+                      <option key={bank} value={bank}>{bank}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="profile-accountNumber">Account Number</label>
+                  <input
+                    id="profile-accountNumber"
+                    type="text"
+                    value={profileForm.accountNumber}
+                    onChange={(e) => handleProfileInputChange("accountNumber", e.target.value)}
+                  />
+                </div>
+              </div>
 
               {profileMessage ? <p className="profile-note">{profileMessage}</p> : null}
 

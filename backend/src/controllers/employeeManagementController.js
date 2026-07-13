@@ -14,7 +14,9 @@ const { sendEmail } = require("../utils/communicationService");
 const ALLOWED_AUTH_ROLES = ["admin", "accountant", "cashier", "priest", "staff"];
 const EMPLOYEE_STATUSES = ["Active", "On Leave", "Inactive", "Suspended", "Resigned", "Retired"];
 const STAFF_PROFILE_EDITABLE_FIELDS = [
-  "name", "email", "bloodGroup", "dob", "phone", "emergencyContact", "address", "photo",
+  "name", "email", "gender", "dob", "bloodGroup", 
+  "phone", "emergencyContact", "address", "photo", "profilePhoto",
+  "bankName", "accountNumber",
 ];
 const MAX_PHOTO_LENGTH = 7 * 1024 * 1024;
 
@@ -276,9 +278,12 @@ exports.loginEmployee = async (req, res) => {
     const employee =
       (user.employeeId && await Employee.findOne({ employeeId: user.employeeId })) ||
       await Employee.findOne({ email: user.email });
-    if (!employee || !user.accountEnabled || !canLoginForStatus(employee.status)) {
+    if (!employee) {
+      return res.status(403).json({ message: "Login disabled: Employee record not found." });
+    }
+    if (!user.accountEnabled || !canLoginForStatus(employee.status)) {
       return res.status(403).json({
-        message: `Login is disabled because employee status is ${employee?.status || "Inactive"}.`,
+        message: `Login is disabled because employee status is ${employee.status}.`,
       });
     }
     const isMatch = await bcrypt.compare(req.body.password || "", user.password);

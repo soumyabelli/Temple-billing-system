@@ -91,6 +91,21 @@ const readFileAsDataUrl = (file) =>
     reader.readAsDataURL(file);
   });
 
+const bankOptions = [
+  "",
+  "State Bank of India (SBI)",
+  "HDFC Bank",
+  "ICICI Bank",
+  "Axis Bank",
+  "Punjab National Bank (PNB)",
+  "Bank of Baroda",
+  "Canara Bank",
+  "Union Bank of India",
+  "Kotak Mahindra Bank",
+  "IndusInd Bank",
+  "Other",
+];
+
 const steps = [
   { label: "Personal Details", icon: <FiUser /> },
   { label: "Professional Details", icon: <FiBriefcase /> },
@@ -203,6 +218,13 @@ const AddEmployee = () => {
           newErrors.photo = "Please upload a valid image file.";
         }
       }
+      if (!form.bankName || form.bankName.trim() === "") {
+        newErrors.bankName = "Please select a Bank Name.";
+      }
+      const acc = form.accountNumber ? form.accountNumber.trim() : "";
+      if (!acc || !/^[0-9]{9,18}$/.test(acc)) {
+        newErrors.accountNumber = "Valid Account Number (9-18 digits) is required.";
+      }
     }
     if (step === 1) {
       if (!form.salary || Number(form.salary) <= 0) {
@@ -249,18 +271,6 @@ const AddEmployee = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage(null);
-
-    // Validate bank details before saving
-    if (!form.bankName || form.bankName.trim() === "") {
-      setMessage({ type: "error", text: "Bank Name is required." });
-      return;
-    }
-
-    const acc = form.accountNumber ? form.accountNumber.trim() : "";
-    if (!acc || !/^[0-9]{9,18}$/.test(acc)) {
-      setMessage({ type: "error", text: "Valid Account Number (9-18 digits) is required." });
-      return;
-    }
 
     setIsSaving(true);
     try {
@@ -533,6 +543,35 @@ const AddEmployee = () => {
                   </div>
                   {errors.photo && <p className="text-rose-500 text-xs mt-1">{errors.photo}</p>}
                 </label>
+                {/* Bank Name */}
+                <label className="block space-y-2 text-sm text-slate-700">
+                  Bank Name <span className="text-rose-500">*</span>
+                  <select
+                    value={form.bankName}
+                    onChange={handleChange("bankName")}
+                    className={`w-full rounded-3xl border ${errors.bankName ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition`}
+                  >
+                    {bankOptions.map((bank) => (
+                      <option key={bank} value={bank} disabled={bank === ""}>
+                        {bank === "" ? "Select Bank" : bank}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.bankName && <p className="text-rose-500 text-xs mt-1">{errors.bankName}</p>}
+                </label>
+
+                {/* Account Number */}
+                <label className="block space-y-2 text-sm text-slate-700">
+                  Account Number <span className="text-rose-500">*</span>
+                  <input
+                    type="text"
+                    value={form.accountNumber}
+                    onChange={handleChange("accountNumber")}
+                    placeholder="e.g. 123456789012"
+                    className={`w-full rounded-3xl border ${errors.accountNumber ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition`}
+                  />
+                  {errors.accountNumber && <p className="text-rose-500 text-xs mt-1">{errors.accountNumber}</p>}
+                </label>
               </div>
             )}
 
@@ -752,28 +791,6 @@ const AddEmployee = () => {
                     <div className="rounded-3xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-800 md:col-span-2">
                       Employee ID, username, and temporary password will be generated and sent to the employee's email automatically after Save Employee.
                     </div>
-
-                    <label className="block space-y-2 text-sm text-slate-700">
-                      <span className="font-medium">Bank Name *</span>
-                      <input
-                        type="text"
-                        value={form.bankName}
-                        onChange={handleChange("bankName")}
-                        placeholder="e.g. State Bank of India"
-                        className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition"
-                      />
-                    </label>
-
-                    <label className="block space-y-2 text-sm text-slate-700">
-                      <span className="font-medium">Account Number *</span>
-                      <input
-                        type="text"
-                        value={form.accountNumber}
-                        onChange={handleChange("accountNumber")}
-                        placeholder="e.g. 123456789012"
-                        className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition"
-                      />
-                    </label>
 
                 {/* Summary Review */}
                 <div className="md:col-span-2 rounded-3xl border border-slate-200 bg-slate-50 p-5 space-y-3">

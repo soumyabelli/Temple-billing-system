@@ -18,9 +18,25 @@ const emptyProfile = {
   dob: "",
   emergencyContact: "",
   photo: "",
+  bankName: "",
+  accountNumber: "",
 };
 
 const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+
+const bankOptions = [
+  "State Bank of India (SBI)",
+  "HDFC Bank",
+  "ICICI Bank",
+  "Axis Bank",
+  "Punjab National Bank (PNB)",
+  "Bank of Baroda",
+  "Canara Bank",
+  "Union Bank of India",
+  "Kotak Mahindra Bank",
+  "IndusInd Bank",
+  "Other",
+];
 
 const ProfilePage = () => {
   const { user, updateUser } = useAuth();
@@ -58,6 +74,8 @@ const ProfilePage = () => {
         dob: nextProfile.dob || "",
         emergencyContact: nextProfile.emergencyContact || "",
         photo: nextProfile.photo || "",
+        bankName: nextProfile.bankName || "",
+        accountNumber: nextProfile.accountNumber || "",
       });
     } finally {
       setLoading(false);
@@ -123,6 +141,15 @@ const ProfilePage = () => {
       if (value && !BLOOD_GROUPS.includes(value)) {
         error = "Please select a valid blood group.";
       }
+    } else if (field === "bankName") {
+      if (!value || value.trim() === "") {
+        error = "Bank Name is required.";
+      }
+    } else if (field === "accountNumber") {
+      const trimmed = value.trim();
+      if (!trimmed || !/^[0-9]{9,18}$/.test(trimmed)) {
+        error = "Valid Account Number (9-18 digits) is required.";
+      }
     }
     return error;
   };
@@ -165,6 +192,8 @@ const ProfilePage = () => {
         dob: profileForm.dob || undefined,
         emergencyContact: profileForm.emergencyContact.trim(),
         photo: profileForm.photo.trim(),
+        bankName: profileForm.bankName.trim(),
+        accountNumber: profileForm.accountNumber.trim(),
       });
       setMessage("Profile updated successfully.");
       setMessageType("success");
@@ -393,6 +422,53 @@ const ProfilePage = () => {
                     />
                   </div>
                   {errors.dob && <p className="text-rose-500 text-xs mt-1 font-semibold pl-1">{errors.dob}</p>}
+                </div>
+
+                {/* Bank Name Dropdown */}
+                <div className="block">
+                  <label className="mb-1.5 block text-sm font-bold text-slate-800">Bank Name</label>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-[#f28c18]">
+                      <FaSave />
+                    </span>
+                    <select
+                      value={profileForm.bankName}
+                      onChange={(e) => handleFieldChange("bankName", e.target.value)}
+                      className={`w-full rounded-2xl border ${
+                        errors.bankName ? "border-rose-400 focus:border-rose-500" : "border-[#ead7bb]"
+                      } bg-[#fffaf4] py-3 pl-10 pr-4 text-base outline-none focus:border-[#f28c18] transition appearance-none cursor-pointer`}
+                    >
+                      <option value="">Select Bank</option>
+                      {bankOptions.map((bank) => (
+                        <option key={bank} value={bank}>
+                          {bank}
+                        </option>
+                      ))}
+                    </select>
+                    <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-slate-400">
+                      ▼
+                    </span>
+                  </div>
+                  {errors.bankName && <p className="text-rose-500 text-xs mt-1 font-semibold pl-1">{errors.bankName}</p>}
+                </div>
+
+                {/* Account Number */}
+                <div className="block">
+                  <label className="mb-1.5 block text-sm font-bold text-slate-800">Account Number</label>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
+                      <FaSave />
+                    </span>
+                    <input
+                      value={profileForm.accountNumber}
+                      onChange={(e) => handleFieldChange("accountNumber", e.target.value)}
+                      className={`w-full rounded-2xl border ${
+                        errors.accountNumber ? "border-rose-400 focus:border-rose-500" : "border-[#ead7bb]"
+                      } bg-[#fffaf4] py-3 pl-10 pr-4 text-base outline-none focus:border-[#f28c18] transition`}
+                      placeholder="Account Number"
+                    />
+                  </div>
+                  {errors.accountNumber && <p className="text-rose-500 text-xs mt-1 font-semibold pl-1">{errors.accountNumber}</p>}
                 </div>
 
                 {/* Address */}
