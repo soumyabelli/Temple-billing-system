@@ -278,7 +278,7 @@ exports.loginEmployee = async (req, res) => {
     const employee =
       (user.employeeId && await Employee.findOne({ employeeId: user.employeeId })) ||
       await Employee.findOne({ email: user.email });
-    if (!employee) {
+    if (!employee && user.role !== "admin") {
       return res.status(403).json({ message: "Login disabled: Employee record not found." });
     }
     if (!user.accountEnabled || !canLoginForStatus(employee.status)) {

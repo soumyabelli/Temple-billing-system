@@ -463,8 +463,8 @@ const loginUser = async (req, res) => {
         )
       : null;
 
-    // Block login if employee record was deleted
-    if (user.role !== "devotee" && !employee) {
+    // Block login if employee record was deleted, unless the user is an admin or devotee
+    if (user.role !== "devotee" && user.role !== "admin" && !employee) {
       return res.status(403).json({ message: "Login disabled: Employee record not found." });
     }
 
