@@ -18,12 +18,12 @@ const RecentBookings = ({ bookings = [] }) => {
         <div key={booking._id || booking.id || `${booking.service}-${booking.datetime}`} className="rounded-2xl border border-[#ece8e1] p-4 bg-slate-50">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="font-semibold text-slate-800">{booking.service}</p>
-              <p className="text-sm text-slate-500">{booking.devoteeName}</p>
+              <p className="text-lg font-bold text-slate-800">{booking.service}</p>
+              <p className="text-base text-slate-600 mt-0.5">{booking.devoteeName}</p>
             </div>
-            <div className={`font-semibold ${getStatusClass(booking.status)}`}>{booking.status}</div>
+            <div className={`text-lg font-bold ${getStatusClass(booking.status)}`}>{booking.status}</div>
           </div>
-          <div className="mt-2 flex items-center justify-between text-sm text-slate-500">
+          <div className="mt-2.5 flex items-center justify-between text-base text-slate-500 font-medium">
             <span>{booking.datetime ? new Date(booking.datetime).toLocaleDateString() : "No date"}</span>
             <span>{booking.amount ? `₹${booking.amount}` : "₹0"}</span>
           </div>

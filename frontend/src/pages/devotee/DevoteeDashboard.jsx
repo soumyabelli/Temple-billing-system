@@ -534,12 +534,11 @@ const DevoteeDashboard = () => {
 
   const minBookingDatetime = useMemo(() => {
     const d = new Date(currentDateTime || new Date());
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
-    const hours = String(d.getHours()).padStart(2, "0");
-    const minutes = String(d.getMinutes()).padStart(2, "0");
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
+    const pad = (n) => String(n).padStart(2, "0");
+    const yyyy = d.getFullYear();
+    const mm = pad(d.getMonth() + 1);
+    const dd = pad(d.getDate());
+    return `${yyyy}-${mm}-${dd}`;
   }, [currentDateTime]);
 
   const devoteeName = useMemo(() => profileData.name || user?.name || "Devotee User", [profileData.name, user?.name]);
@@ -2090,10 +2089,10 @@ const DevoteeDashboard = () => {
                   </select>
                 </div>
 
-                <div>
-                  <p className="text-sm uppercase tracking-[0.08em] text-[#8d6925]">Date & time</p>
+                <div className="bbm-field">
+                  <label>Date</label>
                   <input
-                    type="datetime-local"
+                    type="date"
                     value={bookingDatetime}
                     onChange={(e) => setBookingDatetime(e.target.value)}
                     min={minBookingDatetime}

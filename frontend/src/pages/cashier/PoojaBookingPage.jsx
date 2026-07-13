@@ -136,12 +136,12 @@ const PoojaBookingPage = () => {
                 </div>
               </div>
 
-              {/* DATE & TIME */}
+              {/* DATE */}
               <div>
-                <label className="block text-[11px] font-bold text-[#b88c6b] uppercase tracking-wider mb-2">Date & Time</label>
+                <label className="block text-[11px] font-bold text-[#b88c6b] uppercase tracking-wider mb-2">Date</label>
                 <div className="relative">
                   <input
-                    type="datetime-local"
+                    type="date"
                     name="bookingDate"
                     value={formData.bookingDate}
                     onChange={handleChange}

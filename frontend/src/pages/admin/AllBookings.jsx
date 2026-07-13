@@ -74,18 +74,7 @@ const AllBookings = () => {
                 placeholder="Search ID, Name or Pooja..." 
               />
             </div>
-            
-            <select
-              value={statusFilter}
-              onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-              className="h-11 rounded-xl border border-[#ece8e1] bg-[#faf9f7] px-3 text-[15px] text-[#4b5563] outline-none"
-            >
-              <option value="">All Statuses</option>
-              <option value="Completed">Completed</option>
-              <option value="Pending">Pending</option>
-              <option value="Confirmed">Confirmed</option>
-              <option value="Cancelled">Cancelled</option>
-            </select>
+
 
             <select
               value={dateFilter}
@@ -109,7 +98,6 @@ const AllBookings = () => {
                 <th className="px-4 py-3 text-left font-semibold">Pooja</th>
                 <th className="px-4 py-3 text-left font-semibold">Booking Date</th>
                 <th className="px-4 py-3 text-left font-semibold">Pooja Date</th>
-                <th className="px-4 py-3 text-left font-semibold">Slot</th>
                 <th className="px-4 py-3 text-left font-semibold">Amount</th>
                 <th className="px-4 py-3 text-left font-semibold">Payment</th>
                 <th className="px-4 py-3 text-left font-semibold">Status</th>
@@ -132,7 +120,6 @@ const AllBookings = () => {
                     <td className="px-4 py-3">{row.service}</td>
                     <td className="px-4 py-3">{new Date(row.createdAt).toLocaleDateString()}</td>
                     <td className="px-4 py-3">{row.datetime ? new Date(row.datetime).toLocaleDateString() : "-"}</td>
-                    <td className="px-4 py-3">{row.datetime ? new Date(row.datetime).toLocaleTimeString() : "-"}</td>
                     <td className="px-4 py-3 font-semibold">{formatCurrency(row.amount)}</td>
                     <td className="px-4 py-3">{row.paymentMethod || "UPI"}</td>
                     <td className="px-4 py-3">

@@ -421,9 +421,9 @@ const CashierDashboardPage = () => {
       tone: "orange",
     },
     {
-      title: "Pooja Bookings",
-      value: bookings.length,
-      note: `${bookings.filter(b => String(b.status || "Pending") === "Pending").length} pending`,
+      title: "Pooja Revenue",
+      value: formatCurrency(sumBy(bookings, (b) => b.amount || b.price || 0)),
+      note: `${bookings.length} bookings total`,
       tone: "gold",
     },
     {

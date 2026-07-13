@@ -14,12 +14,6 @@ const DonationStats = ({ stats = {} }) => {
       icon: <FaUsers />,
       accent: "from-sky-600 to-cyan-500",
     },
-    {
-      title: "Completed Donations",
-      value: stats.completed ?? 0,
-      icon: <FaHandHoldingHeart />,
-      accent: "from-emerald-500 to-teal-400",
-    },
   ];
 
   return (

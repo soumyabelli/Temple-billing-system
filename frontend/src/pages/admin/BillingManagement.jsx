@@ -267,16 +267,11 @@ const BillingManagement = () => {
           </button>
         </div>
 
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           <div className="rounded-3xl border border-[#e5e7eb] bg-[#f8fafc] p-6">
             <p className="text-sm uppercase tracking-[0.24em] text-[#475569]">Total Revenue</p>
             <p className="mt-4 text-[2rem] font-bold text-[#0f172a]">{formatCurrency(totalRevenue)}</p>
-            <p className="mt-2 text-sm text-[#475569]">Bookings, donations and prasadam income.</p>
-          </div>
-          <div className="rounded-3xl border border-[#e5e7eb] bg-white p-6">
-            <p className="text-sm uppercase tracking-[0.24em] text-[#475569]">Booking Revenue</p>
-            <p className="mt-4 text-[2rem] font-bold text-[#0f172a]">{formatCurrency(bookingRevenue)}</p>
-            <p className="mt-2 text-sm text-[#475569]">Total value of all pooja bookings.</p>
+            <p className="mt-2 text-sm text-[#475569]">Bookings, donations, and prasadam.</p>
           </div>
           <div className="rounded-3xl border border-[#e5e7eb] bg-white p-6">
             <p className="text-sm uppercase tracking-[0.24em] text-[#475569]">Donation Income</p>
@@ -287,6 +282,16 @@ const BillingManagement = () => {
             <p className="text-sm uppercase tracking-[0.24em] text-[#475569]">Prasadam Sales</p>
             <p className="mt-4 text-[2rem] font-bold text-[#0f172a]">{formatCurrency(prasadamRevenue)}</p>
             <p className="mt-2 text-sm text-[#475569]">Total prasadam order payments.</p>
+          </div>
+          <div className="rounded-3xl border border-[#e5e7eb] bg-white p-6">
+            <p className="text-sm uppercase tracking-[0.24em] text-[#475569]">Total Pooja Booked</p>
+            <p className="mt-4 text-[2rem] font-bold text-[#0f172a]">{bookings.length}</p>
+            <p className="mt-2 text-sm text-[#475569]">Total number of poojas booked.</p>
+          </div>
+          <div className="rounded-3xl border border-[#e5e7eb] bg-white p-6">
+            <p className="text-sm uppercase tracking-[0.24em] text-[#475569]">Room Booked Revenue</p>
+            <p className="mt-4 text-[2rem] font-bold text-[#0f172a]">{formatCurrency(0)}</p>
+            <p className="mt-2 text-sm text-[#475569]">Total value of room bookings.</p>
           </div>
         </div>
       </div>

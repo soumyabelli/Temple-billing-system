@@ -173,8 +173,8 @@ const AdminDashboard = () => {
         ...cardIcons.daily,
       },
       {
-        title: "Pooja Bookings",
-        amount: String(bookings.length),
+        title: "Pooja Revenue",
+        amount: formatRs(bookingRevenue),
         hideTrend: true,
         ...cardIcons.pooja,
       },
@@ -251,15 +251,15 @@ const AdminDashboard = () => {
             return (
               <>
                 <div className="mt-5">
-                  <h1 className={`text-[30px] md:text-[38px] font-bold leading-tight ${darkMode ? "text-slate-100" : "text-[#1d1b19]"}`}>Welcome back, Admin</h1>
-                  <p className={`${darkMode ? "text-slate-300" : "text-gray-600"}`}>Manage collections, bookings and operations from one dashboard.</p>
+                  <h1 className={`text-[36px] md:text-[44px] font-bold leading-tight ${darkMode ? "text-slate-100" : "text-[#1d1b19]"}`}>Welcome back, Admin</h1>
+                  <p className={`text-lg mt-1 ${darkMode ? "text-slate-300" : "text-gray-600"}`}>Manage collections, bookings and operations from one dashboard.</p>
                 </div>
 
                 <DashboardCards cards={dynamicStatCards} />
 
                 <div className="mt-4">
-                  <div className={`rounded-2xl border p-4 ${darkMode ? "bg-[#1f2937] border-[#334155]" : "bg-white border-[#ece8e1]"}`}>
-                    <h3 className={`text-xl font-bold ${darkMode ? "text-slate-100" : "text-[#1d1b19]"}`}>Donation Sources</h3>
+                  <div className={`rounded-2xl border p-5 ${darkMode ? "bg-[#1f2937] border-[#334155]" : "bg-white border-[#ece8e1]"}`}>
+                    <h3 className={`text-2xl font-bold ${darkMode ? "text-slate-100" : "text-[#1d1b19]"}`}>Donation Sources</h3>
                     {donationSources.length ? (
                       <DonationChart sources={donationSources} showCounts />
                     ) : (
@@ -268,13 +268,13 @@ const AdminDashboard = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mt-4">
-                  <div className={`rounded-2xl border p-5 ${darkMode ? "bg-[#1f2937] border-[#334155]" : "bg-white border-[#ece8e1]"}`}>
-                    <h3 className={`text-2xl font-bold mb-3 ${darkMode ? "text-slate-100" : "text-[#1d1b19]"}`}>Recent Bookings</h3>
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 mt-5">
+                  <div className={`rounded-2xl border p-6 ${darkMode ? "bg-[#1f2937] border-[#334155]" : "bg-white border-[#ece8e1]"}`}>
+                    <h3 className={`text-3xl font-bold mb-4 ${darkMode ? "text-slate-100" : "text-[#1d1b19]"}`}>Recent Bookings</h3>
                     <RecentBookings bookings={recentBookings} />
                   </div>
-                  <div className={`rounded-2xl border p-5 ${darkMode ? "bg-[#1f2937] border-[#334155]" : "bg-white border-[#ece8e1]"}`}>
-                    <h3 className={`text-2xl font-bold mb-3 ${darkMode ? "text-slate-100" : "text-[#1d1b19]"}`}>Low Stock Alerts</h3>
+                  <div className={`rounded-2xl border p-6 ${darkMode ? "bg-[#1f2937] border-[#334155]" : "bg-white border-[#ece8e1]"}`}>
+                    <h3 className={`text-3xl font-bold mb-4 ${darkMode ? "text-slate-100" : "text-[#1d1b19]"}`}>Low Stock Alerts</h3>
                     <LowStock items={inventoryItems.map(i => ({ name: i.name, stock: i.currentStock, status: i.currentStock <= i.minimumStock ? "Low" : "OK" }))} />
                   </div>
                 </div>

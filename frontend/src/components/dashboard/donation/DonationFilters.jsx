@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 const DonationFilters = ({ categories, onApplyFilters }) => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -29,7 +29,7 @@ const DonationFilters = ({ categories, onApplyFilters }) => {
     <div className="rounded-[32px] border border-white/10 bg-slate-950/85 p-6 shadow-2xl shadow-slate-950/20 backdrop-blur-xl text-white">
       <h2 className="text-2xl font-semibold">Donation Filters</h2>
       <p className="mt-2 text-slate-400">Slice live donation data by donor, type and status.</p>
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <input
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
@@ -43,15 +43,6 @@ const DonationFilters = ({ categories, onApplyFilters }) => {
           className="rounded-2xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-slate-100 outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20"
         >
           {categoryOptions.map((option) => (
-            <option key={option} value={option}>{option}</option>
-          ))}
-        </select>
-        <select
-          value={selectedStatus}
-          onChange={(e) => setSelectedStatus(e.target.value)}
-          className="rounded-2xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-slate-100 outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20"
-        >
-          {statusOptions.map((option) => (
             <option key={option} value={option}>{option}</option>
           ))}
         </select>

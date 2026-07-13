@@ -1,4 +1,4 @@
-﻿const DashboardCard = ({
+const DashboardCard = ({
   title,
   amount,
   icon,
@@ -19,10 +19,10 @@
         </div>
 
         <div className="flex-1">
-          <h3 className="text-sm text-gray-500">{title}</h3>
-          <h1 className="text-[38px] leading-none font-bold text-[#1f1f1f] mt-2">{amount}</h1>
+          <h3 className="text-base text-gray-500">{title}</h3>
+          <h1 className="text-[44px] leading-none font-bold text-[#1f1f1f] mt-2">{amount}</h1>
           {!hideTrend && trend != null && trend !== "" ? (
-            <p className={`mt-2 text-sm font-semibold ${trendTextColor}`}>
+            <p className={`mt-2 text-base font-semibold ${trendTextColor}`}>
               {trendPrefix} {trend} {trendLabel}
             </p>
           ) : null}

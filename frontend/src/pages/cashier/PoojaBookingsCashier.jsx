@@ -14,14 +14,12 @@ async function getPoojaServices() {
 }
 
 const formatDateTimeLocalValue = (d) => {
-  // yyyy-MM-ddTHH:mm
+  // yyyy-MM-dd
   const pad = (n) => String(n).padStart(2, "0");
   const yyyy = d.getFullYear();
   const mm = pad(d.getMonth() + 1);
   const dd = pad(d.getDate());
-  const hh = pad(d.getHours());
-  const min = pad(d.getMinutes());
-  return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
+  return `${yyyy}-${mm}-${dd}`;
 };
 
 const parseDateTimeLocalToISO = (value) => {
@@ -299,9 +297,9 @@ const CashierPoojaBookings = () => {
                 </div>
 
                 <div className="bbm-field">
-                  <label>Date & Time</label>
+                  <label>Date</label>
                   <input
-                    type="datetime-local"
+                    type="date"
                     value={dateTime}
                     min={minDateTime}
                     onChange={(e) => setDateTime(e.target.value)}

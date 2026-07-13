@@ -36,13 +36,10 @@ const statusStyles = {
 
 const buildMinDateTime = () => {
   const now = new Date();
-  now.setMinutes(now.getMinutes() + 15);
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, "0");
   const day = String(now.getDate()).padStart(2, "0");
-  const hours = String(now.getHours()).padStart(2, "0");
-  const minutes = String(now.getMinutes()).padStart(2, "0");
-  return `${year}-${month}-${day}T${hours}:${minutes}`;
+  return `${year}-${month}-${day}`;
 };
 
 const BookingPayments = () => {
@@ -403,9 +400,9 @@ const BookingPayments = () => {
                 </select>
               </label>
               <label className="block">
-                <span className="mb-2 block text-sm font-bold text-slate-800">Date and time</span>
+                <span className="mb-2 block text-sm font-bold text-slate-800">Date</span>
                 <input
-                  type="datetime-local"
+                  type="date"
                   min={buildMinDateTime()}
                   value={form.datetime}
                   onChange={(e) => setForm((prev) => ({ ...prev, datetime: e.target.value }))}

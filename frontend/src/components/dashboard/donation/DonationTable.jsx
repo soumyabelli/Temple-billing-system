@@ -69,7 +69,6 @@ const DonationTable = ({ donations = [], onRefresh }) => {
               <th className="py-4 px-3">Category</th>
               <th className="py-4 px-3">Amount</th>
               <th className="py-4 px-3">Date</th>
-              <th className="py-4 px-3">Status</th>
               <th className="py-4 px-3">Verified By</th>
             </tr>
           </thead>
@@ -81,15 +80,6 @@ const DonationTable = ({ donations = [], onRefresh }) => {
                 <td className="py-4 px-3">{row.category}</td>
                 <td className="py-4 px-3 text-amber-300 font-semibold">{row.amount}</td>
                 <td className="py-4 px-3">{row.date}</td>
-                <td className="py-4 px-3">
-                  <button
-                    onClick={() => handleToggleStatus(row.raw?._id || row.raw?.id || row.id, row.status)}
-                    className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold transition hover:scale-105 ${statusStyles[row.status] || "bg-slate-700 text-slate-100"}`}
-                    title="Click to toggle status"
-                  >
-                    {row.status}
-                  </button>
-                </td>
                 <td className="py-4 px-3">{row.verifiedBy}</td>
               </tr>
             ))}
