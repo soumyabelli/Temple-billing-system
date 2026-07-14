@@ -1302,7 +1302,7 @@ exports.getPriestsList = async (req, res) => {
   try {
     const priests = await User.find({ 
       role: { $regex: /^priest$/i }, 
-      status: { $ne: "Inactive" } 
+      status: { $in: ["Active", "On Leave"] } 
     }).select("name email _id");
     return res.status(200).json(priests);
   } catch (error) {
