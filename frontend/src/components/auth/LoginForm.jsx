@@ -1,15 +1,13 @@
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { changePassword, googleLogin, login } from "../../services/authService";
 
 import { useAuth } from "../../context/AuthContext";
-import RoleSelector from "./RoleSelector";
 
 const LoginForm = () => {
   const navigate = useNavigate();
   const { loginUser } = useAuth();
 
-  const [selectedRole, setSelectedRole] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
@@ -20,6 +18,62 @@ const LoginForm = () => {
     email: "",
     password: "",
   });
+
+  const [captchaText, setCaptchaText] = useState("");
+  const [userCaptcha, setUserCaptcha] = useState("");
+  const canvasRef = useRef(null);
+
+  const generateCaptcha = () => {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+    let text = "";
+    for (let i = 0; i < 6; i++) {
+      text += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setCaptchaText(text);
+    setUserCaptcha("");
+  };
+
+  useEffect(() => {
+    generateCaptcha();
+  }, []);
+
+  useEffect(() => {
+    if (captchaText && canvasRef.current) {
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Background
+      ctx.fillStyle = "#f3f4f6";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Noise lines
+      for (let i = 0; i < 5; i++) {
+        ctx.strokeStyle = `rgba(${Math.random()*255},${Math.random()*255},${Math.random()*255},0.5)`;
+        ctx.beginPath();
+        ctx.moveTo(Math.random() * canvas.width, Math.random() * canvas.height);
+        ctx.lineTo(Math.random() * canvas.width, Math.random() * canvas.height);
+        ctx.stroke();
+      }
+
+      // Draw text
+      ctx.font = "bold 24px Arial";
+      ctx.fillStyle = "#1f2937";
+      ctx.textBaseline = "middle";
+      
+      for (let i = 0; i < captchaText.length; i++) {
+        const x = 15 + i * 18;
+        const y = canvas.height / 2;
+        const angle = (Math.random() - 0.5) * 0.4;
+        
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(angle);
+        ctx.fillText(captchaText[i], 0, 0);
+        ctx.restore();
+      }
+    }
+  }, [captchaText]);
 
   const handleChange = (e) => {
     setErrorMessage("");
@@ -37,10 +91,16 @@ const LoginForm = () => {
       return;
     }
 
+    if (userCaptcha.toLowerCase() !== captchaText.toLowerCase()) {
+      setErrorMessage("Incorrect CAPTCHA.");
+      generateCaptcha();
+      return;
+    }
+
     try {
       setIsLoading(true);
       setErrorMessage("");
-      const res = await login({ ...formData, role: selectedRole });
+      const res = await login({ ...formData });
       const userRole = res.user?.role;
       if (!userRole) {
         setErrorMessage("Role not found for this account. Please contact admin.");
@@ -59,6 +119,7 @@ const LoginForm = () => {
       navigate(`/${userRole}`);
     } catch (error) {
       setErrorMessage(error.response?.data?.message || "Login failed. Please check server and credentials.");
+      generateCaptcha();
     } finally {
       setIsLoading(false);
     }
@@ -118,8 +179,6 @@ const LoginForm = () => {
         </div>
       </div>
 
-      <RoleSelector selectedRole={selectedRole} setSelectedRole={setSelectedRole} />
-
       {errorMessage ? (
         <div className="mt-5 rounded-2xl border border-red-300/50 bg-red-950/50 px-4 py-3 text-sm text-red-100">
           {errorMessage}
@@ -151,6 +210,37 @@ const LoginForm = () => {
             required
             className="w-full p-4 rounded-2xl bg-white/90 text-black outline-none text-lg shadow-lg"
           />
+        </div>
+
+        <div>
+          <label className="block mb-3 text-lg font-medium">Verify you are human</label>
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-4">
+              <canvas 
+                ref={canvasRef} 
+                width="140" 
+                height="50" 
+                className="rounded-xl border border-gray-300 shadow-sm cursor-pointer"
+                onClick={generateCaptcha}
+                title="Click to refresh CAPTCHA"
+              ></canvas>
+              <button 
+                type="button" 
+                onClick={generateCaptcha} 
+                className="text-amber-100 hover:text-white underline text-sm whitespace-nowrap"
+              >
+                Refresh
+              </button>
+            </div>
+            <input
+              type="text"
+              placeholder="Enter CAPTCHA text"
+              value={userCaptcha}
+              onChange={(e) => { setErrorMessage(""); setUserCaptcha(e.target.value); }}
+              required
+              className="w-full p-4 rounded-2xl bg-white/90 text-black outline-none text-lg shadow-lg"
+            />
+          </div>
         </div>
 
         <button
@@ -194,18 +284,10 @@ const LoginForm = () => {
 
 
       <div className="text-center mt-6">
-        {selectedRole === "devotee" ? (
-          <>
-            <p className="text-amber-100">Don't have an account?</p>
-            <button onClick={() => navigate("/register")} className="mt-2 text-yellow-300 font-semibold hover:text-yellow-400">
-              Register Here
-            </button>
-          </>
-        ) : (
-          <>
-            
-          </>
-        )}
+        <p className="text-amber-100">Don't have an account?</p>
+        <button type="button" onClick={() => navigate("/register")} className="mt-2 text-yellow-300 font-semibold hover:text-yellow-400">
+          New Devotee Register Here
+        </button>
       </div>
 
       <div className="text-center mt-8 text-orange-100 text-xl">Har Har Mahadev</div>
