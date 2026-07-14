@@ -742,11 +742,6 @@ const buildDashboardResponse = async (staffId, monthValue) => {
         description: "Check In / Check Out",
       },
       {
-        key: "history",
-        title: "Attendance History",
-        description: "View full attendance report",
-      },
-      {
         key: "download",
         title: "Download Report",
         description: "Download monthly report",

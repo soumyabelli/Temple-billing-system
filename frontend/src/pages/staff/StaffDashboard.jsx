@@ -641,27 +641,13 @@ const StaffDashboard = () => {
                 <div>
                   <h3>Today's Duties</h3>
                   <strong>{taskSummary.total.toString().padStart(2, "0")}</strong>
-                  <p>Total Assigned Tasks</p>
-                </div>
-              </article>
-              <article className="info-card">
-                <div className="icon-bg green">
-                  <FiCheckCircle />
-                </div>
-                <div>
-                  <h3>Completed Tasks</h3>
-                  <strong>{taskSummary.completed.toString().padStart(2, "0")}</strong>
-                  <p>Marked Completed</p>
-                </div>
-              </article>
-              <article className="info-card">
-                <div className="icon-bg violet">
-                  <TbProgressCheck />
-                </div>
-                <div>
-                  <h3>In Progress</h3>
-                  <strong>{taskSummary.inProgress.toString().padStart(2, "0")}</strong>
-                  <p>Ongoing Services</p>
+                  <p>
+                    {taskSummary.total > 1 
+                      ? `Includes ${taskSummary.total - 1} extra ${taskSummary.total - 1 === 1 ? 'duty' : 'duties'}` 
+                      : taskSummary.total === 1 
+                        ? "Regular duty only" 
+                        : "No duties assigned"}
+                  </p>
                 </div>
               </article>
               <article className="info-card">
@@ -798,54 +784,13 @@ const StaffDashboard = () => {
                 <p>Full duty management for today's staff assignments.</p>
               </div>
               <div className="duties-head-actions">
-                <button type="button" className="secondary-btn" onClick={() => setActiveSection("dashboard")}>
+                <button type="button" onClick={() => setActiveSection("dashboard")}>
                   Back to Overview
                 </button>
-                <button type="button" onClick={() => setSelectedTask(tasks[0] || null)}>
-                  Select First Duty
-                </button>
               </div>
             </div>
 
-            <div className="duties-filters">
-              <div>
-                <label htmlFor="searchQuery">Search duties</label>
-                <input
-                  id="searchQuery"
-                  type="text"
-                  placeholder="Search duty name or area"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-
-              <button type="button" className="export-btn" onClick={() => {
-                const rows = [
-                  ["Shift", "Duty Name", "Area", "Time", "Assigned By", "Description"],
-                  ...filteredDuties.map((task) => [
-                    task.shiftName || "",
-                    task.dutyName || task.title || task.duty || "",
-                    task.dutyArea || task.area || task.description || "",
-                    task.reportingTime || task.time || "",
-                    task.assignedBy || "",
-                    task.description || task.area || "",
-                  ]),
-                ];
-                const csv = rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")).join("\r\n");
-                const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement("a");
-                link.href = url;
-                link.download = "daily-duties.csv";
-                link.click();
-                URL.revokeObjectURL(url);
-              }}>
-                Export
-              </button>
-            </div>
-
-            <div className="duties-grid">
-              <div>
+            <div className="w-full">
                 <div className="card-heading">
                   <h2>All Duties Assigned for Today</h2>
                   <p>{filteredDuties.length} temporary duties found</p>
@@ -937,76 +882,6 @@ const StaffDashboard = () => {
                     </tbody>
                   </table>
                 </div>
-
-                <div className="timeline-card">
-                  <div className="card-heading">
-                    <h2>Duty Timeline</h2>
-                  </div>
-                  <div className="timeline-list">
-                    {timelineItems.length === 0 ? (
-                      <div className="empty-cell">No duties to show</div>
-                    ) : (
-                      timelineItems.map((task) => (
-                        <div key={task._id} className="timeline-item">
-                          <div>
-                            <p className="duty-time">{task.reportingTime || task.time || "-"}</p>
-                            <p className="duty-title">{task.shiftName || task.title || task.duty}</p>
-                            <p className="duty-meta">{task.dutyName || task.area || task.description || "General duty"}</p>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <aside className="details-panel">
-                <div className="card-heading">
-                  <h2>Duty Information</h2>
-                </div>
-                {selectedTask ? (
-                  <div className="details-content">
-                    <div className="detail-row">
-                      <span>Today's Shift</span>
-                      <strong>{selectedTask.shiftName || selectedTask.title || "--"}</strong>
-                    </div>
-                    <div className="detail-row">
-                      <span>Duty Name</span>
-                      <strong>{selectedTask.dutyName || selectedTask.title || selectedTask.duty}</strong>
-                    </div>
-                    <div className="detail-row">
-                      <span>Duty Area</span>
-                      <strong>{selectedTask.dutyArea || selectedTask.area || selectedTask.description || "General duty"}</strong>
-                    </div>
-                    <div className="detail-row">
-                      <span>Reporting Time</span>
-                      <strong>{selectedTask.reportingTime || selectedTask.time || "-"}</strong>
-                    </div>
-                    <div className="detail-row">
-                      <span>Priority</span>
-                      <strong>{selectedTask.priority || "Medium"}</strong>
-                    </div>
-                    <div className="detail-row">
-                      <span>Status</span>
-                      <strong>{selectedTask.status || "Assigned"}</strong>
-                    </div>
-                    <div className="detail-row">
-                      <span>Assigned By</span>
-                      <strong>{selectedTask.assignedBy || "Admin"}</strong>
-                    </div>
-                    <div className="detail-row">
-                      <span>Reason</span>
-                      <strong>{selectedTask.reason || "-"}</strong>
-                    </div>
-                    <div className="detail-row">
-                      <span>Notes</span>
-                      <p>{selectedTask.notes || selectedTask.description || "No additional notes."}</p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="empty-cell">Select a duty to view details.</div>
-                )}
-              </aside>
             </div>
           </section>
         ) : null}

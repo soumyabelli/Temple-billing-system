@@ -91,13 +91,6 @@ const fallbackQuickActions = [
     tone: "success",
   },
   {
-    key: "history",
-    title: "Attendance History",
-    description: "View full attendance report",
-    icon: FiFileText,
-    tone: "warning",
-  },
-  {
     key: "download",
     title: "Download Report",
     description: "Download monthly report",

@@ -224,7 +224,7 @@ const StaffInventory = () => {
   };
 
   return (
-    <div className="staff-dashboard-page" style={{ minHeight: "auto", background: "none", padding: 0 }}>
+    <div style={{ width: "100%", padding: 0 }}>
       <section className="inventory-page">
         <div className="leave-head">
           <div>
