@@ -265,12 +265,13 @@ const RestockModal = ({ item, onClose, onRestock }) => {
               />
             </div>
             <div>
-              <label style={{ fontSize: "13px", fontWeight: 600, color: "#475569", display: "block", marginBottom: "6px" }}>Invoice Number</label>
+              <label style={{ fontSize: "13px", fontWeight: 600, color: "#475569", display: "block", marginBottom: "6px" }}>Invoice Number *</label>
               <input
                 type="text"
                 value={invoiceNumber}
                 onChange={(e) => setInvoiceNumber(e.target.value)}
                 style={{ width: "100%", border: "1px solid #cbd5e1", borderRadius: "10px", padding: "10px 12px", fontSize: "14px" }}
+                required
               />
             </div>
           </div>
@@ -284,7 +285,7 @@ const RestockModal = ({ item, onClose, onRestock }) => {
             </button>
             <button
               type="submit"
-              disabled={loading || !quantityAdded || Number(quantityAdded) <= 0 || !supplier || !purchaseDate}
+              disabled={loading || !quantityAdded || Number(quantityAdded) <= 0 || !supplier || !purchaseDate || !invoiceNumber}
               style={{ padding: "10px 24px", borderRadius: "30px", background: "#2563eb", color: "#fff", fontWeight: 600, border: "none", cursor: "pointer" }}
             >
               {loading ? "Restocking..." : "Restock"}
