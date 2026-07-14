@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaDonate, FaRupeeSign, FaUsers, FaBoxes } from "react-icons/fa";
+import { FaDonate, FaRupeeSign, FaUsers, FaBoxes, FaBed } from "react-icons/fa";
 import { MdTempleBuddhist, MdOutlinePayments } from "react-icons/md";
 import AdminLayout from "../../layouts/AdminLayout";
 import DashboardCards from "../../components/dashboard/DashboardCards";
@@ -17,6 +17,8 @@ import {
   getAdminBookings,
   getAdminDonations,
   getAdminPrasadamOrders,
+  getAdminRooms,
+  getAdminAllBookings,
 } from "../../services/adminService";
 import axios from "axios";
 
@@ -46,6 +48,7 @@ const cardIcons = {
   pooja: { icon: <MdTempleBuddhist />, accent: "bg-violet-100 text-violet-600" },
   donation: { icon: <FaDonate />, accent: "bg-amber-100 text-amber-600" },
   prasadam: { icon: <FaBoxes />, accent: "bg-sky-100 text-sky-600" },
+  room: { icon: <FaBed />, accent: "bg-teal-100 text-teal-600" },
   pending: { icon: <MdOutlinePayments />, accent: "bg-rose-100 text-rose-600" },
   devotees: { icon: <FaUsers />, accent: "bg-blue-100 text-blue-600" },
 };
@@ -65,24 +68,30 @@ const AdminDashboard = () => {
   const [donations, setDonations] = useState([]);
   const [inventoryItems, setInventoryItems] = useState([]);
   const [prasadamOrders, setPrasadamOrders] = useState([]);
+  const [rooms, setRooms] = useState([]);
+  const [allBookings, setAllBookings] = useState([]);
   const navigate = useNavigate();
   const { logoutUser, token } = useAuth();
 
   useEffect(() => {
     const load = async () => {
       try {
-        const [usersRes, bookingsRes, donationsRes, inventoryRes, prasadamRes] = await Promise.all([
+        const [usersRes, bookingsRes, donationsRes, inventoryRes, prasadamRes, roomsRes, allBookingsRes] = await Promise.all([
           getAdminUsers(token),
           getAdminBookings(),
           getAdminDonations(),
           axios.get("http://localhost:5000/api/admin/inventory-items").catch(() => ({ data: { items: [] } })),
           getAdminPrasadamOrders(),
+          getAdminRooms().catch(() => []),
+          getAdminAllBookings().catch(() => ({ bookings: [] })),
         ]);
         setUsers(usersRes.users || []);
         setBookings(bookingsRes.bookings || []);
         setDonations(donationsRes.donations || []);
         setInventoryItems(inventoryRes.data?.items || []);
         setPrasadamOrders(prasadamRes.orders || []);
+        setRooms(Array.isArray(roomsRes) ? roomsRes : []);
+        setAllBookings(allBookingsRes.bookings || []);
       } catch (error) {
         console.warn("Unable to load admin data . please try again", error);
       }
@@ -130,10 +139,18 @@ const AdminDashboard = () => {
   };
 
   const dynamicStatCards = useMemo(() => {
-    const bookingRevenue = bookings.reduce((sum, item) => sum + normalizeAmount(item.amount), 0);
+    const poojaBookings = bookings.filter(b => !(b.service && b.service.startsWith("Room Allotment")));
+    const bookingRevenue = poojaBookings.reduce((sum, item) => sum + normalizeAmount(item.amount), 0);
     const donationRevenue = donations.reduce((sum, item) => sum + normalizeAmount(item.amount), 0);
     const prasadamRevenue = prasadamOrders.reduce((sum, item) => sum + normalizeAmount(item.amount), 0);
-    const totalRevenue = bookingRevenue + donationRevenue + prasadamRevenue;
+    
+    const activeRoomRevenue = 0; // Active rooms are already recorded in allBookings
+    const historyRoomRevenue = allBookings
+      .filter((b) => b.service && b.service.startsWith("Room Allotment:"))
+      .reduce((sum, h) => sum + normalizeAmount(h.amount), 0);
+    const roomRevenue = historyRoomRevenue;
+
+    const totalRevenue = bookingRevenue + donationRevenue + prasadamRevenue + roomRevenue;
 
     const today = new Date();
 
@@ -142,10 +159,17 @@ const AdminDashboard = () => {
         const date = getItemDate(item);
         return date && isSameDay(date, day);
       };
+
+      const todayRoomBookings = allBookings
+        .filter((b) => b.service && b.service.startsWith("Room Allotment:"))
+        .filter(matchDay)
+        .reduce((sum, h) => sum + normalizeAmount(h.amount), 0);
+
       return (
-        bookings.filter(matchDay).reduce((sum, item) => sum + normalizeAmount(item.amount), 0) +
+        poojaBookings.filter(matchDay).reduce((sum, item) => sum + normalizeAmount(item.amount), 0) +
         donations.filter(matchDay).reduce((sum, item) => sum + normalizeAmount(item.amount), 0) +
-        prasadamOrders.filter(matchDay).reduce((sum, item) => sum + normalizeAmount(item.amount), 0)
+        prasadamOrders.filter(matchDay).reduce((sum, item) => sum + normalizeAmount(item.amount), 0) +
+        todayRoomBookings
       );
     };
 
@@ -177,6 +201,12 @@ const AdminDashboard = () => {
         amount: formatRs(bookingRevenue),
         hideTrend: true,
         ...cardIcons.pooja,
+      },
+      {
+        title: "Room Booked Revenue",
+        amount: formatRs(roomRevenue),
+        hideTrend: true,
+        ...cardIcons.room,
       },
       {
         title: "Total Donations",
@@ -235,11 +265,13 @@ const AdminDashboard = () => {
 
   const recentBookings = useMemo(
     () =>
-      [...bookings].sort((left, right) => {
-        const leftDate = getItemDate(left)?.getTime() || 0;
-        const rightDate = getItemDate(right)?.getTime() || 0;
-        return rightDate - leftDate;
-      }),
+      [...bookings]
+        .filter((b) => !(b.service && b.service.startsWith("Room Allotment")))
+        .sort((left, right) => {
+          const leftDate = getItemDate(left)?.getTime() || 0;
+          const rightDate = getItemDate(right)?.getTime() || 0;
+          return rightDate - leftDate;
+        }),
     [bookings]
   );
 

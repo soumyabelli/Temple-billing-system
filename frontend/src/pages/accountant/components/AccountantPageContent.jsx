@@ -354,9 +354,9 @@ const DashboardView = ({ user, currentDate, currentWeekday }) => {
       globalEventRevenue,
       globalEventCount,
       roomBookingTotal: roomBookings
-        .filter(b => ["paid", "completed"].includes(String(b.status || "").toLowerCase()))
+        .filter(b => ["paid", "completed", "active"].includes(String(b.status || "").toLowerCase()))
         .reduce((sum, b) => sum + Number(b.amount || 0), 0),
-      roomBookingCount: roomBookings.filter(b => ["paid", "completed"].includes(String(b.status || "").toLowerCase())).length,
+      roomBookingCount: roomBookings.filter(b => ["paid", "completed", "active"].includes(String(b.status || "").toLowerCase())).length,
       paymentSegments,
       categorySegments,
     };

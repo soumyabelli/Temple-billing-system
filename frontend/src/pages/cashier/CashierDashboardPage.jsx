@@ -144,6 +144,7 @@ const CashierDashboardPage = () => {
 
   const rangeBookings = useMemo(() => {
     return bookings.filter((b) => {
+      if (String(b.service || "").toLowerCase().includes("room allotment")) return false;
       const dk = toDateKey(b.bookingDate || b.createdAt);
       return (!fromDate || dk >= fromDate) && (!toDate || dk <= toDate);
     });
@@ -422,8 +423,8 @@ const CashierDashboardPage = () => {
     },
     {
       title: "Pooja Revenue",
-      value: formatCurrency(sumBy(bookings, (b) => b.amount || b.price || 0)),
-      note: `${bookings.length} bookings total`,
+      value: formatCurrency(sumBy(bookings.filter(b => !String(b.service || "").toLowerCase().includes("room allotment")), (b) => b.amount || b.price || 0)),
+      note: `${bookings.filter(b => !String(b.service || "").toLowerCase().includes("room allotment")).length} bookings total`,
       tone: "gold",
     },
     {
@@ -441,10 +442,10 @@ const CashierDashboardPage = () => {
     {
       title: "Room Booked Revenue",
       value: formatCurrency(sumBy(
-        roomBookings.filter(rb => ["paid", "completed"].includes(String(rb.status || "").toLowerCase())),
+        roomBookings.filter(rb => ["paid", "completed", "active"].includes(String(rb.status || "").toLowerCase())),
         (rb) => rb.amount || 0
       )),
-      note: `${roomBookings.filter(rb => ["paid", "completed"].includes(String(rb.status || "").toLowerCase())).length} paid room booking${roomBookings.filter(rb => ["paid", "completed"].includes(String(rb.status || "").toLowerCase())).length !== 1 ? "s" : ""}`,
+      note: `${roomBookings.filter(rb => ["paid", "completed", "active"].includes(String(rb.status || "").toLowerCase())).length} paid room booking${roomBookings.filter(rb => ["paid", "completed", "active"].includes(String(rb.status || "").toLowerCase())).length !== 1 ? "s" : ""}`,
       tone: "purple",
     },
   ];

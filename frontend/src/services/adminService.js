@@ -49,3 +49,13 @@ export const getAdminEvents = async () => {
   const response = await axios.get(`${DEVOTEE_BASE}/events`);
   return response.data;
 };
+
+export const getAdminRooms = async () => {
+  const response = await axios.get(`http://localhost:5000/api/rooms`);
+  return response.data;
+};
+
+export const getAdminAllBookings = async () => {
+  const response = await axios.get(`http://localhost:5000/api/bookings/all?limit=1000`);
+  return response.data;
+};

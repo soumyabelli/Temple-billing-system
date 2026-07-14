@@ -8,6 +8,7 @@ import {
   FaRegAddressCard,
   FaSearch,
   FaReceipt,
+  FaBed,
 } from "react-icons/fa";
 import { MdTempleBuddhist, MdOutlinePayments } from "react-icons/md";
 import Sidebar from "../components/Sidebar";
@@ -23,6 +24,7 @@ const statCards = [
   { title: "Pending Payments", amount: "Rs 12,560", trend: "2.2%", trendUp: false, icon: <MdOutlinePayments />, accent: "bg-rose-100 text-rose-600" },
   { title: "Total Devotees", amount: "2,350", trend: "4.3%", trendUp: true, icon: <FaUsers />, accent: "bg-blue-100 text-blue-600" },
   { title: "Low Stock Items", amount: "8", trend: "Requires attention", trendUp: false, icon: <FaBoxes />, accent: "bg-red-100 text-red-600" },
+  { title: "Room Booked Revenue", amount: "Rs 1,12,400", trend: "5.4%", trendUp: true, icon: <FaBed />, accent: "bg-teal-100 text-teal-600" },
 ];
 
 const devotees = [

@@ -1133,3 +1133,21 @@ Please login using these credentials. You will be required to change your passwo
 Best regards,
 Temple Admin
 
+[2026-07-14T04:14:57.467Z] EMAIL
+To: devos@gmail.com
+Subject: Verify Your Temple Devotee Registration
+Please click the following link to verify your email and complete devotee registration: http://localhost:5000/api/auth/verify-registration?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiZGV2byIsImVtYWlsIjoiZGV2b3NAZ21haWwuY29tIiwicGhvbmUiOiI4Nzk0NTM2MjE1IiwiYWRkcmVzcyI6IlVEVVBJIiwicGxhY2UiOiJVRFVQSSIsInBhc3N3b3JkIjoiJDJiJDEwJEJRUmtmR2tvb3dBZXJKOXhINEN5VS5YbEVkVlgzL3ZwVXN3NndJWEw5MzMyeW9DQWYxdS9HIiwicm9sZSI6ImRldm90ZWUiLCJpYXQiOjE3ODQwMDI0OTQsImV4cCI6MTc4NDAwMzM5NH0.w8jvOstmS8ccUdV8x7-vYLYCj8XvLryuhAytsdZqk8w
+
+[2026-07-14T04:16:37.522Z] EMAIL
+To: devos@gmail.com
+Subject: Pooja Booking Confirmation
+Pooja Booking Confirmation
+Service: Room Allotment: Room 111 (Deluxe)
+Date & Time: 2026-07-14T10:46
+Amount: ₹1100
+Thank you!
+
+[2026-07-14T04:16:37.542Z] SMS
+To: 8794536215
+Message: Pooja booking confirmed! Service: Room Allotment: Room 111 (Deluxe) on 2026-07-14T10:46. Amount: ₹1100. -Temple
+
