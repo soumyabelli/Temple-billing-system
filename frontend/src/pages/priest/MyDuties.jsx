@@ -201,7 +201,6 @@ const MyDuties = ({ darkMode }) => {
                 <tr className={`border-b ${darkMode ? "border-slate-700 bg-slate-800/50" : "border-slate-200 bg-slate-50"}`}>
                   <th className={`text-left px-4 py-3 text-xs font-bold uppercase tracking-wider ${darkMode ? "text-slate-400" : "text-slate-500"}`}>Time</th>
                   <th className={`text-left px-4 py-3 text-xs font-bold uppercase tracking-wider ${darkMode ? "text-slate-400" : "text-slate-500"}`}>Pooja / Duty</th>
-                  <th className={`text-left px-4 py-3 text-xs font-bold uppercase tracking-wider ${darkMode ? "text-slate-400" : "text-slate-500"}`}>Devotee</th>
                   <th className={`text-left px-4 py-3 text-xs font-bold uppercase tracking-wider ${darkMode ? "text-slate-400" : "text-slate-500"}`}>Location</th>
                   <th className={`text-left px-4 py-3 text-xs font-bold uppercase tracking-wider ${darkMode ? "text-slate-400" : "text-slate-500"}`}>Type</th>
                   <th className={`text-center px-4 py-3 text-xs font-bold uppercase tracking-wider ${darkMode ? "text-slate-400" : "text-slate-500"}`}>Actions</th>
@@ -216,9 +215,6 @@ const MyDuties = ({ darkMode }) => {
                     </td>
                     <td className={`px-4 py-4 font-bold ${darkMode ? "text-slate-200" : "text-slate-800"}`}>
                       {duty.poojaName}
-                    </td>
-                    <td className="px-4 py-4">
-                      {duty.devotee !== "N/A" ? duty.devotee : <span className="italic text-slate-400">Not Specified</span>}
                     </td>
                     <td className="px-4 py-4">{duty.area}</td>
                     <td className="px-4 py-4">

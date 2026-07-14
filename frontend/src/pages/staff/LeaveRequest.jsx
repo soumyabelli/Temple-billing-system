@@ -2,8 +2,7 @@ import "./LeaveRequest.css";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-
-const staff = JSON.parse(localStorage.getItem("user") || "null");
+import { useAuth } from "../../context/AuthContext";
 
 const getLocalDateKey = (date = new Date()) => {
   const year = date.getFullYear();
@@ -52,6 +51,7 @@ const formatPeriod = (fromDate, toDate) => {
 
 const LeaveRequest = ({ darkMode, onBack }) => {
   const navigate = useNavigate();
+  const { user: staff } = useAuth();
   const todayStr = getLocalDateKey();
   const [form, setForm] = useState({
     leaveType: "General",

@@ -4,8 +4,7 @@ import axios from "axios";
 
 import "./LeaveRequest.css";
 import { useNavigate } from "react-router-dom";
-
-const staff = JSON.parse(localStorage.getItem("user") || "null");
+import { useAuth } from "../../context/AuthContext";
 
 const parseDate = (value) => {
   if (!value) return null;
@@ -32,22 +31,22 @@ const formatPeriod = (fromDate, toDate) => {
 
 const LeaveHistory = ({ darkMode, onApply }) => {
   const navigate = useNavigate();
+  const { user: staff } = useAuth();
 
   const [leaves, setLeaves] = useState([]);
 
   useEffect(() => {
+    const fetchLeaves = async () => {
+      if (!staff?.id && !staff?._id) return;
+      const staffId = staff?.id || staff?._id;
+      const res = await axios.get(
+        `http://localhost:5000/api/leaves/${staffId}`
+      );
+
+      setLeaves(res.data);
+    };
     fetchLeaves();
-  }, []);
-
-  const fetchLeaves = async () => {
-    if (!staff?.id && !staff?._id) return;
-    const staffId = staff?.id || staff?._id;
-    const res = await axios.get(
-      `http://localhost:5000/api/leaves/${staffId}`
-    );
-
-    setLeaves(res.data);
-  };
+  }, [staff]);
 
   const approved = leaves.filter(
     (l) => l.status === "Approved"
