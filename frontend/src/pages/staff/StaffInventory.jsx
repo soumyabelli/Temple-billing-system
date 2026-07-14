@@ -490,26 +490,26 @@ const StaffInventory = () => {
 
                         <div style={{ marginBottom: "16px" }}>
                           <p style={{ fontSize: "13px", color: "#475569", margin: "0 0 12px" }}><strong>Purpose:</strong> {issue.purpose || "-"}</p>
-                          
+
                           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "10px" }}>
                             <div>
                               <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#475569", marginBottom: "4px" }}>Used Qty <span style={{ color: "#ef4444" }}>*</span></label>
-                              <input 
-                                type="number" 
-                                min="0" 
-                                step="0.1" 
-                                value={cForm.usedQuantity} 
+                              <input
+                                type="number"
+                                min="0"
+                                step="0.1"
+                                value={cForm.usedQuantity}
                                 onChange={(e) => updateCompletionForm(issue._id, "usedQuantity", e.target.value)}
                                 style={{ width: "100%", padding: "8px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "13px" }}
                               />
                             </div>
                             <div>
                               <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#475569", marginBottom: "4px" }}>Returned Qty <span style={{ color: "#ef4444" }}>*</span></label>
-                              <input 
-                                type="number" 
-                                min="0" 
-                                step="0.1" 
-                                value={cForm.returnedQuantity} 
+                              <input
+                                type="number"
+                                min="0"
+                                step="0.1"
+                                value={cForm.returnedQuantity}
                                 onChange={(e) => updateCompletionForm(issue._id, "returnedQuantity", e.target.value)}
                                 style={{ width: "100%", padding: "8px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "13px" }}
                               />
@@ -517,9 +517,9 @@ const StaffInventory = () => {
                           </div>
                           <div>
                             <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#475569", marginBottom: "4px" }}>Remarks (Optional)</label>
-                            <input 
-                              type="text" 
-                              value={cForm.remarks} 
+                            <input
+                              type="text"
+                              value={cForm.remarks}
                               onChange={(e) => updateCompletionForm(issue._id, "remarks", e.target.value)}
                               placeholder="e.g. Unused packs returned"
                               style={{ width: "100%", padding: "8px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "13px" }}
@@ -527,8 +527,8 @@ const StaffInventory = () => {
                           </div>
                         </div>
 
-                        <button 
-                          type="button" 
+                        <button
+                          type="button"
                           disabled={completingIssueId === issue._id}
                           onClick={() => handleCompleteIssue(issue._id, issue.issuedQuantity)}
                           style={{ width: "100%", background: "#10b981", color: "#fff", border: "none", padding: "10px", borderRadius: "8px", fontWeight: 600, cursor: "pointer" }}
