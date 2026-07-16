@@ -1,55 +1,75 @@
+import { motion } from "framer-motion";
 import Background from "../components/Background";
 import LoginForm from "../components/LoginForm";
 
 const LoginPage = () => {
   return (
-    <div className="relative min-h-screen overflow-hidden flex items-center justify-between px-16">
+    <div className="relative min-h-screen overflow-hidden flex flex-col md:flex-row items-center justify-between px-8 md:px-16 lg:px-24 font-sans selection:bg-temple-500 selection:text-white">
 
-      {/* Background */}
+      {/* Background Component */}
       <Background />
 
       {/* Left Divine Content */}
-      <div className="relative z-10 max-w-2xl text-white">
-
+      <motion.div 
+        initial={{ opacity: 0, x: -50 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+        className="relative z-10 max-w-2xl text-white mt-12 md:mt-0"
+      >
         {/* Sanskrit */}
-        <p className="text-4xl text-amber-300 mb-6 tracking-widest font-semibold drop-shadow-lg">
+        <motion.p 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3, duration: 1 }}
+          className="text-2xl md:text-3xl lg:text-4xl text-temple-300 mb-6 tracking-[0.2em] font-medium drop-shadow-md"
+        >
           ॐ नमः शिवाय
-        </p>
+        </motion.p>
 
         {/* Welcome */}
-        <h2 className="text-5xl md:text-7xl font-bold leading-tight text-white drop-shadow-[0_5px_20px_rgba(0,0,0,0.8)]">
+        <h2 className="text-4xl md:text-6xl lg:text-7xl font-serif font-semibold leading-tight text-white drop-shadow-lg">
           Welcome to
         </h2>
 
         {/* Sri Shanti */}
-        <h1 className="text-6xl md:text-8xl font-extrabold text-amber-400 mt-4 leading-tight drop-shadow-[0_5px_25px_rgba(0,0,0,0.9)]">
+        <h1 className="text-5xl md:text-7xl lg:text-8xl font-serif font-bold text-transparent bg-clip-text bg-gradient-to-r from-temple-300 to-temple-500 mt-2 leading-tight drop-shadow-lg">
           Sri Shanti
         </h1>
 
         {/* Mahadev Mandir */}
-        <h1 className="text-6xl md:text-8xl font-extrabold text-white leading-tight drop-shadow-[0_5px_25px_rgba(0,0,0,0.9)]">
+        <h1 className="text-5xl md:text-7xl lg:text-8xl font-serif font-bold text-white leading-tight drop-shadow-lg">
           Mahadev Mandir
         </h1>
 
         {/* Line */}
-        <div className="h-1 w-56 bg-amber-400 rounded-full my-8 shadow-lg"></div>
+        <motion.div 
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: 1 }}
+          transition={{ delay: 0.6, duration: 0.8, ease: "easeOut" }}
+          className="h-1.5 w-48 bg-gradient-to-r from-temple-400 to-transparent rounded-full my-8 origin-left"
+        />
 
         {/* Billing System */}
-        <p className="text-4xl font-semibold text-amber-300 drop-shadow-lg">
+        <p className="text-3xl md:text-4xl font-medium text-temple-200 drop-shadow-md tracking-wide">
           Billing System
         </p>
 
         {/* Subtitle */}
-        <p className="mt-6 text-2xl text-orange-100 tracking-wide font-medium drop-shadow-lg">
-          Divine Management. Devoted Service.
+        <p className="mt-6 text-xl md:text-2xl text-white/80 tracking-wide font-light border-l-4 border-temple-500 pl-4">
+          Divine Management. <span className="font-medium text-temple-100">Devoted Service.</span>
         </p>
 
-      </div>
+      </motion.div>
 
       {/* Login Form */}
-      <div className="relative z-10">
+      <motion.div 
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, duration: 0.8, ease: "easeOut" }}
+        className="relative z-10 mt-12 md:mt-0 w-full md:w-auto flex justify-center"
+      >
         <LoginForm />
-      </div>
+      </motion.div>
 
     </div>
   );

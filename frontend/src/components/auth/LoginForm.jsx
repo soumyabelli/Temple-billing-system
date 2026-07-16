@@ -171,11 +171,11 @@ const LoginForm = () => {
   return (
     <div className="w-[480px] bg-white/20 backdrop-blur-2xl border border-white/30 rounded-[35px] p-10 shadow-2xl text-white">
       <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-amber-900 drop-shadow-lg">Sri Shanti Mahadev Mandir</h1>
+        <h1 className="text-4xl font-bold text-white drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)] tracking-wide">Sri Shanti Mahadev Mandir</h1>
         <div className="flex items-center justify-center gap-3 mt-4">
-          <div className="h-[2px] w-16 bg-orange-300"></div>
-          <p className="text-amber-800 text-lg font-semibold">Sacred Management Portal</p>
-          <div className="h-[2px] w-16 bg-orange-300"></div>
+          <div className="h-[2px] w-16 bg-amber-400 drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"></div>
+          <p className="text-amber-300 text-lg font-semibold tracking-wider uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">Sacred Management Portal</p>
+          <div className="h-[2px] w-16 bg-amber-400 drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"></div>
         </div>
       </div>
 

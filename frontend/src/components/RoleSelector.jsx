@@ -12,7 +12,7 @@ const RoleSelector = ({ selectedRole, setSelectedRole }) => {
   ];
 
   return (
-    <div className="grid grid-cols-3 gap-4">
+    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
 
       {roles.map((role) => (
         <button
@@ -20,19 +20,17 @@ const RoleSelector = ({ selectedRole, setSelectedRole }) => {
           type="button"
           onClick={() => setSelectedRole(role)}
           className={`
-            p-4
-            rounded-2xl
-            font-semibold
+            py-3 px-2
+            rounded-xl
+            font-medium text-sm
             capitalize
             transition-all
             duration-300
-            shadow-lg
             border
-
             ${
               selectedRole === role
-                ? "bg-orange-500 text-white border-orange-600 scale-105"
-                : "bg-white/90 text-black border-white hover:bg-orange-100"
+                ? "bg-temple-500 text-white border-temple-400 shadow-[0_4px_15px_rgba(229,130,32,0.4)] scale-[1.02]"
+                : "bg-white/10 text-white/80 border-white/10 hover:bg-white/20 hover:text-white"
             }
           `}
         >
