@@ -3,6 +3,7 @@ const Booking = require("../models/Booking");
 const Task = require("../models/Task");
 const Notification = require("../models/Notification");
 const User = require("../models/User");
+const { sendEmail } = require("../utils/communicationService");
 
 exports.getAllTransferRequests = async (req, res) => {
   try {
@@ -117,8 +118,8 @@ exports.resolveTransferRequest = async (req, res) => {
     await Notification.create({
       title: "Transfer Request Resolved",
       message: originalPriestMsg,
-      audienceRole: "priest", // Should ideally be targeted to specific user
-      audienceEmail: "", // We don't have email easily here, but we could populate
+      audienceRole: "priest",
+      audienceEmail: "",
       category: "transfer",
     });
 
@@ -128,8 +129,44 @@ exports.resolveTransferRequest = async (req, res) => {
         title: "New Duty Assigned",
         message: targetPriestMsg,
         audienceRole: "priest",
+        audienceEmail: newPriest ? newPriest.email : "",
         category: "transfer",
       });
+
+      if (newPriest && newPriest.email) {
+        let dutyNameStr = "Unknown";
+        let dateStr = "N/A";
+        let timeStr = "N/A";
+        
+        if (request.referenceType === "Booking") {
+          const booking = await Booking.findById(request.referenceId);
+          if (booking) {
+            dutyNameStr = booking.service;
+            dateStr = new Date(booking.datetime).toLocaleDateString();
+            timeStr = new Date(booking.datetime).toLocaleTimeString();
+          }
+        } else if (request.referenceType === "Task") {
+          const task = await Task.findById(request.referenceId);
+          if (task) {
+            dutyNameStr = task.title || task.dutyName || task.duty;
+            dateStr = task.dateKey || new Date(task.createdAt).toLocaleDateString();
+            timeStr = task.time || task.startTime || "N/A";
+          }
+        }
+
+        await sendEmail({
+          to: newPriest.email,
+          subject: "Duty Transfer Assigned To You",
+          html: `
+            <h3>Duty Transfer Notice</h3>
+            <p>Dear ${newPriest.name},</p>
+            <p>A duty has been transferred to you: <strong>${dutyNameStr}</strong></p>
+            <p><strong>Date:</strong> ${dateStr}</p>
+            <p><strong>Time:</strong> ${timeStr}</p>
+            <p>Please log in to the temple portal for more details.</p>
+          `,
+        }).catch(err => console.error("Failed to send transfer email", err));
+      }
     }
 
     return res.status(200).json({ message: `Transfer request ${status.toLowerCase()} successfully` });

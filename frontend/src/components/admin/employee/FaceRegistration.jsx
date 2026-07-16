@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
-import * as faceapi from "face-api.js";
+import * as faceapi from "@vladmandic/face-api";
 import { FiCamera, FiCheckCircle, FiXCircle } from "react-icons/fi";
 import { registerEmployeeFace } from "../../../services/employeeService";
 

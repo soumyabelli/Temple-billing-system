@@ -10,6 +10,7 @@ const {
   deleteShift,
   assignShift,
   deleteAssignment,
+  getAvailableEmployees,
 } = require("../controllers/shiftController");
 
 router.get("/dashboard", getShiftDashboard);
@@ -19,5 +20,6 @@ router.put("/:id", updateShift);
 router.delete("/:id", deleteShift);
 router.post("/assign", assignShift);
 router.delete("/assign/:id", deleteAssignment);
+router.get("/available-employees", getAvailableEmployees);
 
 module.exports = router;

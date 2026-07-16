@@ -5,6 +5,7 @@ const Attendance = require("../models/Attendance");
 const Task = require("../models/Task");
 const Shift = require("../models/Shift");
 const { createStaffNotification } = require("../utils/notificationService");
+const { sendEmail } = require("../utils/communicationService");
 
 const clean = (value) => String(value || "").trim();
 
@@ -498,6 +499,22 @@ exports.assignShift = async (req, res) => {
       category: "task",
     });
 
+    if (employeeTargets.employee.email && /extra duty/i.test(assignmentType)) {
+      await sendEmail({
+        to: employeeTargets.employee.email,
+        subject: "New Extra Duty Assigned",
+        html: `
+          <h3>New Extra Duty Assignment</h3>
+          <p>Dear ${employeeTargets.employee.name},</p>
+          <p>You have been assigned an extra duty: <strong>${dutyName}</strong></p>
+          <p><strong>Date:</strong> ${dateKey}</p>
+          <p><strong>Reporting Time:</strong> ${reportingTime || shift.startTime}</p>
+          <p><strong>Location:</strong> ${dutyArea}</p>
+          <p>Please log in to the temple portal to view more details and mark your attendance for this duty.</p>
+        `,
+      }).catch(err => console.error("Failed to send extra duty email", err));
+    }
+
     return res.status(201).json({ success: true, assignment: serializeAssignment(assignment) });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
@@ -512,6 +529,69 @@ exports.deleteAssignment = async (req, res) => {
     }
 
     return res.json({ success: true, message: "Assignment deleted successfully" });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+exports.getAvailableEmployees = async (req, res) => {
+  try {
+    const { date, startTime, endTime } = req.query;
+    if (!date || !startTime || !endTime) {
+      return res.status(400).json({ success: false, message: "date, startTime, and endTime are required" });
+    }
+
+    const requestedDate = new Date(date);
+    requestedDate.setHours(0, 0, 0, 0);
+    const dateKey = clean(date);
+    const requestedRange = normalizeRange(startTime, endTime);
+
+    // Get all active employees
+    const employees = await Employee.find({ status: "Active" }).select("-password");
+    
+    // Get all tasks for that day
+    const dailyTasks = await Task.find({ dateKey, status: { $nin: ["Cancelled", "Rejected"] } });
+    
+    // Get all default shifts
+    const activeShifts = await Shift.find({ active: true });
+    const shiftMap = {};
+    activeShifts.forEach((s) => { shiftMap[s.shiftName] = normalizeRange(s.startTime, s.endTime); });
+
+    const availableEmployees = [];
+
+    for (const emp of employees) {
+      // Check joining date
+      if (emp.joiningDate) {
+        const joinDate = new Date(emp.joiningDate);
+        joinDate.setHours(0, 0, 0, 0);
+        if (requestedDate < joinDate) continue; // Not joined yet
+      }
+
+      // Check leave
+      const leave = await getLeaveBlock({ employee: emp }, dateKey);
+      if (leave) continue; // On leave
+
+      // Check default shift overlap
+      const defaultShiftName = emp.defaultShift || emp.shift;
+      if (defaultShiftName && shiftMap[defaultShiftName]) {
+        if (rangesOverlap(shiftMap[defaultShiftName], requestedRange)) {
+          continue; // Conflict with default shift
+        }
+      }
+
+      // Check task overlap
+      const empTasks = dailyTasks.filter(t => t.employeeId === emp._id.toString());
+      const hasTaskConflict = empTasks.some(t => {
+        const taskRange = normalizeRange(t.startTime, t.endTime);
+        return rangesOverlap(taskRange, requestedRange);
+      });
+
+      if (hasTaskConflict) continue; // Conflict with assigned task
+
+      availableEmployees.push(emp);
+    }
+
+    return res.json({ success: true, employees: availableEmployees });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }

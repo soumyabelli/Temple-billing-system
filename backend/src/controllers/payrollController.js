@@ -166,9 +166,11 @@ const buildEmployeePayroll = ({ employee, monthRange, attendanceDocs, leaveDocs,
 
   const baseSalary = roundMoney(employee.salary || 0);
   const dailyRate = baseSalary / Math.max(1, monthRange.daysInMonth);
+  const hourlyRate = baseSalary / (Math.max(1, monthRange.daysInMonth) * 8);
   const deduction = roundMoney((absentDays + unpaidLeaveDays) * dailyRate + halfDays * dailyRate * 0.5);
+  const calculatedExtraDutyPay = overtimeHours * hourlyRate;
   const extraDutyPay =
-    savedRecord?.extraDutyPay != null ? roundMoney(savedRecord.extraDutyPay) : 0;
+    savedRecord?.extraDutyPay != null ? roundMoney(savedRecord.extraDutyPay) : roundMoney(calculatedExtraDutyPay);
   const bonus = savedRecord?.bonus != null ? roundMoney(savedRecord.bonus) : 0;
   const netSalary = roundMoney(baseSalary - deduction + extraDutyPay + bonus);
 

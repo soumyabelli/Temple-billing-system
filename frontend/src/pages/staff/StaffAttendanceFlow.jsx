@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useMemo } from "react";
-import * as faceapi from "face-api.js";
+import * as faceapi from "@vladmandic/face-api";
 import { FiCamera, FiMapPin, FiCheckCircle, FiXCircle, FiLoader } from "react-icons/fi";
 import { markAttendance } from "../../services/attendanceService";
 

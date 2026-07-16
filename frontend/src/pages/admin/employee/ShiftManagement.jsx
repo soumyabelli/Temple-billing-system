@@ -12,6 +12,8 @@ import {
   FiInfo,
   FiX
 } from "react-icons/fi";
+import { FaExchangeAlt, FaCheck, FaTimes, FaSpinner } from "react-icons/fa";
+import axios from "axios";
 import SectionCard from "../../../components/admin/employee/SectionCard";
 import { 
   getShiftDashboard, 
@@ -114,6 +116,11 @@ const ShiftManagement = () => {
   const [weekStart, setWeekStart] = useState(getCurrentWeekStartKey);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [activeTab, setActiveTab] = useState("planner");
+  const [requests, setRequests] = useState([]);
+  const [transferLoading, setTransferLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState(null);
+  const [selectedPriest, setSelectedPriest] = useState({});
 
   // Modals state
   const [showShiftModal, setShowShiftModal] = useState(false);
@@ -150,6 +157,36 @@ const ShiftManagement = () => {
   });
   const [assignError, setAssignError] = useState("");
   const [shiftTypeError, setShiftTypeError] = useState("");
+  const [availableEmployees, setAvailableEmployees] = useState([]);
+  const [fetchingAvailable, setFetchingAvailable] = useState(false);
+
+  useEffect(() => {
+    if (assignForm.date && assignForm.shiftId) {
+      const selectedShift = shifts.find(s => s.id === assignForm.shiftId);
+      if (selectedShift) {
+        fetchAvailable(assignForm.date, selectedShift.startTime, selectedShift.endTime);
+      }
+    } else {
+      setAvailableEmployees([]);
+    }
+  }, [assignForm.date, assignForm.shiftId, shifts]);
+
+  const fetchAvailable = async (date, startTime, endTime) => {
+    try {
+      setFetchingAvailable(true);
+      const res = await axios.get(`http://localhost:5000/api/shifts/available-employees?date=${date}&startTime=${startTime}&endTime=${endTime}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      setAvailableEmployees(res.data.employees || []);
+      if (!res.data.employees?.find(e => e._id === assignForm.employeeId)) {
+        setAssignForm(prev => ({ ...prev, employeeId: "" }));
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setFetchingAvailable(false);
+    }
+  };
 
   // Load Dashboard Data
   const loadData = async (targetWeekStart) => {
@@ -173,11 +210,19 @@ const ShiftManagement = () => {
       
       const empData = await getEmployees();
       setEmployees(Array.isArray(empData) ? empData : empData.employees || []);
+      
+      // Fetch transfers
+      setTransferLoading(true);
+      const res = await axios.get("http://localhost:5000/api/transfers/requests", {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      setRequests(res.data);
     } catch (err) {
       console.error("ShiftManagement load error", err);
       setError("Failed to load shift dashboard. Please try again.");
     } finally {
       setLoading(false);
+      setTransferLoading(false);
     }
   };
 
@@ -380,6 +425,50 @@ const ShiftManagement = () => {
     }
   };
 
+  const fetchRequests = async () => {
+    try {
+      setTransferLoading(true);
+      const res = await axios.get("http://localhost:5000/api/transfers/requests", {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      setRequests(res.data);
+    } catch (error) {
+      console.error("Error fetching transfer requests:", error);
+    } finally {
+      setTransferLoading(false);
+    }
+  };
+
+  const handleResolveTransfer = async (id, status, assignedPriestId = null) => {
+    try {
+      setActionLoading(id);
+      const payload = { status };
+      if (status === "Approved" && assignedPriestId) {
+        payload.assignToPriestId = assignedPriestId;
+      }
+
+      await axios.put(`http://localhost:5000/api/transfers/requests/${id}/resolve`, payload, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      
+      alert(`Request ${status} successfully.`);
+      fetchRequests();
+    } catch (error) {
+      alert(error.response?.data?.message || "Failed to resolve request.");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const getStatusBadgeTransfer = (status) => {
+    switch (status) {
+      case "Pending": return "bg-yellow-100 text-yellow-700";
+      case "Approved": return "bg-green-100 text-green-700";
+      case "Rejected": return "bg-rose-100 text-rose-700";
+      default: return "bg-slate-100 text-slate-700";
+    }
+  };
+
   // Unassign/Delete Assignment
   const handleUnassignClick = async (assignmentId) => {
     if (!window.confirm("Are you sure you want to delete this shift assignment?")) return;
@@ -456,7 +545,33 @@ const ShiftManagement = () => {
         </div>
       )}
 
+      {/* Tabs */}
+      <div className="flex gap-4 border-b border-slate-200">
+        <button
+          onClick={() => setActiveTab("planner")}
+          className={`pb-3 text-sm font-semibold transition-colors ${
+            activeTab === "planner"
+              ? "border-b-2 border-violet-600 text-violet-700"
+              : "text-slate-500 hover:text-slate-700"
+          }`}
+        >
+          Shift Planner
+        </button>
+        <button
+          onClick={() => setActiveTab("transfers")}
+          className={`pb-3 text-sm font-semibold transition-colors flex items-center gap-2 ${
+            activeTab === "transfers"
+              ? "border-b-2 border-orange-500 text-orange-600"
+              : "text-slate-500 hover:text-slate-700"
+          }`}
+        >
+          <FaExchangeAlt /> Duty Transfers
+        </button>
+      </div>
+
       {/* 2. Main Weekly Planner Calendar */}
+      {activeTab === "planner" && (
+        <>
       <SectionCard 
         title="Weekly Shift Planner" 
         subtitle="Manage and view roster schedules in a weekly layout."
@@ -696,6 +811,111 @@ const ShiftManagement = () => {
           </SectionCard>
         </div>
       </div>
+        </>
+      )}
+
+      {/* Duty Transfers Tab */}
+      {activeTab === "transfers" && (
+        <SectionCard 
+          title="Duty Transfer Requests" 
+          subtitle="Review and approve duty reassignment requests from priests."
+        >
+          <div className="overflow-x-auto pb-4">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr className="bg-slate-50 text-slate-600 border-b border-slate-200">
+                  <th className="p-3 font-bold rounded-tl-xl">Duty Details</th>
+                  <th className="p-3 font-bold">Requested By</th>
+                  <th className="p-3 font-bold">Target Priest</th>
+                  <th className="p-3 font-bold">Reason</th>
+                  <th className="p-3 font-bold">Status</th>
+                  <th className="p-3 font-bold text-center rounded-tr-xl">Admin Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {transferLoading ? (
+                  <tr>
+                    <td colSpan="6" className="text-center p-8">
+                      <FaSpinner className="animate-spin text-orange-500 mx-auto text-xl" />
+                    </td>
+                  </tr>
+                ) : requests.length === 0 ? (
+                  <tr>
+                    <td colSpan="6" className="text-center p-8 text-slate-500 italic">
+                      No transfer requests found.
+                    </td>
+                  </tr>
+                ) : (
+                  requests.map((req) => (
+                    <tr key={req.id} className="border-b last:border-0 border-slate-100 hover:bg-slate-50 transition-colors">
+                      <td className="p-3">
+                        <div className="font-bold text-slate-800">{req.dutyName}</div>
+                        <div className="text-[10px] text-slate-500">{req.date} at {req.time}</div>
+                        <div className="text-[10px] text-orange-500 mt-0.5 font-semibold">({req.referenceType})</div>
+                      </td>
+                      <td className="p-3">
+                        <div className="font-semibold text-slate-800">{req.originalPriest?.name || "Unknown"}</div>
+                      </td>
+                      <td className="p-3">
+                        <div className="font-semibold text-slate-800">{req.requestedPriest?.name || "Unknown"}</div>
+                        {req.status === "Pending" && (
+                          <div className="mt-1.5">
+                            <select
+                              className="text-[10px] border border-slate-200 rounded px-1.5 py-1 w-full max-w-[150px] outline-none"
+                              value={selectedPriest[req.id] || req.requestedPriest?._id || ""}
+                              onChange={(e) => setSelectedPriest({ ...selectedPriest, [req.id]: e.target.value })}
+                            >
+                              <option value={req.requestedPriest?._id}>Requested: {req.requestedPriest?.name}</option>
+                              <optgroup label="Or Assign to Others:">
+                                {employees.filter(p => p._id !== req.originalPriest?._id && p.status === "Active").map(p => (
+                                  <option key={p._id} value={p._id}>{p.name}</option>
+                                ))}
+                              </optgroup>
+                            </select>
+                          </div>
+                        )}
+                      </td>
+                      <td className="p-3">
+                        <div className="text-slate-700">{req.reason}</div>
+                        {req.remarks && <div className="text-[10px] text-slate-400 mt-0.5 italic">"{req.remarks}"</div>}
+                      </td>
+                      <td className="p-3">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${getStatusBadgeTransfer(req.status)}`}>
+                          {req.status}
+                        </span>
+                      </td>
+                      <td className="p-3 text-center">
+                        {req.status === "Pending" ? (
+                          <div className="flex justify-center gap-1.5">
+                            <button
+                              onClick={() => handleResolveTransfer(req.id, "Approved", selectedPriest[req.id] || req.requestedPriest?._id)}
+                              disabled={actionLoading === req.id}
+                              className="p-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded transition-colors disabled:opacity-50"
+                              title="Approve & Assign"
+                            >
+                              {actionLoading === req.id ? <FaSpinner className="animate-spin" /> : <FaCheck size={12} />}
+                            </button>
+                            <button
+                              onClick={() => handleResolveTransfer(req.id, "Rejected")}
+                              disabled={actionLoading === req.id}
+                              className="p-1.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded transition-colors disabled:opacity-50"
+                              title="Reject Transfer"
+                            >
+                              {actionLoading === req.id ? <FaSpinner className="animate-spin" /> : <FaTimes size={12} />}
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-[10px] text-slate-400 font-semibold italic">Resolved</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </SectionCard>
+      )}
 
       {/* 4. Add/Edit Shift Modal */}
       {showShiftModal && (
@@ -865,22 +1085,6 @@ const ShiftManagement = () => {
               )}
 
               <div>
-                <label className="block text-slate-600 font-semibold mb-1.5">Select Employee</label>
-                <select 
-                  value={assignForm.employeeId}
-                  onChange={(e) => setAssignForm({ ...assignForm, employeeId: e.target.value })}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 outline-none font-semibold text-slate-800 transition"
-                >
-                  <option value="">-- Select Employee --</option>
-                  {activeEmployees.map(emp => (
-                    <option key={emp.id} value={emp.id || emp._id}>
-                      {emp.name} ({emp.role})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
                 <label className="block text-slate-600 font-semibold mb-1.5">Assignment Type</label>
                 <select
                   value={assignForm.assignmentType}
@@ -893,6 +1097,19 @@ const ShiftManagement = () => {
                     </option>
                   ))}
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-slate-600 font-semibold mb-1.5">Date</label>
+                <input
+                  type="date"
+                  value={assignForm.date}
+                  min={new Date().toISOString().split("T")[0]}
+                  onChange={(e) =>
+                    setAssignForm({ ...assignForm, date: e.target.value })
+                  }
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 outline-none font-semibold text-slate-850 transition"
+                />
               </div>
 
               <div>
@@ -909,6 +1126,31 @@ const ShiftManagement = () => {
                     </option>
                   ))}
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-slate-600 font-semibold mb-1.5 flex justify-between">
+                  <span>Select Employee</span>
+                  {fetchingAvailable && <span className="text-[10px] text-violet-500 flex items-center gap-1"><FaSpinner className="animate-spin" /> Checking availability...</span>}
+                </label>
+                <select 
+                  value={assignForm.employeeId}
+                  onChange={(e) => setAssignForm({ ...assignForm, employeeId: e.target.value })}
+                  disabled={!assignForm.date || !assignForm.shiftId || fetchingAvailable}
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 outline-none font-semibold text-slate-800 transition disabled:opacity-60 disabled:bg-slate-50"
+                >
+                  <option value="">
+                    {!assignForm.date || !assignForm.shiftId ? "-- Select Date & Shift First --" : "-- Select Available Employee --"}
+                  </option>
+                  {availableEmployees.map(emp => (
+                    <option key={emp.id || emp._id} value={emp.id || emp._id}>
+                      {emp.name} ({emp.role})
+                    </option>
+                  ))}
+                </select>
+                {assignForm.date && assignForm.shiftId && availableEmployees.length === 0 && !fetchingAvailable && (
+                  <p className="text-[10px] text-rose-500 font-semibold mt-1">No employees available for this shift.</p>
+                )}
               </div>
 
               <div>
@@ -934,19 +1176,6 @@ const ShiftManagement = () => {
                   onChange={(e) => setAssignForm({ ...assignForm, dutyArea: e.target.value })}
                   placeholder={isTemporaryShiftChange ? "Optional shift location" : "e.g. Temple Hall"}
                   className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 outline-none font-semibold text-slate-800 transition"
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-600 font-semibold mb-1.5">Date</label>
-                <input
-                  type="date"
-                  value={assignForm.date}
-                  min={new Date().toISOString().split("T")[0]}
-                  onChange={(e) =>
-                    setAssignForm({ ...assignForm, date: e.target.value })
-                  }
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 outline-none font-semibold text-slate-850 transition"
                 />
               </div>
 
