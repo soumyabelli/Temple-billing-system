@@ -1,8 +1,9 @@
 import React, { useRef, useState, useEffect } from "react";
 import * as faceapi from "face-api.js";
 import { FiCamera, FiCheckCircle, FiXCircle } from "react-icons/fi";
+import { registerEmployeeFace } from "../../../services/employeeService";
 
-const FaceRegistration = ({ onRegistrationComplete }) => {
+const FaceRegistration = ({ employee, onComplete, onRegistrationComplete }) => {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   
@@ -106,12 +107,27 @@ const FaceRegistration = ({ onRegistrationComplete }) => {
         setMessage("Face Registered Successfully");
         stopVideo();
         
-        if (onRegistrationComplete) {
-            onRegistrationComplete({
-                faceRegistered: true,
-                faceDescriptor: avgDescriptor,
-                profilePhoto: newPhotos[0]
-            });
+        const faceData = {
+            faceRegistered: true,
+            faceDescriptor: avgDescriptor,
+            profilePhoto: newPhotos[0],
+            facePhotos: newPhotos
+        };
+        
+        if (employee && employee._id) {
+            setMessage("Saving face data to database...");
+            try {
+                const res = await registerEmployeeFace(employee._id, faceData);
+                setMessage("Face Registered and Saved Successfully");
+                if (onComplete) {
+                    onComplete(res.employee);
+                }
+            } catch (err) {
+                console.error("Error saving face data:", err);
+                setMessage("Face captured but failed to save to database.");
+            }
+        } else if (onRegistrationComplete) {
+            onRegistrationComplete(faceData);
         }
       } else {
         setMessage(`Captured ${newDescriptors.length}/5. Please slightly change your angle.`);

@@ -53,3 +53,8 @@ export const deleteEmployee = async (id, status = "Inactive") => {
   });
   return response.data;
 };
+
+export const registerEmployeeFace = async (id, faceData) => {
+  const response = await axios.put(`${API_BASE}/${id}/register-face`, faceData, authConfig());
+  return response.data;
+};

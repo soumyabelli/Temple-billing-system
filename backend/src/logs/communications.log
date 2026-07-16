@@ -1151,3 +1151,16 @@ Thank you!
 To: 8794536215
 Message: Pooja booking confirmed! Service: Room Allotment: Room 111 (Deluxe) on 2026-07-14T10:46. Amount: ₹1100. -Temple
 
+[2026-07-14T06:24:32.973Z] EMAIL
+To: reena@gmail.com
+Subject: Donation Receipt
+Donation Receipt
+Amount: ₹50088
+Category: Festival Donation
+Transaction ID: pay_TDHaBkSEdoQXPB
+Thank you for your donation!
+
+[2026-07-14T06:24:32.976Z] SMS
+To: 9945650664
+Message: Donation received! Amount: ₹50088. Transaction ID: pay_TDHaBkSEdoQXPB. Thank you! -Temple
+

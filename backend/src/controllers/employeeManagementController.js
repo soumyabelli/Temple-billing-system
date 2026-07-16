@@ -609,7 +609,7 @@ exports.deleteEmployee = async (req, res) => {
 exports.registerFace = async (req, res) => {
   try {
     const { id } = req.params;
-    const { faceDescriptor, profilePhoto } = req.body;
+    const { faceDescriptor, profilePhoto, facePhotos } = req.body;
     
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: "Invalid employee ID." });
@@ -628,6 +628,9 @@ exports.registerFace = async (req, res) => {
     employee.faceRegistered = true;
     if (profilePhoto) {
       employee.profilePhoto = profilePhoto;
+    }
+    if (facePhotos && Array.isArray(facePhotos)) {
+      employee.facePhotos = facePhotos;
     }
     
     await employee.save();

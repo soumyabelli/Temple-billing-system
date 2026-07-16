@@ -35,6 +35,7 @@ const initialForm = {
   attendanceLocation: "",
   faceRegistered: false,
   faceDescriptor: [],
+  facePhotos: [],
   
   // Step 3 – Account Details
   bankName: "",
@@ -299,6 +300,7 @@ const AddEmployee = () => {
   faceRegistered: form.faceRegistered,
   faceDescriptor: form.faceDescriptor,
   profilePhoto: form.profilePhoto || photoDataUrl,
+  facePhotos: form.facePhotos || [],
   currentDuty: {
     dutyName: form.defaultDuty,
     shift: form.defaultShift,
@@ -751,7 +753,7 @@ const AddEmployee = () => {
                           <p className="font-bold">Face Registered</p>
                           <p className="text-xs">Face data has been captured successfully.</p>
                         </div>
-                        <button type="button" onClick={() => setForm(prev => ({ ...prev, faceRegistered: false, faceDescriptor: [], profilePhoto: null }))} className="text-sm font-semibold underline">Retake</button>
+                        <button type="button" onClick={() => setForm(prev => ({ ...prev, faceRegistered: false, faceDescriptor: [], profilePhoto: null, facePhotos: [] }))} className="text-sm font-semibold underline">Retake</button>
                      </div>
                   ) : (
                      <FaceRegistration onRegistrationComplete={(data) => {
@@ -759,7 +761,8 @@ const AddEmployee = () => {
                            ...prev,
                            faceRegistered: data.faceRegistered,
                            faceDescriptor: data.faceDescriptor,
-                           profilePhoto: data.profilePhoto
+                           profilePhoto: data.profilePhoto,
+                           facePhotos: data.facePhotos
                         }));
                      }} />
                   )}

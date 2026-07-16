@@ -166,6 +166,11 @@ const employeeSchema = new mongoose.Schema({
     default: [],
   },
 
+  facePhotos: {
+    type: [String],
+    default: [],
+  },
+
   attendanceLocation: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "AttendanceLocation",
