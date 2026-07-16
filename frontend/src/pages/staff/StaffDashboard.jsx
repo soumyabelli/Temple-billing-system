@@ -37,7 +37,7 @@ const TASK_STATUSES = ["Pending", "In Progress", "Completed"];
 const LEAVE_TYPES = ["Sick Leave", "Casual Leave", "Festival Leave", "Emergency Leave", "General"];
 const BLOOD_GROUPS = ["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"];
 const INVENTORY_UNITS = ["Kg", "Liter", "Pack", "Pieces"];
-const STAFF_PROFILE_EDITABLE_FIELDS = ["name", "email", "bloodGroup", "dob", "phone", "emergencyContact", "address", "photo"];
+const STAFF_PROFILE_EDITABLE_FIELDS = ["name", "email", "bloodGroup", "dob", "phone", "emergencyContact", "address", "photo", "bankName", "accountNumber"];
 
 const buildEditableProfilePayload = (profile = {}) =>
   STAFF_PROFILE_EDITABLE_FIELDS.reduce((payload, field) => {
@@ -60,7 +60,8 @@ const getStaffProfileDetails = (profile = {}) => {
     { label: "Attendance Status", value: profile.attendanceStatus || "Not Marked" },
     { label: "Weekly Off", value: profile.weeklyOff || "None" },
     { label: "Leave Balance", value: `${profile.leaveBalance ?? 0} days` },
-    { label: "Duty Location", value: profile.currentDuty?.dutyLocation || profile.dutyLocation || "-" },
+    { label: "Bank Name", value: profile.bankName || "-" },
+    { label: "Account Number", value: profile.accountNumber || "-" },
   ];
   return details.filter(d => d.value !== "-" && d.value !== "");
 };
@@ -1082,6 +1083,27 @@ const StaffDashboard = () => {
                     value={profileForm.address}
                     onChange={(e) => handleProfileInputChange("address", e.target.value)}
                   />
+
+                  <div className="date-grid">
+                    <div>
+                      <label htmlFor="profile-bankName">Bank Name</label>
+                      <input
+                        id="profile-bankName"
+                        type="text"
+                        value={profileForm.bankName}
+                        onChange={(e) => handleProfileInputChange("bankName", e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="profile-accountNumber">Account Number</label>
+                      <input
+                        id="profile-accountNumber"
+                        type="text"
+                        value={profileForm.accountNumber}
+                        onChange={(e) => handleProfileInputChange("accountNumber", e.target.value)}
+                      />
+                    </div>
+                  </div>
 
                   {profileMessage ? <p className="profile-note">{profileMessage}</p> : null}
 

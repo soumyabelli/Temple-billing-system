@@ -19,6 +19,7 @@ const initialForm = {
   phone: "",
   address: "",
   photo: null,
+  bloodGroup: "",
   gender: "Male",
   dob: "",
   employeeType: "Full Time",
@@ -210,6 +211,9 @@ const AddEmployee = () => {
       } else if (!isAdult(form.dob)) {
         newErrors.dob = "Employees must be at least 18 years old.";
       }
+      if (!form.bloodGroup || form.bloodGroup.trim() === "") {
+        newErrors.bloodGroup = "Please select a Blood Group.";
+      }
       if (form.address && /^\d+$/.test(form.address.trim())) {
         newErrors.address = "Address cannot consist of only numbers.";
       }
@@ -219,13 +223,6 @@ const AddEmployee = () => {
         } else if (!form.photo.type.startsWith('image/')) {
           newErrors.photo = "Please upload a valid image file.";
         }
-      }
-      if (!form.bankName || form.bankName.trim() === "") {
-        newErrors.bankName = "Please select a Bank Name.";
-      }
-      const acc = form.accountNumber ? form.accountNumber.trim() : "";
-      if (!acc || !/^[0-9]{9,18}$/.test(acc)) {
-        newErrors.accountNumber = "Valid Account Number (9-18 digits) is required.";
       }
     }
     if (step === 1) {
@@ -274,6 +271,20 @@ const AddEmployee = () => {
     e.preventDefault();
     setMessage(null);
 
+    const newErrors = {};
+    if (!form.bankName || form.bankName.trim() === "") {
+      newErrors.bankName = "Please select a Bank Name.";
+    }
+    const acc = form.accountNumber ? form.accountNumber.trim() : "";
+    if (!acc || !/^[0-9]{9,18}$/.test(acc)) {
+      newErrors.accountNumber = "Valid Account Number (9-18 digits) is required.";
+    }
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      setIsSaving(false);
+      return;
+    }
+
     setIsSaving(true);
     try {
       const photoDataUrl = await readFileAsDataUrl(form.photo);
@@ -284,6 +295,7 @@ const AddEmployee = () => {
   address: form.address.trim(),
 
   gender: form.gender,
+  bloodGroup: form.bloodGroup,
   dob: form.dob,
 
   employeeType: form.employeeType,
@@ -478,6 +490,27 @@ const AddEmployee = () => {
                   {errors.dob && <p className="text-rose-500 text-xs mt-1">{errors.dob}</p>}
                 </label>
 
+                {/* Blood Group */}
+                <label className="block space-y-2 text-sm text-slate-700">
+                  Blood Group <span className="text-rose-500">*</span>
+                  <select
+                    value={form.bloodGroup}
+                    onChange={handleChange("bloodGroup")}
+                    className={`w-full rounded-3xl border ${errors.bloodGroup ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition`}
+                  >
+                    <option value="">Select Blood Group</option>
+                    <option value="A+">A+</option>
+                    <option value="A-">A-</option>
+                    <option value="B+">B+</option>
+                    <option value="B-">B-</option>
+                    <option value="AB+">AB+</option>
+                    <option value="AB-">AB-</option>
+                    <option value="O+">O+</option>
+                    <option value="O-">O-</option>
+                  </select>
+                  {errors.bloodGroup && <p className="text-rose-500 text-xs mt-1">{errors.bloodGroup}</p>}
+                </label>
+
                 {/*Emergency Contact*/}
                 <label className="block space-y-2 text-sm text-slate-700">
                   Emergency Contact *
@@ -545,35 +578,6 @@ const AddEmployee = () => {
                     <span className="text-sm text-slate-500">PNG, JPG up to 5 MB</span>
                   </div>
                   {errors.photo && <p className="text-rose-500 text-xs mt-1">{errors.photo}</p>}
-                </label>
-                {/* Bank Name */}
-                <label className="block space-y-2 text-sm text-slate-700">
-                  Bank Name <span className="text-rose-500">*</span>
-                  <select
-                    value={form.bankName}
-                    onChange={handleChange("bankName")}
-                    className={`w-full rounded-3xl border ${errors.bankName ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition`}
-                  >
-                    {bankOptions.map((bank) => (
-                      <option key={bank} value={bank} disabled={bank === ""}>
-                        {bank === "" ? "Select Bank" : bank}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.bankName && <p className="text-rose-500 text-xs mt-1">{errors.bankName}</p>}
-                </label>
-
-                {/* Account Number */}
-                <label className="block space-y-2 text-sm text-slate-700">
-                  Account Number <span className="text-rose-500">*</span>
-                  <input
-                    type="text"
-                    value={form.accountNumber}
-                    onChange={handleChange("accountNumber")}
-                    placeholder="e.g. 123456789012"
-                    className={`w-full rounded-3xl border ${errors.accountNumber ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition`}
-                  />
-                  {errors.accountNumber && <p className="text-rose-500 text-xs mt-1">{errors.accountNumber}</p>}
                 </label>
               </div>
             )}
@@ -815,6 +819,36 @@ const AddEmployee = () => {
                       Employee ID, username, and temporary password will be generated and sent to the employee's email automatically after Save Employee.
                     </div>
 
+                {/* Bank Name */}
+                <label className="block space-y-2 text-sm text-slate-700">
+                  Bank Name <span className="text-rose-500">*</span>
+                  <select
+                    value={form.bankName}
+                    onChange={handleChange("bankName")}
+                    className={`w-full rounded-3xl border ${errors.bankName ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition`}
+                  >
+                    {bankOptions.map((bank) => (
+                      <option key={bank} value={bank} disabled={bank === ""}>
+                        {bank === "" ? "Select Bank" : bank}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.bankName && <p className="text-rose-500 text-xs mt-1">{errors.bankName}</p>}
+                </label>
+
+                {/* Account Number */}
+                <label className="block space-y-2 text-sm text-slate-700">
+                  Account Number <span className="text-rose-500">*</span>
+                  <input
+                    type="text"
+                    value={form.accountNumber}
+                    onChange={handleChange("accountNumber")}
+                    placeholder="e.g. 123456789012"
+                    className={`w-full rounded-3xl border ${errors.accountNumber ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition`}
+                  />
+                  {errors.accountNumber && <p className="text-rose-500 text-xs mt-1">{errors.accountNumber}</p>}
+                </label>
+
                 {/* Summary Review */}
                 <div className="md:col-span-2 rounded-3xl border border-slate-200 bg-slate-50 p-5 space-y-3">
                   <p className="text-sm font-semibold text-slate-700 mb-3">Review Before Saving</p>
@@ -830,6 +864,10 @@ const AddEmployee = () => {
                     <div>
                       <p className="text-slate-500 text-xs">Role</p>
                       <p className="font-semibold text-slate-800 capitalize">{form.role}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-500 text-xs">Blood Group</p>
+                      <p className="font-semibold text-slate-800">{form.bloodGroup || "—"}</p>
                     </div>
                     <div>
                       <p className="text-slate-500 text-xs">Department</p>
