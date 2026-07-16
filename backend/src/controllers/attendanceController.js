@@ -271,6 +271,7 @@ const resolveStaffContext = async ({ staffId, staffName, staffEmail }) => {
     attendanceLocationName: employee?.attendanceLocation?.locationName || "Not Assigned",
     department: employee?.department || "",
     role: user?.role || employee?.role || "staff",
+    weeklyOff: employee?.weeklyOff || "",
   };
 };
 
@@ -599,13 +600,23 @@ const buildDashboardResponse = async (staffId, monthValue) => {
       } else if (status === "Half Day") {
         halfDays += 1;
       } else if (status === "Absent") {
-        absentDays += 1;
+        const cursorDayName = cursor.toLocaleDateString('en-US', { weekday: 'long' });
+        if (staff.weeklyOff && staff.weeklyOff === cursorDayName) {
+          status = "Weekly Off";
+        } else {
+          absentDays += 1;
+        }
       } else if (status === "Leave") {
         leaveDays += 1;
       }
     } else if (hasPastDate) {
-      status = "Absent";
-      absentDays += 1;
+      const cursorDayName = cursor.toLocaleDateString('en-US', { weekday: 'long' });
+      if (staff.weeklyOff && staff.weeklyOff === cursorDayName) {
+        status = "Weekly Off";
+      } else {
+        status = "Absent";
+        absentDays += 1;
+      }
     }
 
     if (status) {
@@ -1295,6 +1306,19 @@ exports.markAttendance = async (req, res) => {
       });
     }
 
+    if (employee.weeklyOff) {
+      const currentDayName = now.toLocaleDateString('en-US', { weekday: 'long' });
+      if (employee.weeklyOff === currentDayName) {
+        const hasEmergencyDuty = todayTasks.some(t => clean(t.assignmentType) === "Emergency Duty");
+        if (!hasEmergencyDuty) {
+          return res.status(403).json({
+            success: false,
+            message: "Today is your Weekly Off. Attendance cannot be marked without an Emergency Duty assignment.",
+          });
+        }
+      }
+    }
+
     let settings = await AttendanceSetting.findOne();
     if (!settings) settings = await AttendanceSetting.create({});
 
@@ -1456,6 +1480,19 @@ exports.markAttendance = async (req, res) => {
       const overtimeMinutes = Math.max(0, workingMinutes - standardWorkingMinutes);
       attendance.overtimeMinutes = overtimeMinutes;
       attendance.overtimeHours = formatWorkingHours(overtimeMinutes);
+    }
+
+    if ((attendance.status === "Present" || attendance.status === "Half Day") && clean(attendance.assignmentType) === "Emergency Duty") {
+      if (employee.weeklyOff) {
+        const checkOutDate = new Date(attendance.dateKey);
+        const dayName = checkOutDate.toLocaleDateString('en-US', { weekday: 'long' });
+        if (employee.weeklyOff === dayName) {
+          const addedCompOff = attendance.status === "Present" ? 1 : 0.5;
+          employee.compOffBalance = (employee.compOffBalance || 0) + addedCompOff;
+          await employee.save();
+          attendance.note = (attendance.note ? attendance.note + " | " : "") + `Earned ${addedCompOff} Comp Off for Emergency Duty on Weekly Off.`;
+        }
+      }
     }
 
     await attendance.save();

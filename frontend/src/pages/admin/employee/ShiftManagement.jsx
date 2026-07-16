@@ -164,17 +164,17 @@ const ShiftManagement = () => {
     if (assignForm.date && assignForm.shiftId) {
       const selectedShift = shifts.find(s => s.id === assignForm.shiftId);
       if (selectedShift) {
-        fetchAvailable(assignForm.date, selectedShift.startTime, selectedShift.endTime);
+        fetchAvailable(assignForm.date, selectedShift.startTime, selectedShift.endTime, assignForm.assignmentType);
       }
     } else {
       setAvailableEmployees([]);
     }
-  }, [assignForm.date, assignForm.shiftId, shifts]);
+  }, [assignForm.date, assignForm.shiftId, shifts, assignForm.assignmentType]);
 
-  const fetchAvailable = async (date, startTime, endTime) => {
+  const fetchAvailable = async (date, startTime, endTime, assignmentType) => {
     try {
       setFetchingAvailable(true);
-      const res = await axios.get(`http://localhost:5000/api/shifts/available-employees?date=${date}&startTime=${startTime}&endTime=${endTime}`, {
+      const res = await axios.get(`http://localhost:5000/api/shifts/available-employees?date=${date}&startTime=${startTime}&endTime=${endTime}&assignmentType=${assignmentType}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       setAvailableEmployees(res.data.employees || []);
@@ -1065,7 +1065,7 @@ const ShiftManagement = () => {
       {/* 5. Assign Shift Modal */}
       {showAssignModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-[32px] border border-slate-200 bg-white p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+          <div className="w-full max-w-md max-h-[95vh] overflow-y-auto rounded-[32px] border border-slate-200 bg-white p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-lg font-bold text-slate-900">Assign Duty & Shift</h3>
               <button 
@@ -1180,20 +1180,6 @@ const ShiftManagement = () => {
               </div>
 
               <div>
-                <label className="block text-slate-600 font-semibold mb-1.5">Priority</label>
-                <select
-                  value={assignForm.priority}
-                  onChange={(e) => setAssignForm({ ...assignForm, priority: e.target.value })}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 outline-none font-semibold text-slate-800 transition"
-                >
-                  <option value="Low">Low</option>
-                  <option value="Medium">Medium</option>
-                  <option value="High">High</option>
-                  <option value="Urgent">Urgent</option>
-                </select>
-              </div>
-
-              <div>
                 <label className="block text-slate-600 font-semibold mb-1.5">Reason</label>
                 <input
                   type="text"
@@ -1202,20 +1188,6 @@ const ShiftManagement = () => {
                   placeholder="e.g. Special Poojas, Sick Cover"
                   className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 outline-none font-semibold text-slate-800 transition"
                 />
-              </div>
-
-              <div>
-                <label className="block text-slate-600 font-semibold mb-1.5">Status</label>
-                <select
-                  value={assignForm.status}
-                  onChange={(e) => setAssignForm({ ...assignForm, status: e.target.value })}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 outline-none font-semibold text-slate-800 transition"
-                >
-                  <option value="Assigned">Assigned</option>
-                  <option value="In Progress">In Progress</option>
-                  <option value="Completed">Completed</option>
-                  <option value="Cancelled">Cancelled</option>
-                </select>
               </div>
 
               <div>

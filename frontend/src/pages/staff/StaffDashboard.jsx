@@ -58,6 +58,7 @@ const getStaffProfileDetails = (profile = {}) => {
     { label: "Salary", value: profile.salary || "-" },
     { label: "Current Duty", value: profile.currentDuty?.dutyName || profile.defaultDuty || "-" },
     { label: "Attendance Status", value: profile.attendanceStatus || "Not Marked" },
+    { label: "Weekly Off", value: profile.weeklyOff || "None" },
     { label: "Leave Balance", value: `${profile.leaveBalance ?? 0} days` },
     { label: "Duty Location", value: profile.currentDuty?.dutyLocation || profile.dutyLocation || "-" },
   ];
@@ -86,14 +87,20 @@ const parseDate = (value) => {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 };
 
-const leaveDays = (fromDate, toDate) => {
+const leaveDaysCount = (fromDate, toDate, weeklyOff = null) => {
   const from = parseDate(fromDate);
   const to = parseDate(toDate);
   if (!from || !to || to < from) {
     return 0;
   }
-  const oneDayMs = 24 * 60 * 60 * 1000;
-  return Math.floor((to - from) / oneDayMs) + 1;
+  let count = 0;
+  for (let d = new Date(from); d <= to; d.setDate(d.getDate() + 1)) {
+    const dayName = d.toLocaleDateString('en-US', { weekday: 'long' });
+    if (weeklyOff !== dayName) {
+      count++;
+    }
+  }
+  return count;
 };
 
 const leavePeriod = (fromDate, toDate) => {
@@ -939,7 +946,7 @@ const StaffDashboard = () => {
                         <tr key={leave._id}>
                           <td>{leave.leaveType || "General"}</td>
                           <td>{leave.reason}</td>
-                          <td>{leaveDays(leave.fromDate, leave.toDate)}</td>
+                          <td>{leaveDaysCount(leave.fromDate, leave.toDate, profile?.weeklyOff)}</td>
                           <td>{leavePeriod(leave.fromDate, leave.toDate)}</td>
                           <td>
                             <span className={`status-chip ${statusClassMap[leave.status] || ""}`}>

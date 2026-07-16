@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const ATTENDANCE_STATUSES = ["Present", "Absent", "Half Day", "Leave", "Pending", "Working", "Holiday", "Late"];
+const ATTENDANCE_STATUSES = ["Present", "Absent", "Half Day", "Leave", "Pending", "Working", "Holiday", "Late", "Weekly Off", "Compensatory Off"];
 
 const attendanceSchema = new mongoose.Schema(
   {

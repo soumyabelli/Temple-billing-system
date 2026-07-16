@@ -97,7 +97,7 @@ const getEmployeeYearlyQuota = async (staffId) => {
   };
 };
 
-const getLeaveDaysCount = (fromDateStr, toDateStr, year) => {
+const getLeaveDaysCount = (fromDateStr, toDateStr, year, weeklyOff = null) => {
   const startOfYear = new Date(`${year}-01-01T00:00:00`);
   const endOfYear = new Date(`${year}-12-31T00:00:00`);
   const from = new Date(`${fromDateStr}T00:00:00`);
@@ -109,7 +109,14 @@ const getLeaveDaysCount = (fromDateStr, toDateStr, year) => {
   const end = to > endOfYear ? endOfYear : to;
   
   if (start <= end) {
-    return Math.round((end - start) / (1000 * 60 * 60 * 24)) + 1;
+    let count = 0;
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const dayName = d.toLocaleDateString('en-US', { weekday: 'long' });
+      if (weeklyOff !== dayName) {
+        count++;
+      }
+    }
+    return count;
   }
   return 0;
 };
@@ -185,6 +192,14 @@ exports.applyLeave = async (req, res) => {
 
     // ── Quota Check ──────────────────────────────────────────────────────────
     const currentYear = new Date().getFullYear();
+    let employee = null;
+    if (mongoose.Types.ObjectId.isValid(staffId)) {
+      employee = await Employee.findById(staffId);
+    }
+    if (!employee) {
+      employee = await Employee.findOne({ employeeId: staffId });
+    }
+    const weeklyOff = employee?.weeklyOff || null;
     const { totalQuota } = await getEmployeeYearlyQuota(staffId);
     
     const existingLeaves = await Leave.find({
@@ -196,10 +211,10 @@ exports.applyLeave = async (req, res) => {
     
     let usedDays = 0;
     existingLeaves.forEach(l => {
-      usedDays += getLeaveDaysCount(l.fromDate, l.toDate, currentYear);
+      usedDays += getLeaveDaysCount(l.fromDate, l.toDate, currentYear, weeklyOff);
     });
     
-    const requestedDays = getLeaveDaysCount(fromDate, toDate, currentYear);
+    const requestedDays = getLeaveDaysCount(fromDate, toDate, currentYear, weeklyOff);
     const quotaExceeded = (usedDays + requestedDays) > totalQuota;
 
     // ── Save ─────────────────────────────────────────────────────────────────

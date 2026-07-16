@@ -138,7 +138,13 @@ const buildEmployeePayroll = ({ employee, monthRange, attendanceDocs, leaveDocs,
     const leave = leaveByDate.get(dateKey);
     const status = getEffectiveStatus(attendance, leave, attendance?.shiftStartTime || "09:00 AM");
 
-    if (status === "Present" || status === "Working") presentDays += 1;
+    const dayName = cursor.toLocaleDateString('en-US', { weekday: 'long' });
+    const isWeeklyOff = employee.weeklyOff === dayName;
+
+    if (isWeeklyOff && !attendance && !leave) {
+      presentDays += 1; // Weekly Off is paid
+    }
+    else if (status === "Present" || status === "Working") presentDays += 1;
     else if (status === "Late") {
       presentDays += 1;
       lateDays += 1;
@@ -159,7 +165,7 @@ const buildEmployeePayroll = ({ employee, monthRange, attendanceDocs, leaveDocs,
       casualQuota = 12 - joinDate.getMonth();
     }
   }
-  const totalQuota = casualQuota + 2;
+  const totalQuota = casualQuota + 2 + (employee.compOffBalance || 0);
 
   const remainingPaidLeaves = Math.max(0, totalQuota - previouslyTakenLeaves);
   const unpaidLeaveDays = Math.max(0, leaveDays - remainingPaidLeaves);

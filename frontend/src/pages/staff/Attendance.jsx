@@ -785,6 +785,10 @@ const Attendance = () => {
                       <i className="legend-dot absent" />
                       Absent
                     </span>
+                    <span>
+                      <i className="legend-dot weekly-off" />
+                      Weekly Off
+                    </span>
                   </div>
                 </section>
 

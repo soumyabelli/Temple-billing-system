@@ -239,6 +239,18 @@ const employeeSchema = new mongoose.Schema({
     default: "",
     trim: true,
   },
+
+  weeklyOff: {
+    type: String,
+    enum: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", ""],
+    default: "",
+  },
+
+  compOffBalance: {
+    type: Number,
+    default: 0,
+    min: 0,
+  },
 }, { timestamps: true });
 
 module.exports = mongoose.model(

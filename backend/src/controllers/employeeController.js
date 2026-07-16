@@ -95,6 +95,7 @@ exports.createEmployee = async (req, res) => {
       faceRegistered,
       faceDescriptor,
       profilePhoto,
+      weeklyOff,
     } = req.body;
 
     const normalizedEmail = String(email || "").toLowerCase().trim();
@@ -260,6 +261,7 @@ if (joiningDateObj > today) {
       attendanceLocation: attendanceLocation || null,
       faceRegistered: faceRegistered || false,
       faceDescriptor: faceDescriptor || [],
+      weeklyOff: weeklyOff || "",
     });
 
     await User.create({
@@ -371,6 +373,10 @@ exports.updateEmployee = async (req, res) => {
         return res.status(400).json({ message: "Valid Account Number (9-18 digits) is required." });
       }
       updateData.accountNumber = acc;
+    }
+
+    if (updateData.weeklyOff !== undefined) {
+      updateData.weeklyOff = String(updateData.weeklyOff).trim();
     }
 
 

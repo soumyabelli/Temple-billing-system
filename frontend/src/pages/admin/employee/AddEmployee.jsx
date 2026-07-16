@@ -40,6 +40,7 @@ const initialForm = {
   // Step 3 – Account Details
   bankName: "",
   accountNumber: "",
+  weeklyOff: "",
 };
 
 import axios from "axios";
@@ -725,6 +726,25 @@ const AddEmployee = () => {
                     ))}
                   </select>
                   {errors.dutyLocation && <p className="text-rose-500 text-xs mt-1">{errors.dutyLocation}</p>}
+                </label>
+
+                {/* Weekly Off */}
+                <label className="block space-y-2 text-sm text-slate-700">
+                  Weekly Off
+                  <select
+                    value={form.weeklyOff}
+                    onChange={handleChange("weeklyOff")}
+                    className={`w-full rounded-3xl border ${errors.weeklyOff ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition`}
+                  >
+                    <option value="">No Weekly Off</option>
+                    <option value="Sunday">Sunday</option>
+                    <option value="Monday">Monday</option>
+                    <option value="Tuesday">Tuesday</option>
+                    <option value="Wednesday">Wednesday</option>
+                    <option value="Thursday">Thursday</option>
+                    <option value="Friday">Friday</option>
+                    <option value="Saturday">Saturday</option>
+                  </select>
                 </label>
 
                 {/* Attendance Location */}

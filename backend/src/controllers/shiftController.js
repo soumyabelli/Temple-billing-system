@@ -536,10 +536,12 @@ exports.deleteAssignment = async (req, res) => {
 
 exports.getAvailableEmployees = async (req, res) => {
   try {
-    const { date, startTime, endTime } = req.query;
+    const { date, startTime, endTime, assignmentType } = req.query;
     if (!date || !startTime || !endTime) {
       return res.status(400).json({ success: false, message: "date, startTime, and endTime are required" });
     }
+
+    const isEmergencyDuty = clean(assignmentType) === "Emergency Duty";
 
     const requestedDate = new Date(date);
     requestedDate.setHours(0, 0, 0, 0);
@@ -570,6 +572,14 @@ exports.getAvailableEmployees = async (req, res) => {
       // Check leave
       const leave = await getLeaveBlock({ employee: emp }, dateKey);
       if (leave) continue; // On leave
+
+      // Check weekly off
+      if (emp.weeklyOff) {
+        const reqDayName = requestedDate.toLocaleDateString('en-US', { weekday: 'long' });
+        if (emp.weeklyOff === reqDayName && !isEmergencyDuty) {
+          continue; // On weekly off
+        }
+      }
 
       // Check default shift overlap
       const defaultShiftName = emp.defaultShift || emp.shift;

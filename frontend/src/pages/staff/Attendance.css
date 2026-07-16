@@ -436,7 +436,8 @@
 .attendance-day[data-status="present"]::after,
 .attendance-day[data-status="late"]::after,
 .attendance-day[data-status="leave"]::after,
-.attendance-day[data-status="absent"]::after {
+.attendance-day[data-status="absent"]::after,
+.attendance-day[data-status="weekly off"]::after {
   content: "";
   position: absolute;
   bottom: 8px;
@@ -458,7 +459,11 @@
 }
 
 .attendance-day[data-status="absent"]::after {
-  background: #ef3124;
+  background: #ef4444;
+}
+
+.attendance-day[data-status="weekly off"]::after {
+  background: #8b5cf6;
 }
 
 .attendance-calendar-legend {
@@ -497,10 +502,14 @@
 }
 
 .legend-dot.absent {
-  background: #ef3124;
+  background: #ef4444;
 }
 
-.attendance-action-list {
+.legend-dot.weekly-off {
+  background: #8b5cf6;
+}
+
+.attendance-actions-card {
   display: grid;
   gap: 12px;
 }
