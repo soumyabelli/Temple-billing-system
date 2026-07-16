@@ -13,6 +13,8 @@ import { getEmployees, getEmployee, deleteEmployee } from "../../../services/emp
 import { getAdminAttendanceDashboard } from "../../../services/attendanceService";
 import { useAuth } from "../../../context/AuthContext";
 import templeLogo from "../../../assets/logo.png";
+import EditEmployeeModal from "../../../components/admin/employee/EditEmployeeModal";
+import { FiEdit } from "react-icons/fi";
 
 const chartColors = ["#7c3aed", "#f5449c", "#38bdf8", "#f59e0b", "#10b981"];
 const roleFilterOptions = ["All", "Priest", "Staff", "Cashier", "Accountant"];
@@ -52,6 +54,7 @@ const AllEmployees = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [selectedTab, setSelectedTab] = useState("Profile");
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [payrollRoleFilter, setPayrollRoleFilter] = useState("All");
   const [attendanceFilters, setAttendanceFilters] = useState({
     role: "All",
@@ -503,8 +506,16 @@ const AllEmployees = () => {
       </SectionCard>
 
       {selectedEmployee && (
-        <SectionCard title="Selected Employee" subtitle="Review detailed employee profile." className="bg-white/95 text-slate-950">
-          <div className="grid gap-4 lg:grid-cols-3">
+        <SectionCard title="Selected Employee" subtitle="Review detailed employee profile." className="bg-white/95 text-slate-950 relative">
+          <div className="absolute right-6 top-6">
+            <button
+              onClick={() => setIsEditModalOpen(true)}
+              className="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-semibold text-violet-700 transition hover:bg-violet-100"
+            >
+              <FiEdit size={16} /> Edit Employee
+            </button>
+          </div>
+          <div className="grid gap-4 lg:grid-cols-3 mt-4">
             <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
               <div className="flex items-center gap-4">
                 <div className="h-16 w-16 overflow-hidden rounded-2xl bg-slate-200">
@@ -793,6 +804,17 @@ const AllEmployees = () => {
           </SectionCard>
         </div>
       </div>
+      {selectedEmployee && isEditModalOpen && (
+        <EditEmployeeModal
+          employee={selectedEmployee}
+          onClose={() => setIsEditModalOpen(false)}
+          onSave={() => {
+            setIsEditModalOpen(false);
+            fetchEmployees();
+            setSelectedEmployee(null); // Deselect so they can see the updated list, or we could just fetch and re-select
+          }}
+        />
+      )}
     </div>
   );
 };
