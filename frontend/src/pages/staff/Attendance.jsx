@@ -572,354 +572,354 @@ const Attendance = () => {
   return (
     <div className="attendance-main staff-attendance-page">
 
-        {error ? <div className="staff-error">{error}</div> : null}
-        {loading ? <div className="staff-loading">Loading attendance data...</div> : null}
+      {error ? <div className="staff-error">{error}</div> : null}
+      {loading ? <div className="staff-loading">Loading attendance data...</div> : null}
 
-        {!loading ? (
-          <>
-            <section className="attendance-summary-grid">
-              {summaryCards.map((stat) => {
-                const Icon = stat.icon || summaryIconMap[stat.title || stat.label];
-                return (
-                  <article key={stat.title || stat.label} className="attendance-stat-card">
-                    <div className={`attendance-stat-icon ${stat.tone || ""}`.trim()}>
-                      {Icon ? <Icon /> : null}
-                    </div>
-                    <div className="attendance-stat-copy">
-                      <h2>{stat.title || stat.label}</h2>
-                      <strong>{stat.value}</strong>
-                      <p>{stat.note || ""}</p>
-                    </div>
-                  </article>
-                );
-              })}
-            </section>
-
-            <section className="attendance-today-card">
-              <div className="attendance-today-item">
-                <span>Current Shift</span>
-                <strong>{todayShiftLabel}</strong>
-                <p>{todayShiftTiming}</p>
-              </div>
-              <div className="attendance-today-item">
-                <span>Today&apos;s Duty</span>
-                <strong>{todayDutyLabel}</strong>
-                <p>{todayDutyArea}</p>
-              </div>
-              <div className="attendance-today-item">
-                <span>Assigned Location</span>
-                <strong>{todaySnapshot.attendanceLocationName || "Global Temple"}</strong>
-                <p>Location needed for Check-in</p>
-              </div>
-              <div className="attendance-today-item">
-                <span>Today Status</span>
-                <strong>{attendanceDialogStatus}</strong>
-                <p>
-                  {todaySnapshot.isOnLeave
-                    ? `${todaySnapshot.leaveType || "Approved leave"}${todaySnapshot.leaveReason ? `: ${todaySnapshot.leaveReason}` : ""}`
-                    : todaySnapshot.completed
-                      ? "Attendance completed"
-                      : "Use Mark Attendance to check in or check out"}
-                </p>
-              </div>
-            </section>
-
-            <section className="attendance-workspace">
-              <div className="attendance-main-column">
-                <section className="attendance-card-panel" id="attendance-records">
-                  <div className="card-heading attendance-card-heading">
-                    <div>
-                      <h2>My Attendance Records</h2>
-                    </div>
-                    <div className="attendance-card-controls">
-                      <button type="button" className="attendance-control" onClick={() => setMonthKey((current) => shiftMonthKey(current, -1))}>
-                        <FiChevronLeft />
-                      </button>
-                      <button type="button" className="attendance-control">
-                        <FiCalendar />
-                        {monthLabel}
-                        <FiChevronDown />
-                      </button>
-                      <button type="button" className="attendance-control" onClick={() => setMonthKey((current) => shiftMonthKey(current, 1))}>
-                        <FiChevronRight />
-                      </button>
-                      <button type="button" className="attendance-control">
-                        <FiFilter />
-                        Filter
-                      </button>
-                    </div>
+      {!loading ? (
+        <>
+          <section className="attendance-summary-grid">
+            {summaryCards.map((stat) => {
+              const Icon = stat.icon || summaryIconMap[stat.title || stat.label];
+              return (
+                <article key={stat.title || stat.label} className="attendance-stat-card">
+                  <div className={`attendance-stat-icon ${stat.tone || ""}`.trim()}>
+                    {Icon ? <Icon /> : null}
                   </div>
+                  <div className="attendance-stat-copy">
+                    <h2>{stat.title || stat.label}</h2>
+                    <strong>{stat.value}</strong>
+                    <p>{stat.note || ""}</p>
+                  </div>
+                </article>
+              );
+            })}
+          </section>
 
-                  <div className="table-wrap attendance-table-wrap">
-                    <table className="attendance-table">
-                      <thead>
+          <section className="attendance-today-card">
+            <div className="attendance-today-item">
+              <span>Current Shift</span>
+              <strong>{todayShiftLabel}</strong>
+              <p>{todayShiftTiming}</p>
+            </div>
+            <div className="attendance-today-item">
+              <span>Today&apos;s Duty</span>
+              <strong>{todayDutyLabel}</strong>
+              <p>{todayDutyArea}</p>
+            </div>
+            <div className="attendance-today-item">
+              <span>Assigned Location</span>
+              <strong>{todaySnapshot.attendanceLocationName || "Global Temple"}</strong>
+              <p>Location needed for Check-in</p>
+            </div>
+            <div className="attendance-today-item">
+              <span>Today Status</span>
+              <strong>{attendanceDialogStatus}</strong>
+              <p>
+                {todaySnapshot.isOnLeave
+                  ? `${todaySnapshot.leaveType || "Approved leave"}${todaySnapshot.leaveReason ? `: ${todaySnapshot.leaveReason}` : ""}`
+                  : todaySnapshot.completed
+                    ? "Attendance completed"
+                    : "Use Mark Attendance to check in or check out"}
+              </p>
+            </div>
+          </section>
+
+          <section className="attendance-workspace">
+            <div className="attendance-main-column">
+              <section className="attendance-card-panel" id="attendance-records">
+                <div className="card-heading attendance-card-heading">
+                  <div>
+                    <h2>My Attendance Records</h2>
+                  </div>
+                  <div className="attendance-card-controls">
+                    <button type="button" className="attendance-control" onClick={() => setMonthKey((current) => shiftMonthKey(current, -1))}>
+                      <FiChevronLeft />
+                    </button>
+                    <button type="button" className="attendance-control">
+                      <FiCalendar />
+                      {monthLabel}
+                      <FiChevronDown />
+                    </button>
+                    <button type="button" className="attendance-control" onClick={() => setMonthKey((current) => shiftMonthKey(current, 1))}>
+                      <FiChevronRight />
+                    </button>
+                    <button type="button" className="attendance-control">
+                      <FiFilter />
+                      Filter
+                    </button>
+                  </div>
+                </div>
+
+                <div className="table-wrap attendance-table-wrap">
+                  <table className="attendance-table">
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Check In</th>
+                        <th>Check Out</th>
+                        <th>Shift</th>
+                        <th>Status</th>
+                        <th>Working Hours</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {records.length === 0 ? (
                         <tr>
-                          <th>Date</th>
-                          <th>Check In</th>
-                          <th>Check Out</th>
-                          <th>Shift</th>
-                          <th>Status</th>
-                          <th>Working Hours</th>
+                          <td className="empty-cell" colSpan="6">
+                            No attendance records found
+                          </td>
                         </tr>
-                      </thead>
-                      <tbody>
-                        {records.length === 0 ? (
-                          <tr>
-                            <td className="empty-cell" colSpan="6">
-                              No attendance records found
+                      ) : (
+                        records.map((record) => (
+                          <tr key={record.id || record.dateKey}>
+                            <td>{record.date}</td>
+                            <td>{record.checkIn}</td>
+                            <td>{record.checkOut}</td>
+                            <td>{record.shift}</td>
+                            <td>
+                              <span className={`attendance-status-pill ${statusLabelClass[record.status] || ""}`}>
+                                {record.status}
+                              </span>
                             </td>
+                            <td>{record.workingHours}</td>
                           </tr>
-                        ) : (
-                          records.map((record) => (
-                            <tr key={record.id || record.dateKey}>
-                              <td>{record.date}</td>
-                              <td>{record.checkIn}</td>
-                              <td>{record.checkOut}</td>
-                              <td>{record.shift}</td>
-                              <td>
-                                <span className={`attendance-status-pill ${statusLabelClass[record.status] || ""}`}>
-                                  {record.status}
-                                </span>
-                              </td>
-                              <td>{record.workingHours}</td>
-                            </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
 
-                  <button type="button" className="attendance-history-link" onClick={() => document.getElementById("attendance-records")?.scrollIntoView({ behavior: "smooth" })}>
-                    View Full History
+                <button type="button" className="attendance-history-link" onClick={() => document.getElementById("attendance-records")?.scrollIntoView({ behavior: "smooth" })}>
+                  View Full History
+                </button>
+              </section>
+
+              <section className="attendance-overview-card">
+                <div className="card-heading">
+                  <h2>Monthly Overview ({monthLabel})</h2>
+                </div>
+
+                <div className="attendance-overview-grid">
+                  {summaryCards.map((stat) => (
+                    <article key={stat.title || stat.label} className={`attendance-overview-item ${stat.tone ? `tone-${stat.tone}` : ""}`}>
+                      <span>{stat.label || stat.title}</span>
+                      <strong>{stat.value}</strong>
+                    </article>
+                  ))}
+                </div>
+
+                <div className="attendance-progress">
+                  <div className="attendance-progress__track">
+                    <span style={{ width: `${dashboard?.summary?.attendancePercent || 80}%` }} />
+                  </div>
+                  <div className="attendance-progress__meta">
+                    <span>
+                      {dashboard?.summary?.presentDays || 24} / {dashboard?.summary?.workingDays || 30} Days
+                    </span>
+                  </div>
+                </div>
+              </section>
+            </div>
+
+            <div className="attendance-side-column">
+              <section className="attendance-calendar-card">
+                <div className="card-heading">
+                  <h2>Attendance Calendar</h2>
+                </div>
+
+                <div className="attendance-calendar-nav">
+                  <button type="button" aria-label="Previous month" onClick={() => setMonthKey((current) => shiftMonthKey(current, -1))}>
+                    <FiChevronLeft />
                   </button>
-                </section>
+                  <strong>{calendar.monthLabel || monthLabel}</strong>
+                  <button type="button" aria-label="Next month" onClick={() => setMonthKey((current) => shiftMonthKey(current, 1))}>
+                    <FiChevronRight />
+                  </button>
+                </div>
 
-                <section className="attendance-overview-card">
-                  <div className="card-heading">
-                    <h2>Monthly Overview ({monthLabel})</h2>
-                  </div>
-
-                  <div className="attendance-overview-grid">
-                    {summaryCards.map((stat) => (
-                      <article key={stat.title || stat.label} className={`attendance-overview-item ${stat.tone ? `tone-${stat.tone}` : ""}`}>
-                        <span>{stat.label || stat.title}</span>
-                        <strong>{stat.value}</strong>
-                      </article>
+                <div className="attendance-calendar-grid">
+                  <div className="attendance-weekdays">
+                    {calendar.weekdays.map((day) => (
+                      <span key={day}>{day}</span>
                     ))}
                   </div>
 
-                  <div className="attendance-progress">
-                    <div className="attendance-progress__track">
-                      <span style={{ width: `${dashboard?.summary?.attendancePercent || 80}%` }} />
-                    </div>
-                    <div className="attendance-progress__meta">
-                      <span>
-                        {dashboard?.summary?.presentDays || 24} / {dashboard?.summary?.workingDays || 30} Days
-                      </span>
-                    </div>
-                  </div>
-                </section>
-              </div>
+                  <div className="attendance-days">
+                    {calendar.days.map((cell, index) => {
+                      const dayClassName = [
+                        "attendance-day",
+                        cell.muted ? "muted" : "",
+                        cell.current ? "current" : "",
+                        cell.selected ? "selected" : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" ");
 
-              <div className="attendance-side-column">
-                <section className="attendance-calendar-card">
-                  <div className="card-heading">
-                    <h2>Attendance Calendar</h2>
-                  </div>
-
-                  <div className="attendance-calendar-nav">
-                    <button type="button" aria-label="Previous month" onClick={() => setMonthKey((current) => shiftMonthKey(current, -1))}>
-                      <FiChevronLeft />
-                    </button>
-                    <strong>{calendar.monthLabel || monthLabel}</strong>
-                    <button type="button" aria-label="Next month" onClick={() => setMonthKey((current) => shiftMonthKey(current, 1))}>
-                      <FiChevronRight />
-                    </button>
-                  </div>
-
-                  <div className="attendance-calendar-grid">
-                    <div className="attendance-weekdays">
-                      {calendar.weekdays.map((day) => (
-                        <span key={day}>{day}</span>
-                      ))}
-                    </div>
-
-                    <div className="attendance-days">
-                      {calendar.days.map((cell, index) => {
-                        const dayClassName = [
-                          "attendance-day",
-                          cell.muted ? "muted" : "",
-                          cell.current ? "current" : "",
-                          cell.selected ? "selected" : "",
-                        ]
-                          .filter(Boolean)
-                          .join(" ");
-
-                        return (
-                          <div
-                            key={`${cell.day}-${index}`}
-                            className={dayClassName}
-                            data-status={cell.status ? String(cell.status).toLowerCase() : undefined}
-                          >
-                            {cell.day}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  <div className="attendance-calendar-legend">
-                    <span>
-                      <i className="legend-dot present" />
-                      Present
-                    </span>
-                    <span>
-                      <i className="legend-dot late" />
-                      Late
-                    </span>
-                    <span>
-                      <i className="legend-dot leave" />
-                      Leave
-                    </span>
-                    <span>
-                      <i className="legend-dot absent" />
-                      Absent
-                    </span>
-                    <span>
-                      <i className="legend-dot weekly-off" />
-                      Weekly Off
-                    </span>
-                  </div>
-                </section>
-
-                <section className="attendance-actions-card">
-                  <div className="card-heading">
-                    <h2>Quick Actions</h2>
-                  </div>
-
-                  <div className="attendance-action-list">
-                    {quickActions.map((action) => {
-                      const Icon = action.icon || quickActionIconMap[action.key || action.title];
-                      const tone = action.tone || quickActionToneMap[action.key || action.title];
                       return (
-                        <button
-                          key={action.key}
-                          type="button"
-                          className="attendance-action-item"
-                          onClick={() => handleQuickAction(action.key)}
-                          disabled={savingAction}
+                        <div
+                          key={`${cell.day}-${index}`}
+                          className={dayClassName}
+                          data-status={cell.status ? String(cell.status).toLowerCase() : undefined}
                         >
-                          <span className={`attendance-action-icon ${tone || ""}`.trim()}>
-                            {Icon ? <Icon /> : null}
-                          </span>
-                          <span className="attendance-action-copy">
-                            <strong>{action.title}</strong>
-                            <span>{action.description}</span>
-                          </span>
-                          <FiChevronRight className="attendance-action-chevron" />
-                        </button>
+                          {cell.day}
+                        </div>
                       );
                     })}
                   </div>
-                </section>
-              </div>
-            </section>
-
-            <footer className="attendance-footer">(c) 2026 Sri Shanti Mahadev Mandir. All rights reserved.</footer>
-          </>
-        ) : null}
-
-        {attendanceDialogOpen ? (
-          <div className="attendance-modal-backdrop" role="presentation" onClick={() => setAttendanceDialogOpen(false)}>
-            <div className="attendance-modal" role="dialog" aria-modal="true" aria-labelledby="attendance-mark-title" onClick={(event) => event.stopPropagation()}>
-                <div className="attendance-modal__header">
-                  <div>
-                    <p className="attendance-modal__eyebrow">Mark Attendance</p>
-                    <h2 id="attendance-mark-title">Quick attendance entry</h2>
-                  </div>
-                <button type="button" className="attendance-modal__close" onClick={() => setAttendanceDialogOpen(false)} aria-label="Close mark attendance panel">
-                  ×
-                </button>
-              </div>
-
-              <div className="attendance-modal__summary">
-                <div>
-                  <span>Today</span>
-                  <strong>{headerDate}</strong>
                 </div>
-                <div>
-                  <span>Status</span>
-                  <strong>{attendanceDialogStatus}</strong>
-                </div>
-                <div>
-                  <span>Shift</span>
-                  <strong>{todayShiftLabel}</strong>
-                  <p>{todayShiftTiming}</p>
-                </div>
-                <div>
-                  <span>Duty</span>
-                  <strong>{todayDutyLabel}</strong>
-                  <p>{todayDutyArea}</p>
-                </div>
-              </div>
 
-              {todaySnapshot.isOnLeave ? (
-                <div className="attendance-modal__leave">
-                  <strong>Approved leave</strong>
+                <div className="attendance-calendar-legend">
                   <span>
-                    {todaySnapshot.leaveType || "Leave"} {todaySnapshot.leaveReason ? `• ${todaySnapshot.leaveReason}` : ""}
+                    <i className="legend-dot present" />
+                    Present
+                  </span>
+                  <span>
+                    <i className="legend-dot late" />
+                    Late
+                  </span>
+                  <span>
+                    <i className="legend-dot leave" />
+                    Leave
+                  </span>
+                  <span>
+                    <i className="legend-dot absent" />
+                    Absent
+                  </span>
+                  <span>
+                    <i className="legend-dot weekly-off" />
+                    Weekly Off
                   </span>
                 </div>
-              ) : null}
+              </section>
 
-              <div className="attendance-modal__actions">
-                <button
-                  type="button"
-                  className="attendance-modal__button primary"
-                  onClick={handleMarkAttendance}
-                  disabled={savingAction || todaySnapshot.isOnLeave || (!canCheckIn && !canCheckOut)}
-                >
-                  {savingAction ? "Saving..." : todaySnapshot.isOnLeave ? "On Leave" : canCheckOut ? "Check Out" : "Check In"}
-                </button>
-                <button
-                  type="button"
-                  className="attendance-modal__button secondary"
-                  onClick={() => setAttendanceDialogOpen(false)}
-                >
-                  Cancel
-                </button>
+              <section className="attendance-actions-card">
+                <div className="card-heading">
+                  <h2>Quick Actions</h2>
+                </div>
+
+                <div className="attendance-action-list">
+                  {quickActions.map((action) => {
+                    const Icon = action.icon || quickActionIconMap[action.key || action.title];
+                    const tone = action.tone || quickActionToneMap[action.key || action.title];
+                    return (
+                      <button
+                        key={action.key}
+                        type="button"
+                        className="attendance-action-item"
+                        onClick={() => handleQuickAction(action.key)}
+                        disabled={savingAction}
+                      >
+                        <span className={`attendance-action-icon ${tone || ""}`.trim()}>
+                          {Icon ? <Icon /> : null}
+                        </span>
+                        <span className="attendance-action-copy">
+                          <strong>{action.title}</strong>
+                          <span>{action.description}</span>
+                        </span>
+                        <FiChevronRight className="attendance-action-chevron" />
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+            </div>
+          </section>
+
+          <footer className="attendance-footer">(c) 2026 Sri Shanti Mahadev Mandir. All rights reserved.</footer>
+        </>
+      ) : null}
+
+      {attendanceDialogOpen ? (
+        <div className="attendance-modal-backdrop" role="presentation" onClick={() => setAttendanceDialogOpen(false)}>
+          <div className="attendance-modal" role="dialog" aria-modal="true" aria-labelledby="attendance-mark-title" onClick={(event) => event.stopPropagation()}>
+            <div className="attendance-modal__header">
+              <div>
+                <p className="attendance-modal__eyebrow">Mark Attendance</p>
+                <h2 id="attendance-mark-title">Quick attendance entry</h2>
               </div>
+              <button type="button" className="attendance-modal__close" onClick={() => setAttendanceDialogOpen(false)} aria-label="Close mark attendance panel">
+                ×
+              </button>
+            </div>
 
-              <p className="attendance-modal__note">
-                {todaySnapshot.isOnLeave
-                  ? "Attendance is blocked because approved leave exists for today."
-                  : attendanceCompleted
+            <div className="attendance-modal__summary">
+              <div>
+                <span>Today</span>
+                <strong>{headerDate}</strong>
+              </div>
+              <div>
+                <span>Status</span>
+                <strong>{attendanceDialogStatus}</strong>
+              </div>
+              <div>
+                <span>Shift</span>
+                <strong>{todayShiftLabel}</strong>
+                <p>{todayShiftTiming}</p>
+              </div>
+              <div>
+                <span>Duty</span>
+                <strong>{todayDutyLabel}</strong>
+                <p>{todayDutyArea}</p>
+              </div>
+            </div>
+
+            {todaySnapshot.isOnLeave ? (
+              <div className="attendance-modal__leave">
+                <strong>Approved leave</strong>
+                <span>
+                  {todaySnapshot.leaveType || "Leave"} {todaySnapshot.leaveReason ? `• ${todaySnapshot.leaveReason}` : ""}
+                </span>
+              </div>
+            ) : null}
+
+            <div className="attendance-modal__actions">
+              <button
+                type="button"
+                className="attendance-modal__button primary"
+                onClick={handleMarkAttendance}
+                disabled={savingAction || todaySnapshot.isOnLeave || (!canCheckIn && !canCheckOut)}
+              >
+                {savingAction ? "Saving..." : todaySnapshot.isOnLeave ? "On Leave" : canCheckOut ? "Check Out" : "Check In"}
+              </button>
+              <button
+                type="button"
+                className="attendance-modal__button secondary"
+                onClick={() => setAttendanceDialogOpen(false)}
+              >
+                Cancel
+              </button>
+            </div>
+
+            <p className="attendance-modal__note">
+              {todaySnapshot.isOnLeave
+                ? "Attendance is blocked because approved leave exists for today."
+                : attendanceCompleted
                   ? "Attendance is already completed for today."
                   : canCheckOut
                     ? "You can check out now. Face and location verification will be required."
                     : "Use this panel to mark your daily attendance. Face and location verification will be required."}
-              </p>
-            </div>
+            </p>
           </div>
-        ) : null}
+        </div>
+      ) : null}
 
-        {showAttendanceFlow && (
-          <div className="attendance-modal-backdrop" role="presentation">
-             <div className="bg-white rounded-3xl overflow-hidden shadow-2xl relative w-full max-w-lg">
-                <StaffAttendanceFlow 
-                  staffId={staffId}
-                  staffName={displayName}
-                  staffEmail={staffEmail}
-                  action={canCheckOut ? "check-out" : "check-in"}
-                  onComplete={() => {
-                     setShowAttendanceFlow(false);
-                     loadAttendance();
-                  }}
-                  onCancel={() => setShowAttendanceFlow(false)}
-                />
-             </div>
+      {showAttendanceFlow && (
+        <div className="attendance-modal-backdrop" role="presentation">
+          <div className="bg-white rounded-3xl overflow-hidden shadow-2xl relative w-full max-w-lg">
+            <StaffAttendanceFlow
+              staffId={staffId}
+              staffName={displayName}
+              staffEmail={staffEmail}
+              action={canCheckOut ? "check-out" : "check-in"}
+              onComplete={() => {
+                setShowAttendanceFlow(false);
+                loadAttendance();
+              }}
+              onCancel={() => setShowAttendanceFlow(false)}
+            />
           </div>
-        )}
+        </div>
+      )}
     </div>
   );
 };
