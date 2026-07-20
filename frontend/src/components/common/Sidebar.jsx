@@ -27,7 +27,7 @@ const Sidebar = ({ items, activeItem, activePath, onSelect, onNavigate, collapse
       )}
 
       <aside
-        className={`fixed top-0 left-0 h-screen z-40 border-r transition-all duration-300 ${collapsed ? "w-[84px]" : "w-[280px]"} ${mobileOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 ${darkMode ? "bg-[#1b2231] border-[#293449]" : "bg-gradient-to-b from-[#f6e7cc] via-[#f2deba] to-[#edd8b0] border-[#e7d7ba]"} flex flex-col`}
+        className={`fixed top-0 left-0 bottom-0 z-40 border-r transition-all duration-300 ${collapsed ? "w-[84px]" : "w-[280px]"} ${mobileOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 ${darkMode ? "bg-[#1b2231] border-[#293449]" : "bg-gradient-to-b from-[#f6e7cc] via-[#f2deba] to-[#edd8b0] border-[#e7d7ba]"} flex flex-col`}
       >
         <div className={`px-3 ${collapsed ? "pt-3 pb-2" : "pt-4 pb-3"} border-b ${darkMode ? "border-[#2e3749]" : "border-[#e5d5b8]/80"}`}>
           <div className="flex items-center justify-between">

@@ -31,8 +31,8 @@ const PriestSidebar = ({
       )}
 
       <aside
-        className={`fixed top-0 left-0 h-screen z-40 border-r transition-all duration-300 ${
-          collapsed ? "w-[84px]" : "w-[254px]"
+        className={`fixed top-0 left-0 bottom-0 z-40 border-r transition-all duration-300 ${
+          collapsed ? "w-[84px]" : "w-[280px]"
         } ${mobileOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 ${
           darkMode
             ? "bg-[#1e293b] border-slate-700 text-slate-100"

@@ -16,8 +16,8 @@ const Sidebar = ({ activeItem, onSelect, collapsed, setCollapsed, mobileOpen, se
       )}
 
       <aside
-        className={`fixed top-0 left-0 h-screen z-40 border-r transition-all duration-300 shadow-2xl lg:shadow-none
-        ${collapsed ? "w-[84px]" : "w-[260px]"}
+        className={`fixed top-0 left-0 bottom-0 z-40 border-r transition-all duration-300 shadow-2xl lg:shadow-none
+        ${collapsed ? "w-[88px]" : "w-[280px]"}
         ${mobileOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0
         ${darkMode 
           ? "bg-[#0f172a]/90 backdrop-blur-xl border-white/5" 

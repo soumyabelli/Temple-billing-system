@@ -43,7 +43,7 @@ const CashierSidebar = ({
       ) : null}
 
       <aside
-        className={`fixed left-0 top-0 z-40 flex h-screen flex-col border-r border-[#f0d7b2] bg-[#fff7eb] text-slate-950 shadow-[4px_0_25px_rgba(170,120,40,0.12)] transition-all duration-300 ${
+        className={`fixed left-0 top-0 bottom-0 z-40 flex flex-col border-r border-[#f0d7b2] bg-[#fff7eb] text-slate-950 shadow-[4px_0_25px_rgba(170,120,40,0.12)] transition-all duration-300 ${
           collapsed ? "w-[92px]" : "w-[280px]"
         } ${mobileOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`}
       >
