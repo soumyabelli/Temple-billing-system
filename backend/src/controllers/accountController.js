@@ -26,11 +26,12 @@ exports.createExpenseCategory = async (req, res) => {
 // --- Transactions ---
 exports.getTransactions = async (req, res) => {
   try {
-    const { financialYear, source, transactionType, startDate, endDate } = req.query;
+    const { financialYear, source, transactionType, startDate, endDate, status } = req.query;
     let query = {};
     if (financialYear) query.financialYear = financialYear;
     if (source) query.source = source;
     if (transactionType) query.transactionType = transactionType;
+    if (status) query.status = status;
     if (startDate && endDate) {
       query.date = { $gte: new Date(startDate), $lte: new Date(endDate) };
     }
