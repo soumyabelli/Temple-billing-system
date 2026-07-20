@@ -170,6 +170,7 @@ const updateDonationStatus = async (req, res) => {
       });
     }
 
+    const previousStatus = donation.status;
     donation.status = status;
     await donation.save();
 
@@ -178,6 +179,22 @@ const updateDonationStatus = async (req, res) => {
       { sourceId: donation._id.toString() },
       { $set: { status: status === "Collected" ? "Paid" : "Pending" } }
     );
+
+    if (previousStatus !== status && (status === "Collected" || status === "Completed")) {
+      const { recordTransaction } = require("../utils/accountTransactionHelper");
+      await recordTransaction({
+        transactionType: "Credit",
+        source: "Donation",
+        category: donation.category || "General",
+        amount: donation.amount,
+        paymentMethod: donation.paymentMethod,
+        description: `Donation by ${donation.donorName}`,
+        referenceId: donation._id,
+        referenceModel: "Donation",
+        recordedBy: req.user ? req.user.id : donation.donatedBy,
+        status: "Completed"
+      });
+    }
 
     res.status(200).json({
       success: true,

@@ -208,9 +208,26 @@ const updateBookingStatus = async (req, res) => {
     if (status === "In Progress")   booking.startedAt  = new Date();
     if (status === "Completed")     booking.completedAt = new Date();
 
+    const previousStatus = booking.status;
     booking.status = status;
     booking.bookingHistory.push(historyEntry);
     await booking.save();
+
+    if (previousStatus !== "Completed" && status === "Completed") {
+      const { recordTransaction } = require("../utils/accountTransactionHelper");
+      await recordTransaction({
+        transactionType: "Credit",
+        source: "Room Booking",
+        category: booking.service || "Room Booking",
+        amount: booking.amount,
+        paymentMethod: booking.paymentMethod || "System",
+        description: `Booking: ${booking.bookingNumber}`,
+        referenceId: booking._id,
+        referenceModel: "Booking",
+        recordedBy: req.user ? req.user.id : null,
+        status: "Completed"
+      });
+    }
 
     res.status(200).json({
       message: `Booking status updated to "${status}" successfully.`,

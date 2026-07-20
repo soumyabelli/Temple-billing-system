@@ -22,6 +22,7 @@ export const cashierSidebarItems = [
   { title: "Pooja Bookings", icon: FaCalendarAlt, path: "/cashier/pooja-bookings" },
   { title: "Donations", icon: FaHeart, path: "/cashier/donations" },
   { title: "Prasadam Sales", icon: FaReceipt, path: "/cashier/prasadam-sales" },
+  { title: "Accounts", icon: FaChartBar, path: "/cashier/accounts" },
   { title: "Receipts", icon: FaReceipt, path: "/cashier/receipts" },
   { title: "Register Devotees", icon: FaUsers, path: "/cashier/register-devotees" },
   { title: "Attendance", icon: FaClock, path: "/cashier/attendance" },

@@ -41,6 +41,11 @@ import PrasadaBooked from "./pages/admin/PrasadaBooked";
 import NotificationsCenter from "./pages/admin/NotificationsCenter";
 import RoomAllotment from "./pages/admin/RoomAllotment";
 import AdminLayout from "./layouts/AdminLayout";
+import AccountsDashboard from "./pages/admin/Accounts/AccountsDashboard";
+import DebitCreditManagement from "./pages/admin/Accounts/DebitCreditManagement";
+import BankInterest from "./pages/admin/Accounts/BankInterest";
+import FinancialReports from "./pages/admin/Accounts/FinancialReports";
+import ExpenseCategories from "./pages/admin/Accounts/ExpenseCategories";
 
 import CashierLayout from "./layouts/CashierLayout";
 
@@ -57,6 +62,7 @@ import InventoryPage from "./pages/cashier/InventoryPage";
 import NotificationsPage from "./pages/cashier/NotificationsPage";
 import ProfilePage from "./pages/cashier/ProfilePage";
 import RegisterDevoteesPage from "./pages/cashier/RegisterDevoteesPage";
+import CashierAccounts from "./pages/cashier/CashierAccounts";
 import PriestDashboard from "./pages/priest/PriestDashboard";
 import StaffDashboard from "./pages/staff/StaffDashboard";
 import LeaveHistory from "./pages/staff/LeaveHistory";
@@ -228,6 +234,58 @@ function App() {
           <ProtectedRoute allowedRoles={["admin"]}>
             <AdminLayout>
               <FestivalsEventsManagement />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* ACCOUNTS */}
+      <Route
+        path="/admin/accounts/dashboard"
+        element={
+          <ProtectedRoute allowedRoles={["admin", "accountant"]}>
+            <AdminLayout>
+              <AccountsDashboard />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/accounts/debit-credit"
+        element={
+          <ProtectedRoute allowedRoles={["admin", "accountant"]}>
+            <AdminLayout>
+              <DebitCreditManagement />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/accounts/bank-interest"
+        element={
+          <ProtectedRoute allowedRoles={["admin", "accountant"]}>
+            <AdminLayout>
+              <BankInterest />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/accounts/reports"
+        element={
+          <ProtectedRoute allowedRoles={["admin", "accountant"]}>
+            <AdminLayout>
+              <FinancialReports />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/accounts/expense-categories"
+        element={
+          <ProtectedRoute allowedRoles={["admin", "accountant"]}>
+            <AdminLayout>
+              <ExpenseCategories />
             </AdminLayout>
           </ProtectedRoute>
         }
@@ -544,6 +602,7 @@ function App() {
         <Route path="pooja-bookings" element={<PoojaBookingsPage />} />
         <Route path="donations" element={<DonationsPage />} />
         <Route path="prasadam-sales" element={<PrasadamPage />} />
+        <Route path="accounts" element={<CashierAccounts />} />
         <Route path="receipts" element={<ReceiptsPage />} />
         <Route path="register-devotees" element={<RegisterDevoteesPage />} />
         <Route path="payments" element={<PaymentsPage />} />

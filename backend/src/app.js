@@ -20,6 +20,7 @@ const attendanceSettingsRoutes = require("./routes/attendanceSettingsRoutes");
 const transferRoutes = require("./routes/transferRoutes");
 const roomRoutes = require("./routes/roomRoutes");
 const attendanceLocationRoutes = require("./routes/attendanceLocationRoutes");
+const accountRoutes = require("./routes/accountRoutes");
 const Room = require("./models/Room");
 
 const app = express();
@@ -51,6 +52,7 @@ app.use("/api/attendance/settings", attendanceSettingsRoutes);
 app.use("/api/transfers", transferRoutes);
 app.use("/api/rooms", roomRoutes);
 app.use("/api/attendance-locations", attendanceLocationRoutes);
+app.use("/api/accounts", accountRoutes);
 
 // Automatic Check-in/out background scheduler running every 60 seconds
 setInterval(async () => {

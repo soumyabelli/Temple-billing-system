@@ -21,6 +21,21 @@ const createBooking = async (req, res) => {
     });
 
     const savedBooking = await newBooking.save();
+
+    const { recordTransaction } = require("../utils/accountTransactionHelper");
+    await recordTransaction({
+      transactionType: "Credit",
+      source: "Pooja Booking",
+      category: service,
+      amount: savedBooking.amount,
+      paymentMethod: savedBooking.paymentMethod,
+      description: `Pooja Booking: ${savedBooking.bookingNumber}`,
+      referenceId: savedBooking._id,
+      referenceModel: "PoojaBooking",
+      recordedBy: req.user.id,
+      status: "Completed"
+    });
+
     res.status(201).json({ message: "Pooja booked successfully", booking: savedBooking });
   } catch (error) {
     console.error("Error creating pooja booking:", error);

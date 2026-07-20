@@ -50,6 +50,18 @@ export const sidebarItems = [
       { title: "Duty, Shift & Transfers", path: "/admin/employees/shifts" },
     ],
   },
+  {
+    title: "Accounts & Finance",
+    icon: TbReportAnalytics,
+    path: "/admin/accounts/dashboard",
+    subItems: [
+      { title: "Dashboard", path: "/admin/accounts/dashboard" },
+      { title: "Debit & Credit", path: "/admin/accounts/debit-credit" },
+      { title: "Bank Interest", path: "/admin/accounts/bank-interest" },
+      { title: "Financial Reports", path: "/admin/accounts/reports" },
+      { title: "Expense Categories", path: "/admin/accounts/expense-categories" },
+    ],
+  },
   { title: "Events", icon: FaCalendarAlt, path: "/admin/events" },
   { title: "Feedback & Complaints", icon: MdFeedback, path: "/admin/feedback" },
   { title: "Notifications", icon: MdNotifications, path: "/admin/notifications" },

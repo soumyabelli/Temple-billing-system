@@ -473,6 +473,20 @@ exports.payEmployeePayroll = async (req, res) => {
       });
     }
 
+    const { recordTransaction } = require("../utils/accountTransactionHelper");
+    await recordTransaction({
+      transactionType: "Debit",
+      source: "Payroll",
+      category: "Salaries",
+      amount: netSalary,
+      paymentMethod: method,
+      description: `Salary for ${employee.name} (${monthKey})`,
+      referenceId: record._id,
+      referenceModel: "PayrollRecord",
+      recordedBy: req.user ? req.user.id : null,
+      status: "Completed"
+    });
+
     return res.json({
       success: true,
       message: "Salary payment recorded successfully.",
@@ -518,6 +532,20 @@ exports.verifyPayrollPayment = async (req, res) => {
     record.razorpaySignature = razorpay_signature;
     record.paidAt = new Date();
     await record.save();
+
+    const { recordTransaction } = require("../utils/accountTransactionHelper");
+    await recordTransaction({
+      transactionType: "Debit",
+      source: "Payroll",
+      category: "Salaries",
+      amount: record.netSalary,
+      paymentMethod: record.paymentMethod || "Bank Transfer",
+      description: `Salary for ${record.employeeName} (${record.monthKey})`,
+      referenceId: record._id,
+      referenceModel: "PayrollRecord",
+      recordedBy: req.user ? req.user.id : null,
+      status: "Completed"
+    });
 
     return res.json({ success: true, message: "Salary payment verified successfully.", record });
   } catch (error) {

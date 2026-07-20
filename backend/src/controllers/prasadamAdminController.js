@@ -197,6 +197,25 @@ exports.updateAdminPrasadamOrderStatus = async (req, res) => {
       { $set: { status: modelStatus === "Collected" || modelStatus === "Completed" || modelStatus === "Delivered" || modelStatus === "Ready" ? "Paid" : "Pending" } }
     );
 
+    const isPaidStatus = ["Collected", "Completed", "Delivered", "Ready"].includes(modelStatus);
+    const wasPaidStatus = ["Collected", "Completed", "Delivered", "Ready"].includes(prevModelStatus);
+
+    if (!wasPaidStatus && isPaidStatus) {
+      const { recordTransaction } = require("../utils/accountTransactionHelper");
+      await recordTransaction({
+        transactionType: "Credit",
+        source: "Prasadam",
+        category: order.itemName || "Prasadam",
+        amount: order.amount,
+        paymentMethod: order.paymentMethod || "System",
+        description: `Prasadam Order: ${order.orderNumber || order._id}`,
+        referenceId: order._id,
+        referenceModel: "PrasadamOrder",
+        recordedBy: req.user ? req.user.id : null,
+        status: "Completed"
+      });
+    }
+
     await createStaffNotification({
       title: `🔔 Prasadam Order Updated`,
       message: `${order.devoteeName || order.customerName || "Guest"} - ${order.itemName} status changed: ${prevModelStatus} → ${modelStatus}$${adminReason ? `\\nReason: ${adminReason}` : ""}`.replace("$${", "${"),
