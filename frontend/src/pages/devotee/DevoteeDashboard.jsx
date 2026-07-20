@@ -344,14 +344,14 @@ const SidebarItem = ({ label, icon, active, onClick }) => (
   <button
     type="button"
     onClick={onClick}
-    className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[20px] font-semibold transition ${
+    className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[18px] font-semibold transition ${
       active
         ? "bg-gradient-to-r from-[#ff9f2f] to-[#ff6a00] text-white shadow-[0_8px_24px_rgba(255,106,0,0.38)]"
         : "text-[#2d1608] border border-white/35 bg-white/35 backdrop-blur-sm hover:bg-white/60"
     }`}
   >
     <AppIcon name={icon} className="h-[21px] w-[21px]" />
-    <span className="text-[20px] leading-none">{label}</span>
+    <span className="text-[18px] leading-none">{label}</span>
   </button>
 );
 
@@ -3620,7 +3620,7 @@ const DevoteeDashboard = () => {
             <button
               type="button"
               onClick={handleLogout}
-              className="mt-1 w-full rounded-xl border border-white/40 bg-white/45 px-3 py-3 text-left text-[20px] font-semibold text-[#7f470a] hover:bg-white/80"
+              className="mt-1 w-full rounded-xl border border-white/40 bg-white/45 px-3 py-3 text-left text-[18px] font-semibold text-[#7f470a] hover:bg-white/80"
             >
               <span className="inline-flex items-center gap-3">
                 <AppIcon name="gear" className="h-[21px] w-[21px]" />

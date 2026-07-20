@@ -19,9 +19,9 @@ const Sidebar = ({ activeItem, onSelect, collapsed, setCollapsed, mobileOpen, se
         className={`fixed top-0 left-0 bottom-0 z-40 border-r transition-all duration-300 shadow-2xl lg:shadow-none
         ${collapsed ? "w-[88px]" : "w-[280px]"}
         ${mobileOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0
-        ${darkMode 
-          ? "bg-[#0f172a]/90 backdrop-blur-xl border-white/5" 
-          : "bg-white/80 backdrop-blur-xl border-slate-200"}`}
+        ${darkMode
+            ? "bg-[#0f172a]/90 backdrop-blur-xl border-white/5"
+            : "bg-white/80 backdrop-blur-xl border-slate-200"}`}
       >
         <div className={`px-4 ${collapsed ? "pt-5 pb-4" : "pt-6 pb-5"} border-b ${darkMode ? "border-white/5" : "border-slate-100"}`}>
           <div className="flex items-center justify-between">
@@ -69,8 +69,8 @@ const Sidebar = ({ activeItem, onSelect, collapsed, setCollapsed, mobileOpen, se
                   ${isActive
                     ? "bg-gradient-to-r from-temple-500 to-temple-600 text-white shadow-md shadow-temple-500/20"
                     : darkMode
-                    ? "text-slate-400 hover:bg-white/5 hover:text-slate-200"
-                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                      ? "text-slate-400 hover:bg-white/5 hover:text-slate-200"
+                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                   }`}
                 title={collapsed ? item.title : undefined}
               >
@@ -78,14 +78,14 @@ const Sidebar = ({ activeItem, onSelect, collapsed, setCollapsed, mobileOpen, se
                 {isActive && (
                   <span className="absolute left-0 top-0 bottom-0 w-1 bg-white/30 rounded-r-full" />
                 )}
-                
+
                 {/* Hover Background Effect */}
                 {!isActive && (
                   <span className="absolute inset-0 bg-current opacity-0 group-hover:opacity-[0.03] transition-opacity duration-300" />
                 )}
 
                 <Icon size={20} className={`shrink-0 transition-transform duration-300 ${isActive ? "scale-110" : "group-hover:scale-110"}`} />
-                
+
                 {!collapsed && (
                   <span className="font-medium text-[14px]">{item.title}</span>
                 )}

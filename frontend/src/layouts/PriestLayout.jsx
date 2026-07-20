@@ -62,7 +62,7 @@ const PriestLayout = ({ children, onLogoutClick }) => {
 
       <div
         className={`transition-all duration-300 p-4 md:p-5 ${
-          collapsed ? "lg:ml-[84px]" : "lg:ml-[254px]"
+          collapsed ? "lg:ml-[84px]" : "lg:ml-[280px]"
         }`}
       >
         <PriestTopbar

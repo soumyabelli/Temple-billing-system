@@ -56,7 +56,7 @@ const PriestSidebar = ({
               </div>
               {!collapsed && (
                 <h1
-                  className={`text-[14px] leading-tight font-bold tracking-wide ${
+                  className={`text-[18px] leading-tight font-bold tracking-wide ${
                     darkMode ? "text-slate-100" : "text-[#1d1b19]"
                   }`}
                 >
@@ -122,7 +122,7 @@ const PriestSidebar = ({
                 )}
                 <Icon size={18} className="shrink-0" />
                 {!collapsed && (
-                  <span className="flex-1 text-[13px] font-semibold leading-tight tracking-wide">
+                  <span className="flex-1 text-lg font-medium leading-tight tracking-wide">
                     {item.title}
                   </span>
                 )}

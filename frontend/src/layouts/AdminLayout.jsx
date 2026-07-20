@@ -64,7 +64,7 @@ const AdminLayout = ({ children, onLogoutClick }) => {
         className={`transition-all duration-300 p-4 md:p-5 ${
           collapsed
             ? "lg:ml-[84px]"
-            : "lg:ml-[280px]"
+            : "lg:ml-[320px]"
         }`}
       >
         <Topbar

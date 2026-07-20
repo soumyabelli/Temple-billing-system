@@ -55,7 +55,7 @@ const CashierSidebar = ({
               </div>
               {!collapsed ? (
                 <div className="min-w-0">
-                  <p className="text-[15px] font-extrabold leading-tight text-slate-950">Sri Shanti Mahadev Mandir</p>
+                  <p className="text-[18px] font-extrabold leading-tight text-slate-950">Sri Shanti Mahadev Mandir</p>
                   <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#8d5500]">Cashier Console</p>
                 </div>
               ) : null}
@@ -108,7 +108,7 @@ const CashierSidebar = ({
                 >
                   {active ? <span className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-white" /> : null}
                   {isLogout ? <FaSignOutAlt size={18} className="shrink-0" /> : <Icon size={18} className="shrink-0" />}
-                  {!collapsed ? <span className="text-[15px] font-semibold leading-tight">{item.title}</span> : null}
+                  {!collapsed ? <span className="text-lg font-medium leading-tight">{item.title}</span> : null}
                   {showBadge ? (
                     <span
                       className={`ml-auto flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1 text-[10px] font-extrabold ${
