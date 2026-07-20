@@ -39,6 +39,7 @@ const PoojaManagement = () => {
   const [poojaTypes, setPoojaTypes] = useState(getPoojaTypes());
   const [typeName, setTypeName] = useState("");
   const [typePrice, setTypePrice] = useState(501);
+  const [typeRequiredMaterials, setTypeRequiredMaterials] = useState("");
   const [editingType, setEditingType] = useState(null);
   const [typeMessage, setTypeMessage] = useState("");
   
@@ -75,19 +76,21 @@ const PoojaManagement = () => {
 
     const updated = savePoojaTypes([
       ...getPoojaTypes().filter((type) => type.name !== (editingType || name)),
-      { name, price },
+      { name, price, requiredMaterials: typeRequiredMaterials },
     ]);
     setPoojaTypes(updated);
     setTypeMessage(editingType ? "Pooja type updated." : "Pooja type added.");
     setEditingType(null);
     setTypeName("");
     setTypePrice(501);
+    setTypeRequiredMaterials("");
     setShowTypeModal(false);
   };
 
   const handleEditType = (type) => {
     setTypeName(type.name);
     setTypePrice(type.price);
+    setTypeRequiredMaterials(type.requiredMaterials || "");
     setEditingType(type.name);
     setTypeMessage("");
     setShowTypeModal(true);
@@ -100,6 +103,7 @@ const PoojaManagement = () => {
       setEditingType(null);
       setTypeName("");
       setTypePrice(501);
+      setTypeRequiredMaterials("");
     }
     setTypeMessage("Pooja type removed.");
   };
@@ -383,6 +387,7 @@ const PoojaManagement = () => {
               setEditingType(null);
               setTypeName("");
               setTypePrice(501);
+              setTypeRequiredMaterials("");
               setTypeMessage("");
               setShowTypeModal(true);
             }}
@@ -522,6 +527,7 @@ const PoojaManagement = () => {
                 setEditingType(null);
                 setTypeName("");
                 setTypePrice(501);
+                setTypeRequiredMaterials("");
                 setTypeMessage("");
               }}
               className="absolute top-4 right-4 text-[#858b96] hover:text-[#15141f] text-2xl font-bold"
@@ -552,6 +558,16 @@ const PoojaManagement = () => {
                 placeholder="Enter price"
               />
             </label>
+            <label className="mt-4 block text-sm font-semibold text-[#4f4f4f]">
+              Required Materials (Optional)
+              <textarea
+                value={typeRequiredMaterials}
+                onChange={(e) => setTypeRequiredMaterials(e.target.value)}
+                rows={2}
+                className="mt-2 w-full rounded-2xl border border-[#ded6c6] bg-white px-4 py-3 text-base outline-none focus:border-[#8b5e3c]"
+                placeholder="e.g. Coconut, Flowers, Fruits"
+              />
+            </label>
             <div className="mt-6 flex items-center gap-2">
               <button
                 type="button"
@@ -567,6 +583,7 @@ const PoojaManagement = () => {
                   setEditingType(null);
                   setTypeName("");
                   setTypePrice(501);
+                  setTypeRequiredMaterials("");
                   setTypeMessage("");
                 }}
                 className="w-full rounded-3xl border border-[#d1d5db] bg-white py-3 text-sm font-semibold text-[#374151]"

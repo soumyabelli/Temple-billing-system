@@ -2026,14 +2026,14 @@ const DevoteeDashboard = () => {
     return (
       <div className="space-y-6">
         {/* Three Glassy Tabs at the Top */}
-        <div className="flex gap-2 sm:gap-4 rounded-3xl bg-white/30 border border-white/40 p-2 backdrop-blur-md shadow-sm max-w-xl">
+        <div className="flex gap-2 sm:gap-4 rounded-[24px] bg-white/40 border border-white/60 p-2 backdrop-blur-xl shadow-sm max-w-2xl mx-auto">
           <button
             type="button"
             onClick={() => setBookingTab("Pooja")}
-            className={`flex-1 py-2.5 px-4 text-xs sm:text-sm font-bold rounded-2xl transition-all duration-200 ${
+            className={`flex-1 py-3 px-4 text-[14px] font-extrabold rounded-[20px] transition-all duration-300 ${
               bookingTab === "Pooja"
-                ? "bg-[#1b7f77] text-white shadow-md scale-[1.02]"
-                : "bg-white/40 text-amber-950 hover:bg-white/60"
+                ? "bg-gradient-to-r from-[#d97706] to-[#f59e0b] text-white shadow-lg shadow-amber-600/30 scale-[1.02]"
+                : "bg-transparent text-[#78350f] hover:bg-white/50 hover:shadow-sm"
             }`}
           >
             🌸 Book Pooja
@@ -2041,10 +2041,10 @@ const DevoteeDashboard = () => {
           <button
             type="button"
             onClick={() => setBookingTab("Prasadam")}
-            className={`flex-1 py-2.5 px-4 text-xs sm:text-sm font-bold rounded-2xl transition-all duration-200 ${
+            className={`flex-1 py-3 px-4 text-[14px] font-extrabold rounded-[20px] transition-all duration-300 ${
               bookingTab === "Prasadam"
-                ? "bg-[#1b7f77] text-white shadow-md scale-[1.02]"
-                : "bg-white/40 text-amber-950 hover:bg-white/60"
+                ? "bg-gradient-to-r from-[#d97706] to-[#f59e0b] text-white shadow-lg shadow-amber-600/30 scale-[1.02]"
+                : "bg-transparent text-[#78350f] hover:bg-white/50 hover:shadow-sm"
             }`}
           >
             📦 Order Prasada
@@ -2052,10 +2052,10 @@ const DevoteeDashboard = () => {
           <button
             type="button"
             onClick={() => setBookingTab("Room")}
-            className={`flex-1 py-2.5 px-4 text-xs sm:text-sm font-bold rounded-2xl transition-all duration-200 ${
+            className={`flex-1 py-3 px-4 text-[14px] font-extrabold rounded-[20px] transition-all duration-300 ${
               bookingTab === "Room"
-                ? "bg-[#1b7f77] text-white shadow-md scale-[1.02]"
-                : "bg-white/40 text-amber-950 hover:bg-white/60"
+                ? "bg-gradient-to-r from-[#d97706] to-[#f59e0b] text-white shadow-lg shadow-amber-600/30 scale-[1.02]"
+                : "bg-transparent text-[#78350f] hover:bg-white/50 hover:shadow-sm"
             }`}
           >
             🏨 Book Room
@@ -2063,14 +2063,16 @@ const DevoteeDashboard = () => {
         </div>
 
         {bookingTab === "Pooja" && (
-          <div className={`${glassCard}`}>
-            <h2 className="text-[2rem] font-bold">Book Pooja</h2>
-            <p className="mt-2 text-[#4f4f4f]">Choose a service and book your next pooja online. Your new booking will appear under My Bookings.</p>
+          <div className="mt-8 rounded-[32px] border border-white/60 bg-white/30 p-6 sm:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.05)] backdrop-blur-2xl">
+            <div className="text-center mb-8">
+              <h2 className="text-[2.5rem] font-extrabold text-[#3a2007]">Book Pooja</h2>
+              <p className="mt-2 text-[#784f27] text-[15px]">Choose a sacred service and book your next pooja online. Experience divine blessings.</p>
+            </div>
 
-            <div className="mt-6 max-w-2xl mx-auto">
-              <div className="space-y-5 rounded-[28px] border border-white/45 bg-white/62 p-6 shadow-[0_20px_52px_rgba(113,82,28,0.12)] backdrop-blur-xl">
+            <div className="mx-auto max-w-xl">
+              <div className="space-y-6 rounded-[28px] border border-white/80 bg-white/80 p-8 shadow-[0_15px_40px_rgba(113,82,28,0.1)] backdrop-blur-xl transition-all hover:shadow-[0_20px_50px_rgba(113,82,28,0.15)]">
                 <div>
-                  <p className="text-sm uppercase tracking-[0.08em] text-[#8d6925]">Service</p>
+                  <p className="mb-2 text-[13px] uppercase tracking-[0.1em] font-bold text-[#8d6925]">Select Service</p>
                   <select
                     value={bookingService}
                     onChange={(e) => {
@@ -2079,7 +2081,7 @@ const DevoteeDashboard = () => {
                       setBookingService(selectedService);
                       setBookingAmount(selectedType?.price || 0);
                     }}
-                    className={glassInput}
+                    className="w-full appearance-none rounded-[20px] border border-[#e2d5c3] bg-[#faf7f2] px-5 py-4 text-[16px] font-medium text-[#4f3f26] outline-none transition focus:border-[#d97706] focus:ring-4 focus:ring-[#d97706]/10 shadow-inner"
                   >
                     {poojaTypes.map((service) => (
                       <option key={service.name} value={service.name}>
@@ -2087,61 +2089,85 @@ const DevoteeDashboard = () => {
                       </option>
                     ))}
                   </select>
+                  {poojaTypes.find((type) => type.name === bookingService)?.requiredMaterials && (
+                    <div className="mt-4 flex items-start gap-3 rounded-[20px] bg-gradient-to-br from-[#fffdf5] to-[#fff3d8] border border-[#ebd8b7] p-5 shadow-sm">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#fce9c0] text-[#d97706]">
+                        ✨
+                      </div>
+                      <div>
+                        <p className="text-[14px] font-bold text-[#9a6710]">Items to Bring</p>
+                        <p className="mt-1 text-[14px] font-medium text-[#7a5310] leading-relaxed">
+                          {poojaTypes.find((type) => type.name === bookingService).requiredMaterials}
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                <div className="bbm-field">
-                  <label>Date</label>
+                <div>
+                  <p className="mb-2 text-[13px] uppercase tracking-[0.1em] font-bold text-[#8d6925]">Select Date</p>
                   <input
                     type="date"
                     value={bookingDatetime}
                     onChange={(e) => setBookingDatetime(e.target.value)}
                     min={minBookingDatetime}
-                    className={glassInput}
+                    className="w-full appearance-none rounded-[20px] border border-[#e2d5c3] bg-[#faf7f2] px-5 py-4 text-[16px] font-medium text-[#4f3f26] outline-none transition focus:border-[#d97706] focus:ring-4 focus:ring-[#d97706]/10 shadow-inner"
                   />
                 </div>
 
-                <div>
-                  <p className="text-sm uppercase tracking-[0.08em] text-[#8d6925]">Amount</p>
-                  <input
-                    type="number"
-                    min="1"
-                    value={bookingAmount}
-                    readOnly
-                    className={glassInput}
-                  />
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                  <div>
+                    <p className="mb-2 text-[13px] uppercase tracking-[0.1em] font-bold text-[#8d6925]">Amount</p>
+                    <div className="relative">
+                      <span className="absolute left-5 top-1/2 -translate-y-1/2 font-bold text-[#8d6925]">₹</span>
+                      <input
+                        type="number"
+                        min="1"
+                        value={bookingAmount}
+                        readOnly
+                        className="w-full appearance-none rounded-[20px] border border-[#e2d5c3] bg-[#faf7f2] pl-10 pr-5 py-4 text-[16px] font-bold text-[#4f3f26] outline-none cursor-not-allowed shadow-inner"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="mb-2 text-[13px] uppercase tracking-[0.1em] font-bold text-[#8d6925]">Payment Method</p>
+                    <select value={bookingPaymentMethod} onChange={(e) => setBookingPaymentMethod(e.target.value)} className="w-full appearance-none rounded-[20px] border border-[#e2d5c3] bg-[#faf7f2] px-5 py-4 text-[16px] font-medium text-[#4f3f26] outline-none transition focus:border-[#d97706] focus:ring-4 focus:ring-[#d97706]/10 shadow-inner">
+                      {paymentMethods.map((m) => (
+                        <option key={m} value={m}>
+                          {m}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
-                <div>
-                  <p className="text-sm uppercase tracking-[0.08em] text-[#8d6925]">Payment Method</p>
-                  <select value={bookingPaymentMethod} onChange={(e) => setBookingPaymentMethod(e.target.value)} className={glassInput}>
-                    {paymentMethods.map((m) => (
-                      <option key={m} value={m}>
-                        {m}
-                      </option>
-                    ))}
-                  </select>
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={handleBookingSubmit}
+                    disabled={bookingLoading}
+                    className="w-full rounded-[22px] bg-gradient-to-r from-[#d97706] to-[#f59e0b] px-6 py-4 text-[16px] font-extrabold text-white shadow-[0_8px_20px_rgba(217,119,6,0.25)] transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_12px_25px_rgba(217,119,6,0.35)] disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100"
+                  >
+                    {bookingLoading ? "Processing Booking..." : "Confirm Booking"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActivePage("My Bookings")}
+                    className="mt-4 w-full text-center text-[15px] font-bold text-[#a65b05] hover:text-[#d97706] transition"
+                  >
+                    View Your Booking History
+                  </button>
                 </div>
-
-                <button
-                  type="button"
-                  onClick={handleBookingSubmit}
-                  disabled={bookingLoading}
-                  className="mt-4 w-full rounded-2xl bg-[#1b7f77] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#166353] disabled:cursor-not-allowed disabled:bg-[#9bb8af]"
-                >
-                  {bookingLoading ? "Booking..." : "Book Pooja"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActivePage("My Bookings")}
-                  className="mt-2 w-full text-center text-sm font-semibold text-[#1b7f77] hover:underline bg-transparent border-0"
-                >
-                  View Bookings History
-                </button>
                 {bookingError ? (
-                  <p className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 mt-2">{bookingError}</p>
+                  <div className="mt-4 rounded-[16px] border border-red-200 bg-red-50 p-4 shadow-sm">
+                    <p className="text-[14px] font-bold text-red-700">{bookingError}</p>
+                  </div>
                 ) : null}
                 {bookingSuccess ? (
-                  <p className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700 mt-2">{bookingSuccess}</p>
+                  <div className="mt-4 rounded-[16px] border border-emerald-200 bg-emerald-50 p-4 shadow-sm">
+                    <p className="text-[14px] font-bold text-emerald-700">{bookingSuccess}</p>
+                  </div>
                 ) : null}
               </div>
             </div>

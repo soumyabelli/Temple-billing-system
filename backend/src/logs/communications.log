@@ -1181,3 +1181,16 @@ Please login using these credentials. You will be required to change your passwo
 Best regards,
 Temple Admin
 
+[2026-07-20T07:21:25.031Z] EMAIL
+To: reena@gmail.com
+Subject: Pooja Booking Confirmation
+Pooja Booking Confirmation
+Service: Archana
+Date & Time: 2026-07-31
+Amount: ₹501
+Thank you!
+
+[2026-07-20T07:21:25.036Z] SMS
+To: 9945650664
+Message: Pooja booking confirmed! Service: Archana on 2026-07-31. Amount: ₹501. -Temple
+
