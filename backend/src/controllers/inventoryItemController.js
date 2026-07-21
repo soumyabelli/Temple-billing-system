@@ -1,6 +1,7 @@
 const InventoryItem = require("../models/InventoryItem");
 const InventoryLog = require("../models/InventoryLog");
 const RestockHistory = require("../models/RestockHistory");
+const AccountTransaction = require("../models/AccountTransaction");
 const { createStaffNotification } = require("../utils/notificationService");
 
 const INVENTORY_UNITS = ["Kg", "Liter", "Pack", "Pieces", "Box"];
@@ -34,10 +35,9 @@ const getAllInventoryItems = async (req, res) => {
   }
 };
 
-// POST /api/admin/inventory-items
 const createInventoryItem = async (req, res) => {
   try {
-    const { name, unit, availableStock, minimumStock, category, description } = req.body;
+    const { name, unit, availableStock, minimumStock, reorderLevel, category, description, expiryDate } = req.body;
 
     if (!clean(name)) {
       return res.status(400).json({ success: false, message: "Item name is required." });
@@ -60,8 +60,10 @@ const createInventoryItem = async (req, res) => {
       unit: clean(unit),
       availableStock: Number(availableStock),
       minimumStock: Number(minimumStock),
+      reorderLevel: Number(reorderLevel || minimumStock),
       category: clean(category),
       description: clean(description),
+      expiryDate: expiryDate ? new Date(expiryDate) : undefined
     });
 
     if (item.availableStock > 0) {
@@ -84,11 +86,10 @@ const createInventoryItem = async (req, res) => {
   }
 };
 
-// PUT /api/admin/inventory-items/:id
 const updateInventoryItem = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, unit, availableStock, minimumStock, category, description } = req.body;
+    const { name, unit, availableStock, minimumStock, reorderLevel, category, description, isActive, expiryDate } = req.body;
 
     const existingItem = await InventoryItem.findById(id);
     if (!existingItem) {
@@ -109,8 +110,11 @@ const updateInventoryItem = async (req, res) => {
     }
     if (availableStock !== undefined) updatePayload.availableStock = Math.max(0, Number(availableStock));
     if (minimumStock !== undefined) updatePayload.minimumStock = Math.max(0, Number(minimumStock));
+    if (reorderLevel !== undefined) updatePayload.reorderLevel = Math.max(0, Number(reorderLevel));
     if (category !== undefined) updatePayload.category = clean(category);
     if (description !== undefined) updatePayload.description = clean(description);
+    if (isActive !== undefined) updatePayload.isActive = Boolean(isActive);
+    if (expiryDate !== undefined) updatePayload.expiryDate = expiryDate ? new Date(expiryDate) : null;
 
     const item = await InventoryItem.findByIdAndUpdate(id, updatePayload, { new: true });
 
@@ -151,7 +155,7 @@ const deleteInventoryItem = async (req, res) => {
 const restockItem = async (req, res) => {
   try {
     const { id } = req.params;
-    const { quantityAdded, supplier, purchaseDate, cost, invoiceUrl } = req.body;
+    const { quantityAdded, supplier, purchaseDate, cost, invoiceUrl, gst, remarks, expiryDate } = req.body;
 
     if (!quantityAdded || Number(quantityAdded) <= 0) {
       return res.status(400).json({ success: false, message: "Valid quantity added is required." });
@@ -163,9 +167,16 @@ const restockItem = async (req, res) => {
     }
 
     item.availableStock += Number(quantityAdded);
+    item.lastSupplier = clean(supplier);
+    item.lastPurchasePrice = Number(cost) || 0;
+    item.lastInvoiceNumber = clean(invoiceUrl);
+    item.lastPurchaseDate = purchaseDate ? new Date(purchaseDate) : new Date();
+    if (expiryDate) {
+      item.expiryDate = new Date(expiryDate);
+    }
     await item.save();
 
-    await RestockHistory.create({
+    const restock = await RestockHistory.create({
       item: item._id,
       itemName: item.name,
       quantity: Number(quantityAdded),
@@ -175,7 +186,42 @@ const restockItem = async (req, res) => {
       cost: Number(cost) || 0,
       invoiceUrl: clean(invoiceUrl),
       restockedBy: req.user ? req.user.name || req.user.id : "Admin",
+      gst: Number(gst) || 0,
+      remarks: clean(remarks)
     });
+
+    await InventoryLog.create({
+      item: item._id,
+      action: "Restocked",
+      quantity: Number(quantityAdded),
+      oldStock: item.availableStock - Number(quantityAdded),
+      newStock: item.availableStock,
+      user: req.user ? req.user.id : null,
+      description: `Restocked ${quantityAdded} ${item.unit} from ${supplier}`
+    });
+
+    if (Number(cost) > 0) {
+      // Determine financial year based on purchaseDate or current date
+      const d = purchaseDate ? new Date(purchaseDate) : new Date();
+      const year = d.getFullYear();
+      const month = d.getMonth() + 1;
+      const financialYear = month >= 4 ? `${year}-${year + 1}` : `${year - 1}-${year}`;
+
+      await AccountTransaction.create({
+        transactionType: "Debit",
+        source: "Inventory",
+        category: "Inventory Purchase",
+        amount: Number(cost),
+        date: d,
+        financialYear: financialYear,
+        paymentMethod: "System",
+        status: "Completed",
+        description: `Purchased ${quantityAdded} ${item.unit} of ${item.name} from ${supplier || 'supplier'}. Invoice: ${invoiceUrl}`,
+        referenceId: restock._id,
+        referenceModel: "RestockHistory",
+        recordedBy: req.user ? req.user.id : null,
+      });
+    }
 
     return res.json({ success: true, message: "Item restocked successfully", item });
   } catch (error) {
@@ -193,6 +239,87 @@ const getInventoryLogs = async (req, res) => {
   }
 };
 
+// POST /api/admin/inventory-items/:id/adjust
+const adjustStock = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { type, quantity, reason } = req.body; // type: Damaged, Expired, Returned, Lost
+    const parsedQty = Number(quantity);
+
+    if (!parsedQty || parsedQty <= 0) {
+      return res.status(400).json({ success: false, message: "Valid quantity is required." });
+    }
+
+    const item = await InventoryItem.findById(id);
+    if (!item) {
+      return res.status(404).json({ success: false, message: "Inventory item not found." });
+    }
+
+    const oldStock = item.availableStock;
+
+    if (["Damaged", "Expired", "Lost"].includes(type)) {
+      if (item.availableStock < parsedQty) {
+        return res.status(400).json({ success: false, message: "Insufficient stock to adjust." });
+      }
+      item.availableStock -= parsedQty;
+      if (type === "Damaged") item.damagedStock += parsedQty;
+      if (type === "Expired") item.expiredStock += parsedQty;
+
+      await AccountTransaction.create({
+        transactionType: "Debit",
+        source: "Inventory",
+        category: "Inventory Loss",
+        amount: 0, // Since we don't know the exact cost per unit, it can be 0 or derived if average cost is tracked
+        date: new Date(),
+        financialYear: new Date().getFullYear() + "-" + (new Date().getFullYear() + 1),
+        paymentMethod: "System",
+        status: "Completed",
+        description: `Inventory Loss: ${parsedQty} ${item.unit} of ${item.name} (${type}). Reason: ${reason}`,
+        referenceId: item._id,
+        referenceModel: "InventoryItem",
+        recordedBy: req.user ? req.user.id : null,
+      });
+
+    } else if (type === "Returned") {
+      item.availableStock += parsedQty;
+      item.returnedStock += parsedQty;
+    } else {
+      return res.status(400).json({ success: false, message: "Invalid adjustment type." });
+    }
+
+    await item.save();
+
+    let actionEnum = "Adjusted";
+    if (type === "Damaged") actionEnum = "Damage";
+    if (type === "Expired") actionEnum = "Expire";
+    if (type === "Lost") actionEnum = "Lost";
+    if (type === "Returned") actionEnum = "Return";
+
+    await InventoryLog.create({
+      item: item._id,
+      action: actionEnum,
+      quantity: parsedQty,
+      oldStock: oldStock,
+      newStock: item.availableStock,
+      user: req.user ? req.user.id : null,
+      description: `Stock adjusted: ${type} - ${reason}`
+    });
+
+    if (item.availableStock <= (item.reorderLevel || item.minimumStock)) {
+      await createStaffNotification({
+        title: "⚠️ Low Stock Alert",
+        message: `${item.name} stock is below minimum level. Current: ${item.availableStock} ${item.unit}. Suggest reordering soon.`,
+        audienceRole: "admin",
+        category: "inventory",
+      });
+    }
+
+    return res.json({ success: true, message: "Stock adjusted successfully", item });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 module.exports = {
   getAllInventoryItems,
   createInventoryItem,
@@ -200,5 +327,6 @@ module.exports = {
   deleteInventoryItem,
   seedDefaultItems,
   restockItem,
+  adjustStock,
   getInventoryLogs,
 };

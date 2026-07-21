@@ -16,7 +16,10 @@ const accountTransactionSchema = new mongoose.Schema(
         "Prasadam",
         "Payroll",
         "Manual Entry",
-        "Bank Interest"
+        "Bank Interest",
+        "Inventory",
+        "Asset",
+        "Repair"
       ],
       required: true,
     },
@@ -61,7 +64,7 @@ const accountTransactionSchema = new mongoose.Schema(
     },
     referenceModel: {
       type: String,
-      enum: ["PoojaBooking", "Donation", "Room", "PrasadamOrder", "PayrollRecord", "BankInterest"],
+      enum: ["PoojaBooking", "Donation", "Room", "PrasadamOrder", "PayrollRecord", "BankInterest", "RestockHistory", "Asset", "RepairRequest"],
     },
     bankName: {
       type: String,

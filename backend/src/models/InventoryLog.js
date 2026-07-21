@@ -9,7 +9,7 @@ const inventoryLogSchema = new mongoose.Schema(
     },
     action: {
       type: String,
-      enum: ["Added", "Updated", "Consumed", "Restocked"],
+      enum: ["Added", "Updated", "Consumed", "Restocked", "Issue", "Damage", "Expire", "Return", "Lost", "Adjusted"],
       required: true,
     },
     quantity: {

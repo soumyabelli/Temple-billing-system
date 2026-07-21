@@ -36,6 +36,7 @@ import AccountantRevenueChart from "./AccountantRevenueChart";
 import Attendance from "../../staff/Attendance";
 import LeaveHistory from "../../staff/LeaveHistory";
 import LeaveRequest from "../../staff/LeaveRequest";
+import AccountantInventory from "../AccountantInventory";
 import {
   accountantStats,
   billingRows,
@@ -1246,60 +1247,7 @@ const PrasadamSalesView = ({ bills, loading }) => {
 };
 
 const InventoryFinanceView = () => (
-  <div className="accountant-view">
-    <ViewHero
-      eyebrow="Inventory Finance"
-      title="Inventory Finance"
-      description="Monitor inventory expense tracking, purchase trends and pending procurement."
-      right={<span className="accountant-chip"><FaFilter /> Expense Tracking</span>}
-    />
-
-    <SummaryGrid items={inventoryStats} />
-
-    <div className="accountant-twoColumn accountant-twoColumn--charts">
-      <section className="accountant-panel">
-        <div className="accountant-panel__header">
-          <div>
-            <p className="accountant-panel__eyebrow">Purchases</p>
-            <h3 className="accountant-panel__title">Inventory Purchase Table</h3>
-          </div>
-        </div>
-
-        <DataTable
-          columns={["Item Name", "Quantity", "Purchase Cost", "Supplier", "Date"]}
-          rows={inventoryRows}
-          renderRow={(row) => (
-            <tr key={`${row.itemName}-${row.date}`}>
-              <td>{row.itemName}</td>
-              <td>{row.quantity}</td>
-              <td>{row.purchaseCost}</td>
-              <td>{row.supplier}</td>
-              <td>{row.date}</td>
-            </tr>
-          )}
-        />
-      </section>
-
-      <aside className="accountant-sideRail accountant-sideRail--chart">
-        <AccountantDonutCard
-          title="Expense Analysis"
-          subtitle="Ledger charts"
-          segments={inventoryExpenseSegments}
-          centerValue="Rs 2,45,000"
-          centerLabel="Total expenses"
-        />
-        <AccountantRevenueChart
-          title="Purchase Trend"
-          subtitle="Expense charts"
-          points={inventoryTrend}
-          rangeLabel="This Year"
-          summaryLabel="Monthly purchases"
-          summaryValue="Rs 1,20,000"
-          trendLabel="+6.2% from last month"
-        />
-      </aside>
-    </div>
-  </div>
+  <AccountantInventory />
 );
 
 const DevoteePaymentsView = () => (

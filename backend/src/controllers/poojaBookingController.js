@@ -1,12 +1,47 @@
 const PoojaBooking = require("../models/PoojaBooking");
+const PoojaMaterialRequirement = require("../models/PoojaMaterialRequirement");
+const InventoryItem = require("../models/InventoryItem");
 
 // Create a new pooja booking
 const createBooking = async (req, res) => {
   try {
-    const { customerName, service, amount, paymentMethod, contactNumber, notes, bookingDate } = req.body;
+    const { customerName, service, amount, paymentMethod, contactNumber, notes, bookingDate, materialsProvidedByTemple, materialCharge } = req.body;
 
     if (!customerName || !service || !amount || !paymentMethod || !contactNumber || !bookingDate) {
       return res.status(400).json({ message: "All required fields must be provided" });
+    }
+
+    let materialsConsumed = [];
+
+    if (materialsProvidedByTemple) {
+      const requirement = await PoojaMaterialRequirement.findOne({ poojaName: service }).populate("requiredMaterials.item");
+      if (requirement && requirement.requiredMaterials) {
+        for (const reqMat of requirement.requiredMaterials) {
+          if (reqMat.item) {
+            const invItem = await InventoryItem.findById(reqMat.item._id);
+            if (invItem) {
+              const oldStock = invItem.availableStock;
+              invItem.availableStock -= reqMat.quantity;
+              await invItem.save();
+              materialsConsumed.push({
+                item: invItem._id,
+                itemName: invItem.name,
+                quantity: reqMat.quantity
+              });
+              const InventoryLog = require("../models/InventoryLog");
+              await InventoryLog.create({
+                item: invItem._id,
+                action: "Consumed",
+                quantity: reqMat.quantity,
+                oldStock: oldStock,
+                newStock: invItem.availableStock,
+                user: req.user ? req.user.id : null,
+                description: `Pooja Booking Consumption: ${service}`
+              });
+            }
+          }
+        }
+      }
     }
 
     const newBooking = new PoojaBooking({
@@ -18,6 +53,9 @@ const createBooking = async (req, res) => {
       notes,
       bookingDate,
       createdBy: req.user.id, // from auth middleware
+      materialsProvidedByTemple: Boolean(materialsProvidedByTemple),
+      materialCharge: Number(materialCharge) || 0,
+      materialsConsumed
     });
 
     const savedBooking = await newBooking.save();

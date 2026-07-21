@@ -18,6 +18,23 @@ const popularPoojas = Object.keys(poojaPrices).map(name => ({
 }));
 
 const PoojaBookingPage = () => {
+  const [poojaSettings, setPoojaSettings] = useState([]);
+  
+  React.useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get("http://localhost:5000/api/pooja-settings", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setPoojaSettings(res.data?.requirements || []);
+      } catch (err) {
+        console.error("Failed to load pooja settings", err);
+      }
+    };
+    fetchSettings();
+  }, []);
+
   const [formData, setFormData] = useState({
     customerName: "",
     service: "Abhisheka",
@@ -25,7 +42,8 @@ const PoojaBookingPage = () => {
     amount: poojaPrices["Abhisheka"],
     paymentMethod: "UPI",
     contactNumber: "",
-    notes: ""
+    notes: "",
+    materialsProvidedByTemple: false
   });
 
   const [loading, setLoading] = useState(false);
@@ -37,7 +55,13 @@ const PoojaBookingPage = () => {
       setFormData({
         ...formData,
         service: value,
-        amount: poojaPrices[value] || ""
+        amount: poojaPrices[value] || "",
+        materialsProvidedByTemple: false // Reset when service changes
+      });
+    } else if (name === "materialsProvidedByTemple") {
+      setFormData({
+        ...formData,
+        [name]: e.target.checked
       });
     } else {
       setFormData({
@@ -46,6 +70,13 @@ const PoojaBookingPage = () => {
       });
     }
   };
+
+  // Calculate dynamic total including material charge
+  const selectedPoojaSetting = poojaSettings.find(p => p.poojaName === formData.service);
+  const materialCharge = formData.materialsProvidedByTemple && selectedPoojaSetting?.requiredMaterials
+    ? selectedPoojaSetting.requiredMaterials.reduce((sum, item) => sum + (item.charge || 0), 0)
+    : 0;
+  const totalAmount = (formData.amount || 0) + materialCharge;
 
   const handlePoojaCardClick = (serviceName) => {
     setFormData({
@@ -61,9 +92,15 @@ const PoojaBookingPage = () => {
 
     try {
       const token = localStorage.getItem("token");
+      const payload = {
+        ...formData,
+        amount: totalAmount, // Submit total amount
+        materialCharge: materialCharge
+      };
+
       await axios.post(
         "http://localhost:5000/api/pooja/book", 
-        formData,
+        payload,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
@@ -76,7 +113,8 @@ const PoojaBookingPage = () => {
         amount: poojaPrices["Abhisheka"],
         paymentMethod: "UPI",
         contactNumber: "",
-        notes: ""
+        notes: "",
+        materialsProvidedByTemple: false
       });
     } catch (error) {
       console.error(error);
@@ -153,7 +191,7 @@ const PoojaBookingPage = () => {
 
               {/* AMOUNT */}
               <div>
-                <label className="block text-[11px] font-bold text-[#b88c6b] uppercase tracking-wider mb-2">Amount</label>
+                <label className="block text-[11px] font-bold text-[#b88c6b] uppercase tracking-wider mb-2">Base Amount</label>
                 <input
                   type="number"
                   name="amount"
@@ -161,6 +199,26 @@ const PoojaBookingPage = () => {
                   readOnly
                   className="w-full pb-2 bg-transparent border-b border-gray-200 text-[14px] text-gray-800 focus:outline-none"
                 />
+              </div>
+
+              {/* MATERIALS PROVIDED BY TEMPLE */}
+              <div className="flex items-center gap-3 mt-4">
+                <input
+                  type="checkbox"
+                  id="materialsProvidedByTemple"
+                  name="materialsProvidedByTemple"
+                  checked={formData.materialsProvidedByTemple}
+                  onChange={handleChange}
+                  className="w-4 h-4 text-[#1F7A68] rounded focus:ring-[#1F7A68]"
+                />
+                <label htmlFor="materialsProvidedByTemple" className="text-[13px] text-gray-700">
+                  Include Temple Materials 
+                  {selectedPoojaSetting && (
+                    <span className="text-[#b88c6b] font-semibold ml-1">
+                      (+ ₹ {selectedPoojaSetting.requiredMaterials.reduce((sum, item) => sum + (item.charge || 0), 0)})
+                    </span>
+                  )}
+                </label>
               </div>
 
               {/* PAYMENT METHOD */}
@@ -261,8 +319,15 @@ const PoojaBookingPage = () => {
               <div className="space-y-1 text-[12px] text-gray-600">
                 <p><span className="font-medium">Service:</span> {formData.service || "Not selected"}</p>
                 <p><span className="font-medium">Date:</span> {formData.bookingDate ? new Date(formData.bookingDate).toLocaleDateString() : "Not selected"}</p>
-                <p><span className="font-medium">Amount:</span> ₹ {formData.amount || "0"}</p>
                 <p><span className="font-medium">Payment:</span> {formData.paymentMethod || "Not selected"}</p>
+                {formData.materialsProvidedByTemple && (
+                  <p><span className="font-medium text-[#1F7A68]">Material Charge:</span> ₹ {materialCharge}</p>
+                )}
+                <div className="border-t border-gray-200 my-2 pt-2">
+                  <p className="text-[14px] font-bold text-[#3A1F1D]">
+                    <span>Total Amount:</span> ₹ {totalAmount}
+                  </p>
+                </div>
               </div>
             </div>
             

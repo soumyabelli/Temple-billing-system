@@ -46,6 +46,21 @@ const poojaBookingSchema = new mongoose.Schema(
       ref: "Employee",
       required: true,
     },
+    materialsProvidedByTemple: {
+      type: Boolean,
+      default: false,
+    },
+    materialCharge: {
+      type: Number,
+      default: 0,
+    },
+    materialsConsumed: [
+      {
+        item: { type: mongoose.Schema.Types.ObjectId, ref: "InventoryItem" },
+        itemName: String,
+        quantity: Number,
+      }
+    ],
   },
   {
     timestamps: true,

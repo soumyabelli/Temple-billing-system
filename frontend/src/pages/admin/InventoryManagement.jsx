@@ -1,1038 +1,822 @@
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
-import { getPrasadamOrders } from "../../services/devoteeService";
 
 const API_BASE = "http://localhost:5000/api";
 
 const INVENTORY_UNITS = ["Kg", "Liter", "Pack", "Pieces", "Box"];
 const INVENTORY_CATEGORIES = ["Pooja", "Abhisheka", "Prasadam", "Annadanam", "Maintenance", "Electrical", "Office", "Festival"];
 
-const formatCurrency = (value) => `₹ ${Number(value || 0).toLocaleString()}`;
-
-const statusClassMap = {
-  Pending: "bg-[#fef3c7] text-[#92400e]",
-  Approved: "bg-[#d1fae5] text-[#166534]",
-  Rejected: "bg-[#fee2e2] text-[#b91c1c]",
-};
-
 const formatDateTime = (value) => {
   if (!value) return "-";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
+  return date.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
 };
 
 const EMPTY_ITEM_FORM = { name: "", unit: "Pack", availableStock: "", minimumStock: "", category: "", description: "" };
+const EMPTY_SUPPLIER_FORM = { name: "", address: "", phone: "", email: "", gst: "" };
+const EMPTY_ASSET_FORM = { assetId: "", name: "", category: "", purchaseDate: "", supplier: "", invoiceNumber: "", warranty: "", assignedLocation: "", status: "Active" };
+const EMPTY_REPAIR_FORM = { asset: "", description: "", vendor: "", cost: "", invoiceNumber: "" };
 
-// ─────────────────────────────────────────────
-// Low Stock Alert Banner
-// ─────────────────────────────────────────────
-const LowStockBanner = ({ items }) => {
-  const lowItems = items.filter((i) => i.availableStock <= i.minimumStock);
-  if (lowItems.length === 0) return null;
-  return (
-    <div style={{ background: "#fff7ed", border: "1px solid #fb923c", borderRadius: "12px", padding: "14px 18px", marginBottom: "16px" }}>
-      <p style={{ fontWeight: 700, color: "#c2410c", marginBottom: "8px", fontSize: "14px" }}>
-        ⚠️ Low Stock Alert — {lowItems.length} item{lowItems.length > 1 ? "s" : ""} below minimum level
-      </p>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-        {lowItems.map((item, index) => (
-          <span
-            key={item?._id || index}
-            style={{ background: "#fee2e2", color: "#b91c1c", borderRadius: "20px", padding: "4px 12px", fontSize: "12px", fontWeight: 600 }}
-          >
-            🔴 {item?.name}: {item?.availableStock}/{item?.minimumStock} {item?.unit}
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-// ─────────────────────────────────────────────
-// Add / Edit Item Modal
-// ─────────────────────────────────────────────
-const ItemFormModal = ({ editItem, onClose, onSave }) => {
-  const [form, setForm] = useState(
-    editItem
-      ? { name: editItem.name, unit: editItem.unit, availableStock: editItem.stock || editItem.availableStock, minimumStock: editItem.minimumStock, category: editItem.category || "", description: editItem.description || "" }
-      : EMPTY_ITEM_FORM
-  );
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!form.name.trim()) { setError("Item name is required."); return; }
-    if (!form.unit) { setError("Unit is required."); return; }
-    if (form.availableStock === "" || Number(form.availableStock) < 0) { setError("Available stock must be 0 or more."); return; }
-    if (form.minimumStock === "" || Number(form.minimumStock) < 0) { setError("Minimum stock must be 0 or more."); return; }
-
-    setSaving(true);
-    setError("");
-    try {
-      await onSave({ ...form, availableStock: Number(form.availableStock), minimumStock: Number(form.minimumStock) });
-      onClose();
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to save item.");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={{ background: "#fff", borderRadius: "20px", padding: "32px", width: "480px", maxWidth: "95vw", boxShadow: "0 20px 60px rgba(0,0,0,0.15)" }}>
-        <h3 style={{ fontSize: "20px", fontWeight: 700, color: "#0f172a", marginBottom: "20px" }}>
-          {editItem ? "Edit Inventory Item" : "Add New Inventory Item"}
-        </h3>
-        {error ? <div style={{ background: "#fee2e2", color: "#b91c1c", borderRadius: "10px", padding: "10px 14px", marginBottom: "14px", fontSize: "13px" }}>{error}</div> : null}
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-          <div>
-            <label style={{ fontSize: "13px", fontWeight: 600, color: "#475569", display: "block", marginBottom: "6px" }}>Item Name *</label>
-            <input
-              type="text"
-              value={form.name}
-              onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
-              placeholder="e.g. Camphor"
-              style={{ width: "100%", border: "1px solid #cbd5e1", borderRadius: "10px", padding: "9px 12px", fontSize: "14px" }}
-            />
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-            <div>
-              <label style={{ fontSize: "13px", fontWeight: 600, color: "#475569", display: "block", marginBottom: "6px" }}>Unit *</label>
-              <select
-                value={form.unit}
-                onChange={(e) => setForm((p) => ({ ...p, unit: e.target.value }))}
-                style={{ width: "100%", border: "1px solid #cbd5e1", borderRadius: "10px", padding: "9px 12px", fontSize: "14px" }}
-              >
-                {INVENTORY_UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
-              </select>
-            </div>
-            <div>
-              <label style={{ fontSize: "13px", fontWeight: 600, color: "#475569", display: "block", marginBottom: "6px" }}>Category</label>
-              <select
-                value={form.category}
-                onChange={(e) => setForm((p) => ({ ...p, category: e.target.value }))}
-                style={{ width: "100%", border: "1px solid #cbd5e1", borderRadius: "10px", padding: "9px 12px", fontSize: "14px" }}
-              >
-                <option value="">Select Category</option>
-                {INVENTORY_CATEGORIES.map((cat) => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-          <div>
-            <label style={{ fontSize: "13px", fontWeight: 600, color: "#475569", display: "block", marginBottom: "6px" }}>Description</label>
-            <textarea
-              rows={2}
-              value={form.description}
-              onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
-              placeholder="e.g. Pure camphor for pooja"
-              style={{ width: "100%", border: "1px solid #cbd5e1", borderRadius: "10px", padding: "9px 12px", fontSize: "14px", resize: "none" }}
-            />
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-            <div>
-              <label style={{ fontSize: "13px", fontWeight: 600, color: "#475569", display: "block", marginBottom: "6px" }}>Available Stock *</label>
-              <input
-                type="number"
-                min="0"
-                step="1"
-                value={form.availableStock}
-                onChange={(e) => setForm((p) => ({ ...p, availableStock: e.target.value }))}
-                placeholder="0"
-                style={{ width: "100%", border: "1px solid #cbd5e1", borderRadius: "10px", padding: "9px 12px", fontSize: "14px" }}
-              />
-            </div>
-            <div>
-              <label style={{ fontSize: "13px", fontWeight: 600, color: "#475569", display: "block", marginBottom: "6px" }}>Minimum Stock *</label>
-              <input
-                type="number"
-                min="0"
-                step="1"
-                value={form.minimumStock}
-                onChange={(e) => setForm((p) => ({ ...p, minimumStock: e.target.value }))}
-                placeholder="0"
-                style={{ width: "100%", border: "1px solid #cbd5e1", borderRadius: "10px", padding: "9px 12px", fontSize: "14px" }}
-              />
-            </div>
-          </div>
-          <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end", marginTop: "8px" }}>
-            <button
-              type="button"
-              onClick={onClose}
-              style={{ padding: "10px 20px", borderRadius: "30px", border: "1px solid #cbd5e1", background: "#fff", fontWeight: 600, cursor: "pointer" }}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={saving}
-              style={{ padding: "10px 24px", borderRadius: "30px", background: "#2563eb", color: "#fff", fontWeight: 600, border: "none", cursor: "pointer" }}
-            >
-              {saving ? "Saving..." : editItem ? "Update Item" : "Add Item"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-};
-
-// ─────────────────────────────────────────────
-// Restock Item Modal
-// ─────────────────────────────────────────────
-const RestockModal = ({ item, onClose, onRestock }) => {
-  const [quantityAdded, setQuantityAdded] = useState("");
-  const [supplier, setSupplier] = useState("");
-  const [cost, setCost] = useState("");
-  const [purchaseDate, setPurchaseDate] = useState("");
-  const [invoiceNumber, setInvoiceNumber] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!item || (!item._id && !item.id)) return;
-    setLoading(true);
-    await onRestock(item._id || item.id, {
-      quantityAdded: Number(quantityAdded),
-      supplier,
-      cost: Number(cost),
-      purchaseDate,
-      invoiceNumber
-    });
-    setLoading(false);
-    onClose();
-  };
-
-  return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={{ background: "#fff", borderRadius: "20px", padding: "32px", width: "440px", maxWidth: "95vw", boxShadow: "0 20px 60px rgba(0,0,0,0.15)" }}>
-        <h3 style={{ fontSize: "18px", fontWeight: 700, color: "#0f172a", marginBottom: "6px" }}>Restock Item</h3>
-        <p style={{ fontSize: "13px", color: "#64748b", marginBottom: "16px" }}>
-          Add stock to: <strong>{item?.name}</strong> (Available: {item?.stock || item?.availableStock} {item?.unit})
-        </p>
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-          <div>
-            <label style={{ fontSize: "13px", fontWeight: 600, color: "#475569", display: "block", marginBottom: "6px" }}>Quantity to Add *</label>
-            <input
-              type="number"
-              min="1"
-              step="1"
-              value={quantityAdded}
-              onChange={(e) => setQuantityAdded(e.target.value)}
-              style={{ width: "100%", border: "1px solid #cbd5e1", borderRadius: "10px", padding: "10px 12px", fontSize: "14px" }}
-              required
-            />
-          </div>
-          <div>
-            <label style={{ fontSize: "13px", fontWeight: 600, color: "#475569", display: "block", marginBottom: "6px" }}>Supplier Name *</label>
-            <input
-              type="text"
-              value={supplier}
-              onChange={(e) => setSupplier(e.target.value)}
-              style={{ width: "100%", border: "1px solid #cbd5e1", borderRadius: "10px", padding: "10px 12px", fontSize: "14px" }}
-              required
-            />
-          </div>
-          <div>
-            <label style={{ fontSize: "13px", fontWeight: 600, color: "#475569", display: "block", marginBottom: "6px" }}>Total Cost (₹)</label>
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={cost}
-              onChange={(e) => setCost(e.target.value)}
-              style={{ width: "100%", border: "1px solid #cbd5e1", borderRadius: "10px", padding: "10px 12px", fontSize: "14px" }}
-            />
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-            <div>
-              <label style={{ fontSize: "13px", fontWeight: 600, color: "#475569", display: "block", marginBottom: "6px" }}>Purchase Date *</label>
-              <input
-                type="date"
-                value={purchaseDate}
-                onChange={(e) => setPurchaseDate(e.target.value)}
-                style={{ width: "100%", border: "1px solid #cbd5e1", borderRadius: "10px", padding: "10px 12px", fontSize: "14px" }}
-                required
-              />
-            </div>
-            <div>
-              <label style={{ fontSize: "13px", fontWeight: 600, color: "#475569", display: "block", marginBottom: "6px" }}>Invoice Number *</label>
-              <input
-                type="text"
-                value={invoiceNumber}
-                onChange={(e) => setInvoiceNumber(e.target.value)}
-                style={{ width: "100%", border: "1px solid #cbd5e1", borderRadius: "10px", padding: "10px 12px", fontSize: "14px" }}
-                required
-              />
-            </div>
-          </div>
-          <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end", marginTop: "10px" }}>
-            <button
-              type="button"
-              onClick={onClose}
-              style={{ padding: "10px 20px", borderRadius: "30px", border: "1px solid #cbd5e1", background: "#fff", fontWeight: 600, cursor: "pointer" }}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading || !quantityAdded || Number(quantityAdded) <= 0 || !supplier || !purchaseDate || !invoiceNumber}
-              style={{ padding: "10px 24px", borderRadius: "30px", background: "#2563eb", color: "#fff", fontWeight: 600, border: "none", cursor: "pointer" }}
-            >
-              {loading ? "Restocking..." : "Restock"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-};
-
-// ─────────────────────────────────────────────
-// Reject Reason Modal
-// ─────────────────────────────────────────────
-const RejectReasonModal = ({ request, onClose, onReject }) => {
-  const [reason, setReason] = useState("Sufficient stock already available.");
-  const [loading, setLoading] = useState(false);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!request || (!request._id && !request.id)) return;
-    setLoading(true);
-    await onReject(request._id || request.id, reason.trim());
-    setLoading(false);
-    onClose();
-  };
-
-  return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={{ background: "#fff", borderRadius: "20px", padding: "32px", width: "440px", maxWidth: "95vw", boxShadow: "0 20px 60px rgba(0,0,0,0.15)" }}>
-        <h3 style={{ fontSize: "18px", fontWeight: 700, color: "#0f172a", marginBottom: "6px" }}>Reject Request</h3>
-        <p style={{ fontSize: "13px", color: "#64748b", marginBottom: "16px" }}>
-          Rejecting: <strong>{request.itemName}</strong> ({request.quantity} {request.unit}) requested by <strong>{request.userName || request.staffName} ({request.role || "Staff"})</strong>
-        </p>
-        <form onSubmit={handleSubmit}>
-          <label style={{ fontSize: "13px", fontWeight: 600, color: "#475569", display: "block", marginBottom: "6px" }}>Reason for Rejection *</label>
-          <textarea
-            rows={3}
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            style={{ width: "100%", border: "1px solid #cbd5e1", borderRadius: "10px", padding: "10px 12px", fontSize: "14px", marginBottom: "16px" }}
-          />
-          <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
-            <button
-              type="button"
-              onClick={onClose}
-              style={{ padding: "10px 20px", borderRadius: "30px", border: "1px solid #cbd5e1", background: "#fff", fontWeight: 600, cursor: "pointer" }}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading || !reason.trim()}
-              style={{ padding: "10px 24px", borderRadius: "30px", background: "#ef4444", color: "#fff", fontWeight: 600, border: "none", cursor: "pointer" }}
-            >
-              {loading ? "Rejecting..." : "Reject Request"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-};
-
-// ─────────────────────────────────────────────
-// Main Component
-// ─────────────────────────────────────────────
 const InventoryManagement = () => {
   const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState("items"); // items, requests, suppliers, assets, repairs, consumptions, settings
 
-  // Tabs: "items" | "requests" | "consumptions"
-  const [activeTab, setActiveTab] = useState("items");
-
-  // Inventory Items state
-  const [inventoryItems, setInventoryItems] = useState([]);
-  const [itemsLoading, setItemsLoading] = useState(true);
-  const [itemsError, setItemsError] = useState("");
-  const [showItemModal, setShowItemModal] = useState(false);
-  const [editingItem, setEditingItem] = useState(null);
-  const [itemSearch, setItemSearch] = useState("");
-  const [deletingItemId, setDeletingItemId] = useState("");
-
-  // Inventory Requests state
-  const [inventoryRequests, setInventoryRequests] = useState([]);
-  const [requestsLoading, setRequestsLoading] = useState(true);
-  const [actionLoadingId, setActionLoadingId] = useState("");
-  const [requestError, setRequestError] = useState("");
-  const [inventoryFilter, setInventoryFilter] = useState("all");
-  const [inventorySearch, setInventorySearch] = useState("");
-  const [rejectingRequest, setRejectingRequest] = useState(null);
-  const [restockingItem, setRestockingItem] = useState(null);
-
-  // Consumption Reports state
+  // Shared Data
+  const [items, setItems] = useState([]);
+  const [requests, setRequests] = useState([]);
   const [consumptions, setConsumptions] = useState([]);
-  const [consumptionsLoading, setConsumptionsLoading] = useState(false);
+  const [suppliers, setSuppliers] = useState([]);
+  const [assets, setAssets] = useState([]);
+  const [repairs, setRepairs] = useState([]);
+  const [poojaSettings, setPoojaSettings] = useState([]);
+  const [metrics, setMetrics] = useState(null);
 
-  // ── Fetch inventory items ──
-  const fetchInventoryItems = async () => {
-    setItemsLoading(true);
-    setItemsError("");
-    try {
-      const res = await axios.get(`${API_BASE}/admin/inventory-items`, { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } });
-      setInventoryItems(Array.isArray(res.data?.items) ? res.data.items : []);
-    } catch (err) {
-      setItemsError(err.response?.data?.message || "Failed to load inventory items.");
-    } finally {
-      setItemsLoading(false);
-    }
-  };
+  // Modals & Forms
+  const [showItemModal, setShowItemModal] = useState(false);
+  const [editItem, setEditItem] = useState(null);
+  const [showSupplierModal, setShowSupplierModal] = useState(false);
+  const [editSupplier, setEditSupplier] = useState(null);
+  const [showAssetModal, setShowAssetModal] = useState(false);
+  const [editAsset, setEditAsset] = useState(null);
+  const [showRepairModal, setShowRepairModal] = useState(false);
+  const [showRestockModal, setShowRestockModal] = useState(false);
+  const [showAdjustModal, setShowAdjustModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null); // for restock/adjust
+  const [showItemDetails, setShowItemDetails] = useState(false);
+  const [itemDetails, setItemDetails] = useState(null);
 
-  // ── Fetch inventory requests ──
-  const fetchInventoryRequests = async () => {
-    setRequestsLoading(true);
-    setRequestError("");
+  // Search & Filter
+  const [searchTerm, setSearchTerm] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("All");
+
+  // Loading
+  const [loading, setLoading] = useState(false);
+
+  // --- Fetches ---
+  const fetchData = async () => {
+    setLoading(true);
     try {
-      const response = await axios.get(`${API_BASE}/staff/inventory-requests`, { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } });
-      setInventoryRequests(Array.isArray(response.data?.requests) ? response.data.requests : []);
+      const headers = { Authorization: `Bearer ${localStorage.getItem("token")}` };
+      const [it, req, cons, sup, ast, rep, pset, met] = await Promise.all([
+        axios.get(`${API_BASE}/admin/inventory-items`, { headers }),
+        axios.get(`${API_BASE}/staff/inventory-requests`, { headers }),
+        axios.get(`${API_BASE}/admin/inventory/reports/consumption`, { headers }),
+        axios.get(`${API_BASE}/admin/inventory-suppliers`, { headers }),
+        axios.get(`${API_BASE}/admin/inventory-assets`, { headers }),
+        axios.get(`${API_BASE}/admin/inventory-repairs`, { headers }),
+        axios.get(`${API_BASE}/pooja-settings`, { headers }),
+        axios.get(`${API_BASE}/admin/inventory-metrics`, { headers }).catch(() => ({ data: { metrics: null } })),
+      ]);
+      setItems(it.data?.items || []);
+      setRequests(req.data?.requests || []);
+      setConsumptions(cons.data?.consumptions || []);
+      setSuppliers(sup.data?.suppliers || []);
+      setAssets(ast.data?.assets || []);
+      setRepairs(rep.data?.repairs || []);
+      setPoojaSettings(pset.data?.requirements || []);
+      setMetrics(met.data?.metrics || null);
     } catch (error) {
-      setRequestError(error.response?.data?.message || "Failed to load inventory requests.");
+      console.error(error);
     } finally {
-      setRequestsLoading(false);
-    }
-  };
-
-  // ── Fetch consumptions ──
-  const fetchConsumptions = async () => {
-    setConsumptionsLoading(true);
-    try {
-      const response = await axios.get(`${API_BASE}/admin/inventory/reports/consumption`, { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } });
-      setConsumptions(Array.isArray(response.data?.consumptions) ? response.data.consumptions : []);
-    } catch (error) {
-      console.error("Failed to load consumption reports", error);
-    } finally {
-      setConsumptionsLoading(false);
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchInventoryItems();
-    fetchInventoryRequests();
-    fetchConsumptions();
+    fetchData();
   }, []);
 
-  // ── Computed summaries ──
-  const requestSummary = useMemo(
-    () =>
-      inventoryRequests.reduce(
-        (summary, request) => {
-          summary.total += 1;
-          summary[request.status?.toLowerCase() || "pending"] += 1;
-          return summary;
-        },
-        { total: 0, pending: 0, approved: 0, rejected: 0 }
-      ),
-    [inventoryRequests]
-  );
-
-  const filteredInventoryRequests = useMemo(() => {
-    const query = inventorySearch.trim().toLowerCase();
-    return inventoryRequests
-      .filter((request) => {
-        const statusMatch = inventoryFilter === "all" || request.status === inventoryFilter;
-        const searchMatch =
-          !query ||
-          request.itemName.toLowerCase().includes(query) ||
-          (request.userName || request.staffName || "").toLowerCase().includes(query);
-        return statusMatch && searchMatch;
-      })
-      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  }, [inventoryRequests, inventoryFilter, inventorySearch]);
-
-  const filteredItems = useMemo(() => {
-    const query = itemSearch.trim().toLowerCase();
-    if (!query) return inventoryItems;
-    return inventoryItems.filter(
-      (item) =>
-        item.name.toLowerCase().includes(query) ||
-        (item.category || "").toLowerCase().includes(query)
-    );
-  }, [inventoryItems, itemSearch]);
-
-  // ── Item CRUD ──
-  const handleEdit = (item) => {
-    if (!item) return;
-    setEditingItem(item);
-  };
-
-  const handleRestockModalOpen = (item) => {
-    if (!item) return;
-    setRestockingItem(item);
-  };
-
-  const handleDelete = async (item) => {
-    if (!item) return;
-    const itemId = item._id || item.id;
-    if (!itemId) return;
-    if (!window.confirm("Are you sure you want to delete this inventory item?")) return;
-    setDeletingItemId(itemId);
+  // --- Item Handlers ---
+  const handleSaveItem = async (e) => {
+    e.preventDefault();
+    const form = new FormData(e.target);
+    const data = {
+      name: form.get("name"),
+      unit: form.get("unit"),
+      category: form.get("category"),
+      availableStock: Number(form.get("availableStock")),
+      minimumStock: Number(form.get("minimumStock")),
+      reorderLevel: Number(form.get("reorderLevel") || form.get("minimumStock")),
+      isActive: form.get("isActive") === "on",
+    };
     try {
-      await axios.delete(`${API_BASE}/admin/inventory-items/${itemId}`, { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } });
-      await fetchInventoryItems();
+      const headers = { Authorization: `Bearer ${localStorage.getItem("token")}` };
+      if (editItem) {
+        await axios.put(`${API_BASE}/admin/inventory-items/${editItem._id}`, data, { headers });
+      } else {
+        await axios.post(`${API_BASE}/admin/inventory-items`, data, { headers });
+      }
+      setShowItemModal(false);
+      fetchData();
     } catch (err) {
-      setItemsError(err.response?.data?.message || "Failed to delete item.");
-    } finally {
-      setDeletingItemId("");
+      alert("Error saving item");
     }
   };
 
-  const handleSaveItem = async (formData) => {
-    if (editingItem) {
-      const itemId = editingItem._id || editingItem.id;
-      if (!itemId) return;
-      await axios.put(`${API_BASE}/admin/inventory-items/${itemId}`, formData, { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } });
-    } else {
-      await axios.post(`${API_BASE}/admin/inventory-items`, formData, { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } });
-    }
-    await fetchInventoryItems();
-    setEditingItem(null);
-  };
-
-  const handleRestockSubmit = async (itemId, restockData) => {
-    if (!itemId) return;
+  const handleAdjustStock = async (e) => {
+    e.preventDefault();
+    const form = new FormData(e.target);
+    const data = Object.fromEntries(form);
     try {
-      await axios.post(`${API_BASE}/admin/inventory/restock/${itemId}`, restockData, { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } });
-      await fetchInventoryItems();
+      const headers = { Authorization: `Bearer ${localStorage.getItem("token")}` };
+      await axios.post(`${API_BASE}/admin/inventory-items/${selectedItem._id}/adjust`, data, { headers });
+      setShowAdjustModal(false);
+      fetchData();
     } catch (err) {
-      setItemsError(err.response?.data?.message || "Failed to restock item.");
+      alert(err.response?.data?.message || "Error adjusting stock");
     }
   };
 
-  // ── Request Actions ──
-  const updateInventoryRequestStatus = async (requestId, status, adminReason = "") => {
-    if (!requestId || !status) return;
-    setActionLoadingId(requestId);
-    setRequestError("");
+  const handleRestock = async (e) => {
+    e.preventDefault();
+    const form = new FormData(e.target);
+    const data = Object.fromEntries(form);
     try {
-      await axios.put(`${API_BASE}/admin/inventory-requests/${requestId}/status`, {
-        status,
-        adminReason,
-        reviewedBy: user?.name || "Admin",
-      }, { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } });
-      await Promise.all([fetchInventoryRequests(), fetchInventoryItems()]);
-    } catch (error) {
-      setRequestError(error.response?.data?.message || "Failed to update inventory request status.");
-    } finally {
-      setActionLoadingId("");
+      const headers = { Authorization: `Bearer ${localStorage.getItem("token")}` };
+      await axios.post(`${API_BASE}/admin/inventory/restock/${selectedItem._id}`, data, { headers });
+      setShowRestockModal(false);
+      fetchData();
+    } catch (err) {
+      alert(err.response?.data?.message || "Error restocking item");
     }
   };
 
-  const handleApprove = (request) => {
-    if (window.confirm(`Approve request for ${request.quantity} ${request.unit} of ${request.itemName} by ${request.userName || request.staffName}?\n\nThis will deduct the quantity from current stock and issue it.`)) {
-      updateInventoryRequestStatus(request._id, "Approved");
+  const handleViewItemDetails = async (id) => {
+    try {
+      const headers = { Authorization: `Bearer ${localStorage.getItem("token")}` };
+      const res = await axios.get(`${API_BASE}/admin/inventory-items/${id}/details`, { headers });
+      setItemDetails(res.data);
+      setShowItemDetails(true);
+    } catch (err) {
+      alert("Error fetching details");
     }
   };
 
-  const handleReject = (request) => {
-    setRejectingRequest(request);
+  // --- Request Handlers ---
+  const handleApproveRequest = async (id) => {
+    try {
+      const headers = { Authorization: `Bearer ${localStorage.getItem("token")}` };
+      await axios.put(`${API_BASE}/admin/inventory-requests/${id}/status`, { status: "Approved" }, { headers });
+      fetchData();
+    } catch (err) {
+      alert("Error approving");
+    }
   };
 
-  const handleRejectConfirm = async (requestId, reason) => {
-    await updateInventoryRequestStatus(requestId, "Rejected", reason);
-    setRejectingRequest(null);
+  // --- Supplier Handlers ---
+  const handleSaveSupplier = async (e) => {
+    e.preventDefault();
+    const form = new FormData(e.target);
+    const data = Object.fromEntries(form);
+    try {
+      const headers = { Authorization: `Bearer ${localStorage.getItem("token")}` };
+      if (editSupplier) {
+        await axios.put(`${API_BASE}/admin/inventory-suppliers/${editSupplier._id}`, data, { headers });
+      } else {
+        await axios.post(`${API_BASE}/admin/inventory-suppliers`, data, { headers });
+      }
+      setShowSupplierModal(false);
+      fetchData();
+    } catch (err) {
+      alert("Error saving supplier");
+    }
   };
 
-  const downloadRequestsReport = () => {
-    const rows = [
-      ["Request ID", "Item", "Requested By", "Quantity", "Unit", "Reason", "Date", "Status", "Admin Reason"],
-      ...inventoryRequests.map((request) => [
-        `INV-${request._id?.slice(-4).toUpperCase()}`,
-        request.itemName,
-        `${request.userName || request.staffName} (${request.role || "Staff"})`,
-        request.quantity,
-        request.unit || "",
-        request.reason || "",
-        formatDateTime(request.createdAt),
-        request.status,
-        request.adminReason || "-",
-      ]),
-    ];
-    const csv = rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")).join("\r\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "admin-inventory-requests-report.csv";
-    link.click();
-    URL.revokeObjectURL(url);
+  // --- Asset Handlers ---
+  const handleSaveAsset = async (e) => {
+    e.preventDefault();
+    const form = new FormData(e.target);
+    const data = Object.fromEntries(form);
+    try {
+      const headers = { Authorization: `Bearer ${localStorage.getItem("token")}` };
+      if (editAsset) {
+        await axios.put(`${API_BASE}/admin/inventory-assets/${editAsset._id}`, data, { headers });
+      } else {
+        await axios.post(`${API_BASE}/admin/inventory-assets`, data, { headers });
+      }
+      setShowAssetModal(false);
+      fetchData();
+    } catch (err) {
+      alert("Error saving asset");
+    }
   };
 
-  // ─────────────────────────────────────────────
-  // Render
-  // ─────────────────────────────────────────────
+  // --- Repair Handlers ---
+  const handleSaveRepair = async (e) => {
+    e.preventDefault();
+    const form = new FormData(e.target);
+    const data = Object.fromEntries(form);
+    try {
+      const headers = { Authorization: `Bearer ${localStorage.getItem("token")}` };
+      await axios.post(`${API_BASE}/admin/inventory-repairs`, data, { headers });
+      setShowRepairModal(false);
+      fetchData();
+    } catch (err) {
+      alert("Error saving repair");
+    }
+  };
+  
+  const handleCompleteRepair = async (id, cost) => {
+    try {
+      const headers = { Authorization: `Bearer ${localStorage.getItem("token")}` };
+      await axios.put(`${API_BASE}/admin/inventory-repairs/${id}/complete`, { cost }, { headers });
+      fetchData();
+    } catch (err) {
+      alert("Error completing repair");
+    }
+  };
+
+  // --- Settings Handlers ---
+  const handleSavePoojaSetting = async (e) => {
+    e.preventDefault();
+    const form = new FormData(e.target);
+    const poojaName = form.get("poojaName");
+    // just a simple implementation for UI demonstration
+    try {
+      const headers = { Authorization: `Bearer ${localStorage.getItem("token")}` };
+      await axios.post(`${API_BASE}/pooja-settings`, { poojaName, requiredMaterials: [] }, { headers });
+      fetchData();
+    } catch (err) {
+      alert("Error saving pooja setting");
+    }
+  };
+
   return (
-    <div className="mt-5 space-y-6">
-      {/* Modals */}
-      {(showItemModal || editingItem) && (
-        <ItemFormModal
-          editItem={editingItem}
-          onClose={() => { setShowItemModal(false); setEditingItem(null); }}
-          onSave={handleSaveItem}
-        />
-      )}
-      {rejectingRequest && (
-        <RejectReasonModal
-          request={rejectingRequest}
-          onClose={() => setRejectingRequest(null)}
-          onReject={handleRejectConfirm}
-        />
-      )}
-      {restockingItem && (
-        <RestockModal
-          item={restockingItem}
-          onClose={() => setRestockingItem(null)}
-          onRestock={handleRestockSubmit}
-        />
-      )}
-
+    <div className="space-y-6 mt-5 p-2">
       {/* Header */}
-      <div className="rounded-2xl border border-[#ece8e1] bg-white p-8 shadow-sm">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h1 className="text-[42px] font-bold text-[#111827]">Inventory Management</h1>
-            <p className="mt-2 text-[#525252]">Manage temple inventory stock, restock history, and track consumption.</p>
-          </div>
-          <div className="rounded-3xl bg-[#eff6ff] px-5 py-3 text-sm font-semibold text-[#1d4ed8]">Inventory Center</div>
-        </div>
-
-        {/* Summary cards */}
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-3xl border border-[#e5e7eb] bg-[#f8fafc] p-6">
-            <p className="text-sm uppercase tracking-[0.24em] text-[#475569]">Total Requests</p>
-            <p className="mt-4 text-[2rem] font-bold text-[#0f172a]">{requestSummary.total}</p>
-            <p className="mt-2 text-sm text-[#475569]">All staff inventory requests.</p>
-          </div>
-          <div className="rounded-3xl border border-[#fef3c7] bg-[#fffbeb] p-6">
-            <p className="text-sm uppercase tracking-[0.24em] text-[#92400e]">Pending Requests</p>
-            <p className="mt-4 text-[2rem] font-bold text-[#92400e]">{requestSummary.pending}</p>
-            <p className="mt-2 text-sm text-[#92400e]">Waiting for your approval.</p>
-          </div>
-          <div className="rounded-3xl border border-[#d1fae5] bg-[#ecfdf5] p-6">
-            <p className="text-sm uppercase tracking-[0.24em] text-[#166534]">Total Issued</p>
-            <p className="mt-4 text-[2rem] font-bold text-[#166534]">{requestSummary.approved}</p>
-            <p className="mt-2 text-sm text-[#166534]">Items issued to staff/priests.</p>
-          </div>
-          <div className="rounded-3xl border border-[#e0e7ff] bg-[#eef2ff] p-6">
-            <p className="text-sm uppercase tracking-[0.24em] text-[#3730a3]">Consumption Records</p>
-            <p className="mt-4 text-[2rem] font-bold text-[#3730a3]">{consumptions.length}</p>
-            <p className="mt-2 text-sm text-[#3730a3]">Completed usage logs.</p>
-          </div>
-        </div>
+      <div className="rounded-2xl border bg-white p-6 shadow-sm">
+        <h1 className="text-3xl font-bold">Inventory & Assets</h1>
+        <p className="mt-2 text-slate-500">Manage all temple resources, suppliers, repairs, and requests in one place.</p>
       </div>
 
-      {/* Tabs */}
-      <div className="rounded-2xl border border-[#ece8e1] bg-white shadow-sm">
-        <div style={{ borderBottom: "1px solid #e5e7eb", display: "flex", overflowX: "auto" }}>
+      {/* Navigation */}
+      <div className="flex flex-wrap gap-2 rounded-2xl border bg-white p-2 shadow-sm">
+        {[
+          { id: "items", label: "📦 Central Inventory" },
+          { id: "requests", label: "📋 Issue Requests" },
+          { id: "suppliers", label: "🤝 Suppliers" },
+          { id: "assets", label: "🏢 Assets" },
+          { id: "repairs", label: "🔧 Repairs" },
+          { id: "consumptions", label: "📊 Consumptions" },
+          { id: "settings", label: "⚙️ Pooja Mats" },
+        ].map(tab => (
           <button
-            type="button"
-            onClick={() => setActiveTab("items")}
-            style={{
-              padding: "14px 24px",
-              fontWeight: 700,
-              fontSize: "14px",
-              border: "none",
-              background: "transparent",
-              cursor: "pointer",
-              borderBottom: activeTab === "items" ? "3px solid #2563eb" : "3px solid transparent",
-              color: activeTab === "items" ? "#2563eb" : "#64748b",
-            }}
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`px-4 py-2 rounded-xl text-sm font-bold transition-colors ${
+              activeTab === tab.id ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+            }`}
           >
-            📦 Central Inventory
+            {tab.label}
           </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("requests")}
-            style={{
-              padding: "14px 24px",
-              fontWeight: 700,
-              fontSize: "14px",
-              border: "none",
-              background: "transparent",
-              cursor: "pointer",
-              borderBottom: activeTab === "requests" ? "3px solid #2563eb" : "3px solid transparent",
-              color: activeTab === "requests" ? "#2563eb" : "#64748b",
-              position: "relative",
-            }}
-          >
-            📋 Issue Requests
-            {requestSummary.pending > 0 && (
-              <span style={{
-                background: "#ef4444", color: "#fff", borderRadius: "20px", fontSize: "11px",
-                fontWeight: 700, padding: "1px 7px", marginLeft: "8px",
-              }}>
-                {requestSummary.pending}
-              </span>
+        ))}
+      </div>
+
+      {/* Content */}
+      <div className="rounded-2xl border bg-white p-6 shadow-sm min-h-[60vh]">
+        {loading && <p>Loading data...</p>}
+
+        {!loading && activeTab === "items" && (
+          <div className="space-y-6">
+            {/* Dashboard Cards */}
+            {metrics && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="p-4 border rounded-xl bg-blue-50">
+                  <p className="text-sm text-slate-500 font-bold">Total Items</p>
+                  <p className="text-2xl font-black text-blue-700">{metrics.totalItems}</p>
+                </div>
+                <div className="p-4 border rounded-xl bg-emerald-50">
+                  <p className="text-sm text-slate-500 font-bold">Inventory Value</p>
+                  <p className="text-2xl font-black text-emerald-700">₹{metrics.totalValue.toLocaleString()}</p>
+                </div>
+                <div className="p-4 border rounded-xl bg-amber-50">
+                  <p className="text-sm text-slate-500 font-bold">Low / Out of Stock</p>
+                  <p className="text-2xl font-black text-amber-700">{metrics.lowStockCount} / {metrics.outOfStockCount}</p>
+                </div>
+                <div className="p-4 border rounded-xl bg-purple-50">
+                  <p className="text-sm text-slate-500 font-bold">Today's Purchases</p>
+                  <p className="text-2xl font-black text-purple-700">{metrics.todaysPurchases}</p>
+                </div>
+              </div>
             )}
-          </button>
-          <button
-            type="button"
-            onClick={() => { setActiveTab("consumptions"); fetchConsumptions(); }}
-            style={{
-              padding: "14px 24px",
-              fontWeight: 700,
-              fontSize: "14px",
-              border: "none",
-              background: "transparent",
-              cursor: "pointer",
-              borderBottom: activeTab === "consumptions" ? "3px solid #2563eb" : "3px solid transparent",
-              color: activeTab === "consumptions" ? "#2563eb" : "#64748b",
-            }}
-          >
-            📊 Consumption Tracking
-          </button>
-        </div>
 
-        {/* ─────── INVENTORY ITEMS TAB ─────── */}
-        {activeTab === "items" && (
-          <div className="p-6">
-            <LowStockBanner items={inventoryItems} />
-
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "12px" }}>
-              <div>
-                <h2 className="text-2xl font-bold text-[#111827]">Inventory Items</h2>
-                <p className="mt-1 text-sm text-[#64748b]">Manage central stock. Stock is tracked across Available, Reserved, and Issued states.</p>
-              </div>
-              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                <input
-                  type="text"
-                  placeholder="Search items..."
-                  value={itemSearch}
-                  onChange={(e) => setItemSearch(e.target.value)}
-                  style={{ border: "1px solid #cbd5e1", borderRadius: "30px", padding: "8px 16px", fontSize: "13px", outline: "none" }}
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+              <h2 className="text-xl font-bold">Central Stock</h2>
+              <div className="flex gap-2">
+                <input 
+                  type="text" 
+                  placeholder="Search items..." 
+                  className="px-4 py-2 border rounded-lg"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                 />
-                <button
-                  type="button"
-                  onClick={fetchInventoryItems}
-                  className="rounded-full border border-[#cbd5e1] bg-white px-4 py-2 text-sm font-semibold text-[#1f2937] transition hover:bg-[#f8fafc]"
+                <select 
+                  className="px-4 py-2 border rounded-lg"
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
                 >
-                  Refresh
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setEditingItem(null); setShowItemModal(true); }}
-                  className="rounded-full bg-[#2563eb] px-5 py-2 text-sm font-semibold text-white hover:bg-[#1d4ed8]"
-                >
-                  + Add Item
-                </button>
-              </div>
-            </div>
-
-            {itemsError ? (
-              <div className="mt-4 rounded-2xl border border-[#fee2e2] bg-[#fff1f2] p-4 text-sm text-[#b91c1c]">{itemsError}</div>
-            ) : null}
-
-            <div className="mt-4 overflow-x-auto">
-              <table className="min-w-full text-left text-sm text-[#334155]">
-                <thead className="border-b border-[#e2e8f0] text-[#475569]">
-                  <tr>
-                    <th className="px-4 py-3">Item Name</th>
-                    <th className="px-4 py-3">Category</th>
-                    <th className="px-4 py-3">Available Stock</th>
-                    <th className="px-4 py-3">Issued Stock</th>
-                    <th className="px-4 py-3">Consumed Stock</th>
-                    <th className="px-4 py-3">Min. Stock</th>
-                    <th className="px-4 py-3">Unit</th>
-                    <th className="px-4 py-3">Status</th>
-                    <th className="px-4 py-3">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {itemsLoading ? (
-                    <tr><td colSpan="9" className="px-4 py-6 text-center text-sm text-[#64748b]">Loading inventory items…</td></tr>
-                  ) : filteredItems.length === 0 ? (
-                    <tr><td colSpan="9" className="px-4 py-6 text-center text-sm text-[#64748b]">No inventory items found. Click "+ Add Item" to get started.</td></tr>
-                  ) : (
-                    filteredItems.map((item, index) => {
-                      const isLow = (item?.availableStock || 0) <= (item?.minimumStock || 0);
-                      const itemId = item?._id || item?.id;
-                      return (
-                        <tr key={itemId || index} className="border-b border-[#f1f5f9] hover:bg-[#f8fafc]">
-                          <td className="px-4 py-4 font-semibold text-[#0f172a]">{item?.name}</td>
-                          <td className="px-4 py-4 text-[#64748b]">{item?.category || "-"}</td>
-                          <td className="px-4 py-4">
-                            <span style={{ fontWeight: 700, color: isLow ? "#b91c1c" : "#166534" }}>
-                              {item?.availableStock || item?.stock || 0}
-                            </span>
-                          </td>
-                          <td className="px-4 py-4 text-[#2563eb] font-medium">{item?.issuedStock || 0}</td>
-                          <td className="px-4 py-4 text-[#64748b] font-medium">{item?.consumedStock || 0}</td>
-                          <td className="px-4 py-4">{item?.minimumStock}</td>
-                          <td className="px-4 py-4">{item?.unit}</td>
-                          <td className="px-4 py-4">
-                            <span
-                              style={{
-                                borderRadius: "20px",
-                                padding: "4px 12px",
-                                fontSize: "12px",
-                                fontWeight: 600,
-                                background: isLow ? "#fee2e2" : "#d1fae5",
-                                color: isLow ? "#b91c1c" : "#166534",
-                              }}
-                            >
-                              {isLow ? "🔴 Low Stock" : "🟢 Available"}
-                            </span>
-                          </td>
-                          <td className="px-4 py-4">
-                            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                              <button
-                                type="button"
-                                onClick={() => handleRestockModalOpen(item)}
-                                style={{ background: "#d1fae5", color: "#059669", border: "none", borderRadius: "20px", padding: "5px 14px", fontWeight: 600, fontSize: "12px", cursor: "pointer" }}
-                              >
-                                Restock
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleEdit(item)}
-                                style={{ background: "#eff6ff", color: "#2563eb", border: "none", borderRadius: "20px", padding: "5px 14px", fontWeight: 600, fontSize: "12px", cursor: "pointer" }}
-                              >
-                                Edit
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDelete(item)}
-                                disabled={deletingItemId === itemId}
-                                style={{ background: "#fff1f2", color: "#b91c1c", border: "none", borderRadius: "20px", padding: "5px 14px", fontWeight: 600, fontSize: "12px", cursor: "pointer" }}
-                              >
-                                {deletingItemId === itemId ? "..." : "Delete"}
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* ─────── STAFF REQUESTS TAB ─────── */}
-        {activeTab === "requests" && (
-          <div className="p-6">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div>
-                <h2 className="text-2xl font-bold text-[#111827]">Staff Inventory Requests</h2>
-                <p className="mt-2 text-sm text-[#64748b]">Approve or reject requests. Approving will automatically deduct from available stock and issue it to the staff.</p>
-              </div>
-              <div className="flex flex-wrap gap-3">
-                <button
-                  type="button"
-                  onClick={() => Promise.all([fetchInventoryRequests(), fetchInventoryItems()])}
-                  className="rounded-full border border-[#cbd5e1] bg-white px-4 py-2 text-sm font-semibold text-[#1f2937] transition hover:bg-[#f8fafc]"
-                >
-                  Refresh
-                </button>
-                <button
-                  type="button"
-                  onClick={downloadRequestsReport}
-                  disabled={inventoryRequests.length === 0}
-                  className="rounded-full bg-[#2563eb] px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#93c5fd]"
-                >
-                  Download Report
-                </button>
-              </div>
-            </div>
-
-            {requestError ? (
-              <div className="mt-4 rounded-2xl border border-[#fee2e2] bg-[#fff1f2] p-4 text-sm text-[#b91c1c]">{requestError}</div>
-            ) : null}
-
-            {/* Filters */}
-            <div className="mt-4 grid gap-4 sm:grid-cols-3">
-              <div className="rounded-3xl border border-[#e5e7eb] bg-white p-4">
-                <label htmlFor="adminInventoryFilter" className="text-sm text-[#475569]">Filter Status</label>
-                <select
-                  id="adminInventoryFilter"
-                  value={inventoryFilter}
-                  onChange={(e) => setInventoryFilter(e.target.value)}
-                  className="mt-2 w-full rounded-xl border border-[#cbd5e1] px-3 py-2 text-sm"
-                >
-                  <option value="all">All</option>
-                  <option value="Pending">Pending</option>
-                  <option value="Approved">Approved/Issued</option>
-                  <option value="Rejected">Rejected</option>
+                  <option value="All">All Categories</option>
+                  {INVENTORY_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
-              </div>
-              <div className="rounded-3xl border border-[#e5e7eb] bg-white p-4">
-                <label htmlFor="adminInventorySearch" className="text-sm text-[#475569]">Search Item / Staff</label>
-                <input
-                  id="adminInventorySearch"
-                  type="text"
-                  placeholder="Search inventory requests"
-                  value={inventorySearch}
-                  onChange={(e) => setInventorySearch(e.target.value)}
-                  className="mt-2 w-full rounded-xl border border-[#cbd5e1] px-3 py-2 text-sm"
-                />
-              </div>
-              <div className="rounded-3xl border border-[#e5e7eb] bg-white p-4 flex items-end justify-between">
-                <span className="text-sm text-[#64748b]">{filteredInventoryRequests.length} matching requests</span>
+                <button onClick={() => { setEditItem(null); setShowItemModal(true); }} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold text-sm">+ Add Item</button>
               </div>
             </div>
-
-            <div className="mt-6 overflow-x-auto">
-              <table className="min-w-full text-left text-sm text-[#334155]">
-                <thead className="border-b border-[#e2e8f0] text-[#475569]">
+            
+            <div className="overflow-x-auto border rounded-xl">
+              <table className="w-full text-left text-sm whitespace-nowrap">
+                <thead className="bg-slate-50 border-b">
                   <tr>
-                    <th className="px-4 py-3">Request ID</th>
-                    <th className="px-4 py-3">Item</th>
-                    <th className="px-4 py-3">Requested By</th>
-                    <th className="px-4 py-3">Role</th>
-                    <th className="px-4 py-3">Quantity</th>
-                    <th className="px-4 py-3">Purpose</th>
-                    <th className="px-4 py-3">Date</th>
-                    <th className="px-4 py-3">Status</th>
-                    <th className="px-4 py-3">Actions</th>
+                    <th className="p-3 sticky left-0 bg-slate-50 z-10">Name</th>
+                    <th className="p-3">Status</th>
+                    <th className="p-3">Category</th>
+                    <th className="p-3">Avail. Stock</th>
+                    <th className="p-3">Min. / Reorder</th>
+                    <th className="p-3">Supplier</th>
+                    <th className="p-3">Price</th>
+                    <th className="p-3">Damaged/Exp.</th>
+                    <th className="p-3">Actions</th>
                   </tr>
                 </thead>
-                <tbody>
-                  {requestsLoading ? (
-                    <tr>
-                      <td colSpan="9" className="px-4 py-6 text-center text-sm text-[#64748b]">Loading inventory requests…</td>
+                <tbody className="divide-y bg-white">
+                  {items
+                    .filter(i => (categoryFilter === "All" || i.category === categoryFilter) && i.name.toLowerCase().includes(searchTerm.toLowerCase()))
+                    .map(item => (
+                    <tr key={item._id} className="hover:bg-slate-50">
+                      <td className="p-3 font-semibold sticky left-0 bg-white z-10">
+                        <button onClick={() => handleViewItemDetails(item._id)} className="text-blue-600 hover:underline">{item.name}</button>
+                      </td>
+                      <td className="p-3">
+                        {!item.isActive ? (
+                           <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold">Inactive</span>
+                        ) : item.availableStock === 0 ? (
+                          <span className="px-2 py-1 bg-rose-100 text-rose-700 rounded-full text-xs font-bold">Out of Stock</span>
+                        ) : item.availableStock <= (item.reorderLevel || item.minimumStock) ? (
+                          <span className="px-2 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-bold">Low Stock</span>
+                        ) : (
+                          <span className="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold">Healthy</span>
+                        )}
+                      </td>
+                      <td className="p-3">{item.category}</td>
+                      <td className="p-3 font-bold text-emerald-600">{item.availableStock} {item.unit}</td>
+                      <td className="p-3 text-slate-500">{item.minimumStock} / {item.reorderLevel || item.minimumStock} {item.unit}</td>
+                      <td className="p-3">{item.lastSupplier || "-"}</td>
+                      <td className="p-3">{item.lastPurchasePrice ? `₹${item.lastPurchasePrice}` : "-"}</td>
+                      <td className="p-3 text-amber-600">{item.damagedStock} / {item.expiredStock} {item.unit}</td>
+                      <td className="p-3 flex gap-2">
+                        <button onClick={() => { setSelectedItem(item); setShowRestockModal(true); }} className="text-emerald-600 text-xs font-bold bg-emerald-50 px-2 py-1 rounded">Restock</button>
+                        <button onClick={() => { setSelectedItem(item); setShowAdjustModal(true); }} className="text-amber-600 text-xs font-bold bg-amber-50 px-2 py-1 rounded">Adjust</button>
+                        <button onClick={() => { setEditItem(item); setShowItemModal(true); }} className="text-blue-600 text-xs font-bold bg-blue-50 px-2 py-1 rounded">Edit</button>
+                      </td>
                     </tr>
-                  ) : filteredInventoryRequests.length === 0 ? (
-                    <tr>
-                      <td colSpan="9" className="px-4 py-6 text-center text-sm text-[#64748b]">No inventory requests found.</td>
-                    </tr>
-                  ) : (
-                    filteredInventoryRequests.map((request, index) => {
-                      const reqId = request?._id || request?.id;
-                      return (
-                        <tr key={reqId || index} className="border-b border-[#f1f5f9] hover:bg-[#f8fafc]">
-                          <td className="px-4 py-4" style={{ fontFamily: "monospace", fontWeight: 700, color: "#6366f1" }}>
-                            INV-{reqId?.slice(-4).toUpperCase() || "UNKN"}
-                          </td>
-                          <td className="px-4 py-4 font-semibold text-[#0f172a]">{request.itemName}</td>
-                          <td className="px-4 py-4">{request.userName || request.staffName || "-"}</td>
-                          <td className="px-4 py-4">{request.role || "Staff"}</td>
-                          <td className="px-4 py-4">{request.quantity} {request.unit || ""}</td>
-                          <td className="px-4 py-4" style={{ maxWidth: "180px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={request.purpose || request.reason}>
-                            {request.purpose || request.reason || "-"}
-                          </td>
-                          <td className="px-4 py-4">{formatDateTime(request.createdAt)}</td>
-                          <td className="px-4 py-4">
-                            <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusClassMap[request.status] || "bg-[#f3f4f6] text-[#334155]"}`}>
-                              {request.status}
-                            </span>
-                          </td>
-                          <td className="px-4 py-4">
-                            {request.status === "Pending" ? (
-                              <div className="flex flex-wrap gap-2">
-                                <button
-                                  type="button"
-                                  className="rounded-full bg-[#10b981] px-3 py-2 text-xs font-semibold text-white hover:bg-[#059669] disabled:cursor-not-allowed disabled:bg-[#6ee7b7]"
-                                  onClick={() => handleApprove(request)}
-                                  disabled={actionLoadingId === reqId}
-                                >
-                                  {actionLoadingId === reqId ? "Working…" : "✓ Issue"}
-                                </button>
-                                <button
-                                  type="button"
-                                  className="rounded-full bg-[#ef4444] px-3 py-2 text-xs font-semibold text-white hover:bg-[#dc2626] disabled:cursor-not-allowed disabled:bg-[#fca5a5]"
-                                  onClick={() => handleReject(request)}
-                                  disabled={actionLoadingId === reqId}
-                                >
-                                  ✕ Reject
-                                </button>
-                              </div>
-                            ) : (
-                              <span className="text-sm text-[#475569]">{request.adminReason || "—"}</span>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
+                  ))}
                 </tbody>
               </table>
             </div>
           </div>
         )}
 
-        {/* ─────── CONSUMPTIONS TAB ─────── */}
-        {activeTab === "consumptions" && (
-          <div className="p-6">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div>
-                <h2 className="text-2xl font-bold text-[#111827]">Consumption Tracking</h2>
-                <p className="mt-2 text-sm text-[#64748b]">Review items consumed by staff. Staff are required to return unused quantities.</p>
-              </div>
-              <div className="flex flex-wrap gap-3">
-                <button
-                  type="button"
-                  onClick={fetchConsumptions}
-                  className="rounded-full border border-[#cbd5e1] bg-white px-4 py-2 text-sm font-semibold text-[#1f2937] transition hover:bg-[#f8fafc]"
-                >
-                  Refresh
-                </button>
-              </div>
-            </div>
-
-            <div className="mt-6 overflow-x-auto">
-              <table className="min-w-full text-left text-sm text-[#334155]">
-                <thead className="border-b border-[#e2e8f0] text-[#475569]">
+        {!loading && activeTab === "requests" && (
+          <div>
+            <h2 className="text-xl font-bold mb-6">Issue Requests</h2>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-slate-50 border-b">
                   <tr>
-                    <th className="px-4 py-3">Date</th>
-                    <th className="px-4 py-3">Item</th>
-                    <th className="px-4 py-3">User</th>
-                    <th className="px-4 py-3">Issued</th>
-                    <th className="px-4 py-3">Used</th>
-                    <th className="px-4 py-3">Returned</th>
-                    <th className="px-4 py-3">Purpose</th>
-                    <th className="px-4 py-3">Remarks</th>
+                    <th className="p-3">Date</th>
+                    <th className="p-3">User</th>
+                    <th className="p-3">Item</th>
+                    <th className="p-3">Quantity</th>
+                    <th className="p-3">Status</th>
+                    <th className="p-3">Action</th>
                   </tr>
                 </thead>
-                <tbody>
-                  {consumptionsLoading ? (
-                    <tr>
-                      <td colSpan="8" className="px-4 py-6 text-center text-sm text-[#64748b]">Loading consumption reports…</td>
+                <tbody className="divide-y">
+                  {requests.map(req => (
+                    <tr key={req._id}>
+                      <td className="p-3">{formatDateTime(req.createdAt)}</td>
+                      <td className="p-3">{req.userName} ({req.role})</td>
+                      <td className="p-3">{req.itemName}</td>
+                      <td className="p-3">{req.quantity} {req.unit}</td>
+                      <td className="p-3">{req.status}</td>
+                      <td className="p-3">
+                        {req.status === "Pending" && (
+                          <button onClick={() => handleApproveRequest(req._id)} className="bg-emerald-500 text-white px-3 py-1 rounded text-xs font-bold">Approve</button>
+                        )}
+                      </td>
                     </tr>
-                  ) : consumptions.length === 0 ? (
-                    <tr>
-                      <td colSpan="8" className="px-4 py-6 text-center text-sm text-[#64748b]">No consumption records found.</td>
-                    </tr>
-                  ) : (
-                    consumptions.map((record, index) => {
-                      return (
-                        <tr key={record._id || index} className="border-b border-[#f1f5f9] hover:bg-[#f8fafc]">
-                          <td className="px-4 py-4">{formatDateTime(record.createdAt || record.date)}</td>
-                          <td className="px-4 py-4 font-semibold text-[#0f172a]">{record.itemName}</td>
-                          <td className="px-4 py-4">{record.userName} <span className="text-xs text-[#64748b]">({record.role})</span></td>
-                          <td className="px-4 py-4 text-[#475569]">{record.issuedQuantity} {record.unit}</td>
-                          <td className="px-4 py-4 font-bold text-[#b91c1c]">{record.usedQuantity} {record.unit}</td>
-                          <td className="px-4 py-4 font-bold text-[#166534]">{record.returnedQuantity} {record.unit}</td>
-                          <td className="px-4 py-4" style={{ maxWidth: "150px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={record.purpose}>{record.purpose || "-"}</td>
-                          <td className="px-4 py-4" style={{ maxWidth: "150px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={record.remarks}>{record.remarks || "-"}</td>
-                        </tr>
-                      );
-                    })
-                  )}
+                  ))}
                 </tbody>
               </table>
             </div>
           </div>
         )}
 
+        {!loading && activeTab === "suppliers" && (
+          <div>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold">Suppliers Directory</h2>
+              <button onClick={() => { setEditSupplier(null); setShowSupplierModal(true); }} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold text-sm">+ Add Supplier</button>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-slate-50 border-b">
+                  <tr>
+                    <th className="p-3">Name</th>
+                    <th className="p-3">Phone</th>
+                    <th className="p-3">Email</th>
+                    <th className="p-3">GST</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {suppliers.map(sup => (
+                    <tr key={sup._id}>
+                      <td className="p-3 font-semibold">{sup.name}</td>
+                      <td className="p-3">{sup.phone}</td>
+                      <td className="p-3">{sup.email}</td>
+                      <td className="p-3">{sup.gst}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {!loading && activeTab === "assets" && (
+          <div>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold">Assets Register</h2>
+              <button onClick={() => { setEditAsset(null); setShowAssetModal(true); }} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold text-sm">+ Add Asset</button>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-slate-50 border-b">
+                  <tr>
+                    <th className="p-3">ID</th>
+                    <th className="p-3">Name</th>
+                    <th className="p-3">Category</th>
+                    <th className="p-3">Location</th>
+                    <th className="p-3">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {assets.map(a => (
+                    <tr key={a._id}>
+                      <td className="p-3 font-mono">{a.assetId}</td>
+                      <td className="p-3 font-semibold">{a.name}</td>
+                      <td className="p-3">{a.category}</td>
+                      <td className="p-3">{a.assignedLocation}</td>
+                      <td className="p-3">{a.status}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {!loading && activeTab === "repairs" && (
+          <div>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold">Maintenance & Repairs</h2>
+              <button onClick={() => setShowRepairModal(true)} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold text-sm">+ New Repair</button>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-slate-50 border-b">
+                  <tr>
+                    <th className="p-3">Asset</th>
+                    <th className="p-3">Description</th>
+                    <th className="p-3">Vendor</th>
+                    <th className="p-3">Status</th>
+                    <th className="p-3">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {repairs.map(r => (
+                    <tr key={r._id}>
+                      <td className="p-3 font-semibold">{r.asset?.name || "Unknown"}</td>
+                      <td className="p-3">{r.description}</td>
+                      <td className="p-3">{r.vendor}</td>
+                      <td className="p-3 font-bold">{r.status}</td>
+                      <td className="p-3">
+                        {r.status === "Pending" && (
+                          <button onClick={() => {
+                            const cost = prompt("Enter final repair cost:");
+                            if (cost) handleCompleteRepair(r._id, cost);
+                          }} className="bg-emerald-500 text-white px-3 py-1 rounded text-xs font-bold">Complete</button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {!loading && activeTab === "consumptions" && (
+          <div>
+            <h2 className="text-xl font-bold mb-6">Consumption Tracking</h2>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-slate-50 border-b">
+                  <tr>
+                    <th className="p-3">Date</th>
+                    <th className="p-3">User</th>
+                    <th className="p-3">Item</th>
+                    <th className="p-3">Used Qty</th>
+                    <th className="p-3">Remarks</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {consumptions.map(c => (
+                    <tr key={c._id}>
+                      <td className="p-3">{formatDateTime(c.createdAt)}</td>
+                      <td className="p-3">{c.userName}</td>
+                      <td className="p-3">{c.itemName}</td>
+                      <td className="p-3 font-bold text-red-600">{c.usedQuantity} {c.unit}</td>
+                      <td className="p-3">{c.remarks}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {!loading && activeTab === "settings" && (
+          <div>
+            <h2 className="text-xl font-bold mb-6">Pooja Material Mappings</h2>
+            <form onSubmit={handleSavePoojaSetting} className="bg-slate-50 p-4 rounded-xl border mb-6 flex gap-4 items-end max-w-xl">
+              <div className="flex-1">
+                <label className="block text-sm font-bold mb-1">Pooja Name</label>
+                <input name="poojaName" required className="w-full border p-2 rounded" />
+              </div>
+              <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded font-bold">Create Rule</button>
+            </form>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-slate-50 border-b">
+                  <tr>
+                    <th className="p-3">Pooja Name</th>
+                    <th className="p-3">Required Materials</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {poojaSettings.map(ps => (
+                    <tr key={ps._id}>
+                      <td className="p-3 font-semibold">{ps.poojaName}</td>
+                      <td className="p-3">{ps.requiredMaterials.length} items mapped</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Modals for creation (Item, Supplier, Asset, Repair) */}
+      {showItemModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-2xl w-96">
+            <h3 className="text-lg font-bold mb-4">{editItem ? "Edit Item" : "Add Item"}</h3>
+            <form onSubmit={handleSaveItem} className="space-y-3">
+              <input name="name" defaultValue={editItem?.name} placeholder="Name" required className="w-full border p-2 rounded" />
+              <select name="unit" defaultValue={editItem?.unit || "Pack"} className="w-full border p-2 rounded">
+                {INVENTORY_UNITS.map(u => <option key={u}>{u}</option>)}
+              </select>
+              <select name="category" defaultValue={editItem?.category} className="w-full border p-2 rounded">
+                {INVENTORY_CATEGORIES.map(c => <option key={c}>{c}</option>)}
+              </select>
+              <div className="flex gap-2">
+                <input name="availableStock" type="number" defaultValue={editItem?.availableStock || 0} placeholder="Available Stock" required className="w-full border p-2 rounded flex-1" />
+                <input name="minimumStock" type="number" defaultValue={editItem?.minimumStock || 0} placeholder="Min Stock" required className="w-full border p-2 rounded flex-1" />
+              </div>
+              <div className="flex gap-2">
+                <input name="reorderLevel" type="number" defaultValue={editItem?.reorderLevel || 0} placeholder="Reorder Level" className="w-full border p-2 rounded flex-1" />
+              </div>
+              {editItem && (
+                <div className="flex items-center gap-2 mt-2">
+                  <input type="checkbox" name="isActive" id="isActive" defaultChecked={editItem.isActive !== false} />
+                  <label htmlFor="isActive" className="text-sm font-bold">Item is Active</label>
+                </div>
+              )}
+              <div className="flex gap-2 justify-end mt-4">
+                <button type="button" onClick={() => setShowItemModal(false)} className="px-4 py-2 border rounded-xl font-bold">Cancel</button>
+                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-xl font-bold">Save</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showSupplierModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-2xl w-96">
+            <h3 className="text-lg font-bold mb-4">Add Supplier</h3>
+            <form onSubmit={handleSaveSupplier} className="space-y-3">
+              <input name="name" placeholder="Name" required className="w-full border p-2 rounded" />
+              <input name="phone" placeholder="Phone" required className="w-full border p-2 rounded" />
+              <input name="email" placeholder="Email" className="w-full border p-2 rounded" />
+              <input name="gst" placeholder="GST Number" className="w-full border p-2 rounded" />
+              <div className="flex gap-2 justify-end mt-4">
+                <button type="button" onClick={() => setShowSupplierModal(false)} className="px-4 py-2 border rounded-xl font-bold">Cancel</button>
+                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-xl font-bold">Save</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showAssetModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-2xl w-96">
+            <h3 className="text-lg font-bold mb-4">Add Asset</h3>
+            <form onSubmit={handleSaveAsset} className="space-y-3">
+              <input name="assetId" placeholder="Asset ID" required className="w-full border p-2 rounded" />
+              <input name="name" placeholder="Name" required className="w-full border p-2 rounded" />
+              <input name="category" placeholder="Category" required className="w-full border p-2 rounded" />
+              <input name="assignedLocation" placeholder="Location" className="w-full border p-2 rounded" />
+              <div className="flex gap-2 justify-end mt-4">
+                <button type="button" onClick={() => setShowAssetModal(false)} className="px-4 py-2 border rounded-xl font-bold">Cancel</button>
+                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-xl font-bold">Save</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showRepairModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-2xl w-96">
+            <h3 className="text-lg font-bold mb-4">Log Repair</h3>
+            <form onSubmit={handleSaveRepair} className="space-y-3">
+              <select name="asset" required className="w-full border p-2 rounded">
+                <option value="">Select Asset...</option>
+                {assets.map(a => <option key={a._id} value={a._id}>{a.name}</option>)}
+              </select>
+              <input name="description" placeholder="Issue Description" required className="w-full border p-2 rounded" />
+              <input name="vendor" placeholder="Vendor Name" required className="w-full border p-2 rounded" />
+              <input name="cost" type="number" placeholder="Estimated Cost" className="w-full border p-2 rounded" />
+              <div className="flex gap-2 justify-end mt-4">
+                <button type="button" onClick={() => setShowRepairModal(false)} className="px-4 py-2 border rounded-xl font-bold">Cancel</button>
+                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-xl font-bold">Save</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showRestockModal && selectedItem && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-2xl w-full max-w-md">
+            <h3 className="text-lg font-bold mb-4">Restock {selectedItem.name}</h3>
+            <form onSubmit={handleRestock} className="space-y-3">
+              <input name="quantityAdded" type="number" placeholder="Quantity Added" required className="w-full border p-2 rounded" />
+              <input name="supplier" placeholder="Supplier Name" required className="w-full border p-2 rounded" />
+              <input name="cost" type="number" placeholder="Total Cost (₹)" required className="w-full border p-2 rounded" />
+              <input name="gst" type="number" placeholder="GST Amount (₹)" className="w-full border p-2 rounded" />
+              <input name="invoiceUrl" placeholder="Invoice Number" required className="w-full border p-2 rounded" />
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <label className="text-xs font-bold text-slate-500">Purchase Date</label>
+                  <input name="purchaseDate" type="date" required className="w-full border p-2 rounded" />
+                </div>
+                <div className="flex-1">
+                  <label className="text-xs font-bold text-slate-500">Expiry Date</label>
+                  <input name="expiryDate" type="date" className="w-full border p-2 rounded" />
+                </div>
+              </div>
+              <input name="remarks" placeholder="Remarks (optional)" className="w-full border p-2 rounded" />
+              <div className="flex gap-2 justify-end mt-4">
+                <button type="button" onClick={() => setShowRestockModal(false)} className="px-4 py-2 border rounded-xl font-bold">Cancel</button>
+                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-xl font-bold">Process Purchase</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showAdjustModal && selectedItem && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-2xl w-full max-w-md">
+            <h3 className="text-lg font-bold mb-4">Adjust Stock: {selectedItem.name}</h3>
+            <p className="text-sm text-slate-500 mb-4">Current Available: {selectedItem.availableStock} {selectedItem.unit}</p>
+            <form onSubmit={handleAdjustStock} className="space-y-3">
+              <select name="type" required className="w-full border p-2 rounded font-bold">
+                <option value="">Select Type...</option>
+                <option value="Damaged">Mark as Damaged</option>
+                <option value="Expired">Mark as Expired</option>
+                <option value="Lost">Mark as Lost</option>
+                <option value="Returned">Mark as Returned</option>
+              </select>
+              <input name="quantity" type="number" placeholder="Quantity" required className="w-full border p-2 rounded" />
+              <input name="reason" placeholder="Reason for adjustment" required className="w-full border p-2 rounded" />
+              <div className="flex gap-2 justify-end mt-4">
+                <button type="button" onClick={() => setShowAdjustModal(false)} className="px-4 py-2 border rounded-xl font-bold">Cancel</button>
+                <button type="submit" className="px-4 py-2 bg-amber-600 text-white rounded-xl font-bold">Confirm Adjustment</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showItemDetails && itemDetails && (
+        <div className="fixed inset-0 bg-black/40 flex justify-end z-50">
+          <div className="bg-white w-full max-w-2xl h-full shadow-xl overflow-y-auto flex flex-col animate-slide-in-right">
+            <div className="p-6 border-b flex justify-between items-center bg-slate-50">
+              <div>
+                <h3 className="text-2xl font-black text-slate-800">{itemDetails.item.name}</h3>
+                <p className="text-sm font-bold text-slate-500">{itemDetails.item.category}</p>
+              </div>
+              <button onClick={() => setShowItemDetails(false)} className="text-slate-500 hover:bg-slate-200 p-2 rounded-full">
+                ✕ Close
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-8 flex-1">
+              <div className="grid grid-cols-3 gap-4">
+                <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-100">
+                  <p className="text-xs font-bold text-emerald-600 uppercase">Available</p>
+                  <p className="text-xl font-black text-emerald-800">{itemDetails.item.availableStock} {itemDetails.item.unit}</p>
+                </div>
+                <div className="bg-amber-50 p-4 rounded-xl border border-amber-100">
+                  <p className="text-xs font-bold text-amber-600 uppercase">Minimum</p>
+                  <p className="text-xl font-black text-amber-800">{itemDetails.item.minimumStock} {itemDetails.item.unit}</p>
+                </div>
+                <div className="bg-rose-50 p-4 rounded-xl border border-rose-100">
+                  <p className="text-xs font-bold text-rose-600 uppercase">Damaged/Exp</p>
+                  <p className="text-xl font-black text-rose-800">{itemDetails.item.damagedStock + itemDetails.item.expiredStock} {itemDetails.item.unit}</p>
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="font-bold text-lg border-b pb-2 mb-4">Recent Purchase History</h4>
+                {itemDetails.purchaseHistory.length === 0 ? <p className="text-sm text-slate-500">No purchase history.</p> : (
+                  <div className="border rounded-xl overflow-hidden">
+                    <table className="w-full text-left text-sm">
+                      <thead className="bg-slate-50 border-b">
+                        <tr>
+                          <th className="p-2">Date</th>
+                          <th className="p-2">Supplier</th>
+                          <th className="p-2">Qty</th>
+                          <th className="p-2">Cost</th>
+                          <th className="p-2">Inv#</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        {itemDetails.purchaseHistory.map(ph => (
+                          <tr key={ph._id}>
+                            <td className="p-2">{formatDateTime(ph.purchaseDate)}</td>
+                            <td className="p-2 font-semibold">{ph.supplier}</td>
+                            <td className="p-2">{ph.quantity} {ph.unit}</td>
+                            <td className="p-2">₹{ph.cost}</td>
+                            <td className="p-2">{ph.invoiceUrl}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+              
+              <div>
+                <h4 className="font-bold text-lg border-b pb-2 mb-4">Recent Stock Movement</h4>
+                {itemDetails.stockMovement.length === 0 ? <p className="text-sm text-slate-500">No stock movement.</p> : (
+                  <div className="border rounded-xl overflow-hidden">
+                    <table className="w-full text-left text-sm">
+                      <thead className="bg-slate-50 border-b">
+                        <tr>
+                          <th className="p-2">Date</th>
+                          <th className="p-2">Action</th>
+                          <th className="p-2">Qty</th>
+                          <th className="p-2">Balance</th>
+                          <th className="p-2">By</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        {itemDetails.stockMovement.map(sm => (
+                          <tr key={sm._id}>
+                            <td className="p-2">{formatDateTime(sm.date)}</td>
+                            <td className="p-2 font-bold">{sm.action}</td>
+                            <td className="p-2">{sm.quantity}</td>
+                            <td className="p-2">{sm.newStock}</td>
+                            <td className="p-2">{sm.user?.name || "System"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

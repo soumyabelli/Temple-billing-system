@@ -6,9 +6,12 @@ const {
   updateInventoryItem,
   deleteInventoryItem,
   restockItem,
+  adjustStock,
   getInventoryLogs,
 } = require("../controllers/inventoryItemController");
 const { updateInventoryRequestStatus } = require("../controllers/inventoryRequestController");
+const { getAllSuppliers, createSupplier, updateSupplier, deleteSupplier } = require("../controllers/inventorySupplierController");
+const { getAllAssets, createAsset, updateAsset, deleteAsset, getAllRepairs, createRepair, completeRepair } = require("../controllers/inventoryAssetController");
 const { authenticate, authorizeRoles } = require("../middleware/authMiddleware");
 
 // All routes require authentication and admin/superadmin role
@@ -30,14 +33,40 @@ router.delete("/inventory-items/:id", deleteInventoryItem);
 // POST /api/admin/inventory/restock/:id
 router.post("/inventory/restock/:id", restockItem);
 
+// POST /api/admin/inventory-items/:id/adjust
+router.post("/inventory-items/:id/adjust", adjustStock);
+
 // GET /api/admin/inventory-logs
 router.get("/inventory-logs", getInventoryLogs);
 
 // PUT /api/admin/inventory-requests/:id/status
 router.put("/inventory-requests/:id/status", updateInventoryRequestStatus);
 const { getConsumptionReports } = require("../controllers/inventoryIssueController");
+const { getDashboardMetrics, getInventoryReports, getItemDetails } = require("../controllers/inventoryReportController");
 
 // GET /api/admin/inventory/reports/consumption
 router.get("/inventory/reports/consumption", getConsumptionReports);
+
+// Dashboard & Reports
+router.get("/inventory-metrics", getDashboardMetrics);
+router.get("/inventory/detailed-reports", getInventoryReports);
+router.get("/inventory-items/:id/details", getItemDetails);
+
+// --- Supplier Routes ---
+router.get("/inventory-suppliers", getAllSuppliers);
+router.post("/inventory-suppliers", createSupplier);
+router.put("/inventory-suppliers/:id", updateSupplier);
+router.delete("/inventory-suppliers/:id", deleteSupplier);
+
+// --- Asset Routes ---
+router.get("/inventory-assets", getAllAssets);
+router.post("/inventory-assets", createAsset);
+router.put("/inventory-assets/:id", updateAsset);
+router.delete("/inventory-assets/:id", deleteAsset);
+
+// --- Repair Routes ---
+router.get("/inventory-repairs", getAllRepairs);
+router.post("/inventory-repairs", createRepair);
+router.put("/inventory-repairs/:id/complete", completeRepair);
 
 module.exports = router;

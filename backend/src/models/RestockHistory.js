@@ -40,6 +40,14 @@ const restockHistorySchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    gst: {
+      type: Number,
+      default: 0,
+    },
+    remarks: {
+      type: String,
+      default: "",
+    },
     date: {
       type: Date,
       default: Date.now,
