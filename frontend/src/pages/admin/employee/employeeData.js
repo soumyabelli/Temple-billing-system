@@ -85,6 +85,7 @@ export const roleDepartmentMap = {
     "Inventory",
     "Devotee Services",
     "Festival Support",
+    "Cooking",
   ],
   admin: ["Administration", "Operations", "Temple Management"],
 };
@@ -103,6 +104,14 @@ export const departmentDutyMap = {
   "Donation Counter": ["Cash Collection", "Receipt Issuing", "Donation Recording", "Counter Management"],
   "Billing Counter": ["Bill Generation", "Cash Handling", "Counter Support", "Payment Processing"],
   "Prasadam Counter": ["Prasadam Sales", "Cash Handling", "Stock Monitoring", "Counter Management"],
+  // Staff - Cooking
+  "Cooking": [
+    "Prasadam Cooking",
+    "Annadanam Cooking",
+    "Kitchen Cleaning",
+    "Vessel Washing",
+    "Vegetable Chopping",
+  ],
   // Staff - Prasadam
   "Prasadam": [
     "Prasadam Preparation",
@@ -110,6 +119,7 @@ export const departmentDutyMap = {
     "Prasadam Distribution",
     "Prasadam Stock Management",
     "Counter Support",
+    "Cooking",
   ],
   // Staff - Security
   "Security": [
@@ -142,6 +152,7 @@ export const departmentDutyMap = {
     "Purchase Order Management",
     "Storage Management",
     "Surplus Disposal",
+    "Pooja Inventory Checking",
   ],
   // Staff - Devotee Services
   "Devotee Services": [
@@ -190,9 +201,11 @@ export const dutyLocations = [
   "Festival Ground",
   "Parking Area",
   "Temple Entrance",
+  "Store Room",
+  "Temple Kitchen",
 ];
 
-export const departments = ["Priest Services", "Pooja Services", "Accounts", "Billing", "Prasadam", "Maintenance", "Security", "Devotee Services"];
+export const departments = ["Priest Services", "Pooja Services", "Accounts", "Billing", "Prasadam", "Maintenance", "Security", "Devotee Services", "Cooking"];
 export const employeeRoles = [
   { value: "priest", label: "Priest" },
   { value: "accountant", label: "Accountant" },
