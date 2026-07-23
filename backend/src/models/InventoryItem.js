@@ -1,6 +1,13 @@
 const mongoose = require("mongoose");
 
-const INVENTORY_UNITS = ["Kg", "Liter", "Pack", "Pieces", "Box"];
+const INVENTORY_UNITS = [
+  "Piece (Pc)", "Number (Nos)", "Unit", "Pair", "Set", "Bundle", "Packet", "Pack", "Box", "Carton", "Roll", "Dozen", "Tray", "Sack", "Bag", "Pieces",
+  "Gram (g)", "Kilogram (kg)", "Kg", "Quintal", "Ton",
+  "Millilitre (ml)", "Litre (L)", "Liter", "Can", "Drum", "Barrel",
+  "Bottle", "Jar", "Tin", "Container", "Bucket", "Cylinder",
+  "Meter", "Feet",
+  "Square Feet", "Square Meter"
+];
 
 const inventoryItemSchema = new mongoose.Schema(
   {
@@ -71,7 +78,7 @@ const inventoryItemSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      enum: ["Pooja Items", "Prasadam Ingredients", "Cleaning Materials", "Office & Stationery", "Electrical & Maintenance", "Festival Materials", "Miscellaneous Items"],
+      enum: ["Pooja Items", "Prasadam Ingredients", "Cleaning Materials", "Office & Stationery", "Electrical & Maintenance", "Festival Materials", "Miscellaneous Items", "Cooking / Annaprasada"],
       default: "Miscellaneous Items",
     },
     description: {

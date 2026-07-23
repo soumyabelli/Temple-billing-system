@@ -4,7 +4,14 @@ const RestockHistory = require("../models/RestockHistory");
 const AccountTransaction = require("../models/AccountTransaction");
 const { createStaffNotification } = require("../utils/notificationService");
 
-const INVENTORY_UNITS = ["Kg", "Liter", "Pack", "Pieces", "Box"];
+const INVENTORY_UNITS = [
+  "Piece (Pc)", "Number (Nos)", "Unit", "Pair", "Set", "Bundle", "Packet", "Pack", "Box", "Carton", "Roll", "Dozen", "Tray", "Sack", "Bag", "Pieces",
+  "Gram (g)", "Kilogram (kg)", "Kg", "Quintal", "Ton",
+  "Millilitre (ml)", "Litre (L)", "Liter", "Can", "Drum", "Barrel",
+  "Bottle", "Jar", "Tin", "Container", "Bucket", "Cylinder",
+  "Meter", "Feet",
+  "Square Feet", "Square Meter"
+];
 
 const DEFAULT_ITEMS = [
   { name: "Camphor", unit: "Pack", availableStock: 4, minimumStock: 10, category: "Pooja" },

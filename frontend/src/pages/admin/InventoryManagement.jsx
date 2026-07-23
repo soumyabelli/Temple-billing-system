@@ -4,7 +4,14 @@ import { useAuth } from "../../context/AuthContext";
 
 const API_BASE = "http://localhost:5000/api";
 
-const INVENTORY_UNITS = ["Kg", "Liter", "Pack", "Pieces", "Box"];
+const UNIT_GROUPS = {
+  "Count Units": ["Piece (Pc)", "Number (Nos)", "Unit", "Pair", "Set", "Bundle", "Packet", "Box", "Carton", "Roll", "Dozen", "Tray", "Sack", "Bag"],
+  "Weight Units": ["Gram (g)", "Kilogram (kg)", "Quintal", "Ton"],
+  "Liquid Units": ["Millilitre (ml)", "Litre (L)", "Can", "Drum", "Barrel"],
+  "Volume / Container Units": ["Bottle", "Jar", "Tin", "Container", "Bucket", "Cylinder"],
+  "Length Units": ["Meter", "Feet", "Roll"],
+  "Area Units": ["Square Feet", "Square Meter"]
+};
 const INVENTORY_CATEGORIES = [
   "Pooja Items",
   "Prasadam Ingredients",
@@ -12,6 +19,7 @@ const INVENTORY_CATEGORIES = [
   "Office & Stationery",
   "Electrical & Maintenance",
   "Festival Materials",
+  "Cooking / Annaprasada",
   "Miscellaneous Items"
 ];
 
@@ -121,7 +129,7 @@ const InventoryManagement = () => {
       setShowItemModal(false);
       fetchData();
     } catch (err) {
-      alert("Error saving item");
+      alert(err.response?.data?.message || "Error saving item");
     }
   };
 
@@ -596,11 +604,19 @@ const InventoryManagement = () => {
             <h3 className="text-lg font-bold mb-4">{editItem ? "Edit Item" : "Add Item"}</h3>
             <form onSubmit={handleSaveItem} className="space-y-3">
               <input name="name" defaultValue={editItem?.name} placeholder="Name" required className="w-full border p-2 rounded" />
-              <select name="unit" defaultValue={editItem?.unit || "Pack"} className="w-full border p-2 rounded">
-                {INVENTORY_UNITS.map(u => <option key={u}>{u}</option>)}
-              </select>
-              <select name="category" defaultValue={editItem?.category} className="w-full border p-2 rounded">
+              <select name="category" defaultValue={editItem?.category} className="w-full border p-2 rounded" required>
+                <option value="">Select Category</option>
                 {INVENTORY_CATEGORIES.map(c => <option key={c}>{c}</option>)}
+              </select>
+              <select name="unit" defaultValue={editItem?.unit || "Piece (Pc)"} className="w-full border p-2 rounded" required>
+                <option value="">Select Unit</option>
+                {Object.entries(UNIT_GROUPS).map(([groupName, units]) => (
+                  <optgroup key={groupName} label={groupName}>
+                    {units.map((u) => (
+                      <option key={u} value={u}>{u}</option>
+                    ))}
+                  </optgroup>
+                ))}
               </select>
               <div className="flex gap-2">
                 <div className="flex-1">
