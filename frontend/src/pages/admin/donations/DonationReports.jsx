@@ -230,7 +230,7 @@ const DonationReports = () => {
       }
     >
       {/* Date Filters Form Card */}
-      <SectionCard title="Filter Report Records" subtitle="Set dates and keywords to narrow down the report dataset.">
+      <SectionCard title="Filter Report Records" subtitle="Set dates and keywords to narrow down the report dataset." className="relative z-50">
         <div className="grid gap-6 md:grid-cols-3">
           <div className="flex flex-col gap-2">
             <label className="text-sm font-semibold text-slate-300">From Date</label>
@@ -238,7 +238,7 @@ const DonationReports = () => {
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white [color-scheme:dark] focus:outline-none focus:ring-2 focus:ring-amber-500"
             />
           </div>
           <div className="flex flex-col gap-2">
@@ -247,7 +247,7 @@ const DonationReports = () => {
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white [color-scheme:dark] focus:outline-none focus:ring-2 focus:ring-amber-500"
             />
           </div>
           <div className="flex flex-col gap-2">

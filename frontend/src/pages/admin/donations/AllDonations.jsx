@@ -1,11 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import SectionCard from "../../../components/admin/employee/SectionCard";
 import DonationPageShell from "../../../components/admin/donations/DonationPageShell";
 
 const AllDonations = () => {
+  const navigate = useNavigate();
   const [donations, setDonations] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [filterType, setFilterType] = useState("all");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   const fetchDonations = async () => {
     setLoading(true);
@@ -19,6 +24,41 @@ const AllDonations = () => {
     }
   };
 
+  const filteredDonations = useMemo(() => {
+    return donations.filter((donation) => {
+      if (!donation.createdAt) return true;
+      const d = new Date(donation.createdAt);
+      const now = new Date();
+
+      if (filterType === "weekly") {
+        const weekAgo = new Date();
+        weekAgo.setDate(now.getDate() - 7);
+        return d >= weekAgo;
+      }
+      if (filterType === "monthwise") {
+        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+      }
+      if (filterType === "yearly") {
+        return d.getFullYear() === now.getFullYear();
+      }
+      if (filterType === "datewise") {
+        let match = true;
+        if (startDate) {
+          const start = new Date(startDate);
+          start.setHours(0, 0, 0, 0);
+          match = match && d >= start;
+        }
+        if (endDate) {
+          const end = new Date(endDate);
+          end.setHours(23, 59, 59, 999);
+          match = match && d <= end;
+        }
+        return match;
+      }
+      return true; // "all"
+    });
+  }, [donations, filterType, startDate, endDate]);
+
   const handleExport = () => {
     const headers = [
       "Receipt ID",
@@ -31,7 +71,7 @@ const AllDonations = () => {
       "Status",
     ];
 
-    const rows = donations.map((item) => [
+    const rows = filteredDonations.map((item) => [
       item._id || "",
       item.donorName || "",
       item.category || "",
@@ -66,14 +106,63 @@ const AllDonations = () => {
       title="All Donations"
       subtitle="A comprehensive donation registry with search, status, verification and export workflows."
       actions={
-        <button
-          onClick={handleExport}
-          className="rounded-2xl bg-amber-400 px-5 py-3 font-semibold text-slate-950 transition hover:bg-amber-300"
-        >
-          Export Report
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => navigate("/admin/donations")}
+            className="rounded-2xl border border-slate-700 bg-slate-800 px-5 py-3 font-semibold text-white transition hover:bg-slate-700"
+          >
+            Back to Donations
+          </button>
+          <button
+            onClick={handleExport}
+            className="rounded-2xl bg-amber-400 px-5 py-3 font-semibold text-slate-950 transition hover:bg-amber-300"
+          >
+            Export Report
+          </button>
+        </div>
       }
     >
+      <SectionCard title="Filters" subtitle="Filter donations based on time period." className="relative z-50">
+        <div className="grid gap-6 md:grid-cols-4 items-end">
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-semibold text-slate-300">Time Period</label>
+            <select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+              className="rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+            >
+              <option value="all">All Time</option>
+              <option value="weekly">This Week</option>
+              <option value="monthwise">This Month</option>
+              <option value="yearly">This Year</option>
+              <option value="datewise">Custom Date</option>
+            </select>
+          </div>
+          {filterType === "datewise" && (
+            <>
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-semibold text-slate-300">From Date</label>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white [color-scheme:dark] focus:outline-none focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-semibold text-slate-300">To Date</label>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white [color-scheme:dark] focus:outline-none focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+            </>
+          )}
+        </div>
+      </SectionCard>
+
       <SectionCard title="Donation Records" subtitle="Receipt ID, donor, payment method and verification status.">
         <div className="overflow-x-auto">
           <table className="min-w-full text-left text-sm text-slate-700">
@@ -97,14 +186,14 @@ const AllDonations = () => {
                     Loading donations...
                   </td>
                 </tr>
-              ) : donations.length === 0 ? (
+              ) : filteredDonations.length === 0 ? (
                 <tr>
                   <td colSpan="9" className="py-8 px-3 text-center text-slate-500">
                     No donations found.
                   </td>
                 </tr>
               ) : (
-                donations.map((item) => (
+                filteredDonations.map((item) => (
                   <tr key={item._id} className="border-b border-slate-200 hover:bg-slate-50 transition">
                     <td className="py-4 px-3 font-medium text-slate-900">{item._id?.slice(-8).toUpperCase()}</td>
                     <td className="py-4 px-3">{item.donorName}</td>
@@ -132,12 +221,12 @@ const AllDonations = () => {
           <div className="grid gap-4">
             <div className="rounded-3xl bg-slate-950/10 p-5">
               <p className="text-sm text-slate-400">Total donations recorded</p>
-              <p className="mt-3 text-3xl font-semibold text-white">{donations.length}</p>
+              <p className="mt-3 text-3xl font-semibold text-white">{filteredDonations.length}</p>
             </div>
             <div className="rounded-3xl bg-slate-950/10 p-5">
               <p className="text-sm text-slate-400">Latest donation</p>
               <p className="mt-3 text-xl text-white">
-                {donations[0]?.donorName ? `${donations[0].donorName} - ₹${donations[0].amount?.toLocaleString()}` : "No donations yet"}
+                {filteredDonations[0]?.donorName ? `${filteredDonations[0].donorName} - ₹${filteredDonations[0].amount?.toLocaleString()}` : "No donations yet"}
               </p>
             </div>
           </div>

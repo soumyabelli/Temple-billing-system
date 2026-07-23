@@ -32,7 +32,7 @@ const DonationTable = ({ donations = [], onRefresh }) => {
 
   const rows = useMemo(
     () =>
-      donations.map((donation) => ({
+      donations.slice(0, 8).map((donation) => ({
         raw: donation,
         id: donation._id || donation.id || "-",
         donor: donation.donorName || donation.donor || "Unknown",
@@ -52,12 +52,22 @@ const DonationTable = ({ donations = [], onRefresh }) => {
           <h2 className="text-2xl font-semibold">Donation Activity Log</h2>
           <p className="mt-2 text-slate-400">Live donation entries and verification status from the backend.</p>
         </div>
-        <button
-          onClick={() => navigate("/admin/donations/settings")}
-          className="inline-flex items-center justify-center rounded-3xl bg-amber-400 px-5 py-3 font-semibold text-slate-950 transition hover:bg-amber-300"
-        >
-          Manage Donation Types
-        </button>
+        <div className="flex gap-3">
+          {donations.length > 8 && (
+            <button
+              onClick={() => navigate("/admin/donations/all")}
+              className="inline-flex items-center justify-center rounded-3xl bg-slate-800 border border-slate-700 px-5 py-3 font-semibold text-white transition hover:bg-slate-700"
+            >
+              View All
+            </button>
+          )}
+          <button
+            onClick={() => navigate("/admin/donations/settings")}
+            className="inline-flex items-center justify-center rounded-3xl bg-amber-400 px-5 py-3 font-semibold text-slate-950 transition hover:bg-amber-300"
+          >
+            Manage Donation Types
+          </button>
+        </div>
       </div>
 
       <div className="overflow-x-auto">
