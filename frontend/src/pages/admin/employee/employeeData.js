@@ -86,6 +86,7 @@ export const roleDepartmentMap = {
     "Devotee Services",
     "Festival Support",
     "Cooking",
+    "Cleaning",
   ],
   admin: ["Administration", "Operations", "Temple Management"],
 };
@@ -111,6 +112,16 @@ export const departmentDutyMap = {
     "Kitchen Cleaning",
     "Vessel Washing",
     "Vegetable Chopping",
+  ],
+  // Staff - Cleaning
+  "Cleaning": [
+    "Temple Floor Cleaning",
+    "Prasadam Hall Cleaning",
+    "Office Cleaning",
+    "Washroom Cleaning",
+    "Garden Cleaning",
+    "Waste Collection",
+    "Festival Cleaning"
   ],
   // Staff - Prasadam
   "Prasadam": [
@@ -195,17 +206,49 @@ export const departmentDutyMap = {
 export const dutyLocations = [
   "Main Temple Hall",
   "Pooja Hall",
-  "Donation Counter",
-  "Prasadam Store",
-  "Accounts Office",
-  "Festival Ground",
-  "Parking Area",
-  "Temple Entrance",
-  "Store Room",
+  "Prasadam Hall",
+  "Dining Hall",
   "Temple Kitchen",
+  "Office",
+  "Store Room",
+  "Washrooms",
+  "Parking Area",
+  "Garden",
+  "Temple Entrance",
+  "Corridor",
+  "Guest Rooms"
 ];
 
-export const departments = ["Priest Services", "Pooja Services", "Accounts", "Billing", "Prasadam", "Maintenance", "Security", "Devotee Services", "Cooking"];
+export const departmentLocationMap = {
+  // Priest
+  "Priest Services": ["Main Temple Hall", "Pooja Hall"],
+  "Festival Services": ["Main Temple Hall", "Festival Ground"],
+  "Special Pooja Services": ["Main Temple Hall", "Pooja Hall", "Guest Rooms"],
+  // Accountant
+  "Accounts": ["Accounts Office", "Office"],
+  "Finance": ["Accounts Office", "Office"],
+  "Billing": ["Accounts Office", "Office"],
+  // Cashier
+  "Donation Counter": ["Donation Counter", "Main Temple Hall"],
+  "Billing Counter": ["Donation Counter", "Office"],
+  "Prasadam Counter": ["Prasadam Hall", "Prasadam Store"],
+  // Staff
+  "Cooking": ["Temple Kitchen"],
+  "Prasadam": ["Temple Kitchen", "Prasadam Hall", "Dining Hall", "Prasadam Store"],
+  "Security": ["Temple Entrance", "Parking Area", "Main Temple Hall", "Corridor", "Festival Ground"],
+  "Pooja Services": ["Main Temple Hall", "Pooja Hall"],
+  "Maintenance": ["Main Temple Hall", "Corridor", "Washrooms", "Garden", "Parking Area", "Guest Rooms", "Store Room"],
+  "Inventory": ["Store Room", "Office"],
+  "Devotee Services": ["Main Temple Hall", "Temple Entrance", "Guest Rooms", "Dining Hall"],
+  "Festival Support": ["Festival Ground", "Main Temple Hall", "Temple Entrance"],
+  "Cleaning": ["Main Temple Hall", "Pooja Hall", "Prasadam Hall", "Dining Hall", "Temple Kitchen", "Office", "Store Room", "Washrooms", "Parking Area", "Garden", "Temple Entrance", "Corridor", "Guest Rooms"],
+  // Admin
+  "Administration": ["Office", "Accounts Office"],
+  "Operations": ["Office", "Main Temple Hall", "Corridor"],
+  "Temple Management": ["Office"],
+};
+
+export const departments = ["Priest Services", "Pooja Services", "Accounts", "Billing", "Prasadam", "Maintenance", "Security", "Devotee Services", "Cooking", "Cleaning"];
 export const employeeRoles = [
   { value: "priest", label: "Priest" },
   { value: "accountant", label: "Accountant" },

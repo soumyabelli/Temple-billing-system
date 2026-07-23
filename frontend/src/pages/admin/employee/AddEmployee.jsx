@@ -6,6 +6,7 @@ import {
   employeeRoles,
   roleDepartmentMap,
   departmentDutyMap,
+  departmentLocationMap,
   dutyLocations,
   shiftOptions,
 } from "./employeeData";
@@ -164,11 +165,19 @@ const AddEmployee = () => {
     }));
   }, [form.role]);
 
-  // When department changes → reset duty to first available
+  // When department changes → reset duty and location to first available
   useEffect(() => {
     const duties = departmentDutyMap[form.department] || [];
-    setForm((prev) => ({ ...prev, defaultDuty: duties[0] || "" }));
+    const locs = departmentLocationMap[form.department] || dutyLocations;
+    setForm((prev) => ({ 
+      ...prev, 
+      defaultDuty: duties[0] || "",
+      dutyLocation: locs[0] || "",
+    }));
   }, [form.department]);
+
+  // Dynamic location list based on department
+  const locationList = useMemo(() => departmentLocationMap[form.department] || dutyLocations, [form.department]);
 
   // Load draft on mount
   useEffect(() => {
@@ -723,7 +732,7 @@ const AddEmployee = () => {
                     onChange={handleChange("dutyLocation")}
                     className={`w-full rounded-3xl border ${errors.dutyLocation ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition`}
                   >
-                    {dutyLocations.map((loc) => (
+                    {locationList.map((loc) => (
                       <option key={loc} value={loc}>
                         {loc}
                       </option>
