@@ -5,7 +5,15 @@ import { useAuth } from "../../context/AuthContext";
 const API_BASE = "http://localhost:5000/api";
 
 const INVENTORY_UNITS = ["Kg", "Liter", "Pack", "Pieces", "Box"];
-const INVENTORY_CATEGORIES = ["Pooja", "Abhisheka", "Prasadam", "Annadanam", "Maintenance", "Electrical", "Office", "Festival"];
+const INVENTORY_CATEGORIES = [
+  "Pooja Items",
+  "Prasadam Ingredients",
+  "Cleaning Materials",
+  "Office & Stationery",
+  "Electrical & Maintenance",
+  "Festival Materials",
+  "Miscellaneous Items"
+];
 
 const formatDateTime = (value) => {
   if (!value) return "-";
@@ -99,6 +107,8 @@ const InventoryManagement = () => {
       availableStock: Number(form.get("availableStock")),
       minimumStock: Number(form.get("minimumStock")),
       reorderLevel: Number(form.get("reorderLevel") || form.get("minimumStock")),
+      lastSupplier: form.get("lastSupplier"),
+      lastPurchasePrice: Number(form.get("lastPurchasePrice") || 0),
       isActive: form.get("isActive") === "on",
     };
     try {
@@ -355,7 +365,7 @@ const InventoryManagement = () => {
                         ) : item.availableStock <= (item.reorderLevel || item.minimumStock) ? (
                           <span className="px-2 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-bold">Low Stock</span>
                         ) : (
-                          <span className="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold">Healthy</span>
+                          <span className="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold">Available</span>
                         )}
                       </td>
                       <td className="p-3">{item.category}</td>
@@ -593,11 +603,30 @@ const InventoryManagement = () => {
                 {INVENTORY_CATEGORIES.map(c => <option key={c}>{c}</option>)}
               </select>
               <div className="flex gap-2">
-                <input name="availableStock" type="number" defaultValue={editItem?.availableStock || 0} placeholder="Available Stock" required className="w-full border p-2 rounded flex-1" />
-                <input name="minimumStock" type="number" defaultValue={editItem?.minimumStock || 0} placeholder="Min Stock" required className="w-full border p-2 rounded flex-1" />
+                <div className="flex-1">
+                  <label className="block text-xs font-bold text-slate-500 mb-1">Available Stock</label>
+                  <input name="availableStock" type="number" defaultValue={editItem?.availableStock || 0} placeholder="Available Stock" required className="w-full border p-2 rounded" />
+                </div>
+                <div className="flex-1">
+                  <label className="block text-xs font-bold text-slate-500 mb-1">Min Stock</label>
+                  <input name="minimumStock" type="number" defaultValue={editItem?.minimumStock || 0} placeholder="Min Stock" required className="w-full border p-2 rounded" />
+                </div>
               </div>
               <div className="flex gap-2">
-                <input name="reorderLevel" type="number" defaultValue={editItem?.reorderLevel || 0} placeholder="Reorder Level" className="w-full border p-2 rounded flex-1" />
+                <div className="flex-1">
+                  <label className="block text-xs font-bold text-slate-500 mb-1">Reorder Level</label>
+                  <input name="reorderLevel" type="number" defaultValue={editItem?.reorderLevel || 0} placeholder="Reorder Level" className="w-full border p-2 rounded" />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <label className="block text-xs font-bold text-slate-500 mb-1">Supplier Name</label>
+                  <input name="lastSupplier" defaultValue={editItem?.lastSupplier || ""} placeholder="Supplier Name" className="w-full border p-2 rounded" />
+                </div>
+                <div className="flex-1">
+                  <label className="block text-xs font-bold text-slate-500 mb-1">Price (₹)</label>
+                  <input name="lastPurchasePrice" type="number" defaultValue={editItem?.lastPurchasePrice || ""} placeholder="Price" className="w-full border p-2 rounded" />
+                </div>
               </div>
               {editItem && (
                 <div className="flex items-center gap-2 mt-2">

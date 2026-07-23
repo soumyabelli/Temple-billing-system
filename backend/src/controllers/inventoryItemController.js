@@ -37,7 +37,7 @@ const getAllInventoryItems = async (req, res) => {
 
 const createInventoryItem = async (req, res) => {
   try {
-    const { name, unit, availableStock, minimumStock, reorderLevel, category, description, expiryDate } = req.body;
+    const { name, unit, availableStock, minimumStock, reorderLevel, category, description, expiryDate, lastSupplier, lastPurchasePrice } = req.body;
 
     if (!clean(name)) {
       return res.status(400).json({ success: false, message: "Item name is required." });
@@ -63,7 +63,9 @@ const createInventoryItem = async (req, res) => {
       reorderLevel: Number(reorderLevel || minimumStock),
       category: clean(category),
       description: clean(description),
-      expiryDate: expiryDate ? new Date(expiryDate) : undefined
+      expiryDate: expiryDate ? new Date(expiryDate) : undefined,
+      lastSupplier: clean(lastSupplier) || undefined,
+      lastPurchasePrice: Number(lastPurchasePrice) || undefined
     });
 
     if (item.availableStock > 0) {
@@ -89,7 +91,7 @@ const createInventoryItem = async (req, res) => {
 const updateInventoryItem = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, unit, availableStock, minimumStock, reorderLevel, category, description, isActive, expiryDate } = req.body;
+    const { name, unit, availableStock, minimumStock, reorderLevel, category, description, isActive, expiryDate, lastSupplier, lastPurchasePrice } = req.body;
 
     const existingItem = await InventoryItem.findById(id);
     if (!existingItem) {
@@ -99,6 +101,8 @@ const updateInventoryItem = async (req, res) => {
     const updatePayload = {};
 
     if (name !== undefined) updatePayload.name = clean(name);
+    if (lastSupplier !== undefined) updatePayload.lastSupplier = clean(lastSupplier);
+    if (lastPurchasePrice !== undefined) updatePayload.lastPurchasePrice = Number(lastPurchasePrice);
     if (unit !== undefined) {
       if (!INVENTORY_UNITS.includes(clean(unit))) {
         return res.status(400).json({
