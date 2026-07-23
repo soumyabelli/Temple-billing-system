@@ -38,6 +38,7 @@ import FestivalsEventsManagement from "./pages/admin/FestivalsEventsManagement";
 import BillingManagement from "./pages/admin/BillingManagement";
 import InventoryManagement from "./pages/admin/InventoryManagement";
 import PrasadaBooked from "./pages/admin/PrasadaBooked";
+import AllPrasadaBookings from "./pages/admin/AllPrasadaBookings";
 import NotificationsCenter from "./pages/admin/NotificationsCenter";
 import RoomAllotment from "./pages/admin/RoomAllotment";
 import AdminLayout from "./layouts/AdminLayout";
@@ -204,6 +205,16 @@ function App() {
           <ProtectedRoute allowedRoles={["admin"]}>
             <AdminLayout>
               <PrasadaBooked />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/prasada/all"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminLayout>
+              <AllPrasadaBookings />
             </AdminLayout>
           </ProtectedRoute>
         }

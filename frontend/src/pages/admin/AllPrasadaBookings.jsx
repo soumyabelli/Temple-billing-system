@@ -35,7 +35,7 @@ const statusClassMap = {
 
 const displayStatus = (order) => order.orderStatusDisplay || order.status || "Pending";
 
-const PrasadaBooked = () => {
+const AllPrasadaBookings = () => {
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -112,10 +112,15 @@ const PrasadaBooked = () => {
       <div className="rounded-2xl border border-[#ece8e1] bg-white p-8 shadow-sm">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-[42px] font-bold text-[#111827]">Prasada Booked</h1>
-            <p className="mt-2 text-[#525252]">Devotee prasada orders appear here when booked from the devotee portal.</p>
+            <h1 className="text-[42px] font-bold text-[#111827]">All Prasada Bookings</h1>
+            <p className="mt-2 text-[#525252]">Complete list of all prasada orders from devotees.</p>
           </div>
-          <div className="rounded-3xl bg-[#eff6ff] px-5 py-3 text-sm font-semibold text-[#1d4ed8]">Prasada</div>
+          <button
+            onClick={() => navigate("/admin/prasada/booked")}
+            className="rounded-3xl bg-[#eff6ff] px-5 py-3 text-sm font-semibold text-[#1d4ed8] hover:bg-[#dbeafe]"
+          >
+            Back to Prasada
+          </button>
         </div>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
@@ -140,17 +145,7 @@ const PrasadaBooked = () => {
 
       <div className="rounded-2xl border border-[#ece8e1] bg-white p-6 shadow-sm">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-4">
-            <h2 className="text-2xl font-bold text-[#111827]">Prasada Bookings</h2>
-            {filteredOrders.length > 10 && (
-              <button
-                onClick={() => navigate("/admin/prasada/all")}
-                className="rounded-full bg-[#1d4ed8] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1e40af]"
-              >
-                View All
-              </button>
-            )}
-          </div>
+          <h2 className="text-2xl font-bold text-[#111827]">All Prasada Bookings</h2>
           <div className="flex flex-wrap gap-3">
             <input
               type="text"
@@ -215,7 +210,7 @@ const PrasadaBooked = () => {
                   </td>
                 </tr>
               ) : (
-                filteredOrders.slice(0, 10).map((order) => {
+                filteredOrders.map((order) => {
                   const orderId = order._id || order.id;
                   const status = displayStatus(order);
                   return (
@@ -274,4 +269,4 @@ const PrasadaBooked = () => {
   );
 };
 
-export default PrasadaBooked;
+export default AllPrasadaBookings;
