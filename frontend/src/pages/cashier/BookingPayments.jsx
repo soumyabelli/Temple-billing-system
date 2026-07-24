@@ -65,18 +65,18 @@ const BookingPayments = () => {
       const [bookingRows, billRows, poojaRes] = await Promise.allSettled([fetchBookings(), fetchBills(), getPoojaTypes()]);
       setBookings(bookingRows.status === "fulfilled" ? bookingRows.value : []);
       setBills(billRows.status === "fulfilled" ? billRows.value : []);
-      
+
       const loadedPoojas = poojaRes.status === "fulfilled" ? (poojaRes.value.poojas || poojaRes.value || []) : [];
       setPoojaTypes(loadedPoojas);
-      
+
       if (loadedPoojas.length > 0) {
         setForm((prev) => {
-           if (prev.service) return prev;
-           return {
-             ...prev,
-             service: loadedPoojas[0].name,
-             amount: loadedPoojas[0].price,
-           };
+          if (prev.service) return prev;
+          return {
+            ...prev,
+            service: loadedPoojas[0].name,
+            amount: loadedPoojas[0].price,
+          };
         });
       }
     } catch (error) {
@@ -91,10 +91,10 @@ const BookingPayments = () => {
     loadData();
 
     const syncPoojaTypes = async () => {
-       const res = await getPoojaTypes();
-       setPoojaTypes(res.poojas || res || []);
+      const res = await getPoojaTypes();
+      setPoojaTypes(res.poojas || res || []);
     };
-    
+
     const onStorage = (event) => {
       if (event.key === "poojaTypes") {
         syncPoojaTypes();
@@ -259,7 +259,7 @@ const BookingPayments = () => {
               });
               setMessage("Pooja booking saved successfully and paid.");
               await loadData();
-              loadNotifications().catch(() => {});
+              loadNotifications().catch(() => { });
             } catch (err) {
               setMessage("Payment verification failed.");
               console.warn("verify booking payment handler error", err);
@@ -287,7 +287,7 @@ const BookingPayments = () => {
       });
       setMessage("Pooja booking saved successfully. The history and bill ledger were updated.");
       await loadData();
-      loadNotifications().catch(() => {});
+      loadNotifications().catch(() => { });
     } catch (error) {
       setMessage(error.response?.data?.error || error.response?.data?.message || "Failed to save booking.");
     } finally {
@@ -330,151 +330,150 @@ const BookingPayments = () => {
       <div className="w-full">
         {!showHistory ? (
           <section className="rounded-[22px] border border-[#f0d3a2] bg-white/95 p-5 shadow-sm">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <h2 className="text-2xl font-extrabold text-slate-950">Admin added services</h2>
-              <p className="mt-1 text-sm font-medium text-slate-700">
-                Tap a service below to auto-fill the booking form and amount.
-              </p>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-2xl font-extrabold text-slate-950">Admin added services</h2>
+                <p className="mt-1 text-sm font-medium text-slate-700">
+                  Tap a service below to auto-fill the booking form and amount.
+                </p>
+              </div>
+              <FaCalendarAlt className="text-[#f28c18]" size={22} />
             </div>
-            <FaCalendarAlt className="text-[#f28c18]" size={22} />
-          </div>
 
-          <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {poojaTypes.map((type) => {
-              const active = form.service === type.name;
-              return (
-                <button
-                  key={type.name}
-                  type="button"
-                  onClick={() => handleServiceSelect(type)}
-                  className={`rounded-[18px] border p-4 text-left transition ${
-                    active
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {poojaTypes.map((type) => {
+                const active = form.service === type.name;
+                return (
+                  <button
+                    key={type.name}
+                    type="button"
+                    onClick={() => handleServiceSelect(type)}
+                    className={`rounded-[18px] border p-4 text-left transition ${active
                       ? "border-[#f28c18] bg-[#fff4e6] shadow-[0_10px_24px_rgba(242,140,24,0.15)]"
                       : "border-[#f1dfc0] bg-[#fffaf4] hover:bg-[#fff7ec]"
-                  }`}
-                >
-                  <p className="text-base font-extrabold text-slate-950">{type.name}</p>
-                  <p className="mt-2 text-sm font-semibold text-[#8a5200]">{formatCurrency(type.price)}</p>
-                </button>
-              );
-            })}
-          </div>
-
-          <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
-            <div className="grid gap-4 md:grid-cols-2">
-              <label className="block">
-                <span className="mb-2 block text-sm font-bold text-slate-800">Devotee name</span>
-                <input
-                  value={form.devoteeName}
-                  onChange={(e) => setForm((prev) => ({ ...prev, devoteeName: e.target.value }))}
-                  className="w-full rounded-2xl border border-[#ead7bb] bg-[#fffaf4] px-4 py-3 text-base outline-none focus:border-[#f28c18]"
-                  placeholder="Enter devotee name"
-                />
-              </label>
-              <label className="block">
-                <span className="mb-2 block text-sm font-bold text-slate-800">Phone number</span>
-                <input
-                  value={form.devoteePhone}
-                  onChange={(e) => setForm((prev) => ({ ...prev, devoteePhone: e.target.value }))}
-                  className="w-full rounded-2xl border border-[#ead7bb] bg-[#fffaf4] px-4 py-3 text-base outline-none focus:border-[#f28c18]"
-                  placeholder="+91 98765 43210"
-                />
-              </label>
-              <label className="block">
-                <span className="mb-2 block text-sm font-bold text-slate-800">Email</span>
-                <input
-                  type="email"
-                  value={form.devoteeEmail}
-                  onChange={(e) => setForm((prev) => ({ ...prev, devoteeEmail: e.target.value }))}
-                  className="w-full rounded-2xl border border-[#ead7bb] bg-[#fffaf4] px-4 py-3 text-base outline-none focus:border-[#f28c18]"
-                  placeholder="devotee@email.com"
-                />
-              </label>
-              <label className="block">
-                <span className="mb-2 block text-sm font-bold text-slate-800">Service</span>
-                <select
-                  value={form.service}
-                  onChange={(e) => {
-                    const selected = poojaTypes.find((type) => type.name === e.target.value);
-                    setForm((prev) => ({
-                      ...prev,
-                      service: e.target.value,
-                      amount: selected?.price || prev.amount,
-                    }));
-                  }}
-                  className="w-full rounded-2xl border border-[#ead7bb] bg-[#fffaf4] px-4 py-3 text-base outline-none focus:border-[#f28c18]"
-                >
-                  {poojaTypes.map((type) => (
-                    <option key={type.name} value={type.name}>
-                      {type.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="block">
-                <span className="mb-2 block text-sm font-bold text-slate-800">Date</span>
-                <input
-                  type="date"
-                  min={buildMinDateTime()}
-                  value={form.datetime}
-                  onChange={(e) => setForm((prev) => ({ ...prev, datetime: e.target.value }))}
-                  className="w-full rounded-2xl border border-[#ead7bb] bg-[#fffaf4] px-4 py-3 text-base outline-none focus:border-[#f28c18]"
-                />
-              </label>
-              <label className="block">
-                <span className="mb-2 block text-sm font-bold text-slate-800">Amount</span>
-                <input
-                  type="number"
-                  min="1"
-                  value={form.amount}
-                  onChange={(e) => setForm((prev) => ({ ...prev, amount: e.target.value }))}
-                  className="w-full rounded-2xl border border-[#ead7bb] bg-[#fffaf4] px-4 py-3 text-base outline-none focus:border-[#f28c18]"
-                  placeholder="0"
-                />
-              </label>
-              <label className="block">
-                <span className="mb-2 block text-sm font-bold text-slate-800">Payment mode</span>
-                <select
-                  value={form.paymentMethod}
-                  onChange={(e) => setForm((prev) => ({ ...prev, paymentMethod: e.target.value }))}
-                  className="w-full rounded-2xl border border-[#ead7bb] bg-[#fffaf4] px-4 py-3 text-base outline-none focus:border-[#f28c18]"
-                >
-                  <option>Cash</option>
-                  <option>UPI</option>
-                  <option>Card</option>
-                  <option>Bank Transfer</option>
-                  <option>Net Banking</option>
-                </select>
-              </label>
+                      }`}
+                  >
+                    <p className="text-base font-extrabold text-slate-950">{type.name}</p>
+                    <p className="mt-2 text-sm font-semibold text-[#8a5200]">{formatCurrency(type.price)}</p>
+                  </button>
+                );
+              })}
             </div>
 
-            <label className="block">
-              <span className="mb-2 block text-sm font-bold text-slate-800">Notes</span>
-              <textarea
-                rows="4"
-                value={form.notes}
-                onChange={(e) => setForm((prev) => ({ ...prev, notes: e.target.value }))}
-                className="w-full rounded-2xl border border-[#ead7bb] bg-[#fffaf4] px-4 py-3 text-base outline-none focus:border-[#f28c18]"
-                placeholder="Optional notes for the counter or priest"
-              />
-            </label>
-
-            {message ? (
-              <div className="rounded-2xl border border-[#f4d0a3] bg-[#fff7eb] px-4 py-3 text-sm font-semibold text-[#8a5200]">
-                {message}
+            <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+              <div className="grid gap-4 md:grid-cols-2">
+                <label className="block">
+                  <span className="mb-2 block text-sm font-bold text-slate-800">Devotee name</span>
+                  <input
+                    value={form.devoteeName}
+                    onChange={(e) => setForm((prev) => ({ ...prev, devoteeName: e.target.value }))}
+                    className="w-full rounded-2xl border border-[#ead7bb] bg-[#fffaf4] px-4 py-3 text-base outline-none focus:border-[#f28c18]"
+                    placeholder="Enter devotee name"
+                  />
+                </label>
+                <label className="block">
+                  <span className="mb-2 block text-sm font-bold text-slate-800">Phone number</span>
+                  <input
+                    value={form.devoteePhone}
+                    onChange={(e) => setForm((prev) => ({ ...prev, devoteePhone: e.target.value }))}
+                    className="w-full rounded-2xl border border-[#ead7bb] bg-[#fffaf4] px-4 py-3 text-base outline-none focus:border-[#f28c18]"
+                    placeholder="+91 98765 43210"
+                  />
+                </label>
+                <label className="block">
+                  <span className="mb-2 block text-sm font-bold text-slate-800">Email</span>
+                  <input
+                    type="email"
+                    value={form.devoteeEmail}
+                    onChange={(e) => setForm((prev) => ({ ...prev, devoteeEmail: e.target.value }))}
+                    className="w-full rounded-2xl border border-[#ead7bb] bg-[#fffaf4] px-4 py-3 text-base outline-none focus:border-[#f28c18]"
+                    placeholder="devotee@email.com"
+                  />
+                </label>
+                <label className="block">
+                  <span className="mb-2 block text-sm font-bold text-slate-800">Service</span>
+                  <select
+                    value={form.service}
+                    onChange={(e) => {
+                      const selected = poojaTypes.find((type) => type.name === e.target.value);
+                      setForm((prev) => ({
+                        ...prev,
+                        service: e.target.value,
+                        amount: selected?.price || prev.amount,
+                      }));
+                    }}
+                    className="w-full rounded-2xl border border-[#ead7bb] bg-[#fffaf4] px-4 py-3 text-base outline-none focus:border-[#f28c18]"
+                  >
+                    {poojaTypes.map((type) => (
+                      <option key={type.name} value={type.name}>
+                        {type.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="block">
+                  <span className="mb-2 block text-sm font-bold text-slate-800">Date</span>
+                  <input
+                    type="date"
+                    min={buildMinDateTime()}
+                    value={form.datetime}
+                    onChange={(e) => setForm((prev) => ({ ...prev, datetime: e.target.value }))}
+                    className="w-full rounded-2xl border border-[#ead7bb] bg-[#fffaf4] px-4 py-3 text-base outline-none focus:border-[#f28c18]"
+                  />
+                </label>
+                <label className="block">
+                  <span className="mb-2 block text-sm font-bold text-slate-800">Amount</span>
+                  <input
+                    type="number"
+                    min="1"
+                    value={form.amount}
+                    onChange={(e) => setForm((prev) => ({ ...prev, amount: e.target.value }))}
+                    className="w-full rounded-2xl border border-[#ead7bb] bg-[#fffaf4] px-4 py-3 text-base outline-none focus:border-[#f28c18]"
+                    placeholder="0"
+                  />
+                </label>
+                <label className="block">
+                  <span className="mb-2 block text-sm font-bold text-slate-800">Payment mode</span>
+                  <select
+                    value={form.paymentMethod}
+                    onChange={(e) => setForm((prev) => ({ ...prev, paymentMethod: e.target.value }))}
+                    className="w-full rounded-2xl border border-[#ead7bb] bg-[#fffaf4] px-4 py-3 text-base outline-none focus:border-[#f28c18]"
+                  >
+                    <option>Cash</option>
+                    <option>UPI</option>
+                    <option>Card</option>
+                    <option>Bank Transfer</option>
+                    <option>Net Banking</option>
+                  </select>
+                </label>
               </div>
-            ) : null}
 
-            <button
-              type="submit"
-              disabled={saving}
-              className="rounded-2xl bg-[#f28c18] px-5 py-3 text-base font-extrabold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              {saving ? "Saving..." : "Save Pooja Booking"}
-            </button>
-          </form>
-        </section>
+              <label className="block">
+                <span className="mb-2 block text-sm font-bold text-slate-800">Notes</span>
+                <textarea
+                  rows="4"
+                  value={form.notes}
+                  onChange={(e) => setForm((prev) => ({ ...prev, notes: e.target.value }))}
+                  className="w-full rounded-2xl border border-[#ead7bb] bg-[#fffaf4] px-4 py-3 text-base outline-none focus:border-[#f28c18]"
+                  placeholder="Optional notes for the counter or priest"
+                />
+              </label>
+
+              {message ? (
+                <div className="rounded-2xl border border-[#f4d0a3] bg-[#fff7eb] px-4 py-3 text-sm font-semibold text-[#8a5200]">
+                  {message}
+                </div>
+              ) : null}
+
+              <button
+                type="submit"
+                disabled={saving}
+                className="rounded-2xl bg-[#f28c18] px-5 py-3 text-base font-extrabold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {saving ? "Saving..." : "Save Pooja Booking"}
+              </button>
+            </form>
+          </section>
         ) : (
           <div>
             <button
@@ -485,91 +484,90 @@ const BookingPayments = () => {
             </button>
             <section className="rounded-[22px] border border-[#f0d3a2] bg-white/95 p-5 shadow-sm">
               <div className="flex items-center justify-between gap-3">
-            <div>
-              <h2 className="text-2xl font-extrabold text-slate-950">Booking history</h2>
-              <p className="mt-1 text-sm font-medium text-slate-700">
-                Saved bookings and matching bill receipts appear here.
-              </p>
-            </div>
-            <div className="flex items-center gap-2 text-sm text-slate-700">
-              <FaSearch />
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search devotee"
-                className="w-[170px] rounded-full border border-[#ead7bb] bg-[#fffaf4] px-3 py-2 outline-none focus:border-[#f28c18]"
-              />
-            </div>
-          </div>
+                <div>
+                  <h2 className="text-2xl font-extrabold text-slate-950">Booking history</h2>
+                  <p className="mt-1 text-sm font-medium text-slate-700">
+                    Saved bookings and matching bill receipts appear here.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-slate-700">
+                  <FaSearch />
+                  <input
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Search devotee"
+                    className="w-[170px] rounded-full border border-[#ead7bb] bg-[#fffaf4] px-3 py-2 outline-none focus:border-[#f28c18]"
+                  />
+                </div>
+              </div>
 
-          <div className="mt-4 flex flex-wrap gap-2">
-            {["All", "Pending", "Confirmed", "Rejected", "Cancelled"].map((status) => (
-              <button
-                key={status}
-                type="button"
-                onClick={() => setStatusFilter(status)}
-                className={`rounded-full border px-3 py-2 text-sm font-semibold transition ${
-                  statusFilter === status
-                    ? "border-[#f28c18] bg-[#fff1df] text-[#8a5200]"
-                    : "border-[#ead7bb] bg-white text-slate-700 hover:bg-[#fff8ef]"
-                }`}
-              >
-                {status}
-              </button>
-            ))}
-          </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {["All", "Pending", "Confirmed", "Rejected", "Cancelled"].map((status) => (
+                  <button
+                    key={status}
+                    type="button"
+                    onClick={() => setStatusFilter(status)}
+                    className={`rounded-full border px-3 py-2 text-sm font-semibold transition ${statusFilter === status
+                      ? "border-[#f28c18] bg-[#fff1df] text-[#8a5200]"
+                      : "border-[#ead7bb] bg-white text-slate-700 hover:bg-[#fff8ef]"
+                      }`}
+                  >
+                    {status}
+                  </button>
+                ))}
+              </div>
 
-          <div className="mt-5 overflow-x-auto">
-            <table className="w-full min-w-[860px] text-left text-sm">
-              <thead className="bg-[#fff7eb] text-slate-600">
-                <tr>
-                  <th className="px-4 py-3 font-bold">Receipt</th>
-                  <th className="px-4 py-3 font-bold">Devotee</th>
-                  <th className="px-4 py-3 font-bold">Service</th>
-                  <th className="px-4 py-3 font-bold">Date</th>
-                  <th className="px-4 py-3 font-bold">Amount</th>
-                  <th className="px-4 py-3 font-bold">Payment</th>
-                  <th className="px-4 py-3 font-bold">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  <tr>
-                    <td colSpan="7" className="px-4 py-8 text-center text-slate-500">
-                      Loading bookings...
-                    </td>
-                  </tr>
-                ) : filteredBookings.length ? (
-                  filteredBookings.map((booking) => {
-                    const bill = billMap.get(String(booking._id));
-                    return (
-                      <tr key={booking._id} className="border-b border-[#f2e7d7]">
-                        <td className="px-4 py-3 font-bold text-slate-950">{bill?.referenceNo || `BK-${String(booking._id).slice(-6).toUpperCase()}`}</td>
-                        <td className="px-4 py-3 font-semibold text-slate-800">{booking.devoteeName}</td>
-                        <td className="px-4 py-3">{booking.service}</td>
-                        <td className="px-4 py-3 text-slate-700">{formatDateTime(booking.datetime || booking.createdAt)}</td>
-                        <td className="px-4 py-3 font-bold text-slate-950">{formatCurrency(booking.amount)}</td>
-                        <td className="px-4 py-3">{booking.paymentMethod || "Cash"}</td>
-                        <td className="px-4 py-3">
-                          <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-bold ${statusStyles[booking.status || "Pending"] || statusStyles.Pending}`}>
-                            {(booking.status || "Pending") === "Confirmed" ? <FaCheckCircle /> : <FaClock />}
-                            {booking.status || "Pending"}
-                          </span>
+              <div className="mt-5 overflow-x-auto">
+                <table className="w-full min-w-[860px] text-left text-sm">
+                  <thead className="bg-[#fff7eb] text-slate-600">
+                    <tr>
+                      <th className="px-4 py-3 font-bold">Receipt</th>
+                      <th className="px-4 py-3 font-bold">Devotee</th>
+                      <th className="px-4 py-3 font-bold">Service</th>
+                      <th className="px-4 py-3 font-bold">Date</th>
+                      <th className="px-4 py-3 font-bold">Amount</th>
+                      <th className="px-4 py-3 font-bold">Payment</th>
+                      <th className="px-4 py-3 font-bold">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loading ? (
+                      <tr>
+                        <td colSpan="7" className="px-4 py-8 text-center text-slate-500">
+                          Loading bookings...
                         </td>
                       </tr>
-                    );
-                  })
-                ) : (
-                  <tr>
-                    <td colSpan="7" className="px-4 py-8 text-center text-slate-500">
-                      No bookings found. Add a pooja booking from the form on the left.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </section>
+                    ) : filteredBookings.length ? (
+                      filteredBookings.map((booking) => {
+                        const bill = billMap.get(String(booking._id));
+                        return (
+                          <tr key={booking._id} className="border-b border-[#f2e7d7]">
+                            <td className="px-4 py-3 font-bold text-slate-950">{bill?.referenceNo || `BK-${String(booking._id).slice(-6).toUpperCase()}`}</td>
+                            <td className="px-4 py-3 font-semibold text-slate-800">{booking.devoteeName}</td>
+                            <td className="px-4 py-3">{booking.service}</td>
+                            <td className="px-4 py-3 text-slate-700">{formatDateTime(booking.datetime || booking.createdAt)}</td>
+                            <td className="px-4 py-3 font-bold text-slate-950">{formatCurrency(booking.amount)}</td>
+                            <td className="px-4 py-3">{booking.paymentMethod || "Cash"}</td>
+                            <td className="px-4 py-3">
+                              <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-bold ${statusStyles[booking.status || "Pending"] || statusStyles.Pending}`}>
+                                {(booking.status || "Pending") === "Confirmed" ? <FaCheckCircle /> : <FaClock />}
+                                {booking.status || "Pending"}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    ) : (
+                      <tr>
+                        <td colSpan="7" className="px-4 py-8 text-center text-slate-500">
+                          No bookings found. Add a pooja booking from the form on the left.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </section>
           </div>
         )}
       </div>
