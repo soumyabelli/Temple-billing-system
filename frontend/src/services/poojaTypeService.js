@@ -1,73 +1,58 @@
-const STORAGE_KEY = "poojaTypes";
+import axios from "axios";
 
-const defaultTypes = [
-  { name: "Abhisheka",           price: 801,  duration: "45 mins",  description: "Sacred bathing ritual for the deity.", category: "Abhisheka",  requiredMaterials: "Milk, Honey, Curd", status: "Active" },
-  { name: "Archana",             price: 501,  duration: "20 mins",  description: "Flower offering with chanting of names.", category: "Archana",    requiredMaterials: "Flowers, Incense", status: "Active" },
-  { name: "Special Homa",        price: 1501, duration: "90 mins",  description: "Fire ritual for specific blessings.", category: "Homa",       requiredMaterials: "Wood, Ghee, Rice", status: "Active" },
-  { name: "Satyanarayana Puja",  price: 1201, duration: "60 mins",  description: "Puja dedicated to Lord Satyanarayana.", category: "Puja",       requiredMaterials: "Banana, Coconut", status: "Active" },
-  { name: "Maha Lakshmi Pooja",  price: 2201, duration: "75 mins",  description: "Special puja for prosperity and wealth.", category: "Puja",       requiredMaterials: "Lotus, Gold", status: "Active" },
-];
+const API_BASE = "http://localhost:5000/api/poojas";
 
-const normalizeType = (item) => ({
-  name:              String(item.name || "").trim(),
-  price:             Number(item.price) || 0,
-  duration:          String(item.duration || "").trim(),
-  description:       String(item.description || "").trim(),
-  category:          String(item.category || "").trim(),
-  requiredMaterials: String(item.requiredMaterials || "").trim(),
-  status:            String(item.status || "Active").trim(),
-});
+const getAuthHeaders = () => {
+  const token = localStorage.getItem("token");
+  return { headers: { Authorization: token ? `Bearer ${token}` : "" } };
+};
 
-const normalizeTypes = (items) =>
-  Array.isArray(items)
-    ? items
-        .map(normalizeType)
-        .filter((item) => item.name && item.price > 0)
-        .reduce((acc, item) => {
-          if (!acc.some((existing) => existing.name === item.name)) {
-            acc.push(item);
-          }
-          return acc;
-        }, [])
-    : [];
-
-export const getPoojaTypes = () => {
+export const getPoojaTypes = async () => {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) return defaultTypes;
-    const parsed = JSON.parse(stored);
-    const normalized = normalizeTypes(parsed);
-    return normalized.length ? normalized : defaultTypes;
-  } catch {
-    return defaultTypes;
+    const response = await axios.get(API_BASE, getAuthHeaders());
+    return response.data;
+  } catch (error) {
+    console.error("Failed to fetch pooja types:", error);
+    return [];
   }
 };
 
-export const savePoojaTypes = (types) => {
+export const getPoojaTypeById = async (id) => {
   try {
-    const normalized = normalizeTypes(types);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
-    return normalized;
-  } catch {
-    return types;
+    const response = await axios.get(`${API_BASE}/${id}`, getAuthHeaders());
+    return response.data;
+  } catch (error) {
+    console.error("Failed to fetch pooja type by id:", error);
+    return null;
   }
 };
 
-export const addOrUpdatePoojaType = (poojaType) => {
-  const types = getPoojaTypes();
-  const normalized = normalizeType(poojaType);
-  if (!normalized.name || normalized.price <= 0) return types;
-  const updated = types.filter((t) => t.name !== normalized.name);
-  updated.push(normalized);
-  return savePoojaTypes(updated);
+export const savePoojaType = async (payload) => {
+  try {
+    const response = await axios.post(API_BASE, payload, getAuthHeaders());
+    return response.data.pooja;
+  } catch (error) {
+    console.error("Failed to save pooja type:", error);
+    throw error;
+  }
 };
 
-export const removePoojaType = (name) => {
-  const types = getPoojaTypes();
-  const updated = types.filter((t) => t.name !== String(name).trim());
-  return savePoojaTypes(updated);
+export const updatePoojaType = async (id, payload) => {
+  try {
+    const response = await axios.put(`${API_BASE}/${id}`, payload, getAuthHeaders());
+    return response.data.pooja;
+  } catch (error) {
+    console.error("Failed to update pooja type:", error);
+    throw error;
+  }
 };
 
-export const clearPoojaTypes = () => {
-  localStorage.removeItem(STORAGE_KEY);
+export const removePoojaType = async (id) => {
+  try {
+    await axios.delete(`${API_BASE}/${id}`, getAuthHeaders());
+    return true;
+  } catch (error) {
+    console.error("Failed to remove pooja type:", error);
+    return false;
+  }
 };

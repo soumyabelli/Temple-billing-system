@@ -74,8 +74,8 @@ export const getBillReference = (bill, index = 0) => {
 export const sumBy = (items, selector) =>
   (Array.isArray(items) ? items : []).reduce((sum, item, index) => sum + Number(selector(item, index) || 0), 0);
 
-export const getCashierCatalogs = () => ({
-  poojaTypes: getPoojaTypes(),
+export const getCashierCatalogs = async () => ({
+  poojaTypes: (await getPoojaTypes()).poojas || [],
   donationTypes: getDonationTypes(),
   prasadamTypes: getPrasadamTypes(),
   defaultPrasadamTypes,

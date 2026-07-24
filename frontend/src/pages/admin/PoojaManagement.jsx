@@ -15,7 +15,8 @@ import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 import { getDevoteeDonations } from "../../services/devoteeService";
 import { getDashboardBookings, updateBookingStatusAdmin, getBookingReceipt } from "../../services/bookingService";
-import { getPoojaTypes, savePoojaTypes, removePoojaType } from "../../services/poojaTypeService";
+import { getPoojaTypes, savePoojaType, updatePoojaType, removePoojaType } from "../../services/poojaTypeService";
+import PoojaTypeSetupModal from "./components/PoojaTypeSetupModal";
 
 const formatCurrency = (value) => `Rs ${Number(value || 0).toLocaleString()}`;
 
@@ -36,76 +37,45 @@ const PoojaManagement = () => {
   const [statsData, setStatsData] = useState(null);
   const [donations, setDonations] = useState([]);
   const [query, setQuery] = useState("");
-  const [poojaTypes, setPoojaTypes] = useState(getPoojaTypes());
-  const [typeName, setTypeName] = useState("");
-  const [typePrice, setTypePrice] = useState(501);
-  const [typeRequiredMaterials, setTypeRequiredMaterials] = useState("");
+  const [poojaTypes, setPoojaTypes] = useState([]);
   const [editingType, setEditingType] = useState(null);
-  const [typeMessage, setTypeMessage] = useState("");
-  
-  // State for Manage Pooja Types modal
   const [showTypeModal, setShowTypeModal] = useState(false);
-  
-  // State for Viewing Booking Details modal
   const [viewingBooking, setViewingBooking] = useState(null);
 
-  const loadPoojaTypes = () => setPoojaTypes(getPoojaTypes());
+  const loadPoojaTypes = async () => {
+    const data = await getPoojaTypes();
+    setPoojaTypes(data.poojas || data || []);
+  };
 
-  const handleSaveType = () => {
-    const name = typeName.trim();
-    const price = Number(typePrice);
-    if (!name || price <= 0) {
-      setTypeMessage("Please enter a valid name and price.");
-      return;
+  useEffect(() => {
+    loadPoojaTypes();
+  }, []);
+
+  const handleSaveType = async (payload) => {
+    try {
+      if (editingType) {
+        await updatePoojaType(editingType._id, payload);
+      } else {
+        await savePoojaType(payload);
+      }
+      await loadPoojaTypes();
+      setShowTypeModal(false);
+      setEditingType(null);
+    } catch (err) {
+      alert("Error saving Pooja: " + (err.response?.data?.message || err.message));
     }
-
-    const existingPooja = getPoojaTypes().find((t) => t.name === (editingType || name));
-    const isPriceChanged = existingPooja ? existingPooja.price !== price : true;
-
-    if (isPriceChanged) {
-      axios.post("http://localhost:5000/api/devotee/notifications", {
-        title: existingPooja ? `Pooja Price Updated: ${name}` : `New Pooja Service: ${name}`,
-        message: existingPooja
-          ? `The price of ${name} Pooja has been updated to Rs ${price.toLocaleString()}.`
-          : `A new Pooja service "${name}" is now available for Rs ${price.toLocaleString()}.`,
-        category: "pooja",
-        audienceRole: "devotee",
-        broadcast: true,
-      }).catch((err) => console.error("Failed to broadcast pooja price change notification:", err));
-    }
-
-    const updated = savePoojaTypes([
-      ...getPoojaTypes().filter((type) => type.name !== (editingType || name)),
-      { name, price, requiredMaterials: typeRequiredMaterials },
-    ]);
-    setPoojaTypes(updated);
-    setTypeMessage(editingType ? "Pooja type updated." : "Pooja type added.");
-    setEditingType(null);
-    setTypeName("");
-    setTypePrice(501);
-    setTypeRequiredMaterials("");
-    setShowTypeModal(false);
   };
 
   const handleEditType = (type) => {
-    setTypeName(type.name);
-    setTypePrice(type.price);
-    setTypeRequiredMaterials(type.requiredMaterials || "");
-    setEditingType(type.name);
-    setTypeMessage("");
+    setEditingType(type);
     setShowTypeModal(true);
   };
 
-  const handleDeleteType = (name) => {
-    const updated = removePoojaType(name);
-    setPoojaTypes(updated);
-    if (editingType === name) {
-      setEditingType(null);
-      setTypeName("");
-      setTypePrice(501);
-      setTypeRequiredMaterials("");
+  const handleDeleteType = async (id) => {
+    if (window.confirm("Are you sure you want to delete this Pooja?")) {
+      await removePoojaType(id);
+      await loadPoojaTypes();
     }
-    setTypeMessage("Pooja type removed.");
   };
 
   useEffect(() => {
@@ -385,10 +355,6 @@ const PoojaManagement = () => {
             type="button"
             onClick={() => {
               setEditingType(null);
-              setTypeName("");
-              setTypePrice(501);
-              setTypeRequiredMaterials("");
-              setTypeMessage("");
               setShowTypeModal(true);
             }}
             className="flex items-center gap-1.5 rounded-xl bg-[#1b7f77] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#146059]"
@@ -414,7 +380,7 @@ const PoojaManagement = () => {
                     <td className="px-4 py-3">{`₹ ${type.price.toLocaleString()}`}</td>
                     <td className="px-4 py-3 space-x-2">
                       <button type="button" onClick={() => handleEditType(type)} className="rounded-lg bg-[#f8fafc] px-3 py-2 text-sm font-semibold text-[#1f2937] hover:bg-[#f1f5f9]">Edit</button>
-                      <button type="button" onClick={() => handleDeleteType(type.name)} className="rounded-lg bg-[#fef2f2] px-3 py-2 text-sm font-semibold text-[#b91c1c] hover:bg-[#fee2e2]">Delete</button>
+                      <button type="button" onClick={() => handleDeleteType(type._id)} className="rounded-lg bg-[#fef2f2] px-3 py-2 text-sm font-semibold text-[#b91c1c] hover:bg-[#fee2e2]">Delete</button>
                     </td>
                   </tr>
                 ))
@@ -518,82 +484,14 @@ const PoojaManagement = () => {
 
       {/* ── Manage Pooja Types Popup Modal ───────────────────────────────────── */}
       {showTypeModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-          <div className="w-full max-w-[400px] rounded-3xl border border-[#f0f0f0] bg-white p-6 shadow-2xl relative">
-            <button
-              type="button"
-              onClick={() => {
-                setShowTypeModal(false);
-                setEditingType(null);
-                setTypeName("");
-                setTypePrice(501);
-                setTypeRequiredMaterials("");
-                setTypeMessage("");
-              }}
-              className="absolute top-4 right-4 text-[#858b96] hover:text-[#15141f] text-2xl font-bold"
-            >
-              &times;
-            </button>
-            <h3 className="text-xl font-bold text-[#15141f] mb-4">
-              {editingType ? "Edit Pooja Type" : "Add Pooja Type"}
-            </h3>
-            <label className="block text-sm font-semibold text-[#4f4f4f]">
-              Pooja Name
-              <input
-                type="text"
-                value={typeName}
-                onChange={(e) => setTypeName(e.target.value)}
-                className="mt-2 w-full rounded-3xl border border-[#ded6c6] bg-white px-4 py-3 text-base outline-none focus:border-[#8b5e3c]"
-                placeholder="e.g. Lakshmi Archana"
-              />
-            </label>
-            <label className="mt-4 block text-sm font-semibold text-[#4f4f4f]">
-              Price
-              <input
-                type="number"
-                min="1"
-                value={typePrice}
-                onChange={(e) => setTypePrice(Number(e.target.value))}
-                className="mt-2 w-full rounded-3xl border border-[#ded6c6] bg-white px-4 py-3 text-base outline-none focus:border-[#8b5e3c]"
-                placeholder="Enter price"
-              />
-            </label>
-            <label className="mt-4 block text-sm font-semibold text-[#4f4f4f]">
-              Required Materials (Optional)
-              <textarea
-                value={typeRequiredMaterials}
-                onChange={(e) => setTypeRequiredMaterials(e.target.value)}
-                rows={2}
-                className="mt-2 w-full rounded-2xl border border-[#ded6c6] bg-white px-4 py-3 text-base outline-none focus:border-[#8b5e3c]"
-                placeholder="e.g. Coconut, Flowers, Fruits"
-              />
-            </label>
-            <div className="mt-6 flex items-center gap-2">
-              <button
-                type="button"
-                onClick={handleSaveType}
-                className="w-full rounded-3xl bg-[#1b7f77] py-3 text-sm font-semibold text-white hover:bg-[#146059]"
-              >
-                {editingType ? "Update Type" : "Add Type"}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowTypeModal(false);
-                  setEditingType(null);
-                  setTypeName("");
-                  setTypePrice(501);
-                  setTypeRequiredMaterials("");
-                  setTypeMessage("");
-                }}
-                className="w-full rounded-3xl border border-[#d1d5db] bg-white py-3 text-sm font-semibold text-[#374151]"
-              >
-                Cancel
-              </button>
-            </div>
-            {typeMessage && <p className="mt-3 text-sm text-[#1f6f5d]">{typeMessage}</p>}
-          </div>
-        </div>
+        <PoojaTypeSetupModal
+          editingPooja={editingType}
+          onClose={() => {
+            setShowTypeModal(false);
+            setEditingType(null);
+          }}
+          onSave={handleSaveType}
+        />
       )}
 
       {/* ── Booking Details View Modal ───────────────────────────────────────── */}

@@ -456,10 +456,10 @@ const DevoteeDashboard = () => {
   });
   const [supportSubject, setSupportSubject] = useState("");
   const [supportMessage, setSupportMessage] = useState("");
-  const [poojaTypes, setPoojaTypes] = useState(getPoojaTypes());
-  const [bookingService, setBookingService] = useState(getPoojaTypes()[0]?.name || "Abhisheka");
+  const [poojaTypes, setPoojaTypes] = useState([]);
+  const [bookingService, setBookingService] = useState("Abhisheka");
   const [bookingDatetime, setBookingDatetime] = useState("");
-  const [bookingAmount, setBookingAmount] = useState(getPoojaTypes()[0]?.price || 501);
+  const [bookingAmount, setBookingAmount] = useState(501);
   const [bookingContact, setBookingContact] = useState("");
   const [bookingNotes, setBookingNotes] = useState("");
   const [bookingLoading, setBookingLoading] = useState(false);
@@ -715,15 +715,21 @@ const DevoteeDashboard = () => {
           address: profileRes?.profile?.address || "",
           place: profileRes?.profile?.place || "",
         });
-        setPoojaTypes(getPoojaTypes());
+        
+        const poojaTypesDataRes = await getPoojaTypes();
+        const poojaTypesData = poojaTypesDataRes.poojas || poojaTypesDataRes || [];
+        setPoojaTypes(poojaTypesData);
+        
         setBookingService((prevService) => {
-          const savedTypes = getPoojaTypes();
-          if (!savedTypes.length) return prevService;
-          return savedTypes.some((type) => type.name === prevService) ? prevService : savedTypes[0].name;
+          if (!poojaTypesData.length) return prevService;
+          return poojaTypesData.some((type) => type.name === prevService) ? prevService : poojaTypesData[0].name;
         });
+        
+        // Use functional state update to ensure it gets the newly selected bookingService
         setBookingAmount((prevAmount) => {
-          const selected = getPoojaTypes().find((type) => type.name === bookingService);
-          return selected?.price || prevAmount;
+          // This will be slightly off since bookingService might just have changed, 
+          // but we fix it in the next useEffect that listens to bookingService changes anyway
+          return prevAmount;
         });
         setDonationCategories(getDonationTypes());
         setDonationCategory((prevCategory) => {

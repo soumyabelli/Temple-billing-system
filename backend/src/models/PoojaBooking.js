@@ -46,21 +46,28 @@ const poojaBookingSchema = new mongoose.Schema(
       ref: "Employee",
       required: true,
     },
-    materialsProvidedByTemple: {
-      type: Boolean,
-      default: false,
-    },
-    materialCharge: {
-      type: Number,
-      default: 0,
-    },
-    materialsConsumed: [
+    templeArrangement: { type: Boolean, default: false },
+    templeMaterialCharge: { type: Number, default: 0 },
+    templeMaterialRequests: [
       {
         item: { type: mongoose.Schema.Types.ObjectId, ref: "InventoryItem" },
         itemName: String,
-        quantity: Number,
+        qty: String, // E.g. '2 Kg'
       }
     ],
+    materialStatus: {
+      type: String,
+      enum: ["N/A", "Pending", "Approved", "Reserved", "Ready", "Issued", "Consumed", "Cancelled"],
+      default: "N/A",
+    },
+    priestChecklist: {
+      devoteeArrived: { type: Boolean, default: false },
+      templeMaterialsReceived: { type: Boolean, default: false },
+      devoteeMaterialsChecked: { type: Boolean, default: false },
+      poojaStarted: { type: Boolean, default: false },
+      poojaCompleted: { type: Boolean, default: false },
+      inventoryConsumed: { type: Boolean, default: false },
+    },
   },
   {
     timestamps: true,

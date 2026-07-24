@@ -45,7 +45,7 @@ const buildMinDateTime = () => {
 const BookingPayments = () => {
   const navigate = useNavigate();
   const { loadNotifications } = useNotifications();
-  const [poojaTypes, setPoojaTypes] = useState(getPoojaTypes());
+  const [poojaTypes, setPoojaTypes] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [bills, setBills] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -54,22 +54,31 @@ const BookingPayments = () => {
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [showHistory, setShowHistory] = useState(false);
-  const [form, setForm] = useState(() => {
-    const initialService = getPoojaTypes()[0];
-    return {
-      ...emptyForm,
-      service: initialService?.name || "",
-      amount: initialService?.price || "",
-      datetime: buildMinDateTime(),
-    };
+  const [form, setForm] = useState({
+    ...emptyForm,
+    datetime: buildMinDateTime(),
   });
 
   const loadData = async () => {
     setLoading(true);
     try {
-      const [bookingRows, billRows] = await Promise.allSettled([fetchBookings(), fetchBills()]);
+      const [bookingRows, billRows, poojaRes] = await Promise.allSettled([fetchBookings(), fetchBills(), getPoojaTypes()]);
       setBookings(bookingRows.status === "fulfilled" ? bookingRows.value : []);
       setBills(billRows.status === "fulfilled" ? billRows.value : []);
+      
+      const loadedPoojas = poojaRes.status === "fulfilled" ? (poojaRes.value.poojas || poojaRes.value || []) : [];
+      setPoojaTypes(loadedPoojas);
+      
+      if (loadedPoojas.length > 0) {
+        setForm((prev) => {
+           if (prev.service) return prev;
+           return {
+             ...prev,
+             service: loadedPoojas[0].name,
+             amount: loadedPoojas[0].price,
+           };
+        });
+      }
     } catch (error) {
       setBookings([]);
       setBills([]);
@@ -81,7 +90,11 @@ const BookingPayments = () => {
   useEffect(() => {
     loadData();
 
-    const syncPoojaTypes = () => setPoojaTypes(getPoojaTypes());
+    const syncPoojaTypes = async () => {
+       const res = await getPoojaTypes();
+       setPoojaTypes(res.poojas || res || []);
+    };
+    
     const onStorage = (event) => {
       if (event.key === "poojaTypes") {
         syncPoojaTypes();

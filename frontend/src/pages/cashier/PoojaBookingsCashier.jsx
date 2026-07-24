@@ -9,8 +9,8 @@ import { getDevoteeNotifications } from "../../services/devoteeService";
 
 // Service layer abstraction (UI will stay unchanged when backend pooja catalog is added)
 async function getPoojaServices() {
-  // Temporary source: localStorage based `poojaTypeService.js`
-  return getPoojaTypes();
+  const res = await getPoojaTypes();
+  return res.poojas || res || [];
 }
 
 const formatDateTimeLocalValue = (d) => {
