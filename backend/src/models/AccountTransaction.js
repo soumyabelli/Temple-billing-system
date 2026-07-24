@@ -64,7 +64,7 @@ const accountTransactionSchema = new mongoose.Schema(
     },
     referenceModel: {
       type: String,
-      enum: ["PoojaBooking", "Donation", "Room", "PrasadamOrder", "PayrollRecord", "BankInterest", "RestockHistory", "Asset", "RepairRequest"],
+      enum: ["PoojaBooking", "Donation", "Room", "PrasadamOrder", "PayrollRecord", "BankInterest", "RestockHistory", "Asset", "RepairRequest", "InventoryItem", "InventoryIssue"],
     },
     bankName: {
       type: String,

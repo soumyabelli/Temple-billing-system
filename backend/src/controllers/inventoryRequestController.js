@@ -179,21 +179,24 @@ exports.updateInventoryRequestStatus = async (req, res) => {
         return res.status(400).json({ success: false, message: "Cannot approve a rejected request." });
       }
 
-      const inventoryItem = await InventoryItem.findOne({
-        name: { $regex: new RegExp(`^${request.itemName}$`, "i") },
+      const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const inventoryItems = await InventoryItem.find({
+        name: { $regex: new RegExp(`^${escapeRegExp(request.itemName)}$`, "i") },
       });
 
-      if (!inventoryItem) {
+      if (!inventoryItems || inventoryItems.length === 0) {
         return res.status(404).json({ success: false, message: "Inventory item not found." });
       }
 
       const parsedQty = parseFloat(request.quantity);
-      if (inventoryItem.availableStock < parsedQty) {
+      let inventoryItem = inventoryItems.find(item => item.availableStock >= parsedQty);
+
+      if (!inventoryItem) {
         return res.status(400).json({ success: false, message: "Insufficient inventory stock." });
       }
 
       inventoryItem.availableStock -= parsedQty;
-      inventoryItem.issuedStock += parsedQty;
+      inventoryItem.issuedStock = (inventoryItem.issuedStock || 0) + parsedQty;
       await inventoryItem.save();
 
       request.status = "Approved";

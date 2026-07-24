@@ -11,24 +11,24 @@ const getDashboardMetrics = async (req, res) => {
     let totalValue = 0;
     let lowStockCount = 0;
     let outOfStockCount = 0;
-    let expiringCount = 0; 
+    let expiringCount = 0;
     const next30Days = new Date();
     next30Days.setDate(today.getDate() + 30);
-    
+
     let totalDamaged = 0;
 
     items.forEach(item => {
       totalValue += item.availableStock * (item.lastPurchasePrice || 0);
       if (item.availableStock === 0) outOfStockCount++;
       else if (item.availableStock <= (item.reorderLevel || item.minimumStock)) lowStockCount++;
-      
+
       if (item.expiryDate && item.expiryDate <= next30Days) expiringCount++;
       totalDamaged += item.damagedStock;
     });
 
     const todaysRestocks = await RestockHistory.find({ date: { $gte: today } });
     const todaysPurchasesCount = todaysRestocks.length;
-    
+
     const todaysLogs = await InventoryLog.find({ date: { $gte: today }, action: "Consumed" });
     const todaysConsumptionCount = todaysLogs.length;
 
@@ -43,7 +43,7 @@ const getDashboardMetrics = async (req, res) => {
         damagedItems: totalDamaged,
         todaysPurchases: todaysPurchasesCount,
         todaysConsumption: todaysConsumptionCount,
-        pendingRequests: 0 
+        pendingRequests: 0
       }
     });
   } catch (error) {
@@ -55,7 +55,7 @@ const getInventoryReports = async (req, res) => {
   try {
     const { type } = req.query; // daily, weekly, monthly, annual, valuation
     const today = new Date();
-    
+
     if (type === "valuation") {
       const items = await InventoryItem.find();
       const report = items.map(item => ({
@@ -70,7 +70,7 @@ const getInventoryReports = async (req, res) => {
     }
 
     let startDate = new Date();
-    if (type === "daily") startDate.setHours(0,0,0,0);
+    if (type === "daily") startDate.setHours(0, 0, 0, 0);
     else if (type === "weekly") startDate.setDate(today.getDate() - 7);
     else if (type === "monthly") startDate.setMonth(today.getMonth() - 1);
     else if (type === "annual") startDate.setFullYear(today.getFullYear() - 1);
@@ -93,7 +93,7 @@ const getItemDetails = async (req, res) => {
 
     const purchaseHistory = await RestockHistory.find({ item: id }).sort({ date: -1 });
     const stockMovement = await InventoryLog.find({ item: id }).sort({ date: -1 }).populate("user", "name role");
-    
+
     const AccountTransaction = require("../models/AccountTransaction");
     const restockIds = purchaseHistory.map(r => r._id);
     const financialTransactions = await AccountTransaction.find({

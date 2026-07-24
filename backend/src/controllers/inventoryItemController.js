@@ -89,7 +89,8 @@ const createInventoryItem = async (req, res) => {
     return res.status(201).json({ success: true, item });
   } catch (error) {
     if (error.code === 11000) {
-      return res.status(409).json({ success: false, message: "An item with this name already exists." });
+      const errorCategory = clean(category) || "Miscellaneous Items";
+      return res.status(409).json({ success: false, message: `${clean(name)} already exists in the '${errorCategory}' category. Please edit the existing item instead of creating a duplicate.` });
     }
     return res.status(500).json({ success: false, message: error.message });
   }
@@ -142,7 +143,9 @@ const updateInventoryItem = async (req, res) => {
     return res.json({ success: true, item });
   } catch (error) {
     if (error.code === 11000) {
-      return res.status(409).json({ success: false, message: "An item with this name already exists." });
+      const errorName = name !== undefined ? clean(name) : existingItem?.name;
+      const errorCategory = category !== undefined ? clean(category) : existingItem?.category;
+      return res.status(409).json({ success: false, message: `${errorName} already exists in the '${errorCategory}' category. Please edit the existing item instead of creating a duplicate.` });
     }
     return res.status(500).json({ success: false, message: error.message });
   }

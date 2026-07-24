@@ -179,7 +179,7 @@ const InventoryManagement = () => {
       await axios.put(`${API_BASE}/admin/inventory-requests/${id}/status`, { status: "Approved" }, { headers });
       fetchData();
     } catch (err) {
-      alert("Error approving");
+      alert(err.response?.data?.message || "Error approving");
     }
   };
 

@@ -15,7 +15,6 @@ const inventoryItemSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      unique: true,
     },
     unit: {
       type: String,
@@ -108,6 +107,8 @@ const inventoryItemSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+inventoryItemSchema.index({ name: 1, category: 1 }, { unique: true });
 
 // Virtual: compute stock status
 inventoryItemSchema.virtual("status").get(function () {
