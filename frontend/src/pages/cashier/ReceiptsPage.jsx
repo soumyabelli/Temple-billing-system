@@ -10,6 +10,7 @@ import {
   FaSyncAlt,
 } from "react-icons/fa";
 import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 import {
   Area,
   AreaChart,
@@ -88,6 +89,11 @@ const ReceiptsPage = () => {
   // Ledger state
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState("All");
+  const [showAllReceipts, setShowAllReceipts] = useState(false);
+
+  useEffect(() => {
+    setShowAllReceipts(false);
+  }, [tab, query]);
 
   // Reports state
   const [range, setRange] = useState("monthly");
@@ -380,7 +386,81 @@ const ReceiptsPage = () => {
     doc.save(`receipt-${refNo}.pdf`);
   };
 
-  // Export CSV Handlers
+  const renderTableRow = (bill, index) => {
+    const type = inferBillType(bill);
+    return (
+      <tr key={bill._id || bill.referenceNo || index} className="border-b border-[#f2e7d7]">
+        <td className="px-4 py-3 font-bold text-slate-950">{getBillReference(bill, index)}</td>
+        <td className="px-4 py-3 font-semibold text-slate-800">{bill.devoteeName}</td>
+        <td className="px-4 py-3">{type}</td>
+        <td className="px-4 py-3">{bill.sevaType}</td>
+        <td className="px-4 py-3 font-bold text-slate-950">{formatCurrency(bill.amount)}</td>
+        <td className="px-4 py-3">{bill.paymentMode || "-"}</td>
+        <td className="px-4 py-3 text-slate-700">{formatDateTime(bill.billDate || bill.createdAt)}</td>
+        <td className="px-4 py-3">
+          <span
+            className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${
+              statusTone[bill.status || "Paid"] || statusTone.Paid
+            }`}
+          >
+            {bill.status || "Paid"}
+          </span>
+        </td>
+        <td className="px-4 py-3 text-center">
+          <div className="flex items-center justify-center gap-2">
+            {(bill.status === "Pending") && (
+              <button
+                type="button"
+                onClick={() => handleMarkAsPaid(bill._id)}
+                className="rounded-lg bg-[#166534] px-3 py-1 text-xs font-bold text-white transition hover:bg-[#15803d]"
+                title="Mark as Paid"
+              >
+                Mark as Paid
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => handlePrintReceipt(bill, index)}
+              className="inline-flex items-center gap-1 rounded-lg border border-[#f0c58f] bg-white px-3 py-1 text-xs font-bold text-slate-900 transition hover:bg-[#fff8ef]"
+              title="Print Receipt"
+            >
+              <FaPrint className="text-xs" /> Print
+            </button>
+          </div>
+        </td>
+      </tr>
+    );
+  };
+
+  // Export CSV and PDF Handlers
+  const handleDownloadLedgerPdf = () => {
+    const doc = new jsPDF();
+    doc.text("Receipt Ledger", 14, 15);
+    const tableColumn = ["Receipt", "Devotee", "Type", "Service", "Amount", "Payment", "Status", "Date"];
+    const tableRows = [];
+
+    filteredBills.forEach((bill, idx) => {
+      const ticketData = [
+        getBillReference(bill, idx),
+        bill.devoteeName || "-",
+        inferBillType(bill),
+        bill.sevaType || "-",
+        formatCurrency(bill.amount),
+        bill.paymentMode || "-",
+        bill.status || "Paid",
+        formatDateTime(bill.billDate || bill.createdAt)
+      ];
+      tableRows.push(ticketData);
+    });
+
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 20,
+    });
+    doc.save(`cashier-receipts-ledger.pdf`);
+  };
+
   const handleDownloadLedgerCsv = () => {
     const rows = [
       ["Receipt", "Devotee", "Type", "Service", "Amount", "Payment", "Status", "Date"],
@@ -506,13 +586,22 @@ const ReceiptsPage = () => {
           >
             Refresh Ledger
           </button>
-          <button
-            type="button"
-            onClick={handleDownloadLedgerCsv}
-            className="rounded-full bg-[#f28c18] px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:opacity-95"
-          >
-            Download CSV
-          </button>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={handleDownloadLedgerCsv}
+              className="rounded-full bg-[#f28c18] px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:opacity-95"
+            >
+              Download CSV
+            </button>
+            <button
+              type="button"
+              onClick={handleDownloadLedgerPdf}
+              className="rounded-full bg-[#f28c18] px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:opacity-95"
+            >
+              Download PDF
+            </button>
+          </div>
         </>
       ),
     };
@@ -545,7 +634,7 @@ const ReceiptsPage = () => {
       </section>
 
       {/* RENDER ACTIVE TAB */}
-      {activeSection === "ledger" && (
+      {activeSection === "ledger" && !showAllReceipts && (
         <>
           <section className="rounded-b-[22px] border-x border-b border-[#f0d3a2] bg-white/95 p-5 shadow-sm">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
@@ -571,7 +660,14 @@ const ReceiptsPage = () => {
                   onClick={handleDownloadLedgerCsv}
                   className="inline-flex items-center gap-2 rounded-2xl border border-[#ead7bb] bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition hover:bg-[#fff8ef]"
                 >
-                  <FaDownload /> Export
+                  <FaDownload /> CSV
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDownloadLedgerPdf}
+                  className="inline-flex items-center gap-2 rounded-2xl border border-[#ead7bb] bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition hover:bg-[#fff8ef]"
+                >
+                  <FaDownload /> PDF
                 </button>
               </div>
             </div>
@@ -629,51 +725,7 @@ const ReceiptsPage = () => {
                         </td>
                       </tr>
                     ) : filteredBills.length ? (
-                      filteredBills.map((bill, index) => {
-                        const type = inferBillType(bill);
-                        return (
-                          <tr key={bill._id || bill.referenceNo || index} className="border-b border-[#f2e7d7]">
-                            <td className="px-4 py-3 font-bold text-slate-950">{getBillReference(bill, index)}</td>
-                            <td className="px-4 py-3 font-semibold text-slate-800">{bill.devoteeName}</td>
-                            <td className="px-4 py-3">{type}</td>
-                            <td className="px-4 py-3">{bill.sevaType}</td>
-                            <td className="px-4 py-3 font-bold text-slate-950">{formatCurrency(bill.amount)}</td>
-                            <td className="px-4 py-3">{bill.paymentMode || "-"}</td>
-                            <td className="px-4 py-3 text-slate-700">{formatDateTime(bill.billDate || bill.createdAt)}</td>
-                            <td className="px-4 py-3">
-                              <span
-                                className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${
-                                  statusTone[bill.status || "Paid"] || statusTone.Paid
-                                }`}
-                              >
-                                {bill.status || "Paid"}
-                              </span>
-                            </td>
-                            <td className="px-4 py-3 text-center">
-                              <div className="flex items-center justify-center gap-2">
-                                {(bill.status === "Pending") && (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleMarkAsPaid(bill._id)}
-                                    className="rounded-lg bg-[#166534] px-3 py-1 text-xs font-bold text-white transition hover:bg-[#15803d]"
-                                    title="Mark as Paid"
-                                  >
-                                    Mark as Paid
-                                  </button>
-                                )}
-                                <button
-                                  type="button"
-                                  onClick={() => handlePrintReceipt(bill, index)}
-                                  className="inline-flex items-center gap-1 rounded-lg border border-[#f0c58f] bg-white px-3 py-1 text-xs font-bold text-slate-900 transition hover:bg-[#fff8ef]"
-                                  title="Print Receipt"
-                                >
-                                  <FaPrint className="text-xs" /> Print
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })
+                      filteredBills.slice(0, 5).map((bill, index) => renderTableRow(bill, index))
                     ) : (
                       <tr>
                         <td colSpan="9" className="px-4 py-8 text-center text-slate-500">
@@ -683,6 +735,17 @@ const ReceiptsPage = () => {
                     )}
                   </tbody>
                 </table>
+                {filteredBills.length > 5 && (
+                  <div className="mt-6 flex justify-center pb-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowAllReceipts(true)}
+                      className="rounded-full bg-[#f28c18] px-6 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#d97706]"
+                    >
+                      View all {filteredBills.length} receipts
+                    </button>
+                  </div>
+                )}
               </div>
             </section>
 
@@ -715,6 +778,64 @@ const ReceiptsPage = () => {
             </aside>
           </div>
         </>
+      )}
+
+      {activeSection === "ledger" && showAllReceipts && (
+        <section className="rounded-[22px] border border-[#f0d3a2] bg-white/95 p-5 shadow-sm mt-4">
+          <div className="mb-4">
+            <button
+              onClick={() => setShowAllReceipts(false)}
+              className="text-[#f28c18] text-sm font-bold hover:underline inline-flex items-center gap-1"
+            >
+              &larr; Back to receipt page
+            </button>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-2xl font-extrabold text-slate-950">All {tab === "All" ? "Receipts" : `${tab} Receipts`}</h2>
+              <p className="mt-1 text-sm font-medium text-slate-700">
+                Complete list of filtered receipts.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleDownloadLedgerCsv}
+                className="inline-flex items-center gap-2 rounded-2xl border border-[#ead7bb] bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition hover:bg-[#fff8ef]"
+              >
+                <FaDownload /> CSV
+              </button>
+              <button
+                type="button"
+                onClick={handleDownloadLedgerPdf}
+                className="inline-flex items-center gap-2 rounded-2xl border border-[#ead7bb] bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition hover:bg-[#fff8ef]"
+              >
+                <FaDownload /> PDF
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-5 overflow-x-auto">
+            <table className="w-full min-w-[920px] text-left text-sm">
+              <thead className="bg-[#fff7eb] text-slate-600">
+                <tr>
+                  <th className="px-4 py-3 font-bold">Receipt</th>
+                  <th className="px-4 py-3 font-bold">Devotee</th>
+                  <th className="px-4 py-3 font-bold">Type</th>
+                  <th className="px-4 py-3 font-bold">Service</th>
+                  <th className="px-4 py-3 font-bold">Amount</th>
+                  <th className="px-4 py-3 font-bold">Payment</th>
+                  <th className="px-4 py-3 font-bold">Date</th>
+                  <th className="px-4 py-3 font-bold">Status</th>
+                  <th className="px-4 py-3 font-bold text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredBills.map((bill, index) => renderTableRow(bill, index))}
+              </tbody>
+            </table>
+          </div>
+        </section>
       )}
 
       {activeSection === "payments" && (
