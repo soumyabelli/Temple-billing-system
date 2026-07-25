@@ -34,7 +34,31 @@ export const sidebarItems = [
   },
   { title: "Billing & Payments", icon: MdOutlinePayments, path: "/admin/billing" },
   { title: "Prasada", icon: FaBoxes, path: "/admin/prasada/booked" },
-  { title: "Inventory", icon: FaBoxes, path: "/admin/inventory" },
+  {
+    title: "Inventory ERP",
+    icon: FaBoxes,
+    path: "/admin/inventory/dashboard",
+    subItems: [
+      { title: "Dashboard", path: "/admin/inventory/dashboard" },
+      { title: "Item Master", path: "/admin/inventory/items" },
+      { title: "Categories", path: "/admin/inventory/categories" },
+      { title: "Suppliers", path: "/admin/inventory/suppliers" },
+      { title: "Purchase Orders", path: "/admin/inventory/purchase-orders" },
+      { title: "Goods Received (GRN)", path: "/admin/inventory/grn" },
+      { title: "Store Room", path: "/admin/inventory/store-room" },
+      { title: "Inventory Requests", path: "/admin/inventory/requests" },
+      { title: "Material Kits", path: "/admin/inventory/material-kits" },
+      { title: "Kitchen Recipes", path: "/admin/inventory/kitchen-recipes" },
+      { title: "Asset Management", path: "/admin/inventory/assets" },
+      { title: "Repairs", path: "/admin/inventory/repairs" },
+      { title: "Damage & Write-Off", path: "/admin/inventory/damage" },
+      { title: "Expiry Management", path: "/admin/inventory/expiry" },
+      { title: "Stock Audit", path: "/admin/inventory/audit" },
+      { title: "Stock Transfers", path: "/admin/inventory/transfers" },
+      { title: "Reports", path: "/admin/inventory/reports" },
+      { title: "Settings", path: "/admin/inventory/settings" }
+    ]
+  },
   { title: "Room Allotment", icon: MdMeetingRoom, path: "/admin/rooms" },
   {
     title: "Employee Management",

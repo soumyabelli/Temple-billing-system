@@ -19,7 +19,9 @@ const accountTransactionSchema = new mongoose.Schema(
         "Bank Interest",
         "Inventory",
         "Asset",
-        "Repair"
+        "Repair",
+        "Kitchen",
+        "Cleaning"
       ],
       required: true,
     },
@@ -64,7 +66,7 @@ const accountTransactionSchema = new mongoose.Schema(
     },
     referenceModel: {
       type: String,
-      enum: ["PoojaBooking", "Donation", "Room", "PrasadamOrder", "PayrollRecord", "BankInterest", "RestockHistory", "Asset", "RepairRequest", "InventoryItem", "InventoryIssue"],
+      enum: ["PoojaBooking", "Donation", "Room", "PrasadamOrder", "PayrollRecord", "BankInterest", "RestockHistory", "Asset", "RepairRequest", "InventoryItem", "InventoryIssue", "PurchaseOrder", "GoodsReceivedNote", "DamageNote", "RepairTicket"],
     },
     bankName: {
       type: String,

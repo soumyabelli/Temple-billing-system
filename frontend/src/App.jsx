@@ -37,6 +37,10 @@ import SettingsManagement from "./pages/admin/SettingsManagement";
 import FestivalsEventsManagement from "./pages/admin/FestivalsEventsManagement";
 import BillingManagement from "./pages/admin/BillingManagement";
 import InventoryManagement from "./pages/admin/InventoryManagement";
+import AdminInventoryDashboard from "./pages/admin/InventoryERP/AdminInventoryDashboard";
+import AdminItemMaster from "./pages/admin/InventoryERP/AdminItemMaster";
+import AdminPurchaseOrders from "./pages/admin/InventoryERP/AdminPurchaseOrders";
+import AdminGRN from "./pages/admin/InventoryERP/AdminGRN";
 import PrasadaBooked from "./pages/admin/PrasadaBooked";
 import AllPrasadaBookings from "./pages/admin/AllPrasadaBookings";
 import NotificationsCenter from "./pages/admin/NotificationsCenter";
@@ -68,6 +72,8 @@ import StaffDashboard from "./pages/staff/StaffDashboard";
 import LeaveHistory from "./pages/staff/LeaveHistory";
 import Attendance from "./pages/staff/Attendance";
 import LeaveRequest from "./pages/staff/LeaveRequest";
+import KitchenDashboard from "./pages/staff/KitchenDashboard";
+import StoreDashboard from "./pages/staff/StoreDashboard";
 import DevoteeDashboard from "./pages/devotee/DevoteeDashboard";
 
 import LoginPage from "./pages/auth/LoginPage";
@@ -189,11 +195,52 @@ function App() {
         }
       />
       <Route
-        path="/admin/inventory"
+        path="/admin/inventory/dashboard"
         element={
           <ProtectedRoute allowedRoles={["admin"]}>
             <AdminLayout>
-              <InventoryManagement />
+              <AdminInventoryDashboard />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/inventory/items"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminLayout>
+              <AdminItemMaster />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/inventory/purchase-orders"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminLayout>
+              <AdminPurchaseOrders />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/inventory/grn"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminLayout>
+              <AdminGRN />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/inventory/*"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminLayout>
+              {/* Fallback to dashboard for unhandled ERP routes */}
+              <AdminInventoryDashboard />
             </AdminLayout>
           </ProtectedRoute>
         }
@@ -748,6 +795,30 @@ function App() {
       />
 
       {/* STAFF */}
+      <Route
+        path="/staff/store"
+        element={
+          <ProtectedRoute allowedRoles={["staff"]}>
+            <StoreDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/staff/kitchen"
+        element={
+          <ProtectedRoute allowedRoles={["staff"]}>
+            <KitchenDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/staff/attendance"
+        element={
+          <ProtectedRoute allowedRoles={["staff"]}>
+            <StaffDashboard />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/staff"
         element={

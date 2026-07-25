@@ -83,7 +83,6 @@ import {
   reportDonationSegments,
   reportExpenseSegments,
   reportRevenueGrowth,
-  recentTransactions,
 } from "../accountantDashboardData";
 
 const slugifyStatus = (value) => String(value || "").toLowerCase().replace(/\s+/g, "-");

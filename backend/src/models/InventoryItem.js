@@ -16,6 +16,24 @@ const inventoryItemSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    itemCode: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
+    barcode: {
+      type: String,
+      trim: true,
+    },
+    qrCode: {
+      type: String,
+      trim: true,
+    },
+    type: {
+      type: String,
+      enum: ["Raw Material", "Finished Good", "Asset", "Consumable", "Other"],
+      default: "Consumable",
+    },
     unit: {
       type: String,
       required: true,
@@ -75,6 +93,51 @@ const inventoryItemSchema = new mongoose.Schema(
       min: 0,
       default: 0,
     },
+    maximumStock: {
+      type: Number,
+      min: 0,
+      default: 0,
+    },
+    batchRequired: {
+      type: Boolean,
+      default: false,
+    },
+    expiryRequired: {
+      type: Boolean,
+      default: false,
+    },
+    shelfLifeDays: {
+      type: Number,
+      default: 0,
+    },
+    purchasePrice: {
+      type: Number,
+      default: 0,
+    },
+    sellingPrice: {
+      type: Number,
+      default: 0,
+    },
+    gstRate: {
+      type: Number,
+      default: 0,
+    },
+    preferredSupplier: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "InventorySupplier",
+    },
+    expenseHead: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "AccountHead",
+    },
+    incomeHead: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "AccountHead",
+    },
+    inventoryAccount: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "AccountHead",
+    },
     category: {
       type: String,
       enum: ["Pooja Items", "Prasadam Ingredients", "Cleaning Materials", "Office & Stationery", "Electrical & Maintenance", "Festival Materials", "Miscellaneous Items", "Cooking / Annaprasada"],
@@ -91,15 +154,6 @@ const inventoryItemSchema = new mongoose.Schema(
     },
     expiryDate: {
       type: Date,
-    },
-    lastSupplier: {
-      type: String,
-    },
-    lastPurchasePrice: {
-      type: Number,
-    },
-    lastInvoiceNumber: {
-      type: String,
     },
     lastPurchaseDate: {
       type: Date,
