@@ -3,9 +3,9 @@ const router = express.Router();
 const accountController = require("../controllers/accountController");
 const { authenticate, authorizeRoles } = require("../middleware/authMiddleware");
 
-// Expense Categories
-router.get("/categories", authenticate, accountController.getExpenseCategories);
-router.post("/categories", authenticate, accountController.createExpenseCategory);
+// Account Heads
+router.get("/account-heads", authenticate, accountController.getAccountHeads);
+router.post("/account-heads", authenticate, accountController.createAccountHead);
 
 // Transactions
 router.get("/transactions", authenticate, accountController.getTransactions);

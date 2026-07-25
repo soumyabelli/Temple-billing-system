@@ -218,10 +218,24 @@ const updateBookingStatus = async (req, res) => {
       await recordTransaction({
         transactionType: "Credit",
         source: "Room Booking",
-        category: booking.service || "Room Booking",
+        category: "Room Booking Income",
         amount: booking.amount,
         paymentMethod: booking.paymentMethod || "System",
         description: `Booking: ${booking.bookingNumber}`,
+        referenceId: booking._id,
+        referenceModel: "Booking",
+        recordedBy: req.user ? req.user.id : null,
+        status: "Completed"
+      });
+    } else if (previousStatus !== "Cancelled" && status === "Cancelled") {
+      const { recordTransaction } = require("../utils/accountTransactionHelper");
+      await recordTransaction({
+        transactionType: "Debit",
+        source: "Room Booking",
+        category: "Refund Account",
+        amount: booking.amount,
+        paymentMethod: booking.paymentMethod || "System",
+        description: `Refund for Cancelled Room Booking: ${booking.bookingNumber}`,
         referenceId: booking._id,
         referenceModel: "Booking",
         recordedBy: req.user ? req.user.id : null,

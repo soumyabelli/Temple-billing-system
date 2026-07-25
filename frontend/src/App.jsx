@@ -43,10 +43,9 @@ import NotificationsCenter from "./pages/admin/NotificationsCenter";
 import RoomAllotment from "./pages/admin/RoomAllotment";
 import AdminLayout from "./layouts/AdminLayout";
 import AccountsDashboard from "./pages/admin/Accounts/AccountsDashboard";
-import DebitCreditManagement from "./pages/admin/Accounts/DebitCreditManagement";
-import BankInterest from "./pages/admin/Accounts/BankInterest";
 import FinancialReports from "./pages/admin/Accounts/FinancialReports";
 import ExpenseCategories from "./pages/admin/Accounts/ExpenseCategories";
+import ProfitLossView from "./pages/accountant/components/ProfitLossView";
 
 import CashierLayout from "./layouts/CashierLayout";
 
@@ -262,21 +261,11 @@ function App() {
         }
       />
       <Route
-        path="/admin/accounts/debit-credit"
+        path="/admin/accounts/profit-loss"
         element={
-          <ProtectedRoute allowedRoles={["admin", "accountant"]}>
+          <ProtectedRoute allowedRoles={["admin"]}>
             <AdminLayout>
-              <DebitCreditManagement />
-            </AdminLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/accounts/bank-interest"
-        element={
-          <ProtectedRoute allowedRoles={["admin", "accountant"]}>
-            <AdminLayout>
-              <BankInterest />
+              <div className="p-4 md:p-8"><ProfitLossView /></div>
             </AdminLayout>
           </ProtectedRoute>
         }
@@ -292,11 +281,21 @@ function App() {
         }
       />
       <Route
-        path="/admin/accounts/expense-categories"
+        path="/admin/accounts/account-heads"
         element={
-          <ProtectedRoute allowedRoles={["admin", "accountant"]}>
+          <ProtectedRoute allowedRoles={["admin"]}>
             <AdminLayout>
               <ExpenseCategories />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/accounts/settings"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminLayout>
+              <SettingsManagement />
             </AdminLayout>
           </ProtectedRoute>
         }

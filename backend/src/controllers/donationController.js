@@ -13,6 +13,7 @@ const createDonation = async (req, res) => {
       contactNumber,
       transactionId,
       notes,
+      status = "Completed",
     } = req.body;
 
     if (!donorName || !amount) {
@@ -47,6 +48,7 @@ const createDonation = async (req, res) => {
       paymentMethod,
       transactionId,
       notes,
+      status,
     });
 
     await Bill.create({
@@ -58,9 +60,34 @@ const createDonation = async (req, res) => {
       referenceNo: `DN-${String(donation._id).slice(-6).toUpperCase()}`,
       sourceId: donation._id.toString(),
       notes: notes || "",
-      status: "Pending",
+      status: status === "Completed" || status === "Collected" ? "Paid" : "Pending",
       billDate: new Date(),
     });
+
+    if (status === "Completed" || status === "Collected") {
+      const { recordTransaction } = require("../utils/accountTransactionHelper");
+
+      // Determine Fund based on category
+      let accountHead = "Donation Income";
+      const cat = (category || "").toLowerCase();
+      if (cat.includes("annadan") || cat.includes("annadanam")) accountHead = "Annadanam Donation";
+      else if (cat.includes("hundi")) accountHead = "Hundi Collection";
+      else if (cat.includes("festival")) accountHead = "Festival Income";
+      else if (cat.includes("general")) accountHead = "Donation Income";
+
+      await recordTransaction({
+        transactionType: "Credit",
+        source: "Donation",
+        category: accountHead,
+        amount: numericAmount,
+        paymentMethod: paymentMethod || "UPI",
+        description: `Donation by ${donorName.trim()}${notes ? ' - ' + notes : ''}`,
+        referenceId: donation._id,
+        referenceModel: "Donation",
+        recordedBy: req.user ? req.user.id : null,
+        status: "Completed"
+      });
+    }
 
     res.status(201).json({
       success: true,
@@ -182,10 +209,19 @@ const updateDonationStatus = async (req, res) => {
 
     if (previousStatus !== status && (status === "Collected" || status === "Completed")) {
       const { recordTransaction } = require("../utils/accountTransactionHelper");
+
+      // Determine Fund based on category
+      let accountHead = "Donation Income";
+      const cat = (donation.category || "").toLowerCase();
+      if (cat.includes("annadan") || cat.includes("annadanam")) accountHead = "Annadanam Donation";
+      else if (cat.includes("hundi")) accountHead = "Hundi Collection";
+      else if (cat.includes("festival")) accountHead = "Festival Income";
+      else if (cat.includes("general")) accountHead = "Donation Income";
+
       await recordTransaction({
         transactionType: "Credit",
         source: "Donation",
-        category: donation.category || "General",
+        category: accountHead,
         amount: donation.amount,
         paymentMethod: donation.paymentMethod,
         description: `Donation by ${donation.donorName}`,

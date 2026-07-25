@@ -138,6 +138,20 @@ const cancelBooking = async (req, res) => {
     booking.status = "Cancelled";
     await booking.save();
 
+    const { recordTransaction } = require("../utils/accountTransactionHelper");
+    await recordTransaction({
+      transactionType: "Debit",
+      source: "Pooja Booking",
+      category: "Refund Account",
+      amount: booking.amount,
+      paymentMethod: booking.paymentMethod,
+      description: `Refund for Cancelled Pooja Booking: ${booking.bookingNumber}`,
+      referenceId: booking._id,
+      referenceModel: "PoojaBooking",
+      recordedBy: req.user.id,
+      status: "Completed"
+    });
+
     res.status(200).json({ message: "Booking cancelled successfully", booking });
   } catch (error) {
     console.error("Error cancelling booking:", error);

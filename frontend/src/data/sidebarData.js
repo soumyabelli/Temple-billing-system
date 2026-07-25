@@ -56,10 +56,10 @@ export const sidebarItems = [
     path: "/admin/accounts/dashboard",
     subItems: [
       { title: "Dashboard", path: "/admin/accounts/dashboard" },
-      { title: "Debit & Credit", path: "/admin/accounts/debit-credit" },
-      { title: "Bank Interest", path: "/admin/accounts/bank-interest" },
       { title: "Financial Reports", path: "/admin/accounts/reports" },
-      { title: "Expense Categories", path: "/admin/accounts/expense-categories" },
+      { title: "Profit & Loss", path: "/admin/accounts/profit-loss" },
+      { title: "Account Heads", path: "/admin/accounts/account-heads" },
+      { title: "Financial Settings", path: "/admin/accounts/settings" },
     ],
   },
   { title: "Events", icon: FaCalendarAlt, path: "/admin/events" },

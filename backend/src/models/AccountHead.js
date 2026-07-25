@@ -1,12 +1,17 @@
 const mongoose = require("mongoose");
 
-const expenseCategorySchema = new mongoose.Schema(
+const accountHeadSchema = new mongoose.Schema(
   {
     name: {
       type: String,
       required: true,
       unique: true,
       trim: true,
+    },
+    type: {
+      type: String,
+      enum: ["Income", "Expense"],
+      required: true,
     },
     description: {
       type: String,
@@ -24,4 +29,4 @@ const expenseCategorySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("ExpenseCategory", expenseCategorySchema);
+module.exports = mongoose.model("AccountHead", accountHeadSchema);

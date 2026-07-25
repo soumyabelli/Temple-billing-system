@@ -1,25 +1,25 @@
 const AccountTransaction = require("../models/AccountTransaction");
-const ExpenseCategory = require("../models/ExpenseCategory");
+const AccountHead = require("../models/AccountHead");
 const CashClosing = require("../models/CashClosing");
 
-// --- Expense Categories ---
-exports.getExpenseCategories = async (req, res) => {
+// --- Account Heads ---
+exports.getAccountHeads = async (req, res) => {
   try {
-    const categories = await ExpenseCategory.find({ isActive: true }).sort({ name: 1 });
-    res.status(200).json(categories);
+    const heads = await AccountHead.find({ isActive: true }).sort({ name: 1 });
+    res.status(200).json(heads);
   } catch (error) {
-    res.status(500).json({ message: "Failed to fetch categories", error: error.message });
+    res.status(500).json({ message: "Failed to fetch account heads", error: error.message });
   }
 };
 
-exports.createExpenseCategory = async (req, res) => {
+exports.createAccountHead = async (req, res) => {
   try {
-    const { name, description } = req.body;
-    const category = new ExpenseCategory({ name, description, createdBy: req.user.id });
-    await category.save();
-    res.status(201).json(category);
+    const { name, type, description } = req.body;
+    const head = new AccountHead({ name, type, description, createdBy: req.user.id });
+    await head.save();
+    res.status(201).json(head);
   } catch (error) {
-    res.status(500).json({ message: "Failed to create category", error: error.message });
+    res.status(500).json({ message: "Failed to create account head", error: error.message });
   }
 };
 

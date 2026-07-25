@@ -205,10 +205,24 @@ exports.updateAdminPrasadamOrderStatus = async (req, res) => {
       await recordTransaction({
         transactionType: "Credit",
         source: "Prasadam",
-        category: order.itemName || "Prasadam",
+        category: "Prasadam Sales",
         amount: order.amount,
         paymentMethod: order.paymentMethod || "System",
         description: `Prasadam Order: ${order.orderNumber || order._id}`,
+        referenceId: order._id,
+        referenceModel: "PrasadamOrder",
+        recordedBy: req.user ? req.user.id : null,
+        status: "Completed"
+      });
+    } else if (wasPaidStatus && modelStatus === "Cancelled") {
+      const { recordTransaction } = require("../utils/accountTransactionHelper");
+      await recordTransaction({
+        transactionType: "Debit",
+        source: "Prasadam",
+        category: "Refund Account",
+        amount: order.amount,
+        paymentMethod: order.paymentMethod || "System",
+        description: `Refund for Cancelled Prasadam Order: ${order.orderNumber || order._id}`,
         referenceId: order._id,
         referenceModel: "PrasadamOrder",
         recordedBy: req.user ? req.user.id : null,

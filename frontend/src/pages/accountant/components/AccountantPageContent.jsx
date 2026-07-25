@@ -2,6 +2,9 @@ import { useState, useEffect, useMemo } from "react";
 import { getEmployeeProfile, updateEmployeeProfile, changeEmployeePassword } from "../../../services/employeeService";
 import { fetchBills, fetchRoomBookings } from "../../../services/cashierService";
 import { useAuth } from "../../../context/AuthContext";
+import { getCashClosings, verifyCashClosing, getTransactions, createManualExpense, getProfitLoss, getExpenseCategories, getDashboardMetrics } from "../../../services/accountService";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import {
@@ -14,6 +17,7 @@ import {
   FaEye,
   FaFileExcel,
   FaFilePdf,
+  FaFileInvoice,
   FaFilter,
   FaHistory,
   FaLock,
@@ -37,6 +41,10 @@ import Attendance from "../../staff/Attendance";
 import LeaveHistory from "../../staff/LeaveHistory";
 import LeaveRequest from "../../staff/LeaveRequest";
 import AccountantInventory from "../AccountantInventory";
+import ShiftVerificationView from "./ShiftVerificationView";
+import ManualEntriesView from "./ManualEntriesView";
+import ProfitLossView from "./ProfitLossView";
+import AccountLedgersView from "./AccountLedgersView";
 import {
   accountantStats,
   billingRows,
@@ -203,7 +211,6 @@ const DashboardView = ({ user, currentDate, currentWeekday }) => {
   const [roomBookings, setRoomBookings] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Date range selectors (default to last 30 days)
   const [fromDate, setFromDate] = useState(() => {
     const d = new Date();
     d.setDate(d.getDate() - 30);
@@ -212,16 +219,28 @@ const DashboardView = ({ user, currentDate, currentWeekday }) => {
   const [toDate, setToDate] = useState(() => {
     return new Date().toISOString().split("T")[0];
   });
+  
+  const [dashMetrics, setDashMetrics] = useState({
+    todayIncome: 0,
+    todayExpense: 0,
+    todayProfit: 0,
+    cashInHand: 0,
+    pendingPayments: 0
+  });
 
   const loadData = async () => {
     setLoading(true);
     try {
-      const [billsData, roomData] = await Promise.allSettled([
+      const [billsData, roomData, dashMetricsRes] = await Promise.allSettled([
         fetchBills(),
         fetchRoomBookings(),
+        getDashboardMetrics(),
       ]);
       setBills(billsData.status === "fulfilled" ? billsData.value : []);
       setRoomBookings(roomData.status === "fulfilled" ? roomData.value : []);
+      if (dashMetricsRes.status === "fulfilled") {
+        setDashMetrics(dashMetricsRes.value);
+      }
     } catch (err) {
       console.error("Failed to load dashboard data", err);
     } finally {
@@ -424,14 +443,14 @@ const DashboardView = ({ user, currentDate, currentWeekday }) => {
   };
 
   const statCards = [
-    { title: "Today's Collection", value: `Rs ${metrics.todayCollection.toLocaleString("en-IN")}`, icon: FaRupeeSign },
+    { title: "Today's Income", value: `Rs ${dashMetrics.todayIncome?.toLocaleString("en-IN") || '0'}`, icon: FaRupeeSign },
+    { title: "Today's Expense", value: `Rs ${dashMetrics.todayExpense?.toLocaleString("en-IN") || '0'}`, icon: FaFileInvoice },
+    { title: "Cash In Hand", value: `Rs ${dashMetrics.cashInHand?.toLocaleString("en-IN") || '0'}`, icon: FaWallet },
+    { title: "Pending Approvals", value: `${dashMetrics.pendingPayments || '0'}`, icon: FaClock },
     { title: "Total Revenue", value: `Rs ${metrics.globalTotalRevenue.toLocaleString("en-IN")}`, icon: FaWallet },
     { title: "Total Donations", value: `Rs ${metrics.globalTotalDonations.toLocaleString("en-IN")}`, icon: FaDonate },
-    { title: "Pending Payments", value: `Rs 0`, icon: FaClock },
     { title: "Pooja Revenue", value: `Rs ${metrics.globalPoojaRevenue.toLocaleString("en-IN")}`, icon: MdTempleBuddhist },
     { title: "Prasadam Revenue", value: `Rs ${metrics.globalPrasadamRevenue.toLocaleString("en-IN")}`, icon: MdOutlineVolunteerActivism },
-    { title: "Room Booked Revenue", value: `Rs ${metrics.roomBookingTotal.toLocaleString("en-IN")}`, icon: FaBed, note: `${metrics.roomBookingCount} paid booking${metrics.roomBookingCount !== 1 ? "s" : ""}` },
-    { title: "Event Revenue", value: `Rs ${metrics.globalEventRevenue.toLocaleString("en-IN")}`, icon: FaCalendarAlt, note: `${metrics.globalEventCount} event donation${metrics.globalEventCount !== 1 ? "s" : ""}` },
   ];
 
   if (loading) {
@@ -1800,6 +1819,14 @@ const AccountantPageContent = ({ activeItem, setActiveItem, user, currentDate, c
   switch (activeItem) {
     case "Donations":
       return <DonationsView bills={bills} loading={loading} />;
+    case "Account Ledgers":
+      return <AccountLedgersView />;
+    case "Shift Verification":
+      return <ShiftVerificationView />;
+    case "Manual Entries":
+      return <ManualEntriesView />;
+    case "Profit & Loss":
+      return <ProfitLossView />;
     case "Billing":
       return <BillingView bills={bills} loading={loading} />;
     case "Payments":
