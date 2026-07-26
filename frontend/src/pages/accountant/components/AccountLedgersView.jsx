@@ -349,8 +349,8 @@ const AccountLedgersView = () => {
               setFilters((prev) => ({ ...prev, transactionType: "" }));
             }}
             className={`px-5 py-3 rounded-2xl text-sm font-extrabold transition-all ${activeTab === "All"
-                ? "bg-amber-600 text-white shadow-md shadow-amber-600/30 scale-[1.02]"
-                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              ? "bg-amber-600 text-white shadow-md shadow-amber-600/30 scale-[1.02]"
+              : "bg-slate-100 text-slate-700 hover:bg-slate-200"
               }`}
           >
             All Ledger Entries ({transactions.length})
@@ -363,8 +363,8 @@ const AccountLedgersView = () => {
               setFilters((prev) => ({ ...prev, transactionType: "Debit" }));
             }}
             className={`flex items-center gap-2 px-5 py-3 rounded-2xl text-sm font-extrabold transition-all ${activeTab === "Debit"
-                ? "bg-red-600 text-white shadow-md shadow-red-600/30 scale-[1.02]"
-                : "bg-red-50 text-red-700 hover:bg-red-100"
+              ? "bg-red-600 text-white shadow-md shadow-red-600/30 scale-[1.02]"
+              : "bg-red-50 text-red-700 hover:bg-red-100"
               }`}
           >
             <FaArrowDown /> Debits Only (Expenses)
@@ -377,8 +377,8 @@ const AccountLedgersView = () => {
               setFilters((prev) => ({ ...prev, transactionType: "Credit" }));
             }}
             className={`flex items-center gap-2 px-5 py-3 rounded-2xl text-sm font-extrabold transition-all ${activeTab === "Credit"
-                ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/30 scale-[1.02]"
-                : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+              ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/30 scale-[1.02]"
+              : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
               }`}
           >
             <FaArrowUp /> Credits Only (Income)
@@ -567,8 +567,8 @@ const AccountLedgersView = () => {
                       <td className="py-4 px-4">
                         <span
                           className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-extrabold border ${t.transactionType === "Credit"
-                              ? "bg-emerald-100 text-emerald-800 border-emerald-200"
-                              : "bg-red-100 text-red-800 border-red-200"
+                            ? "bg-emerald-100 text-emerald-800 border-emerald-200"
+                            : "bg-red-100 text-red-800 border-red-200"
                             }`}
                         >
                           {t.transactionType === "Credit" ? <FaArrowUp /> : <FaArrowDown />} {t.transactionType}
