@@ -265,22 +265,33 @@ const DevoteeDashboard = () => {
             </div>
           </header>
 
-          <section className="mb-5 mt-5">
-            <h1 className="text-[2.75rem] font-extrabold leading-tight">Welcome back, {devoteeName}! 🙏</h1>
-            <p className="text-[1.35rem] text-[#2d2d2d]">May your visit be blessed.</p>
+          <section className="mb-6 mt-4">
+            <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl">Welcome back, {devoteeName}!</h1>
+            <p className="mt-1.5 text-lg font-medium text-amber-800/80">May your visit be blessed with joy and peace.</p>
           </section>
 
-          <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
             {stats.map((item) => (
-              <article key={item.title} className="rounded-2xl border border-[#ececec] bg-white p-4 shadow-sm">
-                <div className="mb-4 flex items-center gap-4">
-                  <IconCircle className={item.tone} icon={item.icon} />
-                  <p className="text-[1.06rem] text-[#383838]">{item.title}</p>
+              <article
+                key={item.title}
+                className="group relative overflow-hidden rounded-2xl border border-gray-100 bg-gradient-to-b from-gray-50/50 via-white to-white p-5 transition-all duration-300 hover:-translate-y-1 hover:border-amber-300 hover:shadow-lg hover:shadow-amber-500/10"
+              >
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-sm font-semibold tracking-wide text-gray-500 uppercase">{item.title}</p>
+                    <p className="mt-2 text-3xl font-black tracking-tight text-gray-900">{item.value}</p>
+                  </div>
+                  <IconCircle className={`${item.tone} shadow-xs`} icon={item.icon} />
                 </div>
-                <p className="text-[2.15rem] font-extrabold leading-none">{item.value}</p>
-                <button type="button" className="mt-4 bg-transparent p-0 text-base font-semibold text-[#bc630f]">
-                  {item.action}
-                </button>
+
+                <div className="mt-5 flex items-center justify-between border-t border-gray-100/80 pt-3">
+                  <button type="button" className="group/btn inline-flex items-center gap-1.5 text-xs font-bold text-[#bc630f] hover:text-[#8e4909] transition-colors">
+                    <span>{item.action}</span>
+                    <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current stroke-2 transition-transform duration-200 group-hover/btn:translate-x-1">
+                      <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </div>
               </article>
             ))}
           </section>

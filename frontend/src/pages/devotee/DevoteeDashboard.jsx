@@ -27,6 +27,18 @@ import {
   markNotificationAsRead,
 } from "../../services/devoteeService";
 
+const DEFAULT_POOJA_TYPES = [
+  { name: "Abhisheka", price: 501, requiredMaterials: "Milk, Curd, Honey, Ghee, Sugar, Flowers, Fruits" },
+  { name: "Archana", price: 101, requiredMaterials: "Flowers, Coconut, Betel Leaves, Fruits" },
+  { name: "Sahasranama Archana", price: 251, requiredMaterials: "Flowers, Garland, Coconut, Fruits" },
+  { name: "Ganapathi Homa", price: 1001, requiredMaterials: "Coconuts, Modak, Ghee, Havan Samagri, Flowers" },
+  { name: "Navagraha Shanti Homa", price: 1501, requiredMaterials: "Nine Grains, Ghee, Nine Color Clothes, Flowers" },
+  { name: "Satyanarayan Pooja", price: 1201, requiredMaterials: "Wheat Flour, Rava, Sugar, Milk, Fruits, Tulsi" },
+  { name: "Maha Mrityunjaya Homa", price: 2101, requiredMaterials: "Ghee, Bilva Leaves, Milk, Honey, Havan Samagri" },
+  { name: "Kalyanotsavam", price: 2501, requiredMaterials: "Vastram, Mangalsutra, Turmeric, Kumkum, Flowers, Fruits" },
+  { name: "Vehicle Pooja", price: 201, requiredMaterials: "Lemon, Coconut, Flowers, Camphor" },
+];
+
 const INITIAL_ROOMS = [
   {
     number: "101",
@@ -456,7 +468,7 @@ const DevoteeDashboard = () => {
   });
   const [supportSubject, setSupportSubject] = useState("");
   const [supportMessage, setSupportMessage] = useState("");
-  const [poojaTypes, setPoojaTypes] = useState([]);
+  const [poojaTypes, setPoojaTypes] = useState(DEFAULT_POOJA_TYPES);
   const [bookingService, setBookingService] = useState("Abhisheka");
   const [bookingDatetime, setBookingDatetime] = useState("");
   const [bookingAmount, setBookingAmount] = useState(501);
@@ -571,32 +583,40 @@ const DevoteeDashboard = () => {
         title: "Upcoming Bookings",
         value: `${upcomingBookings.length}`,
         action: "View Details",
-        tone: "bg-purple-500/15 text-purple-700",
-        cardStyle: "border-purple-500/30 bg-purple-500/5 text-[#58219c]",
+        tone: "bg-purple-100 text-purple-600 group-hover:scale-110 transition-transform duration-300",
+        cardStyle: "border-purple-100 bg-gradient-to-b from-purple-50/50 via-white to-white hover:border-purple-300 hover:shadow-lg hover:shadow-purple-500/10",
+        valueColor: "text-purple-950",
+        badgeBg: "bg-purple-50 text-purple-700 border-purple-200/50",
         icon: "calendar",
       },
       {
         title: "Pooja Booked",
         value: `${bookingsData.length}`,
         action: "View Bookings",
-        tone: "bg-blue-500/15 text-blue-700",
-        cardStyle: "border-blue-500/30 bg-blue-500/5 text-[#1e40af]",
+        tone: "bg-blue-100 text-blue-600 group-hover:scale-110 transition-transform duration-300",
+        cardStyle: "border-blue-100 bg-gradient-to-b from-blue-50/50 via-white to-white hover:border-blue-300 hover:shadow-lg hover:shadow-blue-500/10",
+        valueColor: "text-blue-950",
+        badgeBg: "bg-blue-50 text-blue-700 border-blue-200/50",
         icon: "calendar",
       },
       {
         title: "Total Donations",
         value: formatCurrency(totalDonations),
         action: "View History",
-        tone: "bg-emerald-500/15 text-emerald-700",
-        cardStyle: "border-emerald-500/30 bg-emerald-500/5 text-[#065f46]",
+        tone: "bg-emerald-100 text-emerald-600 group-hover:scale-110 transition-transform duration-300",
+        cardStyle: "border-emerald-100 bg-gradient-to-b from-emerald-50/50 via-white to-white hover:border-emerald-300 hover:shadow-lg hover:shadow-emerald-500/10",
+        valueColor: "text-emerald-950",
+        badgeBg: "bg-emerald-50 text-emerald-700 border-emerald-200/50",
         icon: "heart",
       },
       {
         title: "Prasadam Orders",
         value: `${prasadamOrdersCount}`,
         action: "View Orders",
-        tone: "bg-orange-500/15 text-orange-700",
-        cardStyle: "border-orange-500/30 bg-orange-500/5 text-[#9a3412]",
+        tone: "bg-amber-100 text-amber-600 group-hover:scale-110 transition-transform duration-300",
+        cardStyle: "border-amber-100 bg-gradient-to-b from-amber-50/50 via-white to-white hover:border-amber-300 hover:shadow-lg hover:shadow-amber-500/10",
+        valueColor: "text-amber-950",
+        badgeBg: "bg-amber-50 text-amber-700 border-amber-200/50",
         icon: "bag",
       },
     ],
@@ -717,12 +737,18 @@ const DevoteeDashboard = () => {
         });
         
         const poojaTypesDataRes = await getPoojaTypes();
-        const poojaTypesData = poojaTypesDataRes.poojas || poojaTypesDataRes || [];
+        const fetchedPoojaTypes = poojaTypesDataRes?.poojas || poojaTypesDataRes || [];
+        const poojaTypesData = Array.isArray(fetchedPoojaTypes) && fetchedPoojaTypes.length > 0 ? fetchedPoojaTypes : DEFAULT_POOJA_TYPES;
         setPoojaTypes(poojaTypesData);
         
         setBookingService((prevService) => {
-          if (!poojaTypesData.length) return prevService;
-          return poojaTypesData.some((type) => type.name === prevService) ? prevService : poojaTypesData[0].name;
+          const match = poojaTypesData.find((type) => type.name === prevService);
+          if (match) {
+            setBookingAmount(match.price || 501);
+            return prevService;
+          }
+          setBookingAmount(poojaTypesData[0]?.price || 501);
+          return poojaTypesData[0]?.name || "Abhisheka";
         });
         
         // Use functional state update to ensure it gets the newly selected bookingService
@@ -1889,134 +1915,191 @@ const DevoteeDashboard = () => {
 
   const renderDashboard = () => (
     <>
-      <section className="mb-5 mt-5">
-        <h1 className="text-[2.75rem] font-extrabold leading-tight">Welcome back, {devoteeName}! 🙏</h1>
-        <p className="text-[1.35rem] text-[#2d2d2d]">May your visit be blessed.</p>
+      <section className="mb-6 mt-4">
+        <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl">Welcome back, {devoteeName}!</h1>
+        <p className="mt-1.5 text-lg font-medium text-amber-800/80">May your visit be blessed with joy and peace.</p>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
         {stats.map((item) => (
-          <article key={item.title} className={`rounded-[26px] border ${item.cardStyle} p-4 shadow-sm backdrop-blur-md`}>
-            <div className="mb-4 flex items-center gap-4">
-              <IconCircle className={item.tone} icon={item.icon} />
-              <p className="text-[1.06rem] text-[#383838]">{item.title}</p>
+          <article
+            key={item.title}
+            className={`group relative overflow-hidden rounded-2xl border p-5 transition-all duration-300 hover:-translate-y-1 ${item.cardStyle}`}
+          >
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-xs font-bold tracking-wider text-gray-500 uppercase">{item.title}</p>
+                <p className={`mt-2 text-3xl font-black tracking-tight ${item.valueColor || "text-gray-900"}`}>{item.value}</p>
+              </div>
+              <IconCircle className={`${item.tone} shadow-xs`} icon={item.icon} />
             </div>
-            <p className="text-[2.15rem] font-extrabold leading-none">{item.value}</p>
-            <button
-              type="button"
-              onClick={() => {
-                if (item.action === "View Details") setActivePage("My Bookings");
-                if (item.action === "View Bookings") setActivePage("My Bookings");
-                if (item.action === "View History") setActivePage("Receipts");
-                if (item.action === "View Orders") {
-                  setActivePage("Booking");
-                  setBookingTab("Prasadam");
-                }
-              }}
-              className="mt-4 bg-transparent p-0 text-base font-semibold text-[#bc630f]"
-            >
-              {item.action}
-            </button>
+
+            <div className="mt-5 flex items-center justify-between border-t border-gray-100/80 pt-3">
+              <button
+                type="button"
+                onClick={() => {
+                  if (item.action === "View Details") setActivePage("My Bookings");
+                  if (item.action === "View Bookings") setActivePage("My Bookings");
+                  if (item.action === "View History") setActivePage("Receipts");
+                  if (item.action === "View Orders") {
+                    setActivePage("Booking");
+                    setBookingTab("Prasadam");
+                  }
+                }}
+                className="group/btn inline-flex items-center gap-1.5 text-xs font-bold text-[#bc630f] hover:text-[#8e4909] transition-colors"
+              >
+                <span>{item.action}</span>
+                <svg
+                  viewBox="0 0 24 24"
+                  className="h-4 w-4 fill-none stroke-current stroke-2 transition-transform duration-200 group-hover/btn:translate-x-1"
+                >
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
           </article>
         ))}
       </section>
 
-      <section className="mt-4 grid gap-4 xl:grid-cols-3">
-        <article className={`${glassCard}`}>
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-[2rem] font-bold">Upcoming Bookings</h2>
-            <button type="button" onClick={() => setActivePage("My Bookings")} className="bg-transparent p-0 text-base font-semibold text-[#bc630f]">
-              View All
-            </button>
-          </div>
-          <div className="space-y-3">
-            {upcomingBookings.length > 0 ? (
-              upcomingBookings.slice(0, 3).map((item) => (
-                <div key={`${item.service}-${item.datetime}-${item._id || Math.random()}`} className={glassItem}>
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="text-base font-semibold text-[#1f1f1f]">{item.service}</p>
-                  </div>
-                  <p className="mt-1 text-sm text-[#4f4f4f]">{formatDateTimeDisplay(item.datetime)}</p>
-                </div>
-              ))
-            ) : (
-              <div className={`${glassItem} text-[#5d5d5d]`}>No upcoming bookings found yet.</div>
-            )}
-          </div>
-          <div className="pt-4 text-right">
-            <button type="button" onClick={() => setActivePage("My Bookings")} className="bg-transparent p-0 text-base font-semibold text-[#3058d6]">
-              View All Bookings
-            </button>
-          </div>
-        </article>
+      <section className="mt-6 grid gap-6 xl:grid-cols-3">
+        {/* Upcoming Bookings Card */}
+        <article className="flex flex-col justify-between rounded-3xl border border-gray-100 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
+          <div>
+            <div className="mb-5 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-100 text-purple-700">
+                  <svg viewBox="0 0 24 24" className="h-5 w-5 fill-none stroke-current stroke-2"><rect x="3.5" y="5" width="17" height="15.5" rx="2" /><path d="M7 3v4M17 3v4M3.5 9h17M8.5 13h3v3h-3z" /></svg>
+                </span>
+                <h2 className="text-xl font-bold text-gray-900">Upcoming Bookings</h2>
+              </div>
+              <button type="button" onClick={() => setActivePage("My Bookings")} className="text-xs font-bold text-amber-700 hover:text-amber-900">
+                View All
+              </button>
+            </div>
 
-        <article className={`${glassCard}`}>
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-[2rem] font-bold">Recent Donations</h2>
-            <button type="button" onClick={() => setActivePage("Receipts")} className="bg-transparent p-0 text-base font-semibold text-[#bc630f]">
-              View All
-            </button>
-          </div>
-          <div className="space-y-3">
-            {donationsData.length > 0 ? (
-              donationsData.slice(0, 3).map((item) => (
-                <div key={`${item.type}-${item.date}-${item._id || Math.random()}`} className={`${glassItem} flex items-center justify-between`}>
-                  <div>
-                    <p className="text-base font-semibold text-[#1f1f1f]">{item.type}</p>
-                    <p className="text-xs text-[#5d5d5d]">{item.date}</p>
-                  </div>
-                  <p className="text-base font-bold text-[#1b7f77]">{formatCurrency(item.amount)}</p>
-                </div>
-              ))
-            ) : (
-              <div className={`${glassItem} text-[#5d5d5d]`}>No donations yet.</div>
-            )}
-          </div>
-          <div className="pt-4 text-right">
-            <button type="button" onClick={() => setActivePage("Receipts")} className="bg-transparent p-0 text-base font-semibold text-[#3058d6]">
-              View All Donations
-            </button>
-          </div>
-        </article>
-
-        <article className={`${glassCard}`}>
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-[2rem] font-bold">Notifications</h2>
-            <button type="button" onClick={() => setActivePage("Notifications")} className="bg-transparent p-0 text-base font-semibold text-[#bc630f]">
-              View All
-            </button>
-          </div>
-          <div className="space-y-3">
-              {notificationsData.length > 0 ? (
-                notificationsData.slice(0, 3).map((item) => (
-                  <div key={`${item.title}-${item.date}-${item._id || Math.random()}`} className="rounded-[24px] border border-white/40 bg-white/55 p-4 shadow-sm backdrop-blur-sm">
-                    <p className="text-base font-semibold text-[#1f1f1f]">{item.title}</p>
-                    <p className="text-xs text-[#5d5d5d]">{item.date}</p>
-                    {item.message ? (
-                      <p className="mt-2 text-sm text-[#6b6b6b]">{item.message}</p>
-                    ) : null}
+            <div className="space-y-3">
+              {upcomingBookings.length > 0 ? (
+                upcomingBookings.slice(0, 3).map((item) => (
+                  <div key={`${item.service}-${item.datetime}-${item._id || Math.random()}`} className="rounded-2xl border border-gray-100 bg-purple-50/30 p-4 transition-colors hover:bg-purple-50/60">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-base font-bold text-gray-900">{item.service}</p>
+                      <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold text-emerald-800">Confirmed</span>
+                    </div>
+                    <p className="mt-1.5 text-xs font-medium text-gray-600">{formatDateTimeDisplay(item.datetime)}</p>
                   </div>
                 ))
               ) : (
-                <div className={`${glassItem} text-[#5d5d5d]`}>No notifications yet.</div>
+                <div className="rounded-2xl border border-dashed border-gray-200 p-6 text-center text-sm font-medium text-gray-500">
+                  No upcoming bookings found yet.
+                </div>
               )}
+            </div>
+          </div>
+
+          <div className="mt-5 border-t border-gray-100 pt-3 text-right">
+            <button type="button" onClick={() => setActivePage("My Bookings")} className="text-xs font-bold text-purple-700 hover:text-purple-900 transition-colors">
+              View All Bookings &rarr;
+            </button>
+          </div>
+        </article>
+
+        {/* Recent Donations Card */}
+        <article className="flex flex-col justify-between rounded-3xl border border-gray-100 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
+          <div>
+            <div className="mb-5 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
+                  <svg viewBox="0 0 24 24" className="h-5 w-5 fill-none stroke-current stroke-2"><path d="M12 20s-6.5-4.2-8.5-8.2a5 5 0 0 1 8.1-5.6l.4.4.4-.4a5 5 0 0 1 8.1 5.6C18.5 15.8 12 20 12 20z" /></svg>
+                </span>
+                <h2 className="text-xl font-bold text-gray-900">Recent Donations</h2>
+              </div>
+              <button type="button" onClick={() => setActivePage("Receipts")} className="text-xs font-bold text-amber-700 hover:text-amber-900">
+                View All
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {donationsData.length > 0 ? (
+                donationsData.slice(0, 3).map((item) => (
+                  <div key={`${item.type}-${item.date}-${item._id || Math.random()}`} className="flex items-center justify-between rounded-2xl border border-gray-100 bg-emerald-50/30 p-4 transition-colors hover:bg-emerald-50/60">
+                    <div>
+                      <p className="text-base font-bold text-gray-900">{item.type}</p>
+                      <p className="mt-0.5 text-xs text-gray-500">{item.date}</p>
+                    </div>
+                    <p className="text-base font-extrabold text-emerald-700">{formatCurrency(item.amount)}</p>
+                  </div>
+                ))
+              ) : (
+                <div className="rounded-2xl border border-dashed border-gray-200 p-6 text-center text-sm font-medium text-gray-500">
+                  No donations recorded yet.
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-5 border-t border-gray-100 pt-3 text-right">
+            <button type="button" onClick={() => setActivePage("Receipts")} className="text-xs font-bold text-emerald-700 hover:text-emerald-900 transition-colors">
+              View All Donations &rarr;
+            </button>
+          </div>
+        </article>
+
+        {/* Notifications Card */}
+        <article className="flex flex-col justify-between rounded-3xl border border-gray-100 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
+          <div>
+            <div className="mb-5 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
+                  <svg viewBox="0 0 24 24" className="h-5 w-5 fill-none stroke-current stroke-2"><path d="M15 18h5l-1.3-1.3a1 1 0 0 1-.3-.7V11a6.4 6.4 0 1 0-12.8 0v5a1 1 0 0 1-.3.7L4 18h5" /><path d="M10 18a2 2 0 1 0 4 0" /></svg>
+                </span>
+                <h2 className="text-xl font-bold text-gray-900">Notifications</h2>
+              </div>
+              <button type="button" onClick={() => setActivePage("Notifications")} className="text-xs font-bold text-amber-700 hover:text-amber-900">
+                View All
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {notificationsData.length > 0 ? (
+                notificationsData.slice(0, 3).map((item) => (
+                  <div key={`${item.title}-${item.date}-${item._id || Math.random()}`} className="rounded-2xl border border-gray-100 bg-amber-50/30 p-4 transition-colors hover:bg-amber-50/60">
+                    <p className="text-sm font-bold text-gray-900">{item.title}</p>
+                    <p className="mt-0.5 text-xs text-gray-500">{item.date}</p>
+                    {item.message && <p className="mt-1.5 text-xs text-gray-600 line-clamp-2">{item.message}</p>}
+                  </div>
+                ))
+              ) : (
+                <div className="rounded-2xl border border-dashed border-gray-200 p-6 text-center text-sm font-medium text-gray-500">
+                  No notifications yet.
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-5 border-t border-gray-100 pt-3 text-right">
+            <button type="button" onClick={() => setActivePage("Notifications")} className="text-xs font-bold text-amber-700 hover:text-amber-900 transition-colors">
+              View All Notifications &rarr;
+            </button>
           </div>
         </article>
       </section>
 
-      <section className="relative mt-4 overflow-hidden rounded-2xl shadow-lg pb-4">
-        <img src={templeImage} alt="Festival banner" className="h-36 w-full object-cover sm:h-40" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#261009]/85 via-[#51220d]/55 to-transparent"></div>
-        <div className="absolute inset-0 flex items-center justify-between px-7 text-white">
+      {/* Festival Banner */}
+      <section className="relative mt-6 overflow-hidden rounded-3xl shadow-md transition-all hover:shadow-lg">
+        <img src={templeImage} alt="Festival banner" className="h-44 w-full object-cover sm:h-48" />
+        <div className="absolute inset-0 bg-gradient-to-r from-amber-950/90 via-amber-900/60 to-transparent"></div>
+        <div className="absolute inset-0 flex items-center justify-between px-8 text-white">
           <div>
-            <p className="text-xs sm:text-sm uppercase tracking-wider text-[#ffd56e] font-bold">Upcoming Festival</p>
-            <h3 className="text-xl sm:text-[2.2rem] font-extrabold leading-tight mt-1">{upcomingFestival.title}</h3>
-            <p className="text-sm sm:text-[1.25rem] mt-1 text-[#f3e8ff]">{upcomingFestival.dateDisplay}</p>
+            <span className="inline-block rounded-full bg-amber-400/20 px-3 py-1 text-xs font-bold uppercase tracking-wider text-amber-300 backdrop-blur-md">
+              Upcoming Festival
+            </span>
+            <h3 className="mt-2 text-2xl sm:text-3xl font-extrabold tracking-tight text-white">{upcomingFestival.title}</h3>
+            <p className="mt-1 text-sm font-medium text-amber-100/90">{upcomingFestival.dateDisplay}</p>
           </div>
           <button
             type="button"
             onClick={() => setActivePage("Festival Events")}
-            className="rounded-xl border border-white/60 bg-white/20 px-4 py-2 text-sm sm:text-lg font-semibold text-white backdrop-blur-sm hover:bg-white/30 transition"
+            className="rounded-2xl border border-white/40 bg-white/20 px-5 py-2.5 text-sm font-bold text-white backdrop-blur-md hover:bg-white/30 transition-colors shadow-sm"
           >
             View Details
           </button>
