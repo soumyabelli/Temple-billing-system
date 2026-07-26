@@ -240,17 +240,17 @@ const canCancelPrasadamOrder = (status) => {
 };
 
 const glassCard =
-  "rounded-[28px] border border-white/50 bg-white/35 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.06)] backdrop-blur-lg";
+  "rounded-[32px] border border-white/60 bg-white/50 p-6 sm:p-8 shadow-[0_25px_60px_rgba(0,0,0,0.07)] backdrop-blur-xl";
 const glassSection =
-  "rounded-[28px] border border-white/45 bg-white/25 p-5 shadow-[0_15px_40px_rgba(0,0,0,0.04)] backdrop-blur-lg";
+  "rounded-[32px] border border-white/50 bg-white/35 p-6 sm:p-8 shadow-[0_18px_45px_rgba(0,0,0,0.05)] backdrop-blur-xl";
 const glassInput =
-  "w-full rounded-[24px] border border-white/70 bg-white/75 px-4 py-3 text-base text-[#4f3f26] outline-none shadow-sm shadow-[#d9c8a1]/40 backdrop-blur-sm";
+  "w-full rounded-[24px] border border-white/80 bg-white/90 px-5 py-4 text-lg font-semibold text-[#2d2214] outline-none shadow-md shadow-[#d9c8a1]/30 backdrop-blur-md focus:border-[#d97706] focus:ring-4 focus:ring-[#d97706]/15";
 const glassButton =
-  "rounded-[24px] bg-gradient-to-r from-[#b46a13] via-[#f29f41] to-[#ffbc6e] px-5 py-3 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(184,122,57,0.22)] transition hover:shadow-[0_18px_38px_rgba(184,122,57,0.24)]";
+  "rounded-[24px] bg-gradient-to-r from-[#b46a13] via-[#f29f41] to-[#ffbc6e] px-7 py-4 text-base font-bold text-white shadow-[0_16px_35px_rgba(184,122,57,0.25)] transition hover:scale-[1.02] hover:shadow-[0_20px_42px_rgba(184,122,57,0.3)]";
 const glassButtonSoft =
-  "rounded-[24px] bg-[#fff3d8] px-5 py-3 text-sm font-semibold text-[#7f4b11] shadow-[0_8px_22px_rgba(128,88,40,0.14)] transition hover:bg-[#ffe4b4]";
+  "rounded-[24px] border border-white/60 bg-white/65 px-7 py-4 text-base font-bold text-[#7f470a] shadow-md transition hover:bg-white/85 hover:scale-[1.02]";
 const glassItem =
-  "rounded-[26px] border border-white/40 bg-white/20 p-4 shadow-sm backdrop-blur-md";
+  "rounded-[26px] border border-white/60 bg-white/70 p-5 text-base shadow-sm backdrop-blur-md hover:shadow-md transition-shadow";
 
 const AppIcon = ({ name, className = "h-5 w-5" }) => {
   const base = "fill-none stroke-current stroke-2";
@@ -1920,21 +1920,21 @@ const DevoteeDashboard = () => {
         <p className="mt-1.5 text-lg font-medium text-amber-800/80">May your visit be blessed with joy and peace.</p>
       </section>
 
-      <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
         {stats.map((item) => (
           <article
             key={item.title}
-            className={`group relative overflow-hidden rounded-2xl border p-5 transition-all duration-300 hover:-translate-y-1 ${item.cardStyle}`}
+            className={`group relative overflow-hidden rounded-3xl border p-6 sm:p-7 transition-all duration-300 hover:-translate-y-1.5 shadow-sm hover:shadow-xl ${item.cardStyle}`}
           >
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-xs font-bold tracking-wider text-gray-500 uppercase">{item.title}</p>
-                <p className={`mt-2 text-3xl font-black tracking-tight ${item.valueColor || "text-gray-900"}`}>{item.value}</p>
+                <p className="text-sm font-extrabold tracking-wider text-gray-500 uppercase">{item.title}</p>
+                <p className={`mt-3 text-4xl sm:text-5xl font-black tracking-tight ${item.valueColor || "text-gray-900"}`}>{item.value}</p>
               </div>
-              <IconCircle className={`${item.tone} shadow-xs`} icon={item.icon} />
+              <IconCircle className={`${item.tone} h-16 w-16 shadow-sm`} icon={item.icon} />
             </div>
 
-            <div className="mt-5 flex items-center justify-between border-t border-gray-100/80 pt-3">
+            <div className="mt-6 flex items-center justify-between border-t border-gray-100/80 pt-4">
               <button
                 type="button"
                 onClick={() => {
@@ -1946,12 +1946,12 @@ const DevoteeDashboard = () => {
                     setBookingTab("Prasadam");
                   }
                 }}
-                className="group/btn inline-flex items-center gap-1.5 text-xs font-bold text-[#bc630f] hover:text-[#8e4909] transition-colors"
+                className="group/btn inline-flex items-center gap-2 text-sm sm:text-base font-bold text-[#bc630f] hover:text-[#8e4909] transition-colors"
               >
                 <span>{item.action}</span>
                 <svg
                   viewBox="0 0 24 24"
-                  className="h-4 w-4 fill-none stroke-current stroke-2 transition-transform duration-200 group-hover/btn:translate-x-1"
+                  className="h-5 w-5 fill-none stroke-current stroke-2 transition-transform duration-200 group-hover/btn:translate-x-1"
                 >
                   <path d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
@@ -3719,8 +3719,8 @@ const DevoteeDashboard = () => {
           </div>
         </aside>
 
-        <main className="flex-1 px-3 py-3 sm:px-5 sm:py-5 lg:px-8">
-          <header className="rounded-2xl border border-white/60 bg-white/40 px-5 py-4 shadow-[0_12px_30px_rgba(80,40,10,0.06)] backdrop-blur-md">
+        <main className="flex-1 px-4 py-4 sm:px-6 sm:py-6 lg:px-10">
+          <header className="rounded-2xl border border-white/60 bg-white/50 px-6 py-5 shadow-[0_12px_30px_rgba(80,40,10,0.06)] backdrop-blur-md">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="flex min-w-[360px] flex-1 items-center gap-4">
                 <button type="button" className="hidden text-[#8d551f] lg:block">
@@ -3728,11 +3728,11 @@ const DevoteeDashboard = () => {
                     <path d="M3 6h18v2H3zM3 11h18v2H3zM3 16h18v2H3z"></path>
                   </svg>
                 </button>
-                <div className="relative w-full max-w-[520px]">
+                <div className="relative w-full max-w-[560px]">
                   <input
                     type="text"
                     placeholder="Search here..."
-                    className="w-full rounded-xl border border-[#e8d8c2] bg-white/85 py-3 pl-12 pr-4 text-sm text-[#4d4d4d] outline-none placeholder:text-[#9a9a9a]"
+                    className="w-full rounded-xl border border-[#e8d8c2] bg-white/90 py-3.5 pl-12 pr-4 text-base text-[#3d3d3d] outline-none placeholder:text-[#9a9a9a]"
                   />
                   <svg viewBox="0 0 24 24" className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 fill-none stroke-[#8d551f] stroke-2">
                     <circle cx="11" cy="11" r="7"></circle>
@@ -3741,19 +3741,19 @@ const DevoteeDashboard = () => {
                 </div>
               </div>
               <div className="flex items-center gap-4">
-                <button type="button" onClick={() => setActivePage("Notifications")} className="relative mr-1 hidden rounded-xl bg-white/80 p-2 shadow-sm transition hover:scale-105 lg:block">
+                <button type="button" onClick={() => setActivePage("Notifications")} className="relative mr-1 hidden rounded-xl bg-white/80 p-2.5 shadow-sm transition hover:scale-105 lg:block">
                   <AppIcon name="bell" className="h-7 w-7 text-[#302d2b]" />
                   {unreadNotificationsCount > 0 && (
-                    <span className="absolute -right-1 -top-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-[#e4262c] text-[10px] font-bold text-white">
+                    <span className="absolute -right-1 -top-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#e4262c] text-xs font-extrabold text-white">
                       {unreadNotificationsCount}
                     </span>
                   )}
                 </button>
-                <div className="rounded-xl border border-[#ead6c0] bg-white/70 px-4 py-2 text-sm font-bold text-[#7e4310]">
+                <div className="rounded-xl border border-[#ead6c0] bg-white/80 px-5 py-2.5 text-base font-bold text-[#7e4310]">
                   {currentDateTime.toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "short", day: "numeric" })} {currentDateTime.toLocaleTimeString()}
                 </div>
-                <div className="flex items-center gap-3 rounded-full px-1">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#e2ccb2] text-sm font-bold text-[#5d3310]">
+                <div className="flex items-center gap-3.5 rounded-full px-1">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#e2ccb2] text-base font-extrabold text-[#5d3310]">
                     {devoteeName
                       .split(" ")
                       .slice(0, 2)
@@ -3762,15 +3762,15 @@ const DevoteeDashboard = () => {
                       .toUpperCase()}
                   </div>
                   <div className="hidden leading-tight sm:block">
-                    <p className="text-base font-bold">{devoteeName}</p>
-                    <p className="text-xs text-[#565656]">Devotee</p>
+                    <p className="text-lg font-bold text-gray-900">{devoteeName}</p>
+                    <p className="text-xs font-semibold text-[#565656]">Devotee</p>
                   </div>
                 </div>
               </div>
             </div>
           </header>
  
-          <div className="mt-4 rounded-2xl border border-white/60 bg-white/35 p-3 shadow-[0_10px_30px_rgba(80,40,10,0.04)] backdrop-blur-md md:p-4">
+          <div className="mt-6 rounded-3xl border border-white/70 bg-white/40 p-5 shadow-[0_14px_40px_rgba(80,40,10,0.05)] backdrop-blur-lg sm:p-7 lg:p-9">
             {renderContent()}
           </div>
         </main>
