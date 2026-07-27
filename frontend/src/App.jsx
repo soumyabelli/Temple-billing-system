@@ -39,8 +39,14 @@ import BillingManagement from "./pages/admin/BillingManagement";
 import InventoryManagement from "./pages/admin/InventoryManagement";
 import AdminInventoryDashboard from "./pages/admin/InventoryERP/AdminInventoryDashboard";
 import AdminItemMaster from "./pages/admin/InventoryERP/AdminItemMaster";
-import AdminPurchaseOrders from "./pages/admin/InventoryERP/AdminPurchaseOrders";
-import AdminGRN from "./pages/admin/InventoryERP/AdminGRN";
+import AdminCategories from "./pages/admin/InventoryERP/AdminCategories";
+import AdminSuppliers from "./pages/admin/InventoryERP/AdminSuppliers";
+import AdminPurchaseManagement from "./pages/admin/InventoryERP/AdminPurchaseManagement";
+import AdminStoreRoom from "./pages/admin/InventoryERP/AdminStoreRoom";
+import AdminInventoryRequests from "./pages/admin/InventoryERP/AdminInventoryRequests";
+import AdminAssetManagement from "./pages/admin/InventoryERP/AdminAssetManagement";
+import AdminInventoryReports from "./pages/admin/InventoryERP/AdminInventoryReports";
+import AdminRecipeManagement from "./pages/admin/Prasadam/AdminRecipeManagement";
 import PrasadaBooked from "./pages/admin/PrasadaBooked";
 import AllPrasadaBookings from "./pages/admin/AllPrasadaBookings";
 import NotificationsCenter from "./pages/admin/NotificationsCenter";
@@ -67,6 +73,7 @@ import NotificationsPage from "./pages/cashier/NotificationsPage";
 import ProfilePage from "./pages/cashier/ProfilePage";
 import RegisterDevoteesPage from "./pages/cashier/RegisterDevoteesPage";
 import CashierAccounts from "./pages/cashier/CashierAccounts";
+import CashierInventoryRequestsPage from "./pages/cashier/CashierInventoryRequestsPage";
 import PriestDashboard from "./pages/priest/PriestDashboard";
 import StaffDashboard from "./pages/staff/StaffDashboard";
 import LeaveHistory from "./pages/staff/LeaveHistory";
@@ -214,26 +221,14 @@ function App() {
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/admin/inventory/purchase-orders"
-        element={
-          <ProtectedRoute allowedRoles={["admin"]}>
-            <AdminLayout>
-              <AdminPurchaseOrders />
-            </AdminLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/inventory/grn"
-        element={
-          <ProtectedRoute allowedRoles={["admin"]}>
-            <AdminLayout>
-              <AdminGRN />
-            </AdminLayout>
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/admin/inventory/categories" element={<ProtectedRoute allowedRoles={["admin"]}><AdminLayout><AdminCategories /></AdminLayout></ProtectedRoute>} />
+      <Route path="/admin/inventory/suppliers" element={<ProtectedRoute allowedRoles={["admin"]}><AdminLayout><AdminSuppliers /></AdminLayout></ProtectedRoute>} />
+      <Route path="/admin/inventory/purchase-management" element={<ProtectedRoute allowedRoles={["admin"]}><AdminLayout><AdminPurchaseManagement /></AdminLayout></ProtectedRoute>} />
+      <Route path="/admin/inventory/store-room" element={<ProtectedRoute allowedRoles={["admin"]}><AdminLayout><AdminStoreRoom /></AdminLayout></ProtectedRoute>} />
+      <Route path="/admin/inventory/requests" element={<ProtectedRoute allowedRoles={["admin"]}><AdminLayout><AdminInventoryRequests /></AdminLayout></ProtectedRoute>} />
+      <Route path="/admin/inventory/assets" element={<ProtectedRoute allowedRoles={["admin"]}><AdminLayout><AdminAssetManagement /></AdminLayout></ProtectedRoute>} />
+      <Route path="/admin/inventory/reports" element={<ProtectedRoute allowedRoles={["admin"]}><AdminLayout><AdminInventoryReports /></AdminLayout></ProtectedRoute>} />
+      <Route path="/admin/prasada/recipes" element={<ProtectedRoute allowedRoles={["admin"]}><AdminLayout><AdminRecipeManagement /></AdminLayout></ProtectedRoute>} />
       <Route
         path="/admin/inventory/*"
         element={
@@ -668,6 +663,7 @@ function App() {
         <Route path="leave-requests" element={<div style={{ padding: "2rem" }}><LeaveHistory /></div>} />
         <Route path="apply-leave" element={<div style={{ padding: "2rem" }}><LeaveRequest /></div>} />
         <Route path="inventory" element={<InventoryPage />} />
+        <Route path="inventory-requests" element={<CashierInventoryRequestsPage />} />
         <Route path="notifications" element={<NotificationsPage />} />
         <Route path="profile" element={<ProfilePage />} />
       </Route>

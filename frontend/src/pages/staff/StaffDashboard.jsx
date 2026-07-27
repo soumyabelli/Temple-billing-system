@@ -178,6 +178,7 @@ const toProfileForm = (profile = {}) => ({
   attendanceStatus: profile.attendanceStatus || "Not Marked",
   leaveBalance: profile.leaveBalance ?? 0,
   status: profile.status || "Active",
+  weeklyOff: profile.weeklyOff || "None",
   photo: profile.photo || "",
   createdAt: profile.createdAt || "",
   updatedAt: profile.updatedAt || "",
@@ -947,7 +948,7 @@ const StaffDashboard = () => {
                         <tr key={leave._id}>
                           <td>{leave.leaveType || "General"}</td>
                           <td>{leave.reason}</td>
-                          <td>{leaveDaysCount(leave.fromDate, leave.toDate, profile?.weeklyOff)}</td>
+                          <td>{leaveDaysCount(leave.fromDate, leave.toDate, profileForm?.weeklyOff)}</td>
                           <td>{leavePeriod(leave.fromDate, leave.toDate)}</td>
                           <td>
                             <span className={`status-chip ${statusClassMap[leave.status] || ""}`}>

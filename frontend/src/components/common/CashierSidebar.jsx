@@ -124,24 +124,7 @@ const CashierSidebar = ({
           </nav>
         </div>
 
-        <div className={`border-t border-[#efd2a3] p-3 ${collapsed ? "pb-4" : "pb-5"}`}>
-          <div className="overflow-hidden rounded-[20px] border border-[#f0d9af] bg-white/80">
-            <div
-              className={`relative bg-cover bg-center ${collapsed ? "h-[96px]" : "h-[160px]"}`}
-              style={{ backgroundImage: `url(${templeSidebarImg})` }}
-            >
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-              {!collapsed ? (
-                <div className="absolute inset-x-0 bottom-0 p-3 text-white">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-orange-200">
-                    Temple Workstation
-                  </p>
-                  <p className="mt-1 text-sm font-bold">Billing, bookings, donations and receipts.</p>
-                </div>
-              ) : null}
-            </div>
-          </div>
-        </div>
+
       </aside>
     </>
   );

@@ -137,7 +137,7 @@ const StaffInventory = () => {
       await axios.post(`${API_BASE}/staff/inventory-requests`, {
         userId: staffId,
         userName: staffName,
-        role: "Staff",
+        role: user?.role || "Staff",
         itemName: form.itemName,
         quantity: parsedQty,
         unit: form.unit,
@@ -224,7 +224,12 @@ const StaffInventory = () => {
   };
 
   return (
-    <div style={{ width: "100%", padding: 0 }}>
+    <div style={{ 
+      width: "100%", 
+      "--panel": "#ffffff",
+      "--line": "#e3d2c1",
+      "--text": "#1f1d19"
+    }}>
       <section className="inventory-page">
         <div className="leave-head">
           <div>

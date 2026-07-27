@@ -524,6 +524,13 @@ const CashierDashboardPage = () => {
           >
             Receipts
           </button>
+          <button
+            type="button"
+            onClick={() => navigate("/cashier/inventory-requests")}
+            className="rounded-full border border-[#f0c58f] bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:bg-[#fff8ef]"
+          >
+            Inventory Requests
+          </button>
         </>
       }
     >

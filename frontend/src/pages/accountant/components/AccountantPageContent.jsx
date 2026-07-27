@@ -40,6 +40,7 @@ import AccountantRevenueChart from "./AccountantRevenueChart";
 import Attendance from "../../staff/Attendance";
 import LeaveHistory from "../../staff/LeaveHistory";
 import LeaveRequest from "../../staff/LeaveRequest";
+import StaffInventory from "../../staff/StaffInventory";
 import AccountantInventory from "../AccountantInventory";
 import ShiftVerificationView from "./ShiftVerificationView";
 import ManualEntriesView from "./ManualEntriesView";
@@ -1860,6 +1861,12 @@ const AccountantPageContent = ({ activeItem, setActiveItem, user, currentDate, c
       return (
         <div style={{ padding: "2rem" }}>
           <LeaveHistory onApply={() => setActiveItem("Apply Leave")} />
+        </div>
+      );
+    case "Inventory Requests":
+      return (
+        <div style={{ padding: "2rem" }}>
+          <StaffInventory />
         </div>
       );
     case "Profile":
