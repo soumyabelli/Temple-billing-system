@@ -202,40 +202,11 @@ function App() {
         }
       />
       <Route
-        path="/admin/inventory/dashboard"
+        path="/admin/inventory"
         element={
           <ProtectedRoute allowedRoles={["admin"]}>
             <AdminLayout>
-              <AdminInventoryDashboard />
-            </AdminLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/inventory/items"
-        element={
-          <ProtectedRoute allowedRoles={["admin"]}>
-            <AdminLayout>
-              <AdminItemMaster />
-            </AdminLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route path="/admin/inventory/categories" element={<ProtectedRoute allowedRoles={["admin"]}><AdminLayout><AdminCategories /></AdminLayout></ProtectedRoute>} />
-      <Route path="/admin/inventory/suppliers" element={<ProtectedRoute allowedRoles={["admin"]}><AdminLayout><AdminSuppliers /></AdminLayout></ProtectedRoute>} />
-      <Route path="/admin/inventory/purchase-management" element={<ProtectedRoute allowedRoles={["admin"]}><AdminLayout><AdminPurchaseManagement /></AdminLayout></ProtectedRoute>} />
-      <Route path="/admin/inventory/store-room" element={<ProtectedRoute allowedRoles={["admin"]}><AdminLayout><AdminStoreRoom /></AdminLayout></ProtectedRoute>} />
-      <Route path="/admin/inventory/requests" element={<ProtectedRoute allowedRoles={["admin"]}><AdminLayout><AdminInventoryRequests /></AdminLayout></ProtectedRoute>} />
-      <Route path="/admin/inventory/assets" element={<ProtectedRoute allowedRoles={["admin"]}><AdminLayout><AdminAssetManagement /></AdminLayout></ProtectedRoute>} />
-      <Route path="/admin/inventory/reports" element={<ProtectedRoute allowedRoles={["admin"]}><AdminLayout><AdminInventoryReports /></AdminLayout></ProtectedRoute>} />
-      <Route path="/admin/prasada/recipes" element={<ProtectedRoute allowedRoles={["admin"]}><AdminLayout><AdminRecipeManagement /></AdminLayout></ProtectedRoute>} />
-      <Route
-        path="/admin/inventory/*"
-        element={
-          <ProtectedRoute allowedRoles={["admin"]}>
-            <AdminLayout>
-              {/* Fallback to dashboard for unhandled ERP routes */}
-              <AdminInventoryDashboard />
+              <InventoryManagement />
             </AdminLayout>
           </ProtectedRoute>
         }

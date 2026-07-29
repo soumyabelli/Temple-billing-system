@@ -43,22 +43,7 @@ export const sidebarItems = [
       { title: "Recipe Management", path: "/admin/prasada/recipes" }
     ]
   },
-  {
-    title: "Inventory ERP",
-    icon: FaBoxes,
-    path: "/admin/inventory/dashboard",
-    subItems: [
-      { title: "Dashboard", path: "/admin/inventory/dashboard" },
-      { title: "Item Master", path: "/admin/inventory/items" },
-      { title: "Categories", path: "/admin/inventory/categories" },
-      { title: "Suppliers", path: "/admin/inventory/suppliers" },
-      { title: "Purchase Management", path: "/admin/inventory/purchase-management" },
-      { title: "Store Room", path: "/admin/inventory/store-room" },
-      { title: "Inventory Requests", path: "/admin/inventory/requests" },
-      { title: "Asset Management", path: "/admin/inventory/assets" },
-      { title: "Reports", path: "/admin/inventory/reports" }
-    ]
-  },
+  { title: "Inventory", icon: FaBoxes, path: "/admin/inventory" },
   { title: "Room Allotment", icon: MdMeetingRoom, path: "/admin/rooms" },
   {
     title: "Employee Management",
