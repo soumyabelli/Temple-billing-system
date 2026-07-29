@@ -157,6 +157,14 @@ const inventoryItemSchema = new mongoose.Schema(
     },
     lastPurchaseDate: {
       type: Date,
+    },
+    lastPurchasePrice: {
+      type: Number,
+      default: 0,
+    },
+    lastSupplier: {
+      type: String,
+      trim: true,
     }
   },
   { timestamps: true }

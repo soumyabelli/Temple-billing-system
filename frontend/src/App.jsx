@@ -52,10 +52,8 @@ import AllPrasadaBookings from "./pages/admin/AllPrasadaBookings";
 import NotificationsCenter from "./pages/admin/NotificationsCenter";
 import RoomAllotment from "./pages/admin/RoomAllotment";
 import AdminLayout from "./layouts/AdminLayout";
-import AccountsDashboard from "./pages/admin/Accounts/AccountsDashboard";
 import FinancialReports from "./pages/admin/Accounts/FinancialReports";
 import ExpenseCategories from "./pages/admin/Accounts/ExpenseCategories";
-import ProfitLossView from "./pages/accountant/components/ProfitLossView";
 
 import CashierLayout from "./layouts/CashierLayout";
 
@@ -264,26 +262,6 @@ function App() {
 
       {/* ACCOUNTS */}
       <Route
-        path="/admin/accounts/dashboard"
-        element={
-          <ProtectedRoute allowedRoles={["admin", "accountant"]}>
-            <AdminLayout>
-              <AccountsDashboard />
-            </AdminLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/accounts/profit-loss"
-        element={
-          <ProtectedRoute allowedRoles={["admin"]}>
-            <AdminLayout>
-              <div className="p-4 md:p-8"><ProfitLossView /></div>
-            </AdminLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
         path="/admin/accounts/reports"
         element={
           <ProtectedRoute allowedRoles={["admin", "accountant"]}>
@@ -299,16 +277,6 @@ function App() {
           <ProtectedRoute allowedRoles={["admin"]}>
             <AdminLayout>
               <ExpenseCategories />
-            </AdminLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/accounts/settings"
-        element={
-          <ProtectedRoute allowedRoles={["admin"]}>
-            <AdminLayout>
-              <SettingsManagement />
             </AdminLayout>
           </ProtectedRoute>
         }

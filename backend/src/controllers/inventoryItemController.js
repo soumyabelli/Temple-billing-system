@@ -279,11 +279,14 @@ const adjustStock = async (req, res) => {
       if (type === "Damaged") item.damagedStock += parsedQty;
       if (type === "Expired") item.expiredStock += parsedQty;
 
+      const unitCost = item.lastPurchasePrice || item.purchasePrice || 0;
+      const totalLossValue = parsedQty * unitCost;
+
       await AccountTransaction.create({
         transactionType: "Debit",
         source: "Inventory",
         category: "Inventory Loss",
-        amount: 0, // Since we don't know the exact cost per unit, it can be 0 or derived if average cost is tracked
+        amount: totalLossValue,
         date: new Date(),
         financialYear: new Date().getFullYear() + "-" + (new Date().getFullYear() + 1),
         paymentMethod: "System",

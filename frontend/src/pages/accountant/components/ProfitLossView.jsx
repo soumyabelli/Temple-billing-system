@@ -3,7 +3,7 @@ import { getProfitLoss } from "../../../services/accountService";
 import { toast } from "react-toastify";
 import { FaArrowUp, FaArrowDown, FaWallet } from "react-icons/fa";
 
-const ProfitLossView = () => {
+const ProfitLossView = ({ hideHeader = false }) => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -24,13 +24,15 @@ const ProfitLossView = () => {
   if (loading) return <div className="p-8 text-center">Loading Profit & Loss...</div>;
 
   return (
-    <div className="accountant-view">
-      <section className="accountant-view__hero">
-        <div>
-          <h1>Profit & Loss</h1>
-          <p>Financial overview of Income vs Expenses.</p>
-        </div>
-      </section>
+    <div className={hideHeader ? "" : "accountant-view"}>
+      {!hideHeader && (
+        <section className="accountant-view__hero">
+          <div>
+            <h1>Profit & Loss</h1>
+            <p>Financial overview of Income vs Expenses.</p>
+          </div>
+        </section>
+      )}
 
       {data && (
         <>

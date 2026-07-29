@@ -62,13 +62,10 @@ export const sidebarItems = [
   {
     title: "Accounts & Finance",
     icon: TbReportAnalytics,
-    path: "/admin/accounts/dashboard",
+    path: "/admin/accounts/reports",
     subItems: [
-      { title: "Dashboard", path: "/admin/accounts/dashboard" },
       { title: "Financial Reports", path: "/admin/accounts/reports" },
-      { title: "Profit & Loss", path: "/admin/accounts/profit-loss" },
       { title: "Account Heads", path: "/admin/accounts/account-heads" },
-      { title: "Financial Settings", path: "/admin/accounts/settings" },
     ],
   },
   { title: "Events", icon: FaCalendarAlt, path: "/admin/events" },

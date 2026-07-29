@@ -160,12 +160,13 @@ exports.getProfitLoss = async (req, res) => {
     let expenseByCategory = {};
 
     transactions.forEach(t => {
+      const amt = Number(t.amount) || 0;
       if (t.transactionType === "Credit") {
-        income += t.amount;
-        incomeBySource[t.source] = (incomeBySource[t.source] || 0) + t.amount;
+        income += amt;
+        incomeBySource[t.source] = (incomeBySource[t.source] || 0) + amt;
       } else if (t.transactionType === "Debit") {
-        expense += t.amount;
-        expenseByCategory[t.category] = (expenseByCategory[t.category] || 0) + t.amount;
+        expense += amt;
+        expenseByCategory[t.category] = (expenseByCategory[t.category] || 0) + amt;
       }
     });
 
@@ -193,11 +194,12 @@ exports.getMonthlyReport = async (req, res) => {
     const monthlyData = Array.from({ length: 12 }, () => ({ income: 0, expense: 0 }));
 
     transactions.forEach(t => {
+      const amt = Number(t.amount) || 0;
       const monthIndex = new Date(t.date).getMonth(); // 0-11
       if (t.transactionType === "Credit") {
-        monthlyData[monthIndex].income += t.amount;
+        monthlyData[monthIndex].income += amt;
       } else if (t.transactionType === "Debit") {
-        monthlyData[monthIndex].expense += t.amount;
+        monthlyData[monthIndex].expense += amt;
       }
     });
 
