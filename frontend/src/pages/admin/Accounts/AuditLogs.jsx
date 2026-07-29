@@ -1,0 +1,272 @@
+import React, { useState, useEffect } from "react";
+import { FiSearch, FiFilter, FiChevronLeft, FiChevronRight, FiTrendingUp, FiTrendingDown, FiDollarSign, FiAlertCircle } from "react-icons/fi";
+import { toast } from "react-toastify";
+import axios from "axios";
+import { getDashboardMetrics } from "../../../services/accountService";
+
+const AuditLogs = () => {
+  const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterUser, setFilterUser] = useState("All Users");
+  const [filterAction, setFilterAction] = useState("All Actions");
+  const [filterModule, setFilterModule] = useState("All Modules");
+
+  const [metrics, setMetrics] = useState({
+    todayIncome: 0,
+    todayExpense: 0,
+    todayProfit: 0,
+    cashInHand: 0,
+    pendingPayments: 0,
+  });
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
+
+  useEffect(() => {
+    fetchLogs();
+    fetchMetrics();
+  }, []);
+
+  const fetchMetrics = async () => {
+    try {
+      const data = await getDashboardMetrics();
+      setMetrics(data);
+    } catch (error) {
+      console.error("Failed to fetch dashboard metrics", error);
+    }
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+    }).format(amount);
+  };
+
+  const fetchLogs = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("token");
+      const res = await axios.get("http://localhost:5000/api/audit-logs", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setLogs(res.data);
+    } catch (error) {
+      toast.error("Failed to load audit logs");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredLogs = logs.filter(log => {
+    const matchSearch = log.details?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                        log.action?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchUser = filterUser === "All Users" || log.user?.name === filterUser;
+    const matchAction = filterAction === "All Actions" || log.action === filterAction;
+    const matchModule = filterModule === "All Modules" || log.module === filterModule;
+    return matchSearch && matchUser && matchAction && matchModule;
+  });
+
+  const totalPages = Math.ceil(filteredLogs.length / itemsPerPage);
+  const paginatedLogs = filteredLogs.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  const uniqueUsers = ["All Users", ...new Set(logs.map(log => log.user?.name).filter(Boolean))];
+  const uniqueActions = ["All Actions", ...new Set(logs.map(log => log.action).filter(Boolean))];
+  const uniqueModules = ["All Modules", ...new Set(logs.map(log => log.module).filter(Boolean))];
+
+  return (
+    <div className="p-4 md:p-8 bg-[#faf9f7] min-h-screen font-sans">
+      
+      {/* Accounts Dashboard Section */}
+      <div className="mb-10">
+        <h2 className="text-2xl font-bold text-[#1d1b19] mb-6">Accounts Dashboard</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-slate-500 text-sm font-medium">Today's Income</h3>
+              <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-500">
+                <FiTrendingUp className="text-sm" />
+              </div>
+            </div>
+            <p className="text-2xl font-bold text-slate-800">{formatCurrency(metrics.todayIncome)}</p>
+          </div>
+
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-slate-500 text-sm font-medium">Today's Expense</h3>
+              <div className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center text-red-500">
+                <FiTrendingDown className="text-sm" />
+              </div>
+            </div>
+            <p className="text-2xl font-bold text-slate-800">{formatCurrency(metrics.todayExpense)}</p>
+          </div>
+
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-slate-500 text-sm font-medium">Today's Profit</h3>
+              <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-500">
+                <FiDollarSign className="text-sm" />
+              </div>
+            </div>
+            <p className="text-2xl font-bold text-slate-800">{formatCurrency(metrics.todayProfit)}</p>
+          </div>
+
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-slate-500 text-sm font-medium">Cash In Hand</h3>
+              <div className="w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center text-purple-500">
+                <FiDollarSign className="text-sm" />
+              </div>
+            </div>
+            <p className="text-2xl font-bold text-slate-800">{formatCurrency(metrics.cashInHand)}</p>
+          </div>
+
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-slate-500 text-sm font-medium">Pending Approvals</h3>
+              <div className="w-8 h-8 rounded-full bg-orange-50 flex items-center justify-center text-orange-500">
+                <FiAlertCircle className="text-sm" />
+              </div>
+            </div>
+            <p className="text-2xl font-bold text-slate-800">{metrics.pendingPayments}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-[#1d1b19]">Audit Logs</h1>
+          <p className="text-sm text-[#5c6675]">Accounts & Finance &gt; Audit Logs</p>
+        </div>
+      </div>
+
+      {/* Controls */}
+      <div className="flex flex-wrap items-center gap-4 mb-6">
+        <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-600">
+          <span className="text-slate-400">01/07/2026 - 27/07/2026</span>
+        </div>
+        
+        <select 
+          className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-600 outline-none max-w-[150px]"
+          value={filterUser}
+          onChange={(e) => { setFilterUser(e.target.value); setCurrentPage(1); }}
+        >
+          {uniqueUsers.map(u => <option key={u}>{u}</option>)}
+        </select>
+        
+        <select 
+          className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-600 outline-none max-w-[150px]"
+          value={filterAction}
+          onChange={(e) => { setFilterAction(e.target.value); setCurrentPage(1); }}
+        >
+          {uniqueActions.map(a => <option key={a}>{a}</option>)}
+        </select>
+
+        <select 
+          className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-600 outline-none max-w-[150px]"
+          value={filterModule}
+          onChange={(e) => { setFilterModule(e.target.value); setCurrentPage(1); }}
+        >
+          {uniqueModules.map(m => <option key={m}>{m}</option>)}
+        </select>
+
+        <div className="flex items-center bg-white border border-slate-200 rounded-lg px-3 py-2 flex-grow max-w-md">
+          <FiSearch className="text-slate-400 mr-2" />
+          <input
+            type="text"
+            placeholder="Search logs..."
+            className="bg-transparent border-none outline-none text-sm w-full"
+            value={searchTerm}
+            onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+          />
+        </div>
+        
+        <button className="flex items-center gap-2 bg-white border border-slate-200 text-slate-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-50 ml-auto">
+          <FiFilter /> Filter
+        </button>
+      </div>
+
+      {/* Table */}
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm text-slate-600">
+            <thead className="bg-slate-50 text-xs uppercase font-medium text-slate-500">
+              <tr>
+                <th className="px-6 py-4">Date & Time</th>
+                <th className="px-6 py-4">User</th>
+                <th className="px-6 py-4">Action</th>
+                <th className="px-6 py-4">Module</th>
+                <th className="px-6 py-4">Details</th>
+                <th className="px-6 py-4">IP Address</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {loading ? (
+                <tr>
+                  <td colSpan="6" className="px-6 py-8 text-center text-slate-400">Loading audit logs...</td>
+                </tr>
+              ) : paginatedLogs.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="px-6 py-8 text-center text-slate-400">No logs found</td>
+                </tr>
+              ) : (
+                paginatedLogs.map((log) => (
+                  <tr key={log._id} className="hover:bg-slate-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-slate-700">
+                      {new Date(log.date).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase()}
+                    </td>
+                    <td className="px-6 py-4 font-medium text-slate-800">{log.user?.name || "System"}</td>
+                    <td className="px-6 py-4 text-slate-700">{log.action}</td>
+                    <td className="px-6 py-4">{log.module}</td>
+                    <td className="px-6 py-4 text-slate-500 max-w-md truncate" title={log.details}>{log.details}</td>
+                    <td className="px-6 py-4 font-mono text-xs text-slate-400">{log.ipAddress}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+        
+        {/* Pagination */}
+        <div className="px-6 py-4 border-t border-slate-200 flex items-center justify-between">
+          <p className="text-sm text-slate-500">
+            Showing {Math.min((currentPage - 1) * itemsPerPage + 1, filteredLogs.length)} to {Math.min(currentPage * itemsPerPage, filteredLogs.length)} of {filteredLogs.length} entries
+          </p>
+          <div className="flex gap-1">
+            <button 
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(p => p - 1)}
+              className="p-1 rounded-md border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-50"
+            >
+              <FiChevronLeft size={18} />
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+              <button
+                key={page}
+                onClick={() => setCurrentPage(page)}
+                className={`w-8 h-8 rounded-md flex items-center justify-center text-sm font-medium ${
+                  currentPage === page 
+                    ? "bg-[#ff8b00] text-white border border-[#ff8b00]" 
+                    : "border border-slate-200 text-slate-600 hover:bg-slate-50"
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+            <button 
+              disabled={currentPage === totalPages || totalPages === 0}
+              onClick={() => setCurrentPage(p => p + 1)}
+              className="p-1 rounded-md border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-50"
+            >
+              <FiChevronRight size={18} />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AuditLogs;

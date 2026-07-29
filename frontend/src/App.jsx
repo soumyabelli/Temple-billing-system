@@ -54,6 +54,9 @@ import RoomAllotment from "./pages/admin/RoomAllotment";
 import AdminLayout from "./layouts/AdminLayout";
 import FinancialReports from "./pages/admin/Accounts/FinancialReports";
 import ExpenseCategories from "./pages/admin/Accounts/ExpenseCategories";
+import Income from "./pages/admin/Accounts/Income";
+import Expenses from "./pages/admin/Accounts/Expenses";
+import AuditLogs from "./pages/admin/Accounts/AuditLogs";
 
 import CashierLayout from "./layouts/CashierLayout";
 
@@ -262,11 +265,41 @@ function App() {
 
       {/* ACCOUNTS */}
       <Route
+        path="/admin/accounts/income"
+        element={
+          <ProtectedRoute allowedRoles={["admin", "accountant"]}>
+            <AdminLayout>
+              <Income />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/accounts/expenses"
+        element={
+          <ProtectedRoute allowedRoles={["admin", "accountant"]}>
+            <AdminLayout>
+              <Expenses />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/admin/accounts/reports"
         element={
           <ProtectedRoute allowedRoles={["admin", "accountant"]}>
             <AdminLayout>
               <FinancialReports />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/accounts/audit-logs"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminLayout>
+              <AuditLogs />
             </AdminLayout>
           </ProtectedRoute>
         }

@@ -24,6 +24,7 @@ const accountRoutes = require("./routes/accountRoutes");
 const poojaSettingsRoutes = require("./routes/poojaSettingsRoutes");
 const poojaRoutes = require("./routes/poojaRoutes");
 const poojaBookingRoutes = require("./routes/poojaBookingRoutes");
+const auditLogRoutes = require("./routes/auditLogRoutes");
 const Room = require("./models/Room");
 
 const app = express();
@@ -59,6 +60,7 @@ app.use("/api/accounts", accountRoutes);
 app.use("/api/pooja-settings", poojaSettingsRoutes);
 app.use("/api/pooja", poojaBookingRoutes);
 app.use("/api/poojas", poojaRoutes);
+app.use("/api/audit-logs", auditLogRoutes);
 
 // Automatic Check-in/out background scheduler running every 60 seconds
 setInterval(async () => {

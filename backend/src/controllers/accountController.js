@@ -1,6 +1,7 @@
 const AccountTransaction = require("../models/AccountTransaction");
 const AccountHead = require("../models/AccountHead");
 const CashClosing = require("../models/CashClosing");
+const { logAudit } = require("./auditLogController");
 
 // --- Account Heads ---
 exports.getAccountHeads = async (req, res) => {
@@ -77,6 +78,14 @@ exports.approveExpense = async (req, res) => {
     transaction.approvedBy = req.user.id;
     await transaction.save();
     
+    await logAudit(
+      req.user.id,
+      `${status === "Approved" ? "Approved" : "Rejected"} Expense`,
+      "Accounts & Finance",
+      `${status === "Approved" ? "Approved" : "Rejected"} expense: ${transaction.category} for Rs ${transaction.amount}`,
+      req.ip
+    );
+
     res.status(200).json({ message: `Expense ${status}`, transaction });
   } catch (error) {
     res.status(500).json({ message: "Failed to update expense status", error: error.message });
@@ -250,6 +259,15 @@ exports.submitCashClosing = async (req, res) => {
     });
     
     await closing.save();
+
+    await logAudit(
+      req.user.id,
+      "Submitted Shift Closing",
+      "Accounts & Finance",
+      `Submitted cash closing with closing cash Rs ${closingCash} and discrepancy Rs ${discrepancy}`,
+      req.ip
+    );
+
     res.status(201).json({ message: "Cash closing submitted successfully", closing });
   } catch (error) {
     res.status(500).json({ message: "Failed to submit cash closing", error: error.message });

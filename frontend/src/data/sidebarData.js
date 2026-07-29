@@ -62,10 +62,12 @@ export const sidebarItems = [
   {
     title: "Accounts & Finance",
     icon: TbReportAnalytics,
-    path: "/admin/accounts/reports",
+    path: "/admin/accounts/audit-logs",
     subItems: [
-      { title: "Financial Reports", path: "/admin/accounts/reports" },
-      { title: "Account Heads", path: "/admin/accounts/account-heads" },
+      { title: "Income", path: "/admin/accounts/income" },
+      { title: "Expenses", path: "/admin/accounts/expenses" },
+      { title: "Reports", path: "/admin/accounts/reports" },
+      { title: "Audit Logs", path: "/admin/accounts/audit-logs" },
     ],
   },
   { title: "Events", icon: FaCalendarAlt, path: "/admin/events" },
