@@ -31,7 +31,7 @@ const createBill = async (req, res) => {
     if (!devoteeName || !amount) {
       return res.status(400).json({ message: "devoteeName and amount are required." });
     }
-    
+
     if (!sevaType && (!items || items.length === 0)) {
       return res.status(400).json({ message: "Either sevaType or items are required." });
     }
@@ -89,7 +89,7 @@ const createBill = async (req, res) => {
       message: `Bill for "${devoteeName}" — ${sevaType} — ₹${amount} (${paymentMode || "Cash"}) has been recorded.`,
       audienceRole: "cashier",
       category: "billing",
-    }).catch(() => {});
+    }).catch(() => { });
 
     return res.status(201).json({
       bill,
@@ -129,7 +129,7 @@ const verifyBillPayment = async (req, res) => {
       message: `Bill for "${bill.devoteeName}" — ${bill.sevaType} — ₹${bill.amount} (${bill.paymentMode || "UPI"}) has been recorded.`,
       audienceRole: "cashier",
       category: "billing",
-    }).catch(() => {});
+    }).catch(() => { });
 
     return res.status(200).json({ success: true, bill });
   } catch (error) {
