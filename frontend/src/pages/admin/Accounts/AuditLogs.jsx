@@ -126,7 +126,7 @@ const AuditLogs = () => {
   const uniqueUsers = ["All Users", ...new Set([...employeeNames, ...logUserNames])];
   
   // Standard actions & modules for the dropdowns
-  const uniqueActions = ["All Actions", "Create", "Update", "Delete", "Login", "Logout", "Export", "Approve", "Reject", "Status Change"];
+  const uniqueActions = ["All Actions", "Create", "Update", "Delete", "Export", "Approve", "Reject", "Status Change"];
   const uniqueModules = ["All Modules", "Authentication", "Accounts", "Inventory", "Prasadam", "Donations", "Employees", "Rooms", "Pooja", "Settings", "Devotees"];
 
   return (
