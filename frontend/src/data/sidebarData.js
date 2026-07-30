@@ -36,12 +36,7 @@ export const sidebarItems = [
   {
     title: "Prasada",
     icon: FaBoxes,
-    path: "/admin/prasada/booked",
-    subItems: [
-      { title: "Prasada Booked", path: "/admin/prasada/booked" },
-      { title: "All Bookings", path: "/admin/prasada/all" },
-      { title: "Recipe Management", path: "/admin/prasada/recipes" }
-    ]
+    path: "/admin/prasada/booked"
   },
   { title: "Inventory", icon: FaBoxes, path: "/admin/inventory" },
   { title: "Room Allotment", icon: MdMeetingRoom, path: "/admin/rooms" },

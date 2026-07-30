@@ -92,9 +92,14 @@ import LandingPage from "./pages/LandingPage";
 
 
 
+import AssetScanResult from "./pages/public/AssetScanResult";
+
 function App() {
   return (
     <Routes>
+
+      {/* PUBLIC ROUTES */}
+      <Route path="/public/asset/:id" element={<AssetScanResult />} />
 
       {/* AUTH */}
       <Route path="/" element={<LandingPage />} />

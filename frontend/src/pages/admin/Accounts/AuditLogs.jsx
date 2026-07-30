@@ -24,10 +24,32 @@ const AuditLogs = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
 
+  const [employees, setEmployees] = useState([]);
+
   useEffect(() => {
     fetchLogs();
     fetchMetrics();
+    fetchEmployees();
   }, []);
+
+  const fetchEmployees = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get("http://localhost:5000/api/employees", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data.success) {
+        setEmployees(res.data.data);
+      } else {
+        // fallback if it's an array directly
+        if (Array.isArray(res.data)) {
+          setEmployees(res.data);
+        }
+      }
+    } catch (error) {
+      console.warn("Failed to fetch employees for filter");
+    }
+  };
 
   const fetchMetrics = async () => {
     try {
@@ -72,9 +94,14 @@ const AuditLogs = () => {
   const totalPages = Math.ceil(filteredLogs.length / itemsPerPage);
   const paginatedLogs = filteredLogs.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  const uniqueUsers = ["All Users", ...new Set(logs.map(log => log.user?.name).filter(Boolean))];
-  const uniqueActions = ["All Actions", ...new Set(logs.map(log => log.action).filter(Boolean))];
-  const uniqueModules = ["All Modules", ...new Set(logs.map(log => log.module).filter(Boolean))];
+  // Derive unique users from employees + existing logs
+  const employeeNames = employees.map(emp => emp.user?.name || emp.name).filter(Boolean);
+  const logUserNames = logs.map(log => log.user?.name).filter(Boolean);
+  const uniqueUsers = ["All Users", ...new Set([...employeeNames, ...logUserNames])];
+  
+  // Standard actions & modules for the dropdowns
+  const uniqueActions = ["All Actions", "Create", "Update", "Delete", "Login", "Logout", "Export", "Approve", "Reject", "Status Change"];
+  const uniqueModules = ["All Modules", "Authentication", "Accounts", "Inventory", "Prasadam", "Donations", "Employees", "Rooms", "Pooja", "Settings", "Devotees"];
 
   return (
     <div className="p-4 md:p-8 bg-[#faf9f7] min-h-screen font-sans">

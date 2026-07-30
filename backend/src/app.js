@@ -25,6 +25,7 @@ const poojaSettingsRoutes = require("./routes/poojaSettingsRoutes");
 const poojaRoutes = require("./routes/poojaRoutes");
 const poojaBookingRoutes = require("./routes/poojaBookingRoutes");
 const auditLogRoutes = require("./routes/auditLogRoutes");
+const publicRoutes = require("./routes/publicRoutes");
 const Room = require("./models/Room");
 
 const app = express();
@@ -36,6 +37,9 @@ app.use("/api/notifications", notificationRoutes);
 app.get("/api/health", (req, res) => {
   res.status(200).json({ status: "ok", service: "temple-billing-backend" });
 });
+
+// Public API routes
+app.use("/api/public", publicRoutes);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/employees", employeeRoutes);

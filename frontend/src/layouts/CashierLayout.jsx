@@ -63,9 +63,8 @@ const CashierLayout = ({ children, onLogoutClick }) => {
       />
 
       <main
-        className={`min-h-screen transition-all duration-300 ${
-          collapsed ? "lg:pl-[92px]" : "lg:pl-[320px]"
-        }`}
+        className={`min-h-screen transition-all duration-300 ${collapsed ? "lg:pl-[92px]" : "lg:pl-[320px]"
+          }`}
       >
         <div className="sticky top-0 z-20 border-b border-[#f3d7b0] bg-[#fff8ef]/95 px-4 py-3 backdrop-blur-xl md:px-6">
           <div className="flex items-center justify-between gap-3">
