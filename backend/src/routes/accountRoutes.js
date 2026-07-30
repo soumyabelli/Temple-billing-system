@@ -9,6 +9,7 @@ router.post("/account-heads", authenticate, accountController.createAccountHead)
 
 // Transactions
 router.get("/transactions", authenticate, accountController.getTransactions);
+router.get("/register", authenticate, accountController.getRegister);
 router.post("/manual-expense", authenticate, accountController.createManualExpense);
 router.put("/expense/:id/approve", authenticate, accountController.approveExpense);
 router.post("/bank-interest", authenticate, accountController.addBankInterest);

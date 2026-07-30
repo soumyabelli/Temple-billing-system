@@ -11,7 +11,10 @@ const AssetScanResult = () => {
   useEffect(() => {
     const fetchAssetData = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/public/assets/${id}`);
+        const token = localStorage.getItem("token");
+        const res = await axios.get(`http://localhost:5000/api/admin/assets/scan/${id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         if (res.data.success) {
           setData(res.data);
         } else {

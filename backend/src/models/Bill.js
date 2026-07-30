@@ -3,7 +3,12 @@ const mongoose = require("mongoose");
 const billSchema = new mongoose.Schema(
   {
     devoteeName: { type: String, required: true, trim: true },
-    sevaType: { type: String, required: true, trim: true },
+    sevaType: { type: String, required: false, trim: true }, // Optional for consolidated
+    items: [{
+      itemType: { type: String, enum: ["Pooja", "Donation", "Prasadam", "Other"] },
+      itemName: { type: String },
+      amount: { type: Number }
+    }],
     amount: { type: Number, required: true, min: 1 },
     paymentMode: {
       type: String,

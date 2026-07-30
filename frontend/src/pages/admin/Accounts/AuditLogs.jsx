@@ -82,6 +82,32 @@ const AuditLogs = () => {
     }
   };
 
+  const [showFilters, setShowFilters] = useState(false);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+
+  const applyFilters = async () => {
+    // Send filters to backend instead of just frontend filtering
+    setShowFilters(false);
+    setCurrentPage(1);
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("token");
+      let url = "http://localhost:5000/api/audit-logs?";
+      if (startDate) url += `startDate=${startDate}&`;
+      if (endDate) url += `endDate=${endDate}&`;
+      
+      const res = await axios.get(url, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setLogs(res.data);
+    } catch (error) {
+      toast.error("Failed to load audit logs");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const filteredLogs = logs.filter(log => {
     const matchSearch = log.details?.toLowerCase().includes(searchTerm.toLowerCase()) || 
                         log.action?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -170,35 +196,7 @@ const AuditLogs = () => {
       </div>
 
       {/* Controls */}
-      <div className="flex flex-wrap items-center gap-4 mb-6">
-        <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-600">
-          <span className="text-slate-400">01/07/2026 - 27/07/2026</span>
-        </div>
-        
-        <select 
-          className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-600 outline-none max-w-[150px]"
-          value={filterUser}
-          onChange={(e) => { setFilterUser(e.target.value); setCurrentPage(1); }}
-        >
-          {uniqueUsers.map(u => <option key={u}>{u}</option>)}
-        </select>
-        
-        <select 
-          className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-600 outline-none max-w-[150px]"
-          value={filterAction}
-          onChange={(e) => { setFilterAction(e.target.value); setCurrentPage(1); }}
-        >
-          {uniqueActions.map(a => <option key={a}>{a}</option>)}
-        </select>
-
-        <select 
-          className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-600 outline-none max-w-[150px]"
-          value={filterModule}
-          onChange={(e) => { setFilterModule(e.target.value); setCurrentPage(1); }}
-        >
-          {uniqueModules.map(m => <option key={m}>{m}</option>)}
-        </select>
-
+      <div className="flex flex-wrap items-center gap-4 mb-6 relative">
         <div className="flex items-center bg-white border border-slate-200 rounded-lg px-3 py-2 flex-grow max-w-md">
           <FiSearch className="text-slate-400 mr-2" />
           <input
@@ -210,9 +208,95 @@ const AuditLogs = () => {
           />
         </div>
         
-        <button className="flex items-center gap-2 bg-white border border-slate-200 text-slate-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-50 ml-auto">
-          <FiFilter /> Filter
-        </button>
+        <div className="relative ml-auto">
+          <button 
+            onClick={() => setShowFilters(!showFilters)}
+            className="flex items-center gap-2 bg-white border border-slate-200 text-slate-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-50"
+          >
+            <FiFilter /> Filters {(filterUser !== "All Users" || filterAction !== "All Actions" || filterModule !== "All Modules") && "(Active)"}
+          </button>
+
+          {showFilters && (
+            <div className="absolute right-0 top-full mt-2 w-72 bg-white rounded-xl shadow-lg border border-slate-200 p-4 z-50">
+              <h4 className="text-sm font-semibold text-slate-800 mb-4">Filter Logs</h4>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs text-slate-500 mb-1">Start Date</label>
+                  <input 
+                    type="date" 
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-600 outline-none" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-500 mb-1">End Date</label>
+                  <input 
+                    type="date" 
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-600 outline-none" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-500 mb-1">User</label>
+                  <select 
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-600 outline-none"
+                    value={filterUser}
+                    onChange={(e) => setFilterUser(e.target.value)}
+                  >
+                    {uniqueUsers.map(u => <option key={u}>{u}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-500 mb-1">Action</label>
+                  <select 
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-600 outline-none"
+                    value={filterAction}
+                    onChange={(e) => setFilterAction(e.target.value)}
+                  >
+                    {uniqueActions.map(a => <option key={a}>{a}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-500 mb-1">Module</label>
+                  <select 
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-600 outline-none"
+                    value={filterModule}
+                    onChange={(e) => setFilterModule(e.target.value)}
+                  >
+                    {uniqueModules.map(m => <option key={m}>{m}</option>)}
+                  </select>
+                </div>
+              </div>
+              
+              <div className="flex gap-2 mt-6">
+                <button 
+                  onClick={() => {
+                    setFilterUser("All Users");
+                    setFilterAction("All Actions");
+                    setFilterModule("All Modules");
+                    setStartDate("");
+                    setEndDate("");
+                    setSearchTerm("");
+                    setCurrentPage(1);
+                    fetchLogs();
+                  }}
+                  className="flex-1 px-3 py-2 border border-slate-200 text-slate-600 rounded-lg text-sm hover:bg-slate-50"
+                >
+                  Clear
+                </button>
+                <button 
+                  onClick={applyFilters}
+                  className="flex-1 px-3 py-2 bg-[#ff8b00] text-white rounded-lg text-sm hover:bg-[#e67e00]"
+                >
+                  Apply
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Table */}

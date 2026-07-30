@@ -98,20 +98,13 @@ exports.completeRepair = async (req, res) => {
     await repair.save();
 
     if (repair.cost > 0) {
-      const d = new Date();
-      const year = d.getFullYear();
-      const month = d.getMonth() + 1;
-      const financialYear = month >= 4 ? `${year}-${year + 1}` : `${year - 1}-${year}`;
-
-      await AccountTransaction.create({
+      const { recordTransaction } = require("../utils/accountTransactionHelper");
+      await recordTransaction({
         transactionType: "Debit",
         source: "Repair",
         category: "Repair Expense",
         amount: repair.cost,
-        date: d,
-        financialYear,
         paymentMethod: "System",
-        status: "Completed",
         description: `Repair completed for asset ${repair.asset.name}. Vendor: ${repair.vendor}`,
         referenceId: repair._id,
         referenceModel: "RepairRequest",

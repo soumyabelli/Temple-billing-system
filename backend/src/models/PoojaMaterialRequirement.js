@@ -23,6 +23,18 @@ const poojaMaterialRequirementSchema = new mongoose.Schema(
         charge: {
           type: Number,
           default: 0,
+        },
+        mandatory: {
+          type: Boolean,
+          default: false,
+        },
+        templeArrangeAvailable: {
+          type: Boolean,
+          default: true,
+        },
+        templeCharge: {
+          type: Number,
+          default: 0,
         }
       }
     ]

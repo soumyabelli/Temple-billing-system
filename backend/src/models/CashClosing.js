@@ -16,6 +16,22 @@ const cashClosingSchema = new mongoose.Schema(
       required: true,
       default: 0,
     },
+    upiCollected: {
+      type: Number,
+      default: 0,
+    },
+    cardCollected: {
+      type: Number,
+      default: 0,
+    },
+    bankTransferCollected: {
+      type: Number,
+      default: 0,
+    },
+    totalSystemCollection: {
+      type: Number,
+      default: 0,
+    },
     cashDeposited: {
       type: Number,
       default: 0,

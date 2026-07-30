@@ -44,6 +44,37 @@ exports.getTransactions = async (req, res) => {
   }
 };
 
+exports.getRegister = async (req, res) => {
+  try {
+    const { startDate, endDate, source, status, page = 1, limit = 50 } = req.query;
+    let query = { status: "Completed" };
+    
+    if (source) query.source = source;
+    if (status) query.status = status;
+    if (startDate && endDate) {
+      query.date = { $gte: new Date(startDate), $lte: new Date(endDate) };
+    }
+    
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const transactions = await AccountTransaction.find(query)
+      .sort({ date: -1 })
+      .skip(skip)
+      .limit(parseInt(limit))
+      .populate("recordedBy", "name email");
+      
+    const total = await AccountTransaction.countDocuments(query);
+
+    res.status(200).json({
+      transactions,
+      totalPages: Math.ceil(total / parseInt(limit)),
+      currentPage: parseInt(page),
+      totalTransactions: total,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch register", error: error.message });
+  }
+};
+
 exports.createManualExpense = async (req, res) => {
   try {
     const { category, amount, description, financialYear, paymentMethod } = req.body;
@@ -241,21 +272,55 @@ exports.getCashClosings = async (req, res) => {
 
 exports.submitCashClosing = async (req, res) => {
   try {
-    const { openingCash, cashCollected, cashDeposited, closingCash, notes, date } = req.body;
+    const { openingCash, cashDeposited, closingCash, notes, date } = req.body;
     
-    // Calculate discrepancy (opening + collected - deposited should equal closing)
-    const expectedClosing = Number(openingCash) + Number(cashCollected) - Number(cashDeposited);
+    // Auto-calculate collections for today for this cashier
+    const targetDate = date ? new Date(date) : new Date();
+    targetDate.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(targetDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const transactions = await AccountTransaction.find({
+      recordedBy: req.user.id,
+      transactionType: "Credit",
+      status: "Completed",
+      date: { $gte: targetDate, $lte: endOfDay }
+    });
+
+    let cashCollected = 0;
+    let upiCollected = 0;
+    let cardCollected = 0;
+    let bankTransferCollected = 0;
+
+    transactions.forEach(t => {
+      const amt = Number(t.amount) || 0;
+      if (t.paymentMethod === "Cash") cashCollected += amt;
+      else if (t.paymentMethod === "UPI") upiCollected += amt;
+      else if (t.paymentMethod === "Card") cardCollected += amt;
+      else if (t.paymentMethod === "Bank Transfer") bankTransferCollected += amt;
+    });
+
+    const totalSystemCollection = cashCollected + upiCollected + cardCollected + bankTransferCollected;
+
+    // Calculate discrepancy based on physical cash vs expected cash
+    // Expected Cash = Opening Cash + Cash Collected - Cash Deposited
+    const expectedClosing = Number(openingCash) + cashCollected - Number(cashDeposited);
     const discrepancy = Number(closingCash) - expectedClosing;
 
     const closing = new CashClosing({
-      date: date || new Date(),
+      date: targetDate,
       openingCash,
       cashCollected,
+      upiCollected,
+      cardCollected,
+      bankTransferCollected,
+      totalSystemCollection,
       cashDeposited,
       closingCash,
       discrepancy,
       notes,
-      recordedBy: req.user.id
+      recordedBy: req.user.id,
+      status: "Pending Verification"
     });
     
     await closing.save();
@@ -264,7 +329,7 @@ exports.submitCashClosing = async (req, res) => {
       req.user.id,
       "Submitted Shift Closing",
       "Accounts & Finance",
-      `Submitted cash closing with closing cash Rs ${closingCash} and discrepancy Rs ${discrepancy}`,
+      `Submitted shift closing with discrepancy Rs ${discrepancy}. Expected Cash: ${expectedClosing}, Actual: ${closingCash}`,
       req.ip
     );
 

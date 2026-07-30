@@ -18,6 +18,7 @@ const createBill = async (req, res) => {
     const {
       devoteeName,
       sevaType,
+      items,
       amount,
       paymentMode,
       billDate,
@@ -27,8 +28,12 @@ const createBill = async (req, res) => {
       notes,
     } = req.body;
 
-    if (!devoteeName || !sevaType || !amount) {
-      return res.status(400).json({ message: "devoteeName, sevaType and amount are required." });
+    if (!devoteeName || !amount) {
+      return res.status(400).json({ message: "devoteeName and amount are required." });
+    }
+    
+    if (!sevaType && (!items || items.length === 0)) {
+      return res.status(400).json({ message: "Either sevaType or items are required." });
     }
 
     const numericAmount = Number(amount);
@@ -42,6 +47,7 @@ const createBill = async (req, res) => {
     const bill = await Bill.create({
       devoteeName,
       sevaType,
+      items,
       amount: numericAmount,
       paymentMode,
       billDate,

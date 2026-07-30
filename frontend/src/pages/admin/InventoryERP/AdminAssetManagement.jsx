@@ -67,7 +67,7 @@ const AdminAssetManagement = () => {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {assets.map((asset) => {
-          const qrUrl = `${window.location.origin}/public/asset/${asset.assetId}`;
+          const qrUrl = `${window.location.origin}/admin/assets/scan/${asset.assetId}`;
           return (
             <div key={asset._id} className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow p-6 relative overflow-hidden group">
               <div className="flex justify-between items-start mb-4">
@@ -120,7 +120,7 @@ const AdminAssetManagement = () => {
                 <div className="flex justify-center mb-6 p-4 bg-white rounded-xl border border-slate-100 shadow-sm inline-block">
                   <QRCodeCanvas 
                     id={`qr-code-${showQRModal.assetId}`}
-                    value={`${window.location.origin}/public/asset/${showQRModal.assetId}`} 
+                    value={`${window.location.origin}/admin/assets/scan/${showQRModal.assetId}`} 
                     size={200}
                     level="H"
                     includeMargin={true}

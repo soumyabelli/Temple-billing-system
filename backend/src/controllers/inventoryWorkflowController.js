@@ -4,6 +4,7 @@ const InventoryItem = require("../models/InventoryItem");
 const InventoryBatch = require("../models/InventoryBatch");
 const AccountTransaction = require("../models/AccountTransaction");
 const { recordTransaction } = require("../utils/accountTransactionHelper");
+const { addStock, deductStock } = require("../utils/inventoryHelper");
 
 // Create GRN from PO
 exports.createGRN = async (req, res) => {
@@ -60,10 +61,19 @@ exports.approveGRN = async (req, res) => {
       const item = await InventoryItem.findById(line.item._id);
       
       // Update Item Total Stock
-      item.availableStock += line.acceptedQuantity;
-      item.lastPurchasePrice = line.unitPrice;
-      item.lastPurchaseDate = new Date();
-      await item.save();
+      const updatedItem = await addStock(
+        line.item._id, 
+        line.acceptedQuantity, 
+        "GRN Approved", 
+        req.user._id, 
+        `Received via GRN ${grn.grnNumber}`
+      );
+      
+      if (updatedItem) {
+        updatedItem.lastPurchasePrice = line.unitPrice;
+        updatedItem.lastPurchaseDate = new Date();
+        await updatedItem.save();
+      }
 
       // Create Batch if Required
       if (item.batchRequired || line.batchNumber) {
@@ -129,9 +139,19 @@ exports.logKitchenProduction = async (req, res) => {
         });
       }
 
-      item.availableStock -= requiredQty;
-      item.consumedStock += requiredQty;
-      await item.save();
+      await deductStock(
+        item._id,
+        requiredQty,
+        "Kitchen Production",
+        req.user ? req.user._id : null,
+        `Used in ${recipe.name}`
+      );
+      
+      const updatedItem = await InventoryItem.findById(item._id);
+      if (updatedItem) {
+        updatedItem.consumedStock = (updatedItem.consumedStock || 0) + requiredQty;
+        await updatedItem.save();
+      }
 
       // Deduct from batches using FIFO
       let remainingToDeduct = requiredQty;
@@ -154,11 +174,13 @@ exports.logKitchenProduction = async (req, res) => {
     // Increase Finished Good (Prasadam) Stock
     if (recipe.outputItem) {
        // if it's an InventoryItem finished good
-       const fg = await InventoryItem.findById(recipe.outputItem);
-       if (fg) {
-         fg.availableStock += producedQuantity;
-         await fg.save();
-       }
+       await addStock(
+         recipe.outputItem,
+         producedQuantity,
+         "Kitchen Production",
+         req.user ? req.user._id : null,
+         `Produced from recipe ${recipe.name}`
+       );
     }
     
     // Also update Prasadam model if they are linked by name
@@ -191,9 +213,19 @@ exports.approveDamageNote = async (req, res) => {
     damage.approvedBy = req.user._id;
 
     const item = damage.item;
-    item.availableStock -= damage.quantity;
-    item.damagedStock += damage.quantity;
-    await item.save();
+    await deductStock(
+      item._id,
+      damage.quantity,
+      "Damage Note",
+      req.user._id,
+      `Damage approved: ${damage.reason || ''}`
+    );
+    
+    const updatedItem = await InventoryItem.findById(item._id);
+    if (updatedItem) {
+      updatedItem.damagedStock = (updatedItem.damagedStock || 0) + damage.quantity;
+      await updatedItem.save();
+    }
 
     await damage.save();
 

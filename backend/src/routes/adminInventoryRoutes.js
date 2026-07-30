@@ -64,6 +64,10 @@ router.post("/inventory-assets", createAsset);
 router.put("/inventory-assets/:id", updateAsset);
 router.delete("/inventory-assets/:id", deleteAsset);
 
+const { getPublicAssetDetails } = require("../controllers/publicAssetController");
+// Protected QR Scan Route
+router.get("/assets/scan/:assetId", getPublicAssetDetails);
+
 // --- Repair Routes ---
 router.get("/inventory-repairs", getAllRepairs);
 router.post("/inventory-repairs", createRepair);

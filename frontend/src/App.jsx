@@ -99,7 +99,6 @@ function App() {
     <Routes>
 
       {/* PUBLIC ROUTES */}
-      <Route path="/public/asset/:id" element={<AssetScanResult />} />
 
       {/* AUTH */}
       <Route path="/" element={<LandingPage />} />
@@ -213,6 +212,16 @@ function App() {
           <ProtectedRoute allowedRoles={["admin"]}>
             <AdminLayout>
               <InventoryManagement />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/assets/scan/:id"
+        element={
+          <ProtectedRoute allowedRoles={["admin", "staff"]}>
+            <AdminLayout>
+              <AssetScanResult />
             </AdminLayout>
           </ProtectedRoute>
         }

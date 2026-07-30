@@ -110,4 +110,66 @@ setInterval(async () => {
   }
 }, 60000);
 
+// Daily Background Jobs for Notifications
+const cron = require("node-cron");
+const Asset = require("./models/Asset");
+const Notification = require("./models/Notification");
+const PoojaBooking = require("./models/PoojaBooking");
+
+// Run every day at 8:00 AM
+cron.schedule("0 8 * * *", async () => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const thirtyDaysFromNow = new Date(today);
+    thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+
+    // 1. Warranty Expiration Check
+    const expiringAssets = await Asset.find({
+      warranty: { $exists: true, $ne: null },
+    });
+    
+    // Some logic to parse warranty if it's a date. 
+    // Usually 'warranty' might be a string like '1 Year' or a Date. 
+    // Assuming it's a Date string if parseable
+    for (const asset of expiringAssets) {
+      const warrantyDate = new Date(asset.warranty);
+      if (!isNaN(warrantyDate.getTime())) {
+        if (warrantyDate >= today && warrantyDate <= thirtyDaysFromNow) {
+          await Notification.create({
+            title: "Warranty Expiring Soon",
+            message: `The warranty for asset ${asset.name} (ID: ${asset.assetId}) is expiring on ${warrantyDate.toLocaleDateString()}.`,
+            category: "Asset Management",
+            audienceRole: "admin",
+          });
+        }
+      }
+    }
+
+    // 2. Upcoming Poojas for tomorrow
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const dayAfterTomorrow = new Date(tomorrow);
+    dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 1);
+
+    const upcomingPoojas = await PoojaBooking.find({
+      status: "Booked",
+      bookingDate: { $gte: tomorrow, $lt: dayAfterTomorrow }
+    });
+
+    if (upcomingPoojas.length > 0) {
+      await Notification.create({
+        title: "Upcoming Poojas Tomorrow",
+        message: `There are ${upcomingPoojas.length} poojas scheduled for tomorrow. Please ensure materials are ready.`,
+        category: "Pooja Management",
+        audienceRole: "priest", // or staff/admin
+      });
+    }
+
+    console.log("[Cron] Daily notification checks completed.");
+  } catch (err) {
+    console.error("[Cron] Error running daily jobs:", err);
+  }
+});
+
 module.exports = app;

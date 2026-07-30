@@ -5,39 +5,38 @@ const InventoryItem = require("../models/InventoryItem");
 // Create a new pooja booking
 const createBooking = async (req, res) => {
   try {
-    const { customerName, service, amount, paymentMethod, contactNumber, notes, bookingDate, materialsProvidedByTemple, materialCharge } = req.body;
+    const { customerName, service, amount, paymentMethod, contactNumber, notes, bookingDate, templeArrangement, templeMaterialCharge } = req.body;
 
     if (!customerName || !service || !amount || !paymentMethod || !contactNumber || !bookingDate) {
       return res.status(400).json({ message: "All required fields must be provided" });
     }
 
-    let materialsConsumed = [];
+    let templeMaterialRequests = [];
+    let calculatedTempleCharge = 0;
 
-    if (materialsProvidedByTemple) {
+    if (templeArrangement) {
       const requirement = await PoojaMaterialRequirement.findOne({ poojaName: service }).populate("requiredMaterials.item");
       if (requirement && requirement.requiredMaterials) {
         for (const reqMat of requirement.requiredMaterials) {
-          if (reqMat.item) {
-            const invItem = await InventoryItem.findById(reqMat.item._id);
-            if (invItem) {
-              const oldStock = invItem.availableStock;
-              invItem.availableStock -= reqMat.quantity;
-              await invItem.save();
-              materialsConsumed.push({
-                item: invItem._id,
-                itemName: invItem.name,
-                quantity: reqMat.quantity
-              });
-              const InventoryLog = require("../models/InventoryLog");
-              await InventoryLog.create({
-                item: invItem._id,
-                action: "Consumed",
-                quantity: reqMat.quantity,
-                oldStock: oldStock,
-                newStock: invItem.availableStock,
-                user: req.user ? req.user.id : null,
-                description: `Pooja Booking Consumption: ${service}`
-              });
+          if (reqMat.templeArrangeAvailable) {
+            calculatedTempleCharge += reqMat.templeCharge || 0;
+            if (reqMat.item) {
+              const invItem = await InventoryItem.findById(reqMat.item._id);
+              if (invItem && invItem.availableStock >= reqMat.quantity) {
+                const { deductStock } = require("../utils/inventoryHelper");
+                await deductStock(
+                  invItem._id, 
+                  reqMat.quantity, 
+                  "Consumed", 
+                  req.user ? req.user.id : null, 
+                  `Pooja Booking Consumption: ${service}`
+                );
+                templeMaterialRequests.push({
+                  item: invItem._id,
+                  itemName: invItem.name,
+                  qty: `${reqMat.quantity}`
+                });
+              }
             }
           }
         }
@@ -53,9 +52,10 @@ const createBooking = async (req, res) => {
       notes,
       bookingDate,
       createdBy: req.user.id, // from auth middleware
-      materialsProvidedByTemple: Boolean(materialsProvidedByTemple),
-      materialCharge: Number(materialCharge) || 0,
-      materialsConsumed
+      templeArrangement: Boolean(templeArrangement),
+      templeMaterialCharge: Number(templeMaterialCharge) || calculatedTempleCharge,
+      templeMaterialRequests,
+      materialStatus: templeArrangement ? "Consumed" : "N/A"
     });
 
     const savedBooking = await newBooking.save();
