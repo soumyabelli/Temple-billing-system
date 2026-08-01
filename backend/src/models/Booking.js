@@ -111,6 +111,10 @@ const bookingSchema = new mongoose.Schema(
       inventoryConsumed: { type: Boolean, default: false },
     },
 
+    // Combined booking fields
+    isCombined: { type: Boolean, default: false },
+    items: { type: Array, default: [] },
+
     // Full audit trail of every status change
     bookingHistory: { type: [bookingHistorySchema], default: [] },
   },
@@ -121,13 +125,14 @@ const bookingSchema = new mongoose.Schema(
 bookingSchema.pre("save", async function () {
   if (this.bookingNumber) return;
 
-  const last = await this.constructor.findOne({}, { bookingNumber: 1 }, { sort: { createdAt: -1 } });
+  const prefix = this.isCombined ? "CB" : "PB";
+  const last = await this.constructor.findOne({ bookingNumber: new RegExp(`^${prefix}`) }, { bookingNumber: 1 }, { sort: { createdAt: -1 } });
   let nextNum = 1001;
   if (last?.bookingNumber) {
-    const parsed = parseInt(last.bookingNumber.replace(/^PB/i, ""), 10);
+    const parsed = parseInt(last.bookingNumber.replace(new RegExp(`^${prefix}`, "i"), ""), 10);
     if (!Number.isNaN(parsed)) nextNum = parsed + 1;
   }
-  this.bookingNumber = `PB${nextNum}`;
+  this.bookingNumber = `${prefix}${nextNum}`;
 });
 
 module.exports = mongoose.model("Booking", bookingSchema);

@@ -4,7 +4,7 @@ import { getDonationTypes } from "./donationTypeService";
 import { getPrasadamTypes, defaultPrasadamTypes } from "./prasadamTypeService";
 import { getEmployeeProfile, updateEmployeeProfile, changeEmployeePassword } from "./employeeService";
 
-export const API_BASE = "http://localhost:5000/api";
+export const API_BASE = "/api";
 
 export const toNumber = (value) => {
   const normalized = Number(String(value ?? "").replace(/[^0-9.-]+/g, ""));

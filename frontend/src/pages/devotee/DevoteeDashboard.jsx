@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
 import templeImage from "../../assets/temple.jpg.png";
 import { useAuth } from "../../context/AuthContext";
 import BookingReceipt from "../../components/common/BookingReceipt";
@@ -463,7 +464,7 @@ const DevoteeDashboard = () => {
       { type: "VIP Suite", price: 4500, amenities: ["Attached Bathroom", "AC", "TV", "WiFi", "Geyser", "Refrigerator", "Sofa", "Room Service"] }
     ];
   }, [availableRooms]);
-  const [prasadamOrders, setPrasadamOrders] = useState([]);
+
   const [cartItems, setCartItems] = useState([]);
   const [cartPaymentMethod, setCartPaymentMethod] = useState("Razorpay (UPI / Cards / Net Banking)");
   const [profileData, setProfileData] = useState({
@@ -606,22 +607,18 @@ const DevoteeDashboard = () => {
     );
     if (!isConfirmed) return;
 
-    const combinedBillNo = `COMBINED-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`;
     const summaryTitle = cartItems.map((i) => `${i.name} (x${i.quantity})`).join(", ");
 
-    const executeCheckout = (paymentId = `RZP-${Date.now()}`) => {
-      const combinedRecord = {
-        _id: `CB-${Date.now()}`,
-        bookingNumber: combinedBillNo,
-        service: `Combined Order: ${summaryTitle}`,
+    try {
+      const payload = {
         devoteeName: profileData.name || user?.name || "Devotee",
         devoteeEmail: profileData.email || user?.email || "",
-        devoteePhone: profileData.phone || "",
-        datetime: new Date().toISOString(),
+        devoteePhone: profileData.phone || undefined,
+        service: `Combined Order: ${summaryTitle}`,
+        datetime: new Date(Date.now() + 60 * 60 * 1000).toISOString(), // 1 hour in future to pass validation
         amount: cartTotal,
-        paymentMethod: cartPaymentMethod || "Razorpay (Online Payment)",
-        transactionId: paymentId,
-        status: "Confirmed / Paid",
+        paymentMethod: cartPaymentMethod || "UPI",
+        notes: `Items: ${cartItems.map((i) => `${i.name} (x${i.quantity})`).join(", ")}`,
         isCombined: true,
         items: cartItems.map((i) => ({
           name: i.name,
@@ -632,79 +629,81 @@ const DevoteeDashboard = () => {
           type: i.type,
           date: i.date || new Date().toLocaleDateString(),
         })),
-        createdAt: new Date().toISOString(),
       };
 
-      setBookingsData((prev) => [combinedRecord, ...prev]);
+      const bookingRes = await createDevoteeBooking(payload);
+      const { booking: createdBooking, order, key, simulated } = bookingRes;
 
-      // Download 1 Combined Receipt
-      handleReceiptDownload(combinedRecord, "combined");
+      if (!simulated && order) {
+        const loaded = await loadRazorpayScript();
+        if (!loaded) {
+          alert("Unable to load payment gateway. Try again later.");
+          return;
+        }
 
-      setCartItems([]);
-      alert(`1 Combined Bill (${combinedBillNo}) Paid & Generated Successfully! Receipt downloaded.`);
-      setActivePage("My Bookings");
-    };
+        const options = {
+          key: key || "",
+          amount: order.amount,
+          currency: order.currency,
+          name: "Sri Shanti Mahadev Mandir",
+          description: `Combined Bill for ${cartItems.length} sacred service(s)`,
+          order_id: order.id,
+          prefill: {
+            name: profileData.name || "Devotee",
+            email: profileData.email || "devotee@example.com",
+            contact: profileData.phone || "",
+          },
+          theme: { color: "#d97706" },
+          handler: async function (resp) {
+            try {
+              await verifyBookingPayment({
+                razorpay_order_id: resp.razorpay_order_id,
+                razorpay_payment_id: resp.razorpay_payment_id,
+                razorpay_signature: resp.razorpay_signature,
+                bookingId: createdBooking._id,
+              });
 
-    // Load Razorpay Checkout SDK
-    const loaded = await loadRazorpayScript();
-    if (!loaded || !window.Razorpay) {
-      // Direct completion fallback if Razorpay script is blocked locally
-      executeCheckout(`RZP-SIM-${Date.now()}`);
-      return;
-    }
+              // Refresh data
+              try {
+                const [bookingsRes, notificationsRes] = await Promise.all([
+                  getDevoteeBookings(profileData.email || user?.email || ""),
+                  getDevoteeNotifications(profileData.email || user?.email || ""),
+                ]);
+                setBookingsData(bookingsRes.bookings || []);
+                setNotificationsData(formatNotifications(notificationsRes.notifications || []));
+              } catch (refreshError) {
+                console.warn("Unable to refresh bookings after create", refreshError);
+              }
 
-    // Safely retrieve Razorpay Key without process.env ReferenceError in Vite
-    let razorpayKey = "rzp_test_key";
-    try {
-      if (typeof import.meta !== "undefined" && import.meta.env?.VITE_RAZORPAY_KEY_ID) {
-        razorpayKey = import.meta.env.VITE_RAZORPAY_KEY_ID;
+              // Download Receipt
+              handleReceiptDownload(createdBooking, "combined");
+              setCartItems([]);
+              alert(`Combined Bill Paid & Generated Successfully! Receipt downloaded.`);
+              setActivePage("My Bookings");
+            } catch (err) {
+              alert(err?.response?.data?.error || "Payment verification failed.");
+              console.warn("verify combined booking handler error", err);
+            }
+          },
+          modal: {
+            ondismiss: function () {
+              alert("Razorpay checkout was closed without completing payment.");
+            },
+          },
+        };
+
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+      } else {
+        // Simulated or Cash checkout
+        handleReceiptDownload(createdBooking, "combined");
+        setCartItems([]);
+        alert(`Combined Bill Generated Successfully! Receipt downloaded.`);
+        setActivePage("My Bookings");
       }
-    } catch (e) {}
-
-    try {
-      const orderRes = await createRazorpayOrder({
-        amount: cartTotal,
-        donorName: profileData.name || user?.name || "Devotee",
-        donorEmail: profileData.email || user?.email || "",
-      });
-      if (orderRes?.key) {
-        razorpayKey = orderRes.key;
-      }
-      if (orderRes?.simulated) {
-        executeCheckout(`RZP-SIM-${Date.now()}`);
-        return;
-      }
-    } catch (err) {
-      console.warn("Backend order creation fallback:", err);
-    }
-
-    const options = {
-      key: razorpayKey,
-      amount: Math.round(cartTotal * 100),
-      currency: "INR",
-      name: "Sri Shanti Mahadev Mandir",
-      description: `Combined Bill for ${cartItems.length} sacred service(s)`,
-      prefill: {
-        name: profileData.name || "Devotee",
-        email: profileData.email || "devotee@example.com",
-        contact: profileData.phone || "",
-      },
-      theme: { color: "#d97706" },
-      handler: function (response) {
-        executeCheckout(response.razorpay_payment_id || `RZP-${Date.now()}`);
-      },
-      modal: {
-        ondismiss: function () {
-          alert("Razorpay checkout was closed without completing payment.");
-        },
-      },
-    };
-
-    try {
-      const rzp = new window.Razorpay(options);
-      rzp.open();
-    } catch (e) {
-      executeCheckout(`RZP-DIRECT-${Date.now()}`);
+    } catch (error) {
+      console.error("Combined checkout error:", error);
+      alert(error?.response?.data?.error || "An error occurred while saving the booking. Please try again or contact support.");
     }
   };
 
@@ -1847,9 +1846,10 @@ const DevoteeDashboard = () => {
   };
 
   const getReceiptDevotee = (item = {}) => ({
-    name: item.devoteeName || item.donorName || profileData.name,
-    email: item.devoteeEmail || item.donorEmail || item.email || profileData.email,
-    phone: item.devoteePhone || item.donorPhone || item.phone || item.contactNumber || profileData.phone || "",
+    name: item.devoteeName || item.donorName || profileData.name || "-",
+    email: item.devoteeEmail || item.donorEmail || item.email || profileData.email || "-",
+    phone: item.devoteePhone || item.donorPhone || item.phone || item.contactNumber || profileData.phone || "-",
+    address: item.address || item.devoteeAddress || profileData.address || "-",
   });
 
   const handleReceiptDownload = (item, type = "donation") => {
@@ -1926,7 +1926,8 @@ const DevoteeDashboard = () => {
       cashierName: "Online Portal",
       devoteeName: devotee.name,
       mobile: devotee.phone,
-      address: devotee.email,
+      email: devotee.email,
+      address: devotee.address,
       poojaBookings,
       prasadamOrders,
       subTotal: amount,
@@ -1936,6 +1937,31 @@ const DevoteeDashboard = () => {
       materials: [],
       notes: notesArr
     });
+  };
+
+  const handleDownloadReceiptView = async () => {
+    const receiptElement = document.getElementById("receipt-preview-content");
+    if (!receiptElement) return;
+
+    try {
+      const canvas = await html2canvas(receiptElement, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#ffffff"
+      });
+      const imgData = canvas.toDataURL("image/jpeg", 1.0);
+      
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      
+      pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`receipt-${viewingReceiptData?.receiptNo || 'download'}.pdf`);
+    } catch (err) {
+      console.error("Failed to generate PDF", err);
+      alert("Failed to download receipt.");
+    }
   };
 
   const handlePaymentHistoryDownload = () => {
@@ -4083,7 +4109,7 @@ const DevoteeDashboard = () => {
           </div>
         </main>
       </div>
-    </div>
+
       
       {/* Receipt Preview Modal */}
       {viewingReceiptData && (
@@ -4095,11 +4121,18 @@ const DevoteeDashboard = () => {
               <h3 className="text-lg font-bold text-gray-900">Receipt Preview</h3>
               <div className="flex items-center gap-3">
                 <button
+                  onClick={handleDownloadReceiptView}
+                  className="rounded-xl bg-green-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-green-700 transition-colors shadow-sm"
+                >
+                  <svg className="inline w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                  Download PDF
+                </button>
+                <button
                   onClick={() => window.print()}
                   className="rounded-xl bg-orange-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-orange-700 transition-colors shadow-sm"
                 >
                   <svg className="inline w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-                  Print / Save PDF
+                  Print
                 </button>
                 <button
                   onClick={() => setViewingReceiptData(null)}
@@ -4111,7 +4144,7 @@ const DevoteeDashboard = () => {
             </div>
 
             {/* Receipt Component */}
-            <div className="p-4 sm:p-8 bg-gray-50 flex justify-center print:bg-white print:p-0">
+            <div id="receipt-preview-content" className="p-4 sm:p-8 bg-gray-50 flex justify-center print:bg-white print:p-0">
               <BookingReceipt {...viewingReceiptData} />
             </div>
             

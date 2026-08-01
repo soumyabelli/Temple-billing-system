@@ -90,7 +90,7 @@ const getBookings = async (req, res) => {
 
 const createBooking = async (req, res) => {
   try {
-    const { devoteeName, devoteeEmail, devoteePhone, service, datetime, amount, contactNumber, notes, devoteeId, eventId, paymentMethod, assignedPriest } = req.body;
+    const { devoteeName, devoteeEmail, devoteePhone, service, datetime, amount, contactNumber, notes, devoteeId, eventId, paymentMethod, assignedPriest, isCombined, items, transactionId } = req.body;
     const normalizedDevoteeEmail = normalizeEmail(devoteeEmail);
 
     if (!devoteeName || !service || !datetime || amount == null) {
@@ -141,10 +141,13 @@ const createBooking = async (req, res) => {
       paymentMethod: pm || undefined,
       status: bookingStatus,
       paymentStatus: paymentStatus,
+      transactionId: transactionId || undefined,
       contactNumber,
       notes,
       assignedPriest: assignedPriest || undefined,
       priestName: priestName || undefined,
+      isCombined: isCombined || false,
+      items: items || [],
     };
 
     if (isDbConnected()) {

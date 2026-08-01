@@ -39,7 +39,9 @@ const buildMinDateTime = () => {
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, "0");
   const day = String(now.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+  const hours = String(now.getHours()).padStart(2, "0");
+  const minutes = String(now.getMinutes()).padStart(2, "0");
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
 
 const BookingPayments = () => {
@@ -414,7 +416,7 @@ const BookingPayments = () => {
                 <label className="block">
                   <span className="mb-2 block text-sm font-bold text-slate-800">Date</span>
                   <input
-                    type="date"
+                    type="datetime-local"
                     min={buildMinDateTime()}
                     value={form.datetime}
                     onChange={(e) => setForm((prev) => ({ ...prev, datetime: e.target.value }))}

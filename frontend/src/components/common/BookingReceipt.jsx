@@ -56,6 +56,7 @@ const BookingReceipt = ({
   cashierName = "Deepthi S.",
   devoteeName = "Ramesh Bhat",
   mobile = "9876543210",
+  email = "ramesh@example.com",
   address = "#12, Temple Street, Udupi - 576101",
   poojaBookings = [
     { slNo: 1, name: "Satyanarayana Pooja", date: "29 May 2025", qty: 1, amount: 500.00 }
@@ -178,6 +179,11 @@ const BookingReceipt = ({
               <span className="detail-label" style={{width: '70px'}}>Mobile</span>
               <span className="detail-colon">:</span>
               <span className="detail-value">{mobile}</span>
+            </div>
+            <div className="detail-row">
+              <span className="detail-label" style={{width: '70px'}}>Email</span>
+              <span className="detail-colon">:</span>
+              <span className="detail-value" style={{maxWidth: '180px', wordBreak: 'break-all'}}>{email}</span>
             </div>
             <div className="detail-row">
               <span className="detail-label" style={{width: '70px'}}>Address</span>
