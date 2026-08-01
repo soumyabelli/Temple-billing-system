@@ -25,11 +25,11 @@ async function runTests() {
   console.log("Connecting to MongoDB...");
   await mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost:27017/temple_billing");
   console.log("Connected.");
-  
+
   const AccountTransaction = require("./src/models/AccountTransaction");
   const CashClosing = require("./src/models/CashClosing");
   const Booking = require("./src/models/Booking");
-  
+
   // Clean test transactions
   await AccountTransaction.deleteMany({ description: /TEST_VERIFY/ });
   await Booking.deleteMany({ devoteeName: /TEST_VERIFY/ });
@@ -79,7 +79,7 @@ async function runTests() {
   } catch (e) {
     assert(e.response && (e.response.status === 403 || e.response.status === 401), "Cashier cannot access manual expense");
   }
-  
+
   // Test 2: Donation
   console.log("Testing Donation...");
   try {
@@ -132,12 +132,12 @@ async function runTests() {
         { type: "Prasadam", price: 400, quantity: 1, name: "Prasadam" }
       ]
     });
-    
+
     // Look for transactions for this combined
     const combTxs = await AccountTransaction.find({ description: /TEST_VERIFY_COMBINED/ });
     let totalComb = 0;
     combTxs.forEach(t => totalComb += t.amount);
-    
+
     assert(combTxs.some(t => t.category === "Pooja Income" && t.amount === 1000), "Combined: Pooja Income = 1000");
     assert(combTxs.some(t => t.category === "Room Income" && t.amount === 600), "Combined: Room Income = 600");
     assert(combTxs.some(t => t.category === "Prasadam Income" && t.amount === 400), "Combined: Prasadam Income = 400");
@@ -182,7 +182,7 @@ async function runTests() {
 
   console.log("--- TEST RESULTS ---");
   console.log(JSON.stringify(results, null, 2));
-  
+
   mongoose.disconnect();
 }
 
