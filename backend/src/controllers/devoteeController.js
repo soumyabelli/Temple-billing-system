@@ -17,6 +17,8 @@ const Razorpay = require("razorpay");
 const { createStaffBroadcastNotifications, createBroadcastNotifications, createStaffNotification } = require("../utils/notificationService");
 const { sendBookingConfirmation, sendDonationReceipt, sendPrasadamOrderConfirmation } = require("../utils/communicationService");
 const { buildEmailLookup, normalizeEmail } = require("../utils/email");
+const { recordTransaction } = require("../services/accountingService");
+
 const PRASADAM_MENU = {
   "Laddu Prasadam": 151,
   "Panchamrit Prasadam": 101,
@@ -240,6 +242,52 @@ const createBooking = async (req, res) => {
       }
     }
 
+    if (isDbConnected() && paymentStatus === "Paid") {
+      try {
+        if (isCombined && items && items.length > 0) {
+          for (const item of items) {
+            let cat = "Pooja Income";
+            let src = "Pooja Booking";
+            if (item.type === "Room" || item.type === "Accommodation") {
+              cat = "Room Income";
+              src = "Room Booking";
+            } else if (item.type === "Prasadam") {
+              cat = "Prasadam Income";
+              src = "Prasadam";
+            }
+
+            await recordTransaction({
+              transactionType: "Credit",
+              source: src,
+              category: cat,
+              amount: Number(item.price) * (item.quantity || 1) || item.amount || 0,
+              paymentMethod: pm || "Cash",
+              status: "Completed",
+              description: `Combined Offline: ${item.name || item.service || src} for ${devoteeName}`,
+              referenceId: booking._id,
+              referenceModel: "PoojaBooking",
+              recordedBy: req.user ? req.user.id : null,
+            });
+          }
+        } else {
+          await recordTransaction({
+            transactionType: "Credit",
+            source: "Pooja Booking",
+            category: "Pooja Income",
+            amount: numericAmount,
+            paymentMethod: pm || "Cash",
+            status: "Completed",
+            description: `Pooja Booking: ${service} for ${devoteeName}`,
+            referenceId: booking._id,
+            referenceModel: "PoojaBooking",
+            recordedBy: req.user ? req.user.id : null,
+          });
+        }
+      } catch (err) {
+        console.error("Failed to record accounting transaction:", err);
+      }
+    }
+
     return res.status(201).json({
       booking: normalizeBookingEmails(booking.toObject ? booking.toObject() : booking),
       simulated: true,
@@ -319,6 +367,52 @@ const verifyBookingPayment = async (req, res) => {
       }
     } catch (notifErr) {
       console.warn("Notification after booking verify failed:", notifErr);
+    }
+
+    if (isDbConnected() && booking.paymentStatus === "Paid") {
+      try {
+        if (booking.isCombined && booking.items && booking.items.length > 0) {
+          for (const item of booking.items) {
+            let cat = "Pooja Income";
+            let src = "Pooja Booking";
+            if (item.type === "Room" || item.type === "Accommodation") {
+              cat = "Room Income";
+              src = "Room Booking";
+            } else if (item.type === "Prasadam") {
+              cat = "Prasadam Income";
+              src = "Prasadam";
+            }
+
+            await recordTransaction({
+              transactionType: "Credit",
+              source: src,
+              category: cat,
+              amount: Number(item.price) * (item.quantity || 1) || item.amount || 0,
+              paymentMethod: booking.paymentMethod || "Bank Transfer",
+              status: "Completed",
+              description: `Combined: ${item.name || item.service || src} for ${booking.devoteeName} (${razorpay_payment_id})`,
+              referenceId: booking._id,
+              referenceModel: "PoojaBooking",
+              recordedBy: req.user ? req.user.id : null,
+            });
+          }
+        } else {
+          await recordTransaction({
+            transactionType: "Credit",
+            source: "Pooja Booking",
+            category: "Pooja Income",
+            amount: booking.amount,
+            paymentMethod: booking.paymentMethod || "Bank Transfer",
+            status: "Completed",
+            description: `Online Pooja Booking: ${booking.service} for ${booking.devoteeName} (${razorpay_payment_id})`,
+            referenceId: booking._id,
+            referenceModel: "PoojaBooking",
+            recordedBy: req.user ? req.user.id : null,
+          });
+        }
+      } catch (err) {
+        console.error("Failed to record accounting transaction:", err);
+      }
     }
 
     return res.status(200).json({ success: true, booking: normalizeBookingEmails(booking.toObject ? booking.toObject() : booking) });
@@ -1434,6 +1528,25 @@ const verifyRazorpayPayment = async (req, res) => {
       }
     } catch (notifErr) {
       console.warn("Notification after verify failed:", notifErr);
+    }
+
+    if (isDbConnected() && donation.status === "Completed") {
+      try {
+        await recordTransaction({
+          transactionType: "Credit",
+          source: "Donation",
+          category: "Donation Income",
+          amount: donation.amount,
+          paymentMethod: donation.paymentMethod || "Bank Transfer",
+          status: "Completed",
+          description: `Online Donation: ${donation.category} by ${donation.donorName} (${razorpay_payment_id})`,
+          referenceId: donation._id,
+          referenceModel: "Donation",
+          recordedBy: req.user ? req.user.id : null,
+        });
+      } catch (err) {
+        console.error("Failed to record accounting transaction:", err);
+      }
     }
 
     return res.status(200).json({ success: true, donation: normalizeDonationEmails(donation.toObject ? donation.toObject() : donation) });

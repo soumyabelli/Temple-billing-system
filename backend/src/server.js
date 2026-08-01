@@ -11,6 +11,9 @@ const startServer = async () => {
     console.warn("Starting without MongoDB. Auth will use local file fallback.");
   } else {
     const { syncLedgerBills } = require("./utils/syncService");
+    const { seedAccountHeads } = require("./utils/seedAccounts");
+    
+    await seedAccountHeads().catch((err) => console.error("Account Seeder error:", err));
     await syncLedgerBills().catch((err) => console.error("Sync error:", err));
   }
 

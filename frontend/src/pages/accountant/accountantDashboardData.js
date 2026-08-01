@@ -20,7 +20,6 @@ import { TbReportAnalytics } from "react-icons/tb";
 export const accountantSidebarPrimary = [
   { label: "Dashboard", icon: FaHome },
   { label: "Account Ledgers", icon: FaFileInvoiceDollar },
-  { label: "Shift Verification", icon: FaReceipt },
   { label: "Manual Entries", icon: FaCreditCard },
   { label: "Profit & Loss", icon: TbReportAnalytics },
 ];

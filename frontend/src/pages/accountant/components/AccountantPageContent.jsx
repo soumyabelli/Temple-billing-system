@@ -42,7 +42,6 @@ import LeaveHistory from "../../staff/LeaveHistory";
 import LeaveRequest from "../../staff/LeaveRequest";
 import StaffInventory from "../../staff/StaffInventory";
 import AccountantInventory from "../AccountantInventory";
-import ShiftVerificationView from "./ShiftVerificationView";
 import ManualEntriesView from "./ManualEntriesView";
 import ProfitLossView from "./ProfitLossView";
 import AccountLedgersView from "./AccountLedgersView";
@@ -1821,8 +1820,6 @@ const AccountantPageContent = ({ activeItem, setActiveItem, user, currentDate, c
       return <DonationsView bills={bills} loading={loading} />;
     case "Account Ledgers":
       return <AccountLedgersView />;
-    case "Shift Verification":
-      return <ShiftVerificationView />;
     case "Manual Entries":
       return <ManualEntriesView />;
     case "Profit & Loss":

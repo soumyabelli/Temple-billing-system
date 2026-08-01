@@ -214,7 +214,7 @@ const updateBookingStatus = async (req, res) => {
     await booking.save();
 
     if (previousStatus !== "Completed" && status === "Completed") {
-      const { recordTransaction } = require("../utils/accountTransactionHelper");
+      const { recordTransaction } = require("../services/accountingService");
       await recordTransaction({
         transactionType: "Credit",
         source: "Room Booking",
@@ -228,7 +228,7 @@ const updateBookingStatus = async (req, res) => {
         status: "Completed"
       });
     } else if (previousStatus !== "Cancelled" && status === "Cancelled") {
-      const { recordTransaction } = require("../utils/accountTransactionHelper");
+      const { recordTransaction } = require("../services/accountingService");
       await recordTransaction({
         transactionType: "Debit",
         source: "Room Booking",

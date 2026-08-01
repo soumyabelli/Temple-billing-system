@@ -60,17 +60,30 @@ const accountTransactionSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    receiptNumber: {
+      type: String,
+    },
+    invoiceNumber: {
+      type: String,
+    },
     referenceId: {
       type: mongoose.Schema.Types.ObjectId,
       // Links back to the original Pooja, Donation, Payroll record etc.
     },
     referenceModel: {
       type: String,
-      enum: ["PoojaBooking", "Donation", "Room", "PrasadamOrder", "PayrollRecord", "BankInterest", "RestockHistory", "Asset", "RepairRequest", "InventoryItem", "InventoryIssue", "PurchaseOrder", "GoodsReceivedNote", "DamageNote", "RepairTicket"],
+      enum: ["Booking", "PoojaBooking", "Donation", "Room", "PrasadamOrder", "PayrollRecord", "BankInterest", "RestockHistory", "Asset", "RepairRequest", "InventoryItem", "InventoryIssue", "PurchaseOrder", "GoodsReceivedNote", "DamageNote", "RepairTicket", "Bill"],
     },
     bankName: {
       type: String,
       // Specific to Bank Interest or Bank Transfers
+    },
+    cashierId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    cashierName: {
+      type: String,
     },
     recordedBy: {
       type: mongoose.Schema.Types.ObjectId,

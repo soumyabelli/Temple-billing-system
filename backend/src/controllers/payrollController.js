@@ -473,7 +473,7 @@ exports.payEmployeePayroll = async (req, res) => {
       });
     }
 
-    const { recordTransaction } = require("../utils/accountTransactionHelper");
+    const { recordTransaction } = require("../services/accountingService");
     await recordTransaction({
       transactionType: "Debit",
       source: "Payroll",
@@ -533,7 +533,7 @@ exports.verifyPayrollPayment = async (req, res) => {
     record.paidAt = new Date();
     await record.save();
 
-    const { recordTransaction } = require("../utils/accountTransactionHelper");
+    const { recordTransaction } = require("../services/accountingService");
     await recordTransaction({
       transactionType: "Debit",
       source: "Payroll",

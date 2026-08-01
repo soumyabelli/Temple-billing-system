@@ -65,7 +65,7 @@ const createDonation = async (req, res) => {
     });
 
     if (status === "Completed" || status === "Collected") {
-      const { recordTransaction } = require("../utils/accountTransactionHelper");
+      const { recordTransaction } = require("../services/accountingService");
 
       // Determine Fund based on category
       let accountHead = "Donation Income";
@@ -208,7 +208,7 @@ const updateDonationStatus = async (req, res) => {
     );
 
     if (previousStatus !== status && (status === "Collected" || status === "Completed")) {
-      const { recordTransaction } = require("../utils/accountTransactionHelper");
+      const { recordTransaction } = require("../services/accountingService");
 
       // Determine Fund based on category
       let accountHead = "Donation Income";

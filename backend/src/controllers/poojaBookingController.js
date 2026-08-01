@@ -60,7 +60,7 @@ const createBooking = async (req, res) => {
 
     const savedBooking = await newBooking.save();
 
-    const { recordTransaction } = require("../utils/accountTransactionHelper");
+    const { recordTransaction } = require("../services/accountingService");
     await recordTransaction({
       transactionType: "Credit",
       source: "Pooja Booking",
@@ -138,7 +138,7 @@ const cancelBooking = async (req, res) => {
     booking.status = "Cancelled";
     await booking.save();
 
-    const { recordTransaction } = require("../utils/accountTransactionHelper");
+    const { recordTransaction } = require("../services/accountingService");
     await recordTransaction({
       transactionType: "Debit",
       source: "Pooja Booking",

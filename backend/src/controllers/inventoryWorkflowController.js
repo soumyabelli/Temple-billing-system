@@ -3,7 +3,7 @@ const PurchaseOrder = require("../models/PurchaseOrder");
 const InventoryItem = require("../models/InventoryItem");
 const InventoryBatch = require("../models/InventoryBatch");
 const AccountTransaction = require("../models/AccountTransaction");
-const { recordTransaction } = require("../utils/accountTransactionHelper");
+const { recordTransaction } = require("../services/accountingService");
 const { addStock, deductStock } = require("../utils/inventoryHelper");
 
 // Create GRN from PO

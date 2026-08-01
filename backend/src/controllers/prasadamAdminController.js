@@ -201,7 +201,7 @@ exports.updateAdminPrasadamOrderStatus = async (req, res) => {
     const wasPaidStatus = ["Collected", "Completed", "Delivered", "Ready"].includes(prevModelStatus);
 
     if (!wasPaidStatus && isPaidStatus) {
-      const { recordTransaction } = require("../utils/accountTransactionHelper");
+      const { recordTransaction } = require("../services/accountingService");
       await recordTransaction({
         transactionType: "Credit",
         source: "Prasadam",
@@ -215,7 +215,7 @@ exports.updateAdminPrasadamOrderStatus = async (req, res) => {
         status: "Completed"
       });
     } else if (wasPaidStatus && modelStatus === "Cancelled") {
-      const { recordTransaction } = require("../utils/accountTransactionHelper");
+      const { recordTransaction } = require("../services/accountingService");
       await recordTransaction({
         transactionType: "Debit",
         source: "Prasadam",

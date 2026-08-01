@@ -98,7 +98,7 @@ exports.completeRepair = async (req, res) => {
     await repair.save();
 
     if (repair.cost > 0) {
-      const { recordTransaction } = require("../utils/accountTransactionHelper");
+      const { recordTransaction } = require("../services/accountingService");
       await recordTransaction({
         transactionType: "Debit",
         source: "Repair",
