@@ -498,6 +498,24 @@ const PriestDashboard = () => {
     const totalPages = Math.ceil(data.length / PAGE_SIZE);
     const paged = data.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
+    const getPageNumbers = () => {
+      const pages = [];
+      if (totalPages <= 7) {
+        for (let i = 1; i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        if (page <= 4) {
+          pages.push(1, 2, 3, 4, 5, '...', totalPages);
+        } else if (page >= totalPages - 3) {
+          pages.push(1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+        } else {
+          pages.push(1, '...', page - 1, page, page + 1, '...', totalPages);
+        }
+      }
+      return pages;
+    };
+
     const card = darkMode ? "bg-[#1f2937] border-slate-700" : "bg-white border-[#ece8e1]";
     const txt = darkMode ? "text-slate-100" : "text-[#1d1b19]";
     const sub = darkMode ? "text-slate-400" : "text-slate-500";
@@ -712,13 +730,16 @@ const PriestDashboard = () => {
                     >
                       ← Prev
                     </button>
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                    {getPageNumbers().map((p, index) => (
                       <button
-                        key={p}
-                        onClick={() => setPage(p)}
+                        key={index}
+                        onClick={() => typeof p === 'number' && setPage(p)}
+                        disabled={p === '...'}
                         className={`w-8 h-8 rounded-lg text-xs font-bold transition-colors ${p === page
                             ? "bg-orange-500 text-white"
-                            : darkMode
+                            : p === '...'
+                              ? "text-slate-400 cursor-default"
+                              : darkMode
                               ? "bg-slate-800 text-slate-300 hover:bg-slate-700"
                               : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                           }`}

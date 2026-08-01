@@ -622,7 +622,7 @@ const DevoteeDashboard = () => {
         isCombined: true,
         items: cartItems.map((i) => ({
           name: i.name,
-          description: `${i.type === "pooja" ? "🌸 Pooja Seva" : "📦 Prasadam Order"}: ${i.name}`,
+          description: `${i.type === "pooja" ? "Pooja Seva" : "Prasadam Order"}: ${i.name}`,
           quantity: i.quantity,
           price: i.price,
           amount: i.price * i.quantity,
@@ -1863,13 +1863,20 @@ const DevoteeDashboard = () => {
           ["Bill Type", "Single Combined Sacred Bill"],
           ["Payment Method", item.paymentMethod || "UPI"],
           ["Total Line Items", String(item.items?.length || 1)],
-          ["Booking Date", formatDateDisplay(item.createdAt || new Date())],
+          ["Transaction Date", formatDateDisplay(item.createdAt || new Date())],
         ],
-        items: (item.items || []).map((i) => ({
-          description: i.description || i.name,
-          quantity: String(i.quantity || 1),
-          amount: formatCurrency((i.price || 0) * (i.quantity || 1)),
-        })),
+        items: (item.items || []).map((i) => {
+          let desc = i.description || i.name;
+          desc = desc.replace(/🌸 /g, "").replace(/📦 /g, "");
+          if (i.type === "pooja" && i.date && !desc.includes("For:")) {
+             desc += ` (For: ${formatDateDisplay(i.date)})`;
+          }
+          return {
+            description: desc,
+            quantity: String(i.quantity || 1),
+            amount: formatCurrency((i.price || 0) * (i.quantity || 1)),
+          };
+        }),
         totalAmount: formatCurrency(item.amount),
         notes: "Non-refundable sacred offering. All selected poojas & prasadam items combined into 1 single receipt.",
       });
