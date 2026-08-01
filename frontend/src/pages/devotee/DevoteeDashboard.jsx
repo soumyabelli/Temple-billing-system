@@ -5,6 +5,7 @@ import axios from "axios";
 import { jsPDF } from "jspdf";
 import templeImage from "../../assets/temple.jpg.png";
 import { useAuth } from "../../context/AuthContext";
+import BookingReceipt from "../../components/common/BookingReceipt";
 import { getDonationTypes } from "../../services/donationTypeService";
 import { getPoojaTypes } from "../../services/poojaTypeService";
 import {
@@ -386,6 +387,8 @@ const DevoteeDashboard = () => {
   const [donationsData, setDonationsData] = useState([]);
   const [notificationsData, setNotificationsData] = useState([]);
   const [eventsData, setEventsData] = useState([]);
+  const [prasadamOrders, setPrasadamOrders] = useState([]);
+  const [viewingReceiptData, setViewingReceiptData] = useState(null);
   const [selectedEventId, setSelectedEventId] = useState(null);
 
   const [availableRooms, setAvailableRooms] = useState(() => {
@@ -1850,98 +1853,88 @@ const DevoteeDashboard = () => {
   });
 
   const handleReceiptDownload = (item, type = "donation") => {
+    let receiptNo = "";
+    let title = "";
+    let poojaBookings = [];
+    let prasadamOrders = [];
+    let notesArr = [];
+    let transactionId = item.transactionId || "-";
+    let isOnline = true;
+    let paymentMode = item.paymentMethod || "UPI";
+    let amount = parseFloat(item.amount) || 0;
+    
     if (type === "combined" || item.isCombined || (item.items && item.items.length > 0)) {
-      const receiptId = item.bookingNumber || buildReceiptId("CB", item);
-      downloadReceiptPdf({
-        filename: `combined-temple-bill-${receiptId}.pdf`,
-        title: "Combined Sacred Booking & Prasadam Bill",
-        receiptId,
-        receiptDate: formatDateDisplay(item.createdAt || new Date()),
-        status: item.status || "Confirmed",
-        devotee: getReceiptDevotee(item),
-        details: [
-          ["Bill Type", "Single Combined Sacred Bill"],
-          ["Payment Method", item.paymentMethod || "UPI"],
-          ["Total Line Items", String(item.items?.length || 1)],
-          ["Transaction Date", formatDateDisplay(item.createdAt || new Date())],
-        ],
-        items: (item.items || []).map((i) => {
-          let desc = i.description || i.name;
-          desc = desc.replace(/🌸 /g, "").replace(/📦 /g, "");
-          if (i.type === "pooja" && i.date && !desc.includes("For:")) {
-             desc += ` (For: ${formatDateDisplay(i.date)})`;
-          }
-          return {
-            description: desc,
-            quantity: String(i.quantity || 1),
-            amount: formatCurrency((i.price || 0) * (i.quantity || 1)),
-          };
-        }),
-        totalAmount: formatCurrency(item.amount),
-        notes: "Non-refundable sacred offering. All selected poojas & prasadam items combined into 1 single receipt.",
-      });
-      return;
+      receiptNo = item.bookingNumber || buildReceiptId("CB", item);
+      title = "Combined Sacred Booking & Prasadam Bill";
+      poojaBookings = (item.items || []).filter(i => i.type !== "prasadam").map((i, idx) => ({
+        slNo: idx + 1,
+        name: i.description || i.name,
+        date: i.date ? formatDateDisplay(i.date) : "-",
+        qty: i.quantity || 1,
+        amount: (i.price || 0) * (i.quantity || 1)
+      }));
+      prasadamOrders = (item.items || []).filter(i => i.type === "prasadam").map((i, idx) => ({
+        slNo: idx + 1,
+        name: i.description || i.name,
+        date: "-",
+        qty: i.quantity || 1,
+        amount: (i.price || 0) * (i.quantity || 1)
+      }));
+      notesArr = ["Non-refundable sacred offering. All selected poojas & prasadam items combined into 1 single receipt."];
+    } else if (type === "booking") {
+      receiptNo = item.bookingNumber || buildReceiptId("PB", item);
+      title = "Pooja Booking Receipt";
+      poojaBookings = [{
+        slNo: 1,
+        name: item.service || "Pooja Booking",
+        date: item.datetime ? formatDateTimeDisplay(item.datetime) : "-",
+        qty: 1,
+        amount: amount
+      }];
+      if (item.notes) notesArr.push(item.notes);
+    } else if (type === "prasadam") {
+      receiptNo = buildReceiptId("PR", item);
+      title = "Prasadam Receipt";
+      prasadamOrders = [{
+        slNo: 1,
+        name: item.itemName || "Prasadam",
+        date: "-",
+        qty: item.quantity || 1,
+        amount: amount
+      }];
+    } else {
+      receiptNo = buildReceiptId("DN", item);
+      title = item.eventTitle ? `Donation: ${item.eventTitle}` : "Donation Receipt";
+      poojaBookings = [{
+        slNo: 1,
+        name: item.category || item.type || "Donation",
+        date: item.date || item.createdAt ? formatDateDisplay(item.date || item.createdAt) : "-",
+        qty: 1,
+        amount: amount
+      }];
+      if (item.notes) notesArr.push(item.notes);
     }
 
-    if (type === "booking") {
-      const receiptId = buildReceiptId("PB", item);
-      downloadReceiptPdf({
-        filename: `pooja-booking-receipt-${receiptId}.pdf`,
-        title: "Pooja Booking Receipt",
-        receiptId,
-        receiptDate: formatDateDisplay(item.createdAt || new Date()),
-        status: item.status || "Pending",
-        devotee: getReceiptDevotee(item),
-        details: [
-          ["Service", item.service || "Pooja Booking"],
-          ["Pooja Date", formatDateTimeDisplay(item.datetime)],
-          ["Payment Method", item.paymentMethod || "UPI"],
-          ["Booking No", item.bookingNumber || item._id || "-"],
-        ],
-        items: [{ description: item.service || "Pooja Booking", quantity: "1", amount: formatCurrency(item.amount) }],
-        totalAmount: formatCurrency(item.amount),
-        notes: item.notes,
-      });
-      return;
-    }
+    const devotee = getReceiptDevotee(item);
 
-    if (type === "prasadam") {
-      const receiptId = buildReceiptId("PR", item);
-      downloadReceiptPdf({
-        filename: `prasadam-receipt-${receiptId}.pdf`,
-        title: "Prasadam Receipt",
-        receiptId,
-        receiptDate: formatDateDisplay(item.createdAt || item.date),
-        status: item.status || "Placed",
-        devotee: getReceiptDevotee(item),
-        details: [
-          ["Item", item.itemName || "Prasadam"],
-          ["Payment Method", item.paymentMethod || "UPI"],
-          ["Unit Price", formatCurrency(item.unitPrice || 0)],
-        ],
-        items: [{ description: item.itemName || "Prasadam", quantity: item.quantity || 1, amount: formatCurrency(item.amount) }],
-        totalAmount: formatCurrency(item.amount),
-      });
-      return;
-    }
-
-    const receiptId = buildReceiptId("DN", item);
-    downloadReceiptPdf({
-      filename: `donation-receipt-${receiptId}.pdf`,
-      title: "Donation Receipt",
-      receiptId,
-      receiptDate: formatDateDisplay(item.date || item.createdAt),
-      status: item.status || "Completed",
-      devotee: getReceiptDevotee(item),
-      details: [
-        ["Donation Type", item.category || item.type || "Donation"],
-        ["Payment Method", item.paymentMethod || "UPI"],
-        item.eventTitle ? ["Event", item.eventTitle] : null,
-        item.transactionId ? ["Transaction ID", item.transactionId] : null,
-      ],
-      items: [{ description: item.category || item.type || "Donation", quantity: "1", amount: formatCurrency(item.amount) }],
-      totalAmount: formatCurrency(item.amount),
-      notes: item.notes,
+    setViewingReceiptData({
+      isOnline,
+      receiptNo,
+      bookingDate: formatDateDisplay(item.createdAt || new Date()),
+      paymentMode,
+      transactionId,
+      cashierName: "Online Portal",
+      devoteeName: devotee.name,
+      mobile: devotee.phone,
+      address: devotee.email,
+      poojaBookings,
+      prasadamOrders,
+      subTotal: amount,
+      templeCharges: 0,
+      grandTotal: amount,
+      amountInWords: `Rs. ${amount}`,
+      materials: [],
+      notes: notesArr
     });
   };
 
@@ -4090,6 +4083,41 @@ const DevoteeDashboard = () => {
           </div>
         </main>
       </div>
+    </div>
+      
+      {/* Receipt Preview Modal */}
+      {viewingReceiptData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 sm:p-6 backdrop-blur-sm print:bg-white print:p-0 print:block">
+          <div className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white shadow-2xl print:max-w-full print:max-h-full print:shadow-none print:overflow-visible scrollbar-hide">
+            
+            {/* Modal Actions - Hidden when printing */}
+            <div className="sticky top-0 z-10 flex justify-between items-center bg-white/90 backdrop-blur-md px-6 py-4 border-b print:hidden">
+              <h3 className="text-lg font-bold text-gray-900">Receipt Preview</h3>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => window.print()}
+                  className="rounded-xl bg-orange-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-orange-700 transition-colors shadow-sm"
+                >
+                  <svg className="inline w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                  Print / Save PDF
+                </button>
+                <button
+                  onClick={() => setViewingReceiptData(null)}
+                  className="rounded-xl bg-gray-100 px-5 py-2.5 text-sm font-bold text-gray-700 hover:bg-gray-200 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+
+            {/* Receipt Component */}
+            <div className="p-4 sm:p-8 bg-gray-50 flex justify-center print:bg-white print:p-0">
+              <BookingReceipt {...viewingReceiptData} />
+            </div>
+            
+          </div>
+        </div>
+      )}
     </div>
   );
 };
