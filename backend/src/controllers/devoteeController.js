@@ -469,7 +469,12 @@ const createDonation = async (req, res) => {
       return res.status(400).json({ error: "Please provide a valid contact number." });
     }
 
-    const donationStatus = "Not Collected";
+    const hasKeys = !!(process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET);
+    const isOnline = paymentMethod && paymentMethod !== "Cash";
+    
+    // For online payments, wait for razorpay webhook. For offline (Cash), it's immediately collected/paid.
+    const donationStatus = (hasKeys && isOnline) ? "Not Collected" : "Collected";
+    const paymentStatus = (hasKeys && isOnline) ? "Pending" : "Paid";
 
     let donation;
     const donationPayload = {
@@ -527,6 +532,20 @@ const createDonation = async (req, res) => {
         order,
         key: process.env.RAZORPAY_KEY_ID || "",
         simulated: false,
+      });
+    } else if (isDbConnected() && paymentStatus === "Paid") {
+      // Offline paid donation
+      await recordTransaction({
+        transactionType: "Credit",
+        source: "Donation",
+        category: "Donation Income",
+        amount: numericAmount,
+        paymentMethod: paymentMethod || "Cash",
+        status: "Completed",
+        description: `Donation: ${category} by ${donorName}`,
+        referenceId: donation._id,
+        referenceModel: "Donation",
+        recordedBy: req.user ? req.user.id : null,
       });
     }
 

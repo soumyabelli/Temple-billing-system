@@ -88,7 +88,6 @@ const accountTransactionSchema = new mongoose.Schema(
     recordedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
     },
     approvedBy: {
       type: mongoose.Schema.Types.ObjectId,
