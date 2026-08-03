@@ -562,6 +562,8 @@ const DevoteeDashboard = () => {
 
   const devoteeName = useMemo(() => profileData.name || user?.name || "Devotee User", [profileData.name, user?.name]);
 
+  const [selectedTempleMaterials, setSelectedTempleMaterials] = useState([]);
+
   const addToCart = (item) => {
     setCartItems((prev) => {
       const existingIdx = prev.findIndex((i) => i.id === item.id);
@@ -628,6 +630,7 @@ const DevoteeDashboard = () => {
           amount: i.price * i.quantity,
           type: i.type,
           date: i.date || new Date().toLocaleDateString(),
+          selectedTempleMaterials: i.selectedTempleMaterials || [],
         })),
       };
 
@@ -949,9 +952,19 @@ const DevoteeDashboard = () => {
   useEffect(() => {
     const selected = poojaTypes.find((type) => type.name === bookingService);
     if (selected) {
-      setBookingAmount(selected.price);
+      let basePrice = selected.price || 0;
+      let templeCharge = 0;
+      if (Array.isArray(selected.requiredMaterials)) {
+        selected.requiredMaterials.forEach(rm => {
+          const itemId = typeof rm.item === 'object' ? rm.item?._id : rm.item;
+          if (selectedTempleMaterials.includes(itemId)) {
+            templeCharge += (Number(rm.templeCharge) || 0);
+          }
+        });
+      }
+      setBookingAmount(basePrice + templeCharge);
     }
-  }, [bookingService, poojaTypes]);
+  }, [bookingService, poojaTypes, selectedTempleMaterials]);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentDateTime(new Date()), 1000);
@@ -1144,6 +1157,20 @@ const DevoteeDashboard = () => {
       return;
     }
 
+    // Validate available days and dates
+    const selectedType = poojaTypes.find((type) => type.name === bookingService);
+    if (selectedType) {
+      const dayName = selected.toLocaleDateString("en-US", { weekday: "long" });
+      const dateString = selected.toISOString().split("T")[0];
+      const isDayAllowed = selectedType.availableDays?.includes("Everyday") || selectedType.availableDays?.includes(dayName);
+      const isDateAllowed = selectedType.availableDates?.includes(dateString);
+
+      if (!isDayAllowed && !isDateAllowed) {
+        window.alert(`The selected Pooja is not available on ${bookingDatetime}. Please check available days.`);
+        return;
+      }
+    }
+
     if (!bookingPaymentMethod) {
       setBookingError("Please select a payment method for the booking.");
       return;
@@ -1266,6 +1293,7 @@ const DevoteeDashboard = () => {
       setBookingContact("");
       setBookingNotes("");
       setBookingPaymentMethod("UPI");
+      setSelectedTempleMaterials([]);
       setBookingSuccess("Booking successful! Your order has been placed and payment is confirmed. Please note: This payment is final and non-refundable.");
       setActivePage("My Bookings");
     } catch (error) {
@@ -2424,9 +2452,54 @@ const DevoteeDashboard = () => {
                       ))}
                     </select>
 
-                    {poojaTypes.find((type) => type.name === bookingService)?.requiredMaterials && (
-                      <div className="mt-3 rounded-2xl bg-amber-50 p-4 border border-amber-200 text-xs font-semibold text-amber-900">
-                        ✨ <strong>Items to Bring:</strong> {poojaTypes.find((type) => type.name === bookingService).requiredMaterials}
+                    {poojaTypes.find((type) => type.name === bookingService)?.requiredMaterials && poojaTypes.find((type) => type.name === bookingService).requiredMaterials.length > 0 && (
+                      <div className="mt-3 rounded-2xl bg-amber-50 p-4 border border-amber-200 text-sm font-semibold text-amber-900">
+                        <div className="mb-3 text-amber-950 font-black">🌸 Pooja Materials Requirement</div>
+                        {Array.isArray(poojaTypes.find((type) => type.name === bookingService).requiredMaterials) ? (
+                          poojaTypes.find((type) => type.name === bookingService).requiredMaterials.map((rm, idx) => {
+                            const item = typeof rm.item === 'object' ? rm.item : { _id: rm.item, name: rm.itemName || "Item" };
+                            return (
+                              <div key={idx} className="flex items-center justify-between py-1.5 border-b border-amber-100/50 last:border-0">
+                                <span className="flex items-center gap-2">
+                                  <span className="font-bold text-amber-700">{rm.qty || rm.quantity} {rm.unit || ''}</span>
+                                  <span>{item.name || rm.itemName}</span>
+                                </span>
+                                {rm.mustBringByDevotee ? (
+                                  <span className="text-xs px-2 py-1 bg-amber-200 text-amber-900 rounded-lg">You must bring</span>
+                                ) : rm.canTempleArrange ? (
+                                  <label className="flex items-center gap-2 cursor-pointer bg-amber-100 hover:bg-amber-200 px-2 py-1 rounded-lg transition-colors">
+                                    <input 
+                                      type="checkbox"
+                                      checked={selectedTempleMaterials.includes(item._id)}
+                                      onChange={(e) => {
+                                        if (e.target.checked) {
+                                          setSelectedTempleMaterials(prev => [...prev, item._id]);
+                                        } else {
+                                          setSelectedTempleMaterials(prev => prev.filter(id => id !== item._id));
+                                        }
+                                      }}
+                                      className="accent-amber-600 w-4 h-4 cursor-pointer"
+                                    />
+                                    <span className="text-xs font-bold">Temple Arrange (+₹{rm.templeCharge})</span>
+                                  </label>
+                                ) : (
+                                  <span className="text-xs text-amber-700">Arranged</span>
+                                )}
+                              </div>
+                            );
+                          })
+                        ) : (
+                          <span>{poojaTypes.find((type) => type.name === bookingService).requiredMaterials}</span>
+                        )}
+                        
+                        {/* Show Pooja Schedule Constraints */}
+                        <div className="mt-4 pt-3 border-t border-amber-200/50 text-xs">
+                          <span className="font-bold text-amber-950">Available Days: </span>
+                          <span>{poojaTypes.find((t) => t.name === bookingService).availableDays?.join(", ") || "Everyday"}</span>
+                          {poojaTypes.find((t) => t.name === bookingService).availableStartTime && (
+                            <span className="ml-3"><span className="font-bold text-amber-950">Time: </span>{poojaTypes.find((t) => t.name === bookingService).availableStartTime} - {poojaTypes.find((t) => t.name === bookingService).availableEndTime}</span>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -2467,7 +2540,9 @@ const DevoteeDashboard = () => {
                         price: Number(price),
                         quantity: 1,
                         date: bookingDatetime || new Date().toLocaleDateString(),
+                        selectedTempleMaterials: [...selectedTempleMaterials],
                       });
+                      setSelectedTempleMaterials([]);
                       toast.success(`Added ${bookingService} to your bill!`);
                     }}
                     className="w-full rounded-2xl bg-amber-600 hover:bg-amber-700 py-4 text-base font-extrabold text-white shadow-md transition hover:scale-[1.02]"

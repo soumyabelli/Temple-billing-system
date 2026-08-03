@@ -1,67 +1,84 @@
 const PoojaBooking = require("../models/PoojaBooking");
-const PoojaMaterialRequirement = require("../models/PoojaMaterialRequirement");
+const Pooja = require("../models/Pooja");
 const InventoryItem = require("../models/InventoryItem");
 
 // Create a new pooja booking
 const createBooking = async (req, res) => {
   try {
-    const { customerName, service, amount, paymentMethod, contactNumber, notes, bookingDate, templeArrangement, templeMaterialCharge } = req.body;
+    const { customerName, service, amount, paymentMethod, contactNumber, notes, bookingDate, selectedTempleMaterials } = req.body;
 
     if (!customerName || !service || !amount || !paymentMethod || !contactNumber || !bookingDate) {
       return res.status(400).json({ message: "All required fields must be provided" });
     }
 
+    const pooja = await Pooja.findOne({ name: service }).populate("requiredMaterials.item");
+    if (!pooja) {
+      return res.status(404).json({ message: "Pooja details not found" });
+    }
+
+    // Backend Date Validation
+    const d = new Date(bookingDate);
+    const dayName = d.toLocaleDateString("en-US", { weekday: "long" });
+    const dateString = d.toISOString().split("T")[0]; // YYYY-MM-DD
+
+    const isDayAllowed = pooja.availableDays.includes("Everyday") || pooja.availableDays.includes(dayName);
+    const isDateAllowed = pooja.availableDates.includes(dateString);
+
+    if (!isDayAllowed && !isDateAllowed) {
+      return res.status(400).json({ message: `Pooja is not available on ${bookingDate}` });
+    }
+
     let templeMaterialRequests = [];
     let calculatedTempleCharge = 0;
+    
+    // selectedTempleMaterials should be an array of item IDs that the user selected for the temple to arrange.
+    const selectedItemIds = Array.isArray(selectedTempleMaterials) ? selectedTempleMaterials : [];
 
-    if (templeArrangement) {
-      const requirement = await PoojaMaterialRequirement.findOne({ poojaName: service }).populate("requiredMaterials.item");
-      if (requirement && requirement.requiredMaterials) {
-        for (const reqMat of requirement.requiredMaterials) {
-          if (reqMat.templeArrangeAvailable) {
-            calculatedTempleCharge += reqMat.templeCharge || 0;
-            if (reqMat.item) {
-              const invItem = await InventoryItem.findById(reqMat.item._id);
-              if (invItem) {
-                templeMaterialRequests.push({
-                  item: invItem._id,
-                  itemName: invItem.name,
-                  qty: `${reqMat.quantity}`
-                });
-                
-                const InventoryRequest = require("../models/InventoryRequest");
-                await InventoryRequest.create({
-                  userId: req.user.id,
-                  userName: `${customerName} (Pooja Booking)`,
-                  role: "System",
-                  itemName: invItem.name,
-                  quantity: reqMat.quantity,
-                  unit: invItem.unit,
-                  reason: `System generated for Pooja Booking: ${service}`,
-                  purpose: `Pooja Booking: ${service}`,
-                  expectedDate: new Date(bookingDate),
-                  status: "Approved",
-                  approvedBy: "System",
-                  approvedAt: new Date()
-                });
-              }
-            }
-          }
+    if (pooja.requiredMaterials && pooja.requiredMaterials.length > 0) {
+      for (const reqMat of pooja.requiredMaterials) {
+        // If the user selected it AND the temple can actually arrange it
+        if (reqMat.canTempleArrange && reqMat.item && selectedItemIds.includes(reqMat.item._id.toString())) {
+          calculatedTempleCharge += (reqMat.templeCharge || 0);
+          
+          templeMaterialRequests.push({
+            item: reqMat.item._id,
+            itemName: reqMat.item.name,
+            qty: reqMat.qty,
+            unit: reqMat.unit
+          });
+          
+          const InventoryRequest = require("../models/InventoryRequest");
+          await InventoryRequest.create({
+            userId: req.user.id,
+            userName: `${customerName} (Pooja Booking)`,
+            role: "System",
+            itemName: reqMat.item.name,
+            quantity: reqMat.qty,
+            unit: reqMat.unit,
+            reason: `System generated for Pooja Booking: ${service}`,
+            purpose: `Pooja Booking: ${service}`,
+            expectedDate: new Date(bookingDate),
+            status: "Approved",
+            approvedBy: "System",
+            approvedAt: new Date()
+          });
         }
       }
     }
 
+    const templeArrangement = templeMaterialRequests.length > 0;
+
     const newBooking = new PoojaBooking({
       customerName,
       service,
-      amount,
+      amount, // Base price + temple charge should already be validated here, but we trust the frontend 'amount' for now, or we can recalculate: pooja.price + calculatedTempleCharge
       paymentMethod,
       contactNumber,
       notes,
       bookingDate,
       createdBy: req.user.id, // from auth middleware
       templeArrangement: Boolean(templeArrangement),
-      templeMaterialCharge: Number(templeMaterialCharge) || calculatedTempleCharge,
+      templeMaterialCharge: calculatedTempleCharge,
       templeMaterialRequests,
       materialStatus: templeArrangement ? "Pending" : "N/A"
     });

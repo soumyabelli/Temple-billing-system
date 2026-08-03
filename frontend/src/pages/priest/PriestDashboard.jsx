@@ -208,7 +208,23 @@ const PriestDashboard = () => {
                 {todaySchedule.slice(0, 8).map((item, index) => (
                   <tr key={index} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
                     <td className={`py-3 px-1 font-medium ${darkMode ? "text-slate-300" : "text-slate-700"}`}>{item.time}</td>
-                    <td className={`py-3 px-1 font-semibold ${darkMode ? "text-slate-200" : "text-slate-800"}`}>{item.pooja}</td>
+                    <td className={`py-3 px-1 font-semibold ${darkMode ? "text-slate-200" : "text-slate-800"}`}>
+                      <div>{item.pooja}</div>
+                      {(item.templeArranged?.length > 0 || item.devoteeBrings?.length > 0) && (
+                        <div className="flex flex-col gap-0.5 mt-1">
+                          {item.templeArranged?.length > 0 && (
+                            <span className="text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded w-fit">
+                              Temple Arranged: {item.templeArranged.join(", ")}
+                            </span>
+                          )}
+                          {item.devoteeBrings?.length > 0 && (
+                            <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded w-fit">
+                              Devotee Brings: {item.devoteeBrings.join(", ")}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </td>
                     <td className={`py-3 px-1 ${darkMode ? "text-slate-300" : "text-slate-700"}`}>{item.devotee}</td>
                   </tr>
                 ))}
@@ -336,7 +352,23 @@ const PriestDashboard = () => {
                   filteredPoojas.map((pooja) => (
                     <tr key={pooja.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
                       <td className={`py-4 px-2 font-medium ${darkMode ? "text-slate-300" : "text-slate-700"}`}>{pooja.time}</td>
-                      <td className={`py-4 px-2 font-semibold ${darkMode ? "text-slate-200" : "text-slate-800"}`}>{pooja.pooja}</td>
+                      <td className={`py-4 px-2 font-semibold ${darkMode ? "text-slate-200" : "text-slate-800"}`}>
+                        <div>{pooja.pooja}</div>
+                        {(pooja.templeArranged?.length > 0 || pooja.devoteeBrings?.length > 0) && (
+                          <div className="flex flex-col gap-1 mt-1.5">
+                            {pooja.templeArranged?.length > 0 && (
+                              <span className="text-xs font-bold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded w-fit">
+                                Temple Arranged: {pooja.templeArranged.join(", ")}
+                              </span>
+                            )}
+                            {pooja.devoteeBrings?.length > 0 && (
+                              <span className="text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded w-fit">
+                                Devotee Brings: {pooja.devoteeBrings.join(", ")}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </td>
                       <td className={`py-4 px-2 ${darkMode ? "text-slate-300" : "text-slate-700"}`}>{pooja.devotee}</td>
                       <td className="py-4 px-2">
                         <div className="flex items-center justify-center gap-2">

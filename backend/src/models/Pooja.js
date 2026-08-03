@@ -23,6 +23,22 @@ const poojaSchema = new mongoose.Schema(
       trim: true,
       default: "",
     },
+    availableDays: {
+      type: [String], // e.g. ["Everyday"], ["Monday", "Tuesday"]
+      default: ["Everyday"],
+    },
+    availableDates: {
+      type: [String], // e.g. ["2026-08-15"] for special poojas
+      default: [],
+    },
+    availableStartTime: {
+      type: String, // e.g. "06:00"
+      default: "",
+    },
+    availableEndTime: {
+      type: String, // e.g. "08:00"
+      default: "",
+    },
     requiredMaterials: [
       {
         item: {
@@ -35,8 +51,16 @@ const poojaSchema = new mongoose.Schema(
           required: true,
         },
         qty: {
-          type: String, // Allow string (like "2 Kg") or number as string
+          type: Number, 
           required: true,
+        },
+        unit: {
+          type: String,
+          required: true,
+        },
+        mustBringByDevotee: {
+          type: Boolean,
+          default: false,
         },
         canTempleArrange: {
           type: Boolean,

@@ -18,6 +18,47 @@ const { createStaffBroadcastNotifications, createBroadcastNotifications, createS
 const { sendBookingConfirmation, sendDonationReceipt, sendPrasadamOrderConfirmation } = require("../utils/communicationService");
 const { buildEmailLookup, normalizeEmail } = require("../utils/email");
 const { recordTransaction } = require("../services/accountingService");
+const InventoryRequest = require("../models/InventoryRequest");
+const InventoryItem = require("../models/InventoryItem");
+const Pooja = require("../models/Pooja");
+
+const generateInventoryRequestsForBooking = async (booking) => {
+  try {
+    const items = booking.isCombined ? (booking.items || []) : [{
+      type: "pooja",
+      name: booking.service,
+      selectedTempleMaterials: booking.selectedTempleMaterials || []
+    }];
+    
+    for (const item of items) {
+      if (item.type === "pooja" && item.selectedTempleMaterials && item.selectedTempleMaterials.length > 0) {
+        const pooja = await Pooja.findOne({ name: item.name }).populate("requiredMaterials.item");
+        if (!pooja) continue;
+        
+        for (const reqMat of pooja.requiredMaterials) {
+          if (reqMat.canTempleArrange && reqMat.item && item.selectedTempleMaterials.includes(reqMat.item._id.toString())) {
+            await InventoryRequest.create({
+              userId: booking.createdBy || booking.devoteeEmail || "System",
+              userName: `${booking.devoteeName} (Online Pooja Booking)`,
+              role: "System",
+              itemName: reqMat.item.name,
+              quantity: reqMat.qty,
+              unit: reqMat.unit,
+              reason: `System generated for Pooja Booking: ${item.name}`,
+              purpose: `Pooja Booking: ${item.name}`,
+              expectedDate: booking.datetime || new Date(),
+              status: "Approved",
+              approvedBy: "System",
+              approvedAt: new Date()
+            });
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error("Failed to generate inventory requests:", err);
+  }
+};
 
 const PRASADAM_MENU = {
   "Laddu Prasadam": 151,
@@ -150,6 +191,7 @@ const createBooking = async (req, res) => {
       priestName: priestName || undefined,
       isCombined: isCombined || false,
       items: items || [],
+      selectedTempleMaterials: req.body.selectedTempleMaterials || [],
     };
 
     if (isDbConnected()) {
@@ -286,6 +328,9 @@ const createBooking = async (req, res) => {
       } catch (err) {
         console.error("Failed to record accounting transaction:", err);
       }
+      
+      // Generate InventoryRequests if items have selectedTempleMaterials
+      await generateInventoryRequestsForBooking(booking);
     }
 
     return res.status(201).json({
@@ -413,6 +458,9 @@ const verifyBookingPayment = async (req, res) => {
       } catch (err) {
         console.error("Failed to record accounting transaction:", err);
       }
+      
+      // Generate InventoryRequests if items have selectedTempleMaterials
+      await generateInventoryRequestsForBooking(booking);
     }
 
     return res.status(200).json({ success: true, booking: normalizeBookingEmails(booking.toObject ? booking.toObject() : booking) });

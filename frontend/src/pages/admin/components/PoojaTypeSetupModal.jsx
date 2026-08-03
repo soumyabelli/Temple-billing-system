@@ -9,6 +9,11 @@ export default function PoojaTypeSetupModal({ editingPooja, onClose, onSave }) {
   const [price, setPrice] = useState(editingPooja?.price || 501);
   const [duration, setDuration] = useState(editingPooja?.duration || "");
   const [dressCode, setDressCode] = useState(editingPooja?.dressCode || "");
+  const [availableDays, setAvailableDays] = useState(editingPooja?.availableDays || ["Everyday"]);
+  const [availableDates, setAvailableDates] = useState(editingPooja?.availableDates || []);
+  const [newDate, setNewDate] = useState("");
+  const [availableStartTime, setAvailableStartTime] = useState(editingPooja?.availableStartTime || "");
+  const [availableEndTime, setAvailableEndTime] = useState(editingPooja?.availableEndTime || "");
   
   const [rules, setRules] = useState(editingPooja?.rules || []);
   const [newRule, setNewRule] = useState("");
@@ -21,9 +26,13 @@ export default function PoojaTypeSetupModal({ editingPooja, onClose, onSave }) {
   const [inventoryItems, setInventoryItems] = useState([]);
   const [selectedItem, setSelectedItem] = useState("");
   const [qty, setQty] = useState("");
+  const [unit, setUnit] = useState("");
+  const [mustBringByDevotee, setMustBringByDevotee] = useState(false);
   const [canTempleArrange, setCanTempleArrange] = useState(true);
   const [mandatory, setMandatory] = useState(false);
   const [templeCharge, setTempleCharge] = useState(0);
+
+  const WEEKDAYS = ["Everyday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
   const [error, setError] = useState("");
 
@@ -56,9 +65,16 @@ export default function PoojaTypeSetupModal({ editingPooja, onClose, onSave }) {
     }
   };
 
+  const handleAddDate = () => {
+    if (newDate.trim() && !availableDates.includes(newDate.trim())) {
+      setAvailableDates([...availableDates, newDate.trim()]);
+      setNewDate("");
+    }
+  };
+
   const handleAddMaterial = () => {
-    if (!selectedItem || !qty.trim()) {
-      setError("Please select an item and enter quantity.");
+    if (!selectedItem || !qty || !unit.trim()) {
+      setError("Please select an item, quantity, and unit.");
       return;
     }
     const itemObj = inventoryItems.find(i => i._id === selectedItem);
@@ -67,16 +83,20 @@ export default function PoojaTypeSetupModal({ editingPooja, onClose, onSave }) {
     setRequiredMaterials([...requiredMaterials, {
       item: selectedItem,
       itemName: itemObj.name,
-      qty: qty.trim(),
-      canTempleArrange,
+      qty: Number(qty),
+      unit: unit.trim(),
+      mustBringByDevotee,
+      canTempleArrange: mustBringByDevotee ? false : canTempleArrange,
       mandatory,
-      templeCharge: Number(templeCharge)
+      templeCharge: mustBringByDevotee ? 0 : Number(templeCharge)
     }]);
 
     setSelectedItem("");
     setQty("");
+    setUnit("");
     setTempleCharge(0);
     setMandatory(false);
+    setMustBringByDevotee(false);
     setCanTempleArrange(true);
     setError("");
   };
@@ -92,6 +112,10 @@ export default function PoojaTypeSetupModal({ editingPooja, onClose, onSave }) {
       description: description.trim(),
       price: Number(price),
       duration: duration.trim(),
+      availableDays,
+      availableDates,
+      availableStartTime,
+      availableEndTime,
       dressCode: dressCode.trim(),
       rules,
       instructions,
@@ -143,7 +167,53 @@ export default function PoojaTypeSetupModal({ editingPooja, onClose, onSave }) {
               <input type="text" value={dressCode} onChange={(e) => setDressCode(e.target.value)} className="mt-1 w-full rounded-xl border border-[#ded6c6] px-4 py-2.5 outline-none focus:border-[#8b5e3c]" placeholder="e.g. Traditional Indian wear" />
             </label>
 
-            <div className="pt-2">
+            <div className="pt-2 border-t mt-2">
+              <h5 className="font-bold text-[#323946] mb-2">Schedule</h5>
+              <label className="block text-sm font-semibold text-[#4f4f4f] mb-1">Available Days</label>
+              <div className="flex flex-wrap gap-2 mb-3">
+                {WEEKDAYS.map(day => (
+                  <label key={day} className="flex items-center gap-1 text-sm bg-gray-50 border px-2 py-1 rounded cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={availableDays.includes(day)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setAvailableDays(day === "Everyday" ? ["Everyday"] : [...availableDays.filter(d => d !== "Everyday"), day]);
+                        } else {
+                          setAvailableDays(availableDays.filter(d => d !== day));
+                        }
+                      }}
+                    /> {day}
+                  </label>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 mb-3">
+                <label className="block text-sm font-semibold text-[#4f4f4f]">
+                  Start Time
+                  <input type="time" value={availableStartTime} onChange={(e) => setAvailableStartTime(e.target.value)} className="mt-1 w-full rounded-xl border border-[#ded6c6] px-4 py-2 outline-none focus:border-[#8b5e3c]" />
+                </label>
+                <label className="block text-sm font-semibold text-[#4f4f4f]">
+                  End Time
+                  <input type="time" value={availableEndTime} onChange={(e) => setAvailableEndTime(e.target.value)} className="mt-1 w-full rounded-xl border border-[#ded6c6] px-4 py-2 outline-none focus:border-[#8b5e3c]" />
+                </label>
+              </div>
+
+              <label className="block text-sm font-semibold text-[#4f4f4f] mb-1">Specific Dates (Optional Festival Dates)</label>
+              <div className="flex gap-2">
+                <input type="date" value={newDate} onChange={(e) => setNewDate(e.target.value)} className="w-full rounded-xl border border-[#ded6c6] px-4 py-2 outline-none focus:border-[#8b5e3c]" />
+                <button type="button" onClick={handleAddDate} className="rounded-xl bg-[#e0f2fe] px-4 py-2 text-sm font-bold text-[#0369a1] hover:bg-[#bae6fd]">Add</button>
+              </div>
+              <ul className="mt-2 flex flex-wrap gap-2">
+                {availableDates.map((d, i) => (
+                  <li key={i} className="flex gap-1 items-center bg-blue-50 text-blue-800 text-xs px-2 py-1 rounded border border-blue-200">
+                    {d} <button type="button" onClick={() => setAvailableDates(availableDates.filter((_, idx) => idx !== i))} className="text-red-500 font-bold ml-1">&times;</button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="pt-2 border-t mt-2">
               <label className="block text-sm font-semibold text-[#4f4f4f] mb-1">Rules (For Devotee)</label>
               <div className="flex gap-2">
                 <input type="text" value={newRule} onChange={(e) => setNewRule(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAddRule()} className="w-full rounded-xl border border-[#ded6c6] px-4 py-2 outline-none focus:border-[#8b5e3c]" placeholder="e.g. Fasting required" />
@@ -194,24 +264,35 @@ export default function PoojaTypeSetupModal({ editingPooja, onClose, onSave }) {
               <div className="grid grid-cols-2 gap-3">
                 <label className="block text-sm font-semibold text-[#4f4f4f]">
                   Quantity
-                  <input type="text" value={qty} onChange={(e) => setQty(e.target.value)} className="mt-1 w-full rounded-xl border border-[#ded6c6] px-4 py-2 outline-none focus:border-[#8b5e3c]" placeholder="e.g. 2 Kg" />
+                  <input type="number" step="0.01" min="0" value={qty} onChange={(e) => setQty(e.target.value)} className="mt-1 w-full rounded-xl border border-[#ded6c6] px-4 py-2 outline-none focus:border-[#8b5e3c]" placeholder="e.g. 2" />
                 </label>
                 <label className="block text-sm font-semibold text-[#4f4f4f]">
-                  Temple Charge (₹)
-                  <input type="number" value={templeCharge} onChange={(e) => setTempleCharge(e.target.value)} className="mt-1 w-full rounded-xl border border-[#ded6c6] px-4 py-2 outline-none focus:border-[#8b5e3c]" disabled={!canTempleArrange} />
+                  Unit
+                  <input type="text" value={unit} onChange={(e) => setUnit(e.target.value)} className="mt-1 w-full rounded-xl border border-[#ded6c6] px-4 py-2 outline-none focus:border-[#8b5e3c]" placeholder="e.g. Kg, Pcs" />
                 </label>
               </div>
 
-              <div className="flex gap-4 pt-1">
+              <div className="flex gap-4 pt-1 flex-wrap">
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
-                  <input type="checkbox" checked={canTempleArrange} onChange={(e) => setCanTempleArrange(e.target.checked)} className="w-4 h-4 accent-[#1b7f77]" />
+                  <input type="checkbox" checked={mustBringByDevotee} onChange={(e) => setMustBringByDevotee(e.target.checked)} className="w-4 h-4 accent-[#1b7f77]" />
+                  Must Bring by Devotee
+                </label>
+                <label className={`flex items-center gap-2 text-sm font-medium ${mustBringByDevotee ? 'text-gray-400' : 'text-gray-700'} cursor-pointer`}>
+                  <input type="checkbox" checked={mustBringByDevotee ? false : canTempleArrange} disabled={mustBringByDevotee} onChange={(e) => setCanTempleArrange(e.target.checked)} className="w-4 h-4 accent-[#1b7f77]" />
                   Temple Can Arrange
                 </label>
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
                   <input type="checkbox" checked={mandatory} onChange={(e) => setMandatory(e.target.checked)} className="w-4 h-4 accent-[#1b7f77]" />
-                  Mandatory to Bring
+                  Mandatory to have
                 </label>
               </div>
+
+              {(!mustBringByDevotee && canTempleArrange) && (
+                <label className="block text-sm font-semibold text-[#4f4f4f]">
+                  Temple Charge (₹)
+                  <input type="number" min="0" value={templeCharge} onChange={(e) => setTempleCharge(e.target.value)} className="mt-1 w-full rounded-xl border border-[#ded6c6] px-4 py-2 outline-none focus:border-[#8b5e3c]" />
+                </label>
+              )}
 
               <button type="button" onClick={handleAddMaterial} className="w-full mt-2 rounded-xl bg-[#15141f] py-2 text-sm font-bold text-white hover:bg-black">
                 + Add Material to Pooja
@@ -226,9 +307,10 @@ export default function PoojaTypeSetupModal({ editingPooja, onClose, onSave }) {
                   {requiredMaterials.map((mat, idx) => (
                     <div key={idx} className="relative rounded-xl border border-[#ece8e1] bg-white p-3 shadow-sm">
                       <button type="button" onClick={() => setRequiredMaterials(requiredMaterials.filter((_, i) => i !== idx))} className="absolute top-2 right-2 text-red-500 hover:text-red-700 font-bold">&times;</button>
-                      <p className="font-bold text-[#15141f]">{mat.itemName} <span className="text-sm font-normal text-gray-500">({mat.qty})</span></p>
+                      <p className="font-bold text-[#15141f]">{mat.itemName} <span className="text-sm font-normal text-gray-500">({mat.qty} {mat.unit})</span></p>
                       <div className="mt-1 flex gap-2 flex-wrap">
-                        {mat.canTempleArrange && <span className="rounded bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700">Temple Charge: ₹{mat.templeCharge}</span>}
+                        {mat.mustBringByDevotee && <span className="rounded bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700">Devotee Must Bring</span>}
+                        {mat.canTempleArrange && <span className="rounded bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700">Temple Arranges (₹{mat.templeCharge})</span>}
                         {mat.mandatory && <span className="rounded bg-orange-100 px-2 py-0.5 text-xs font-semibold text-orange-700">Mandatory</span>}
                       </div>
                     </div>

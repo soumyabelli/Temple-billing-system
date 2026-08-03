@@ -82,6 +82,7 @@ const CashierPoojaBookings = () => {
   const [paymentMethod, setPaymentMethod] = useState("UPI");
   const [contactNumber, setContactNumber] = useState("");
   const [notes, setNotes] = useState("");
+  const [selectedTempleMaterials, setSelectedTempleMaterials] = useState([]);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -119,6 +120,9 @@ const CashierPoojaBookings = () => {
         price: Number(p?.price) || 0,
         description: p?.description || "",
         status: p?.status || "active",
+        requiredMaterials: p?.requiredMaterials || [],
+        availableDays: p?.availableDays || [],
+        availableDates: p?.availableDates || [],
       }))
       .filter((p) => p.name && p.price > 0);
 
@@ -126,6 +130,7 @@ const CashierPoojaBookings = () => {
 
     if (!selectedPoojaName && normalized.length) {
       setSelectedPoojaName(normalized[0].name);
+      setSelectedTempleMaterials([]);
     }
   };
 
@@ -176,13 +181,23 @@ const CashierPoojaBookings = () => {
 
   const bookingSummary = useMemo(() => {
     const iso = parseDateTimeLocalToISO(dateTime);
+    let amount = selectedPooja ? Number(selectedPooja.price) : 0;
+    if (selectedPooja && selectedPooja.requiredMaterials) {
+      selectedPooja.requiredMaterials.forEach(rm => {
+        const itemId = typeof rm.item === 'object' ? rm.item?._id : rm.item;
+        if (selectedTempleMaterials.includes(itemId)) {
+          amount += (Number(rm.templeCharge) || 0);
+        }
+      });
+    }
     return {
       service: selectedPooja?.name || "--",
       date: iso ? formatDisplayDateTime(iso) : "--",
-      amount: selectedPooja ? `₹ ${selectedPooja.price}` : "--",
+      amount: selectedPooja ? `₹ ${amount}` : "--",
       payment: paymentMethod || "--",
+      totalAmount: amount,
     };
-  }, [selectedPooja, dateTime, paymentMethod]);
+  }, [selectedPooja, dateTime, paymentMethod, selectedTempleMaterials]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -196,6 +211,18 @@ const CashierPoojaBookings = () => {
     const iso = parseDateTimeLocalToISO(dateTime);
     if (!iso) {
       setError("Please choose a valid date & time.");
+      return;
+    }
+
+    // Validate available days and dates
+    const d = new Date(iso);
+    const dayName = d.toLocaleDateString("en-US", { weekday: "long" });
+    const dateString = iso.split("T")[0];
+    const isDayAllowed = selectedPooja.availableDays?.includes("Everyday") || selectedPooja.availableDays?.includes(dayName);
+    const isDateAllowed = selectedPooja.availableDates?.includes(dateString);
+
+    if (!isDayAllowed && !isDateAllowed) {
+      setError(`The selected Pooja is not available on this date. Available Days: ${selectedPooja.availableDays?.join(', ')}`);
       return;
     }
 
@@ -213,11 +240,12 @@ const CashierPoojaBookings = () => {
         devoteePhone: contactNumber || undefined,
         service: selectedPooja.name,
         datetime: iso,
-        amount: selectedPooja.price,
+        amount: bookingSummary.totalAmount,
         paymentMethod,
         contactNumber: contactNumber || undefined,
         notes: notes || undefined,
         assignedPriest: assignedPriest || undefined,
+        selectedTempleMaterials,
       };
 
       await createDevoteeBooking(payload);
@@ -228,6 +256,7 @@ const CashierPoojaBookings = () => {
 
       // Keep form selection, but reset notes
       setNotes("");
+      setSelectedTempleMaterials([]);
     } catch (err) {
       setError(err?.response?.data?.error || err?.message || "Failed to create booking.");
     } finally {
@@ -281,13 +310,16 @@ const CashierPoojaBookings = () => {
                   <label>Service</label>
                   <select
                     value={selectedPoojaName}
-                    onChange={(e) => setSelectedPoojaName(e.target.value)}
+                    onChange={(e) => {
+                      setSelectedPoojaName(e.target.value);
+                      setSelectedTempleMaterials([]);
+                    }}
                     disabled={!poojaServices.length || loading}
                   >
                     {poojaServices.length ? (
                       poojaServices.map((p) => (
                         <option key={p._id || p.name} value={p.name}>
-                          {p.name} ₹ {p.price}	
+                          {p.name}  ₹ {p.price}	
                         </option>
                       ))
                     ) : (
@@ -295,6 +327,45 @@ const CashierPoojaBookings = () => {
                     )}
                   </select>
                 </div>
+
+                {selectedPooja?.requiredMaterials && selectedPooja.requiredMaterials.length > 0 && (
+                  <div className="bbm-field">
+                    <label>Pooja Materials Requirement</label>
+                    <div className="mt-1 bg-amber-50 rounded-xl border border-amber-200 p-3 space-y-2">
+                      {selectedPooja.requiredMaterials.map((rm, idx) => {
+                        const item = typeof rm.item === 'object' ? rm.item : { _id: rm.item, name: rm.itemName || "Item" };
+                        return (
+                          <div key={idx} className="flex items-center justify-between py-1 border-b border-amber-100 last:border-0 text-sm">
+                            <span className="font-semibold text-amber-900">
+                              {rm.qty || rm.quantity} {rm.unit || ''} {item.name || rm.itemName}
+                            </span>
+                            {rm.mustBringByDevotee ? (
+                              <span className="text-xs px-2 py-0.5 bg-amber-200 text-amber-900 rounded-lg">Devotee Brings</span>
+                            ) : rm.canTempleArrange ? (
+                              <label className="flex items-center gap-2 cursor-pointer bg-white px-2 py-1 rounded-lg border border-amber-200 hover:bg-amber-100 transition-colors">
+                                <input 
+                                  type="checkbox"
+                                  checked={selectedTempleMaterials.includes(item._id)}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      setSelectedTempleMaterials(prev => [...prev, item._id]);
+                                    } else {
+                                      setSelectedTempleMaterials(prev => prev.filter(id => id !== item._id));
+                                    }
+                                  }}
+                                  className="accent-amber-600 w-3.5 h-3.5"
+                                />
+                                <span className="text-xs font-bold text-amber-800">Temple (+₹{rm.templeCharge})</span>
+                              </label>
+                            ) : (
+                              <span className="text-xs text-amber-700">Arranged</span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
 
                 <div className="bbm-field">
                   <label>Date</label>
@@ -308,7 +379,7 @@ const CashierPoojaBookings = () => {
 
                 <div className="bbm-field">
                   <label>Amount</label>
-                  <input type="text" value={selectedPooja ? `₹ ${selectedPooja.price}` : "--"} readOnly />
+                  <input type="text" value={bookingSummary.amount} readOnly />
                 </div>
 
                 <div className="bbm-field">

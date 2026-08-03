@@ -102,12 +102,40 @@ exports.getPriestDashboard = async (req, res) => {
     };
 
     // 7. Format today's schedule
-    const todaySchedule = todayBookings.map(b => ({
-      id: b._id,
-      time: formatTime(b.datetime),
-      pooja: b.service,
-      devotee: b.devoteeName,
-      status: b.status,
+    const Pooja = require("../models/Pooja");
+    const todaySchedule = await Promise.all(todayBookings.map(async (b) => {
+      const poojaItems = b.isCombined ? (b.items || []).filter(i => i.type === "pooja") : [{
+        name: b.service,
+        selectedTempleMaterials: b.selectedTempleMaterials || []
+      }];
+      
+      const materialsArranged = [];
+      const devoteeBrings = [];
+      
+      for (const pooja of poojaItems) {
+        const poojaInfo = await Pooja.findOne({ name: pooja.name });
+        if (poojaInfo && poojaInfo.requiredMaterials) {
+          poojaInfo.requiredMaterials.forEach(rm => {
+            if (rm.mustBringByDevotee) {
+              devoteeBrings.push(`${rm.qty} ${rm.unit} ${rm.itemName || "Item"}`);
+            } else if (rm.canTempleArrange && pooja.selectedTempleMaterials && pooja.selectedTempleMaterials.includes(rm.item.toString())) {
+              materialsArranged.push(`${rm.qty} ${rm.unit} ${rm.itemName || "Item"}`);
+            } else {
+              devoteeBrings.push(`${rm.qty} ${rm.unit} ${rm.itemName || "Item"}`);
+            }
+          });
+        }
+      }
+      
+      return {
+        id: b._id,
+        time: formatTime(b.datetime),
+        pooja: b.service,
+        devotee: b.devoteeName,
+        status: b.status,
+        templeArranged: materialsArranged,
+        devoteeBrings: devoteeBrings,
+      };
     }));
 
     // 8. Format upcoming poojas
