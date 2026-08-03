@@ -62,6 +62,9 @@ const InventoryManagement = () => {
   const [selectedItem, setSelectedItem] = useState(null); // for restock/adjust
   const [showItemDetails, setShowItemDetails] = useState(false);
   const [itemDetails, setItemDetails] = useState(null);
+  const [showCompleteRepairModal, setShowCompleteRepairModal] = useState(false);
+  const [selectedRepair, setSelectedRepair] = useState(null);
+  const [poojaMaterials, setPoojaMaterials] = useState([{ item: "", quantity: 1, templeArrangeAvailable: true, templeCharge: 0 }]);
 
   // Search & Filter
   const [searchTerm, setSearchTerm] = useState("");
@@ -183,6 +186,16 @@ const InventoryManagement = () => {
     }
   };
 
+  const handleIssueRequest = async (id) => {
+    try {
+      const headers = { Authorization: `Bearer ${localStorage.getItem("token")}` };
+      await axios.post(`${API_BASE}/admin/inventory-requests/${id}/issue`, {}, { headers });
+      fetchData();
+    } catch (err) {
+      alert(err.response?.data?.message || "Error issuing request");
+    }
+  };
+
   // --- Supplier Handlers ---
   const handleSaveSupplier = async (e) => {
     e.preventDefault();
@@ -236,13 +249,18 @@ const InventoryManagement = () => {
     }
   };
   
-  const handleCompleteRepair = async (id, cost) => {
+  const handleCompleteRepairSubmit = async (e) => {
+    e.preventDefault();
+    const form = new FormData(e.target);
+    const data = Object.fromEntries(form);
     try {
       const headers = { Authorization: `Bearer ${localStorage.getItem("token")}` };
-      await axios.put(`${API_BASE}/admin/inventory-repairs/${id}/complete`, { cost }, { headers });
+      await axios.put(`${API_BASE}/admin/inventory-repairs/${selectedRepair._id}/complete`, data, { headers });
+      setShowCompleteRepairModal(false);
+      setSelectedRepair(null);
       fetchData();
     } catch (err) {
-      alert("Error completing repair");
+      alert(err.response?.data?.message || "Error completing repair");
     }
   };
 
@@ -251,14 +269,38 @@ const InventoryManagement = () => {
     e.preventDefault();
     const form = new FormData(e.target);
     const poojaName = form.get("poojaName");
-    // just a simple implementation for UI demonstration
+    
+    // Filter out rows without a selected item
+    const validMaterials = poojaMaterials.filter(m => m.item).map(m => ({
+      ...m,
+      quantity: Number(m.quantity) || 0,
+      templeCharge: Number(m.templeCharge) || 0
+    }));
+
     try {
       const headers = { Authorization: `Bearer ${localStorage.getItem("token")}` };
-      await axios.post(`${API_BASE}/pooja-settings`, { poojaName, requiredMaterials: [] }, { headers });
+      await axios.post(`${API_BASE}/pooja-settings`, { poojaName, requiredMaterials: validMaterials }, { headers });
+      setPoojaMaterials([{ item: "", quantity: 1, templeArrangeAvailable: true, templeCharge: 0 }]);
+      e.target.reset();
       fetchData();
     } catch (err) {
       alert("Error saving pooja setting");
     }
+  };
+
+  const handleAddPoojaMaterialRow = () => {
+    setPoojaMaterials([...poojaMaterials, { item: "", quantity: 1, templeArrangeAvailable: true, templeCharge: 0 }]);
+  };
+
+  const handlePoojaMaterialChange = (index, field, value) => {
+    const newMaterials = [...poojaMaterials];
+    newMaterials[index][field] = value;
+    setPoojaMaterials(newMaterials);
+  };
+
+  const handleRemovePoojaMaterialRow = (index) => {
+    const newMaterials = poojaMaterials.filter((_, i) => i !== index);
+    setPoojaMaterials(newMaterials);
   };
 
   return (
@@ -352,7 +394,7 @@ const InventoryManagement = () => {
                     <th className="p-3">Avail. Stock</th>
                     <th className="p-3">Min. / Reorder</th>
                     <th className="p-3">Supplier</th>
-                    <th className="p-3">Price</th>
+                    <th className="p-3">Last Purchase Price</th>
                     <th className="p-3">Damaged/Exp.</th>
                     <th className="p-3">Actions</th>
                   </tr>
@@ -421,6 +463,9 @@ const InventoryManagement = () => {
                       <td className="p-3">
                         {req.status === "Pending" && (
                           <button onClick={() => handleApproveRequest(req._id)} className="bg-emerald-500 text-white px-3 py-1 rounded text-xs font-bold">Approve</button>
+                        )}
+                        {req.status === "Approved" && (
+                          <button onClick={() => handleIssueRequest(req._id)} className="bg-blue-600 text-white px-3 py-1 rounded text-xs font-bold mt-1">Issue</button>
                         )}
                       </td>
                     </tr>
@@ -522,8 +567,8 @@ const InventoryManagement = () => {
                       <td className="p-3">
                         {r.status === "Pending" && (
                           <button onClick={() => {
-                            const cost = prompt("Enter final repair cost:");
-                            if (cost) handleCompleteRepair(r._id, cost);
+                            setSelectedRepair(r);
+                            setShowCompleteRepairModal(true);
                           }} className="bg-emerald-500 text-white px-3 py-1 rounded text-xs font-bold">Complete</button>
                         )}
                       </td>
@@ -568,12 +613,66 @@ const InventoryManagement = () => {
         {!loading && activeTab === "settings" && (
           <div>
             <h2 className="text-xl font-bold mb-6">Pooja Material Mappings</h2>
-            <form onSubmit={handleSavePoojaSetting} className="bg-slate-50 p-4 rounded-xl border mb-6 flex gap-4 items-end max-w-xl">
-              <div className="flex-1">
+            <form onSubmit={handleSavePoojaSetting} className="bg-slate-50 p-6 rounded-xl border mb-6 flex flex-col gap-4 max-w-4xl">
+              <div>
                 <label className="block text-sm font-bold mb-1">Pooja Name</label>
-                <input name="poojaName" required className="w-full border p-2 rounded" />
+                <input name="poojaName" required className="w-full border p-2 rounded" placeholder="e.g. Satyanarayana Swamy Vratha" />
               </div>
-              <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded font-bold">Create Rule</button>
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="block text-sm font-bold">Required Materials</label>
+                  <button type="button" onClick={handleAddPoojaMaterialRow} className="text-sm bg-slate-200 hover:bg-slate-300 px-3 py-1 rounded font-bold">+ Add Material</button>
+                </div>
+                <div className="flex flex-col gap-2">
+                  {poojaMaterials.map((mat, idx) => (
+                    <div key={idx} className="flex gap-2 items-center bg-white p-2 rounded border">
+                      <select 
+                        className="border p-2 rounded flex-1" 
+                        value={mat.item} 
+                        onChange={(e) => handlePoojaMaterialChange(idx, "item", e.target.value)}
+                        required
+                      >
+                        <option value="">Select Item</option>
+                        {items.filter(i => i.category === "Pooja Items" || i.category === "Prasadam").map(i => (
+                          <option key={i._id} value={i._id}>{i.name} ({i.unit})</option>
+                        ))}
+                      </select>
+                      <input 
+                        type="number" 
+                        step="0.01"
+                        min="0"
+                        className="border p-2 rounded w-24" 
+                        placeholder="Qty" 
+                        value={mat.quantity}
+                        onChange={(e) => handlePoojaMaterialChange(idx, "quantity", e.target.value)}
+                        required
+                      />
+                      <label className="flex items-center gap-1 text-sm font-bold">
+                        <input 
+                          type="checkbox" 
+                          checked={mat.templeArrangeAvailable} 
+                          onChange={(e) => handlePoojaMaterialChange(idx, "templeArrangeAvailable", e.target.checked)} 
+                        />
+                        Temple Arranges?
+                      </label>
+                      {mat.templeArrangeAvailable && (
+                        <input 
+                          type="number" 
+                          className="border p-2 rounded w-24" 
+                          placeholder="Charge ₹" 
+                          value={mat.templeCharge}
+                          onChange={(e) => handlePoojaMaterialChange(idx, "templeCharge", e.target.value)}
+                        />
+                      )}
+                      <button type="button" onClick={() => handleRemovePoojaMaterialRow(idx)} className="text-red-500 font-bold px-2">X</button>
+                    </div>
+                  ))}
+                  {poojaMaterials.length === 0 && <p className="text-slate-500 text-sm italic">No materials added.</p>}
+                </div>
+              </div>
+              <div className="flex justify-end mt-2">
+                <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded font-bold">Create Rule</button>
+              </div>
             </form>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
@@ -620,28 +719,12 @@ const InventoryManagement = () => {
               </select>
               <div className="flex gap-2">
                 <div className="flex-1">
-                  <label className="block text-xs font-bold text-slate-500 mb-1">Available Stock</label>
-                  <input name="availableStock" type="number" defaultValue={editItem?.availableStock || 0} placeholder="Available Stock" required className="w-full border p-2 rounded" />
-                </div>
-                <div className="flex-1">
                   <label className="block text-xs font-bold text-slate-500 mb-1">Min Stock</label>
                   <input name="minimumStock" type="number" defaultValue={editItem?.minimumStock || 0} placeholder="Min Stock" required className="w-full border p-2 rounded" />
                 </div>
-              </div>
-              <div className="flex gap-2">
                 <div className="flex-1">
                   <label className="block text-xs font-bold text-slate-500 mb-1">Reorder Level</label>
                   <input name="reorderLevel" type="number" defaultValue={editItem?.reorderLevel || 0} placeholder="Reorder Level" className="w-full border p-2 rounded" />
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <div className="flex-1">
-                  <label className="block text-xs font-bold text-slate-500 mb-1">Supplier Name</label>
-                  <input name="lastSupplier" defaultValue={editItem?.lastSupplier || ""} placeholder="Supplier Name" className="w-full border p-2 rounded" />
-                </div>
-                <div className="flex-1">
-                  <label className="block text-xs font-bold text-slate-500 mb-1">Price (₹)</label>
-                  <input name="lastPurchasePrice" type="number" defaultValue={editItem?.lastPurchasePrice || ""} placeholder="Price" className="w-full border p-2 rounded" />
                 </div>
               </div>
               {editItem && (
@@ -686,6 +769,10 @@ const InventoryManagement = () => {
               <input name="name" placeholder="Name" required className="w-full border p-2 rounded" />
               <input name="category" placeholder="Category" required className="w-full border p-2 rounded" />
               <input name="assignedLocation" placeholder="Location" className="w-full border p-2 rounded" />
+              <div className="flex gap-2">
+                <input name="purchaseCost" type="number" placeholder="Purchase Cost (₹)" className="w-full border p-2 rounded flex-1" />
+                <input name="serialNumber" placeholder="Serial Number" className="w-full border p-2 rounded flex-1" />
+              </div>
               <div className="flex gap-2 justify-end mt-4">
                 <button type="button" onClick={() => setShowAssetModal(false)} className="px-4 py-2 border rounded-xl font-bold">Cancel</button>
                 <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-xl font-bold">Save</button>
@@ -710,6 +797,29 @@ const InventoryManagement = () => {
               <div className="flex gap-2 justify-end mt-4">
                 <button type="button" onClick={() => setShowRepairModal(false)} className="px-4 py-2 border rounded-xl font-bold">Cancel</button>
                 <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-xl font-bold">Save</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showCompleteRepairModal && selectedRepair && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-2xl w-full max-w-md">
+            <h3 className="text-lg font-bold mb-4">Complete Repair: {selectedRepair.asset?.name}</h3>
+            <form onSubmit={handleCompleteRepairSubmit} className="space-y-3">
+              <input name="cost" type="number" placeholder="Final Cost (₹)" required className="w-full border p-2 rounded" />
+              <input name="invoiceNumber" placeholder="Invoice Number (if any)" className="w-full border p-2 rounded" />
+              <select name="paymentMethod" required className="w-full border p-2 rounded">
+                <option value="Cash">Cash</option>
+                <option value="Bank Transfer">Bank Transfer</option>
+                <option value="System">System</option>
+              </select>
+              <input name="completionDate" type="date" required className="w-full border p-2 rounded" defaultValue={new Date().toISOString().split('T')[0]} />
+              <textarea name="remarks" placeholder="Remarks" className="w-full border p-2 rounded h-20"></textarea>
+              <div className="flex gap-2 justify-end mt-4">
+                <button type="button" onClick={() => setShowCompleteRepairModal(false)} className="px-4 py-2 border rounded-xl font-bold">Cancel</button>
+                <button type="submit" className="px-4 py-2 bg-emerald-600 text-white rounded-xl font-bold">Complete Repair</button>
               </div>
             </form>
           </div>

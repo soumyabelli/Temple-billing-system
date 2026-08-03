@@ -45,7 +45,23 @@ const assetSchema = new mongoose.Schema(
       type: String,
       enum: ["Active", "Under Repair", "Retired"],
       default: "Active",
-    }
+    },
+    purchaseCost: {
+      type: Number,
+      default: 0,
+    },
+    serialNumber: {
+      type: String,
+      default: "",
+    },
+    maintenanceHistory: [
+      {
+        repairDate: Date,
+        description: String,
+        cost: Number,
+        vendor: String,
+      }
+    ]
   },
   { timestamps: true }
 );

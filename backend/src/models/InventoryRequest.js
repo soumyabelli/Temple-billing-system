@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const INVENTORY_REQUEST_STATUSES = ["Pending", "Approved", "Rejected"];
+const INVENTORY_REQUEST_STATUSES = ["Pending", "Approved", "Rejected", "Issued"];
 
 const inventoryRequestSchema = new mongoose.Schema(
   {
@@ -17,7 +17,6 @@ const inventoryRequestSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["Staff", "Priest"],
       required: true,
       default: "Staff",
     },
@@ -40,7 +39,6 @@ const inventoryRequestSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      enum: ["Kg", "Liter", "Pack", "Pieces", "Box"],
     },
     reason: {
       type: String,
@@ -98,6 +96,10 @@ const inventoryRequestSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    issuedAt: {
+      type: Date,
+      default: null,
+    }
   },
   { timestamps: true }
 );

@@ -55,7 +55,7 @@ const createInventoryItem = async (req, res) => {
         message: `Unit must be one of: ${INVENTORY_UNITS.join(", ")}`,
       });
     }
-    if (availableStock === undefined || availableStock === null || Number(availableStock) < 0) {
+    if (availableStock !== undefined && availableStock !== null && Number(availableStock) < 0) {
       return res.status(400).json({ success: false, message: "Available stock must be a non-negative number." });
     }
     if (minimumStock === undefined || minimumStock === null || Number(minimumStock) < 0) {
@@ -65,26 +65,13 @@ const createInventoryItem = async (req, res) => {
     const item = await InventoryItem.create({
       name: clean(name),
       unit: clean(unit),
-      availableStock: Number(availableStock),
+      availableStock: 0, // Enforce 0 initial stock for new items to enforce accounting workflow
       minimumStock: Number(minimumStock),
       reorderLevel: Number(reorderLevel || minimumStock),
       category: clean(category),
       description: clean(description),
       expiryDate: expiryDate ? new Date(expiryDate) : undefined,
-      lastSupplier: clean(lastSupplier) || undefined,
-      lastPurchasePrice: Number(lastPurchasePrice) || undefined
     });
-
-    if (item.availableStock > 0) {
-      await RestockHistory.create({
-        item: item._id,
-        itemName: item.name,
-        quantity: item.availableStock,
-        unit: item.unit,
-        supplier: "Initial Stock",
-        restockedBy: req.user ? req.user.id : "System",
-      });
-    }
 
     return res.status(201).json({ success: true, item });
   } catch (error) {
@@ -175,70 +162,79 @@ const restockItem = async (req, res) => {
       return res.status(400).json({ success: false, message: "Valid quantity added is required." });
     }
 
-    const item = await InventoryItem.findById(id);
-    if (!item) {
-      return res.status(404).json({ success: false, message: "Inventory item not found." });
-    }
+    const { recordTransaction } = require("../services/accountingService");
+    const mongoose = require("mongoose");
+    const session = await mongoose.startSession();
+    
+    let resultItem, restockRecord;
 
-    item.availableStock += Number(quantityAdded);
-    item.lastSupplier = clean(supplier);
-    item.lastPurchasePrice = Number(cost) || 0;
-    item.lastInvoiceNumber = clean(invoiceUrl);
-    item.lastPurchaseDate = purchaseDate ? new Date(purchaseDate) : new Date();
-    if (expiryDate) {
-      item.expiryDate = new Date(expiryDate);
-    }
-    await item.save();
+    await session.withTransaction(async () => {
+      const item = await InventoryItem.findById(id).session(session);
+      if (!item) {
+        throw new Error("Inventory item not found.");
+      }
 
-    const restock = await RestockHistory.create({
-      item: item._id,
-      itemName: item.name,
-      quantity: Number(quantityAdded),
-      unit: item.unit,
-      supplier: clean(supplier),
-      purchaseDate: purchaseDate ? new Date(purchaseDate) : new Date(),
-      cost: Number(cost) || 0,
-      invoiceUrl: clean(invoiceUrl),
-      restockedBy: req.user ? req.user.name || req.user.id : "Admin",
-      gst: Number(gst) || 0,
-      remarks: clean(remarks)
+      item.availableStock += Number(quantityAdded);
+      item.lastSupplier = clean(supplier);
+      item.lastPurchasePrice = Number(cost) || 0;
+      item.lastInvoiceNumber = clean(invoiceUrl);
+      item.lastPurchaseDate = purchaseDate ? new Date(purchaseDate) : new Date();
+      if (expiryDate) {
+        item.expiryDate = new Date(expiryDate);
+      }
+      await item.save({ session });
+
+      restockRecord = await RestockHistory.create([{
+        item: item._id,
+        itemName: item.name,
+        quantity: Number(quantityAdded),
+        unit: item.unit,
+        supplier: clean(supplier),
+        purchaseDate: purchaseDate ? new Date(purchaseDate) : new Date(),
+        cost: Number(cost) || 0,
+        invoiceUrl: clean(invoiceUrl),
+        restockedBy: req.user ? req.user.name || req.user.id : "Admin",
+        gst: Number(gst) || 0,
+        remarks: clean(remarks)
+      }], { session });
+      
+      restockRecord = restockRecord[0];
+
+      await InventoryLog.create([{
+        item: item._id,
+        action: "Restocked",
+        quantity: Number(quantityAdded),
+        oldStock: item.availableStock - Number(quantityAdded),
+        newStock: item.availableStock,
+        user: req.user ? req.user.id : null,
+        description: `Restocked ${quantityAdded} ${item.unit} from ${supplier}`
+      }], { session });
+
+      if (Number(cost) > 0) {
+        await recordTransaction({
+          transactionType: "Debit",
+          source: "Inventory",
+          category: "Inventory Purchase",
+          amount: Number(cost),
+          date: purchaseDate ? new Date(purchaseDate) : new Date(),
+          paymentMethod: "System",
+          status: "Completed",
+          description: `Purchased ${quantityAdded} ${item.unit} of ${item.name} from ${supplier || 'supplier'}. Invoice: ${invoiceUrl}`,
+          invoiceNumber: clean(invoiceUrl),
+          referenceId: restockRecord._id,
+          referenceModel: "RestockHistory",
+          recordedBy: req.user ? req.user.id : null,
+        });
+      }
+      resultItem = item;
     });
 
-    await InventoryLog.create({
-      item: item._id,
-      action: "Restocked",
-      quantity: Number(quantityAdded),
-      oldStock: item.availableStock - Number(quantityAdded),
-      newStock: item.availableStock,
-      user: req.user ? req.user.id : null,
-      description: `Restocked ${quantityAdded} ${item.unit} from ${supplier}`
-    });
-
-    if (Number(cost) > 0) {
-      // Determine financial year based on purchaseDate or current date
-      const d = purchaseDate ? new Date(purchaseDate) : new Date();
-      const year = d.getFullYear();
-      const month = d.getMonth() + 1;
-      const financialYear = month >= 4 ? `${year}-${year + 1}` : `${year - 1}-${year}`;
-
-      await AccountTransaction.create({
-        transactionType: "Debit",
-        source: "Inventory",
-        category: "Inventory Purchase",
-        amount: Number(cost),
-        date: d,
-        financialYear: financialYear,
-        paymentMethod: "System",
-        status: "Completed",
-        description: `Purchased ${quantityAdded} ${item.unit} of ${item.name} from ${supplier || 'supplier'}. Invoice: ${invoiceUrl}`,
-        referenceId: restock._id,
-        referenceModel: "RestockHistory",
-        recordedBy: req.user ? req.user.id : null,
-      });
-    }
-
-    return res.json({ success: true, message: "Item restocked successfully", item });
+    session.endSession();
+    return res.json({ success: true, message: "Item restocked successfully", item: resultItem });
   } catch (error) {
+    if (error.message === "Inventory item not found.") {
+       return res.status(404).json({ success: false, message: error.message });
+    }
     return res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -282,13 +278,13 @@ const adjustStock = async (req, res) => {
       const unitCost = item.lastPurchasePrice || item.purchasePrice || 0;
       const totalLossValue = parsedQty * unitCost;
 
-      await AccountTransaction.create({
+      const { recordTransaction } = require("../services/accountingService");
+      await recordTransaction({
         transactionType: "Debit",
         source: "Inventory",
         category: "Inventory Loss",
         amount: totalLossValue,
         date: new Date(),
-        financialYear: new Date().getFullYear() + "-" + (new Date().getFullYear() + 1),
         paymentMethod: "System",
         status: "Completed",
         description: `Inventory Loss: ${parsedQty} ${item.unit} of ${item.name} (${type}). Reason: ${reason}`,

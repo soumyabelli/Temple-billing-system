@@ -22,19 +22,27 @@ const createBooking = async (req, res) => {
             calculatedTempleCharge += reqMat.templeCharge || 0;
             if (reqMat.item) {
               const invItem = await InventoryItem.findById(reqMat.item._id);
-              if (invItem && invItem.availableStock >= reqMat.quantity) {
-                const { deductStock } = require("../utils/inventoryHelper");
-                await deductStock(
-                  invItem._id, 
-                  reqMat.quantity, 
-                  "Consumed", 
-                  req.user ? req.user.id : null, 
-                  `Pooja Booking Consumption: ${service}`
-                );
+              if (invItem) {
                 templeMaterialRequests.push({
                   item: invItem._id,
                   itemName: invItem.name,
                   qty: `${reqMat.quantity}`
+                });
+                
+                const InventoryRequest = require("../models/InventoryRequest");
+                await InventoryRequest.create({
+                  userId: req.user.id,
+                  userName: `${customerName} (Pooja Booking)`,
+                  role: "System",
+                  itemName: invItem.name,
+                  quantity: reqMat.quantity,
+                  unit: invItem.unit,
+                  reason: `System generated for Pooja Booking: ${service}`,
+                  purpose: `Pooja Booking: ${service}`,
+                  expectedDate: new Date(bookingDate),
+                  status: "Approved",
+                  approvedBy: "System",
+                  approvedAt: new Date()
                 });
               }
             }
@@ -55,7 +63,7 @@ const createBooking = async (req, res) => {
       templeArrangement: Boolean(templeArrangement),
       templeMaterialCharge: Number(templeMaterialCharge) || calculatedTempleCharge,
       templeMaterialRequests,
-      materialStatus: templeArrangement ? "Consumed" : "N/A"
+      materialStatus: templeArrangement ? "Pending" : "N/A"
     });
 
     const savedBooking = await newBooking.save();

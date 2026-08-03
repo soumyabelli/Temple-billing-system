@@ -15,7 +15,7 @@ exports.getAllAssets = async (req, res) => {
 
 exports.createAsset = async (req, res) => {
   try {
-    const { assetId, name, category, purchaseDate, supplier, invoiceNumber, warranty, assignedLocation, status } = req.body;
+    const { assetId, name, category, purchaseDate, supplier, invoiceNumber, warranty, assignedLocation, status, purchaseCost, serialNumber } = req.body;
     if (!clean(assetId) || !clean(name)) return res.status(400).json({ success: false, message: "Asset ID and Name are required" });
 
     const asset = await Asset.create({
@@ -27,7 +27,9 @@ exports.createAsset = async (req, res) => {
       invoiceNumber: clean(invoiceNumber),
       warranty: clean(warranty),
       assignedLocation: clean(assignedLocation),
-      status: clean(status) || "Active"
+      status: clean(status) || "Active",
+      purchaseCost: Number(purchaseCost) || 0,
+      serialNumber: clean(serialNumber)
     });
     res.status(201).json({ success: true, asset });
   } catch (error) {
@@ -91,11 +93,26 @@ exports.completeRepair = async (req, res) => {
     const repair = await RepairRequest.findById(req.params.id).populate("asset");
     if (!repair) return res.status(404).json({ success: false, message: "Repair request not found" });
 
+    if (repair.status === "Completed") {
+      return res.status(400).json({ success: false, message: "Repair is already marked as completed." });
+    }
+
     repair.status = "Completed";
-    repair.completionDate = new Date();
+    repair.completionDate = req.body.completionDate ? new Date(req.body.completionDate) : new Date();
     if (req.body.cost) repair.cost = Number(req.body.cost);
     if (req.body.invoiceNumber) repair.invoiceNumber = clean(req.body.invoiceNumber);
+    const paymentMethod = clean(req.body.paymentMethod) || "System";
+    const remarks = clean(req.body.remarks);
     await repair.save();
+
+    // Update maintenance history on the asset
+    repair.asset.maintenanceHistory.push({
+      repairDate: repair.completionDate,
+      description: repair.description + (remarks ? ` - Remarks: ${remarks}` : ""),
+      cost: repair.cost,
+      vendor: repair.vendor
+    });
+    await repair.asset.save();
 
     if (repair.cost > 0) {
       const { recordTransaction } = require("../services/accountingService");
@@ -104,8 +121,8 @@ exports.completeRepair = async (req, res) => {
         source: "Repair",
         category: "Repair Expense",
         amount: repair.cost,
-        paymentMethod: "System",
-        description: `Repair completed for asset ${repair.asset.name}. Vendor: ${repair.vendor}`,
+        paymentMethod: paymentMethod,
+        description: `Repair completed for asset ${repair.asset.name}. Vendor: ${repair.vendor}` + (remarks ? ` - Remarks: ${remarks}` : ""),
         referenceId: repair._id,
         referenceModel: "RepairRequest",
         recordedBy: req.user ? req.user.id : null,

@@ -4,7 +4,7 @@ const InventoryIssue = require("../models/InventoryIssue");
 const { createStaffNotification } = require("../utils/notificationService");
 const { seedDefaultItems } = require("./inventoryItemController");
 
-const INVENTORY_REQUEST_STATUSES = ["Pending", "Approved", "Rejected"];
+const INVENTORY_REQUEST_STATUSES = ["Pending", "Approved", "Rejected", "Issued"];
 
 const clean = (value) => String(value || "").trim();
 
@@ -175,30 +175,6 @@ exports.updateInventoryRequestStatus = async (req, res) => {
       if (request.status === "Approved") {
         return res.status(400).json({ success: false, message: "This request has already been approved." });
       }
-      if (request.status === "Rejected") {
-        return res.status(400).json({ success: false, message: "Cannot approve a rejected request." });
-      }
-
-      const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const inventoryItems = await InventoryItem.find({
-        name: { $regex: new RegExp(`^${escapeRegExp(request.itemName)}$`, "i") },
-      });
-
-      if (!inventoryItems || inventoryItems.length === 0) {
-        return res.status(404).json({ success: false, message: "Inventory item not found." });
-      }
-
-      const parsedQty = parseFloat(request.quantity);
-      let inventoryItem = inventoryItems.find(item => item.availableStock >= parsedQty);
-
-      if (!inventoryItem) {
-        return res.status(400).json({ success: false, message: "Insufficient inventory stock." });
-      }
-
-      inventoryItem.availableStock -= parsedQty;
-      inventoryItem.issuedStock = (inventoryItem.issuedStock || 0) + parsedQty;
-      await inventoryItem.save();
-
       request.status = "Approved";
       request.adminReason = clean(adminReason);
       request.reviewedBy = clean(reviewedBy) || (req.user ? req.user.name : "Admin");
@@ -207,35 +183,12 @@ exports.updateInventoryRequestStatus = async (req, res) => {
       request.approvedAt = new Date();
       await request.save();
 
-      await InventoryIssue.create({
-        request: request._id,
-        item: inventoryItem._id,
-        itemName: inventoryItem.name,
-        userId: request.userId,
-        userName: request.userName,
-        role: request.role,
-        issuedQuantity: parsedQty,
-        unit: inventoryItem.unit,
-        issuedBy: req.user ? req.user.name || req.user.id : "Admin",
-        purpose: request.purpose || request.reason,
-      });
-
       await createStaffNotification({
-        title: "🔔 Request Approved & Issued",
-        message: `✅ Your request for ${request.itemName} (${request.quantity} ${request.unit}) has been approved and issued to you.`,
+        title: "🔔 Request Approved",
+        message: `✅ Your request for ${request.itemName} (${request.quantity} ${request.unit}) has been approved and is ready to be issued.`,
         audienceId: request.userId,
         category: "inventory",
       });
-
-      // Check for low stock alert
-      if (inventoryItem.availableStock <= inventoryItem.minimumStock) {
-        await createStaffNotification({
-          title: "⚠️ Low Stock Alert",
-          message: `${inventoryItem.name} stock is now at or below minimum level. Current: ${inventoryItem.availableStock} ${inventoryItem.unit}, Minimum: ${inventoryItem.minimumStock} ${inventoryItem.unit}. Please reorder soon.`,
-          audienceRole: "admin",
-          category: "inventory",
-        });
-      }
     } else if (normalizedStatus === "Rejected") {
       if (request.status === "Approved") {
         return res.status(400).json({ success: false, message: "Cannot reject an already approved request." });
@@ -262,6 +215,89 @@ exports.updateInventoryRequestStatus = async (req, res) => {
 
     return res.json({ success: true, request });
   } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// POST /api/admin/inventory-requests/:id/issue
+exports.issueInventoryRequest = async (req, res) => {
+  const mongoose = require("mongoose");
+  const session = await mongoose.startSession();
+  
+  try {
+    let resultRequest, resultIssue;
+    await session.withTransaction(async () => {
+      const { id } = req.params;
+      
+      const request = await InventoryRequest.findById(id).session(session);
+      if (!request) throw new Error("Inventory request not found");
+      
+      if (request.status !== "Approved") {
+        throw new Error("Only approved requests can be issued.");
+      }
+
+      const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const inventoryItems = await InventoryItem.find({
+        name: { $regex: new RegExp(`^${escapeRegExp(request.itemName)}$`, "i") },
+      }).session(session);
+
+      if (!inventoryItems || inventoryItems.length === 0) {
+        throw new Error("Inventory item not found.");
+      }
+
+      const parsedQty = parseFloat(request.quantity);
+      let inventoryItem = inventoryItems.find(item => item.availableStock >= parsedQty);
+
+      if (!inventoryItem) {
+        throw new Error(`Insufficient inventory stock for ${request.itemName}. Needed: ${parsedQty}.`);
+      }
+
+      inventoryItem.availableStock -= parsedQty;
+      inventoryItem.issuedStock = (inventoryItem.issuedStock || 0) + parsedQty;
+      await inventoryItem.save({ session });
+
+      request.status = "Issued";
+      request.issuedAt = new Date();
+      await request.save({ session });
+
+      resultIssue = await InventoryIssue.create([{
+        request: request._id,
+        item: inventoryItem._id,
+        itemName: inventoryItem.name,
+        userId: request.userId,
+        userName: request.userName,
+        role: request.role,
+        issuedQuantity: parsedQty,
+        unit: inventoryItem.unit,
+        issuedBy: req.user ? req.user.name || req.user.id : "Admin",
+        purpose: request.purpose || request.reason,
+      }], { session });
+
+      await createStaffNotification({
+        title: "📦 Items Issued",
+        message: `Your approved request for ${request.itemName} (${request.quantity} ${request.unit}) has been issued.`,
+        audienceId: request.userId,
+        category: "inventory",
+      });
+
+      if (inventoryItem.availableStock <= inventoryItem.minimumStock) {
+        await createStaffNotification({
+          title: "⚠️ Low Stock Alert",
+          message: `${inventoryItem.name} stock is now at or below minimum level. Current: ${inventoryItem.availableStock} ${inventoryItem.unit}, Minimum: ${inventoryItem.minimumStock} ${inventoryItem.unit}. Please reorder soon.`,
+          audienceRole: "admin",
+          category: "inventory",
+        });
+      }
+      
+      resultRequest = request;
+    });
+    
+    session.endSession();
+    return res.json({ success: true, request: resultRequest, issue: resultIssue[0] });
+  } catch (error) {
+    if (error.message.includes("not found") || error.message.includes("Insufficient") || error.message.includes("Only approved")) {
+       return res.status(400).json({ success: false, message: error.message });
+    }
     return res.status(500).json({ success: false, message: error.message });
   }
 };

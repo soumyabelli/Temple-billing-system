@@ -9,7 +9,7 @@ const {
   adjustStock,
   getInventoryLogs,
 } = require("../controllers/inventoryItemController");
-const { updateInventoryRequestStatus } = require("../controllers/inventoryRequestController");
+const { updateInventoryRequestStatus, issueInventoryRequest } = require("../controllers/inventoryRequestController");
 const { getAllSuppliers, createSupplier, updateSupplier, deleteSupplier } = require("../controllers/inventorySupplierController");
 const { getAllAssets, createAsset, updateAsset, deleteAsset, getAllRepairs, createRepair, completeRepair } = require("../controllers/inventoryAssetController");
 const { authenticate, authorizeRoles } = require("../middleware/authMiddleware");
@@ -41,6 +41,9 @@ router.get("/inventory-logs", getInventoryLogs);
 
 // PUT /api/admin/inventory-requests/:id/status
 router.put("/inventory-requests/:id/status", updateInventoryRequestStatus);
+
+// POST /api/admin/inventory-requests/:id/issue
+router.post("/inventory-requests/:id/issue", issueInventoryRequest);
 const { getConsumptionReports } = require("../controllers/inventoryIssueController");
 const { getDashboardMetrics, getInventoryReports, getItemDetails } = require("../controllers/inventoryReportController");
 
