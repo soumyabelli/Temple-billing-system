@@ -30,30 +30,53 @@ const generateInventoryRequestsForBooking = async (booking) => {
       selectedTempleMaterials: booking.selectedTempleMaterials || []
     }];
     
+    let needsBookingUpdate = false;
+
     for (const item of items) {
-      if (item.type === "pooja" && item.selectedTempleMaterials && item.selectedTempleMaterials.length > 0) {
+      if (item.type === "pooja") {
         const pooja = await Pooja.findOne({ name: item.name }).populate("requiredMaterials.item");
         if (!pooja) continue;
         
+        // Find materials that the temple must provide (either implicitly or chosen by devotee)
         for (const reqMat of pooja.requiredMaterials) {
-          if (reqMat.canTempleArrange && reqMat.item && item.selectedTempleMaterials.includes(reqMat.item._id.toString())) {
-            await InventoryRequest.create({
-              userId: booking.createdBy || booking.devoteeEmail || "System",
-              userName: `${booking.devoteeName} (Online Pooja Booking)`,
-              role: "System",
-              itemName: reqMat.item.name,
-              quantity: reqMat.qty,
-              unit: reqMat.unit,
-              reason: `System generated for Pooja Booking: ${item.name}`,
-              purpose: `Pooja Booking: ${item.name}`,
-              expectedDate: booking.datetime || new Date(),
-              status: "Approved",
-              approvedBy: "System",
-              approvedAt: new Date()
-            });
+          const isTempleProvides = reqMat.responsibilityType === "TEMPLE_PROVIDES";
+          const isDevoteeSelected = reqMat.responsibilityType === "DEVOTEE_OR_TEMPLE" && 
+                                    item.selectedTempleMaterials && 
+                                    reqMat.item && 
+                                    item.selectedTempleMaterials.includes(reqMat.item._id.toString());
+          
+          if (isTempleProvides || isDevoteeSelected) {
+            // Check if this material is already in templeMaterialRequests
+            const existingReq = booking.templeMaterialRequests.find(tmr => 
+              tmr.item && tmr.item.toString() === reqMat.item._id.toString()
+            );
+
+            if (existingReq && !existingReq.inventoryRequestId) {
+              const invReq = await InventoryRequest.create({
+                userId: booking.createdBy || booking.devoteeEmail || "System",
+                userName: `${booking.devoteeName} (Online Pooja Booking)`,
+                role: "System",
+                itemName: reqMat.item.name,
+                quantity: reqMat.qty,
+                unit: reqMat.unit,
+                reason: `System generated for Pooja Booking: ${item.name}`,
+                purpose: `Pooja Booking: ${item.name}`,
+                expectedDate: booking.datetime || new Date(),
+                status: "Approved",
+                approvedBy: "System",
+                approvedAt: new Date()
+              });
+              
+              existingReq.inventoryRequestId = invReq._id;
+              needsBookingUpdate = true;
+            }
           }
         }
       }
+    }
+    
+    if (needsBookingUpdate) {
+      await booking.save();
     }
   } catch (err) {
     console.error("Failed to generate inventory requests:", err);
@@ -172,6 +195,74 @@ const createBooking = async (req, res) => {
       }
     }
 
+    // Resolve templeMaterialRequests and Approval requirements
+    let templeMaterialRequests = [];
+    let templeApprovalRequired = false;
+    let materialStatus = "N/A";
+
+    const allItems = isCombined ? (items || []) : [{
+      type: "pooja",
+      name: service,
+      selectedTempleMaterials: req.body.selectedTempleMaterials || []
+    }];
+
+    for (const item of allItems) {
+      if (item.type === "pooja") {
+        const pooja = await Pooja.findOne({ name: item.name }).populate("requiredMaterials.item");
+        if (pooja) {
+          const minAdvanceDays = pooja.minimumAdvanceBookingDays || 0;
+          let maxPrepDays = 0;
+          let hasMaterials = false;
+          
+          for (const reqMat of pooja.requiredMaterials) {
+            if (reqMat.responsibilityType === "DEVOTEE_PREPARATION_REQUIRED") {
+              maxPrepDays = Math.max(maxPrepDays, reqMat.preparationDaysBeforePooja || 0);
+            }
+            
+            const isTempleProvides = reqMat.responsibilityType === "TEMPLE_PROVIDES";
+            const isDevoteeSelected = reqMat.responsibilityType === "DEVOTEE_OR_TEMPLE" && 
+                                      item.selectedTempleMaterials && 
+                                      reqMat.item && 
+                                      item.selectedTempleMaterials.includes(reqMat.item._id.toString());
+            
+            if (isTempleProvides || isDevoteeSelected) {
+              templeMaterialRequests.push({
+                item: reqMat.item._id,
+                itemName: reqMat.item.name,
+                qty: `${reqMat.qty} ${reqMat.unit}`
+              });
+              hasMaterials = true;
+            }
+          }
+          if (hasMaterials) {
+             materialStatus = "Pending Approval";
+          }
+          
+          // Server-side validation of advance booking days
+          const effectiveMinDays = Math.max(minAdvanceDays, maxPrepDays);
+          if (effectiveMinDays > 0) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const selectedDate = new Date(datetime);
+            selectedDate.setHours(0, 0, 0, 0);
+            const diffDays = Math.ceil(Math.abs(selectedDate - today) / (1000 * 60 * 60 * 24));
+            
+            if (diffDays < effectiveMinDays) {
+              if (pooja.strictAdvancePreparation) {
+                return res.status(400).json({ error: `This Pooja requires at least ${effectiveMinDays} days of advance notice/preparation.` });
+              } else {
+                templeApprovalRequired = true;
+              }
+            }
+          }
+          
+          if (pooja.strictAdvancePreparation && templeApprovalRequired) {
+             // In case there was some other reason
+          }
+        }
+      }
+    }
+
     const bookingPayload = {
       devoteeId: devoteeId || undefined,
       eventId: eventId || undefined,
@@ -192,6 +283,10 @@ const createBooking = async (req, res) => {
       isCombined: isCombined || false,
       items: items || [],
       selectedTempleMaterials: req.body.selectedTempleMaterials || [],
+      templeMaterialRequests,
+      materialStatus,
+      templeApprovalRequired,
+      preparationAcknowledged: true,
     };
 
     if (isDbConnected()) {

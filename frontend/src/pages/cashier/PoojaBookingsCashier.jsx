@@ -83,6 +83,7 @@ const CashierPoojaBookings = () => {
   const [contactNumber, setContactNumber] = useState("");
   const [notes, setNotes] = useState("");
   const [selectedTempleMaterials, setSelectedTempleMaterials] = useState([]);
+  const [prepAcknowledged, setPrepAcknowledged] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -131,6 +132,7 @@ const CashierPoojaBookings = () => {
     if (!selectedPoojaName && normalized.length) {
       setSelectedPoojaName(normalized[0].name);
       setSelectedTempleMaterials([]);
+      setPrepAcknowledged(false);
     }
   };
 
@@ -214,6 +216,36 @@ const CashierPoojaBookings = () => {
       return;
     }
 
+    // Advance Preparation Validation
+    const prepRequired = (selectedPooja?.requiredMaterials || []).filter(m => m.responsibilityType === "DEVOTEE_PREPARATION_REQUIRED");
+    if (prepRequired.length > 0 && !prepAcknowledged) {
+      setError("Please acknowledge the preparation instructions.");
+      return;
+    }
+
+    const minAdvanceDays = selectedPooja?.minimumAdvanceBookingDays || 0;
+    const maxPrepDays = prepRequired.reduce((max, rm) => Math.max(max, rm.preparationDaysBeforePooja || 0), 0);
+    const effectiveMinDays = Math.max(minAdvanceDays, maxPrepDays);
+
+    if (effectiveMinDays > 0) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const selectedDate = new Date(iso);
+      selectedDate.setHours(0, 0, 0, 0);
+      
+      const diffTime = Math.abs(selectedDate - today);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+      
+      if (diffDays < effectiveMinDays) {
+        if (selectedPooja?.strictAdvancePreparation) {
+          setError(`This Pooja requires at least ${effectiveMinDays} days of advance notice/preparation. Please select an eligible later date.`);
+          return;
+        } else {
+          // It will just be marked for temple approval on the backend
+        }
+      }
+    }
+
     // Validate available days and dates
     const d = new Date(iso);
     const dayName = d.toLocaleDateString("en-US", { weekday: "long" });
@@ -257,6 +289,7 @@ const CashierPoojaBookings = () => {
       // Keep form selection, but reset notes
       setNotes("");
       setSelectedTempleMaterials([]);
+      setPrepAcknowledged(false);
     } catch (err) {
       setError(err?.response?.data?.error || err?.message || "Failed to create booking.");
     } finally {
@@ -313,6 +346,7 @@ const CashierPoojaBookings = () => {
                     onChange={(e) => {
                       setSelectedPoojaName(e.target.value);
                       setSelectedTempleMaterials([]);
+                      setPrepAcknowledged(false);
                     }}
                     disabled={!poojaServices.length || loading}
                   >
@@ -328,44 +362,102 @@ const CashierPoojaBookings = () => {
                   </select>
                 </div>
 
-                {selectedPooja?.requiredMaterials && selectedPooja.requiredMaterials.length > 0 && (
-                  <div className="bbm-field">
-                    <label>Pooja Materials Requirement</label>
-                    <div className="mt-1 bg-amber-50 rounded-xl border border-amber-200 p-3 space-y-2">
-                      {selectedPooja.requiredMaterials.map((rm, idx) => {
-                        const item = typeof rm.item === 'object' ? rm.item : { _id: rm.item, name: rm.itemName || "Item" };
-                        return (
-                          <div key={idx} className="flex items-center justify-between py-1 border-b border-amber-100 last:border-0 text-sm">
-                            <span className="font-semibold text-amber-900">
-                              {rm.qty || rm.quantity} {rm.unit || ''} {item.name || rm.itemName}
-                            </span>
-                            {rm.mustBringByDevotee ? (
-                              <span className="text-xs px-2 py-0.5 bg-amber-200 text-amber-900 rounded-lg">Devotee Brings</span>
-                            ) : rm.canTempleArrange ? (
-                              <label className="flex items-center gap-2 cursor-pointer bg-white px-2 py-1 rounded-lg border border-amber-200 hover:bg-amber-100 transition-colors">
-                                <input 
-                                  type="checkbox"
-                                  checked={selectedTempleMaterials.includes(item._id)}
-                                  onChange={(e) => {
-                                    if (e.target.checked) {
-                                      setSelectedTempleMaterials(prev => [...prev, item._id]);
-                                    } else {
-                                      setSelectedTempleMaterials(prev => prev.filter(id => id !== item._id));
-                                    }
-                                  }}
-                                  className="accent-amber-600 w-3.5 h-3.5"
-                                />
-                                <span className="text-xs font-bold text-amber-800">Temple (+₹{rm.templeCharge})</span>
-                              </label>
-                            ) : (
-                              <span className="text-xs text-amber-700">Arranged</span>
-                            )}
+                {(() => {
+                  if (!selectedPooja || !selectedPooja.requiredMaterials || selectedPooja.requiredMaterials.length === 0) return null;
+                  
+                  const reqMats = Array.isArray(selectedPooja.requiredMaterials) ? selectedPooja.requiredMaterials : [];
+                  
+                  const templeProvides = reqMats.filter(m => m.responsibilityType === "TEMPLE_PROVIDES");
+                  const devoteeMustBring = reqMats.filter(m => m.responsibilityType === "DEVOTEE_MUST_BRING");
+                  const prepRequired = reqMats.filter(m => m.responsibilityType === "DEVOTEE_PREPARATION_REQUIRED");
+                  const orTemple = reqMats.filter(m => m.responsibilityType === "DEVOTEE_OR_TEMPLE");
+                  
+                  return (
+                    <div className="bbm-field">
+                      <label>Pooja Materials Requirement</label>
+                      <div className="mt-1 bg-amber-50 rounded-xl border border-amber-200 p-3 space-y-3">
+                        {templeProvides.length > 0 && (
+                          <div>
+                            <div className="text-teal-800 text-xs font-bold mb-1 border-b border-teal-200 pb-1">Temple Will Provide</div>
+                            {templeProvides.map((rm, idx) => {
+                              const item = typeof rm.item === 'object' ? rm.item : { _id: rm.item, name: rm.itemName || "Item" };
+                              return (
+                                <div key={idx} className="flex justify-between py-1 text-xs text-amber-900">
+                                  <span>{rm.qty} {rm.unit} {item.name}</span>
+                                </div>
+                              );
+                            })}
                           </div>
-                        );
-                      })}
+                        )}
+
+                        {devoteeMustBring.length > 0 && (
+                          <div>
+                            <div className="text-blue-800 text-xs font-bold mb-1 border-b border-blue-200 pb-1">Devotee Must Bring</div>
+                            {devoteeMustBring.map((rm, idx) => {
+                              const item = typeof rm.item === 'object' ? rm.item : { _id: rm.item, name: rm.itemName || "Item" };
+                              return (
+                                <div key={idx} className="flex justify-between py-1 text-xs text-amber-900">
+                                  <span>{rm.qty} {rm.unit} {item.name} {rm.mandatory && <span className="text-red-500">*</span>}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        {orTemple.length > 0 && (
+                          <div>
+                            <div className="text-green-800 text-xs font-bold mb-1 border-b border-green-200 pb-1">Temple Can Arrange (Optional)</div>
+                            {orTemple.map((rm, idx) => {
+                              const item = typeof rm.item === 'object' ? rm.item : { _id: rm.item, name: rm.itemName || "Item" };
+                              return (
+                                <div key={idx} className="flex items-center justify-between py-1.5 text-xs text-amber-900">
+                                  <span>{rm.qty} {rm.unit} {item.name} {rm.mandatory && <span className="text-red-500">*</span>}</span>
+                                  <label className="flex items-center gap-2 cursor-pointer bg-white border border-green-200 hover:bg-green-50 px-2 py-1 rounded-lg transition-colors">
+                                    <input 
+                                      type="checkbox"
+                                      checked={selectedTempleMaterials.includes(item._id)}
+                                      onChange={(e) => {
+                                        if (e.target.checked) {
+                                          setSelectedTempleMaterials(prev => [...prev, item._id]);
+                                        } else {
+                                          setSelectedTempleMaterials(prev => prev.filter(id => id !== item._id));
+                                        }
+                                      }}
+                                      className="accent-green-600 w-3.5 h-3.5 cursor-pointer"
+                                    />
+                                    <span className="font-bold">Arrange (+₹{rm.templeCharge})</span>
+                                  </label>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        {prepRequired.length > 0 && (
+                          <div>
+                            <div className="text-orange-800 text-xs font-bold mb-1 border-b border-orange-200 pb-1">Advance Preparation Required</div>
+                            {prepRequired.map((rm, idx) => {
+                              const item = typeof rm.item === 'object' ? rm.item : { _id: rm.item, name: rm.itemName || "Item" };
+                              return (
+                                <div key={idx} className="py-2 text-xs bg-orange-100/50 rounded-lg p-2 mb-2 text-amber-900">
+                                  <div className="flex justify-between font-bold mb-1">
+                                    <span>{rm.qty} {rm.unit} {item.name} {rm.mandatory && <span className="text-red-500">*</span>}</span>
+                                    <span className="text-orange-700">{rm.preparationDaysBeforePooja} Days</span>
+                                  </div>
+                                  <div className="mb-1"><span className="font-semibold text-orange-800">Instructions:</span> {rm.preparationInstructions}</div>
+                                </div>
+                              );
+                            })}
+                            <label className="flex items-center gap-2 mt-2 cursor-pointer bg-orange-50 border border-orange-300 p-2 rounded text-xs font-bold text-orange-900">
+                              <input type="checkbox" checked={prepAcknowledged} onChange={(e) => setPrepAcknowledged(e.target.checked)} className="accent-orange-600 w-4 h-4" />
+                              Advise devotee about prep instructions
+                            </label>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
 
                 <div className="bbm-field">
                   <label>Date</label>

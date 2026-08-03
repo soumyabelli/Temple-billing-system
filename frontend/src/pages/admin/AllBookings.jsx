@@ -101,6 +101,7 @@ const AllBookings = () => {
                 <th className="px-4 py-3 text-left font-semibold">Amount</th>
                 <th className="px-4 py-3 text-left font-semibold">Payment</th>
                 <th className="px-4 py-3 text-left font-semibold">Status</th>
+                <th className="px-4 py-3 text-left font-semibold">Materials</th>
               </tr>
             </thead>
             <tbody>
@@ -126,6 +127,19 @@ const AllBookings = () => {
                       <span className={`rounded-lg px-2.5 py-1 text-[13px] font-semibold ${statusTheme[row.status] || statusTheme.Pending}`}>
                         {row.status}
                       </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      {row.materialStatus && row.materialStatus !== "N/A" ? (
+                        <span className={`text-[12px] font-bold ${
+                          row.materialStatus === "Issued" ? "text-emerald-600" :
+                          row.materialStatus === "Ready for Collection" ? "text-amber-600" :
+                          "text-rose-500"
+                        }`}>
+                          {row.materialStatus}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400 text-sm">-</span>
+                      )}
                     </td>
                   </tr>
                 ))

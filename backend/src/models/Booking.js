@@ -82,6 +82,7 @@ const bookingSchema = new mongoose.Schema(
     rejectionReason: { type: String, trim: true, default: "" },
     pendingReason: { type: String, trim: true },
     pendingAt: { type: Date },
+    templeApprovalRequired: { type: Boolean, default: false },
     // Room booking specific fields
     days: { type: Number },
     checkinDate: { type: Date },
@@ -95,13 +96,15 @@ const bookingSchema = new mongoose.Schema(
         item: { type: mongoose.Schema.Types.ObjectId, ref: "InventoryItem" },
         itemName: String,
         qty: String, // E.g. '2 Kg'
+        inventoryRequestId: { type: mongoose.Schema.Types.ObjectId, ref: "InventoryRequest" },
       }
     ],
     materialStatus: {
       type: String,
-      enum: ["N/A", "Pending", "Approved", "Reserved", "Ready", "Issued", "Consumed", "Cancelled"],
+      enum: ["N/A", "Pending Approval", "Approved", "Ready for Collection", "Issued", "Acknowledged", "Consumed", "Cancelled", "Pending", "Reserved", "Ready"],
       default: "N/A",
     },
+    preparationAcknowledged: { type: Boolean, default: false },
     priestChecklist: {
       devoteeArrived: { type: Boolean, default: false },
       templeMaterialsReceived: { type: Boolean, default: false },

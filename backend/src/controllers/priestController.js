@@ -402,6 +402,8 @@ exports.getAssignedPoojas = async (req, res) => {
       completedAt: b.completedAt,
       pendingReason: b.pendingReason,
       pendingAt: b.pendingAt,
+      templeMaterialRequests: b.templeMaterialRequests || [],
+      materialStatus: b.materialStatus,
     }));
 
     return res.status(200).json(formatted);

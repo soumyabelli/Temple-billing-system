@@ -261,11 +261,27 @@ const AssignedPoojas = ({ darkMode }) => {
                         <span className="text-xs text-orange-500 font-semibold">{pooja.time}</span>
                       </div>
                     </td>
-                    <td 
-                      className="py-4 px-4 font-extrabold"
-                      style={{ color: darkMode ? '#ffffff' : '#0f172a' }}
-                    >
-                      {pooja.pooja}
+                    <td className="py-4 px-4 font-extrabold" style={{ color: darkMode ? '#ffffff' : '#0f172a' }}>
+                      <div className="flex flex-col gap-1.5">
+                        <span>{pooja.pooja}</span>
+                        {pooja.templeMaterialRequests && pooja.templeMaterialRequests.length > 0 && (
+                          <div className={`mt-1 p-2 rounded-lg text-xs font-medium border ${darkMode ? "bg-slate-800/50 border-slate-700" : "bg-orange-50/50 border-orange-100"}`}>
+                            <p className={`font-bold mb-1 ${darkMode ? "text-slate-300" : "text-orange-700"}`}>Materials Checklist:</p>
+                            <ul className="list-disc pl-4 space-y-0.5">
+                              {pooja.templeMaterialRequests.map((mat, idx) => (
+                                <li key={idx} className={darkMode ? "text-slate-400" : "text-slate-600"}>
+                                  {mat.itemName} - <span className="font-semibold">{mat.qty}</span>
+                                </li>
+                              ))}
+                            </ul>
+                            {pooja.materialStatus && (
+                              <p className={`mt-1.5 text-[10px] font-bold uppercase ${pooja.materialStatus === "Issued" ? "text-emerald-500" : pooja.materialStatus === "Ready for Collection" ? "text-amber-500" : "text-rose-500"}`}>
+                                Status: {pooja.materialStatus}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </td>
                     <td className="py-4 px-4 font-semibold">{pooja.devotee}</td>
                     <td className="py-4 px-4">

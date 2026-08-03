@@ -14,6 +14,8 @@ export default function PoojaTypeSetupModal({ editingPooja, onClose, onSave }) {
   const [newDate, setNewDate] = useState("");
   const [availableStartTime, setAvailableStartTime] = useState(editingPooja?.availableStartTime || "");
   const [availableEndTime, setAvailableEndTime] = useState(editingPooja?.availableEndTime || "");
+  const [minimumAdvanceBookingDays, setMinimumAdvanceBookingDays] = useState(editingPooja?.minimumAdvanceBookingDays || 0);
+  const [strictAdvancePreparation, setStrictAdvancePreparation] = useState(editingPooja?.strictAdvancePreparation ?? false);
   
   const [rules, setRules] = useState(editingPooja?.rules || []);
   const [newRule, setNewRule] = useState("");
@@ -27,8 +29,11 @@ export default function PoojaTypeSetupModal({ editingPooja, onClose, onSave }) {
   const [selectedItem, setSelectedItem] = useState("");
   const [qty, setQty] = useState("");
   const [unit, setUnit] = useState("");
-  const [mustBringByDevotee, setMustBringByDevotee] = useState(false);
-  const [canTempleArrange, setCanTempleArrange] = useState(true);
+  const [responsibilityType, setResponsibilityType] = useState("TEMPLE_PROVIDES");
+  const [preparationDaysBeforePooja, setPreparationDaysBeforePooja] = useState(0);
+  const [preparationInstructions, setPreparationInstructions] = useState("");
+  const [requiresAdvanceCollection, setRequiresAdvanceCollection] = useState(false);
+  const [collectionInstructions, setCollectionInstructions] = useState("");
   const [mandatory, setMandatory] = useState(false);
   const [templeCharge, setTempleCharge] = useState(0);
 
@@ -85,10 +90,13 @@ export default function PoojaTypeSetupModal({ editingPooja, onClose, onSave }) {
       itemName: itemObj.name,
       qty: Number(qty),
       unit: unit.trim(),
-      mustBringByDevotee,
-      canTempleArrange: mustBringByDevotee ? false : canTempleArrange,
+      responsibilityType,
       mandatory,
-      templeCharge: mustBringByDevotee ? 0 : Number(templeCharge)
+      templeCharge: responsibilityType === "DEVOTEE_OR_TEMPLE" ? Number(templeCharge) : 0,
+      preparationDaysBeforePooja: responsibilityType === "DEVOTEE_PREPARATION_REQUIRED" ? Number(preparationDaysBeforePooja) : 0,
+      preparationInstructions: responsibilityType === "DEVOTEE_PREPARATION_REQUIRED" ? preparationInstructions.trim() : "",
+      requiresAdvanceCollection: responsibilityType === "DEVOTEE_PREPARATION_REQUIRED" ? requiresAdvanceCollection : false,
+      collectionInstructions: (responsibilityType === "DEVOTEE_PREPARATION_REQUIRED" && requiresAdvanceCollection) ? collectionInstructions.trim() : ""
     }]);
 
     setSelectedItem("");
@@ -96,8 +104,11 @@ export default function PoojaTypeSetupModal({ editingPooja, onClose, onSave }) {
     setUnit("");
     setTempleCharge(0);
     setMandatory(false);
-    setMustBringByDevotee(false);
-    setCanTempleArrange(true);
+    setResponsibilityType("TEMPLE_PROVIDES");
+    setPreparationDaysBeforePooja(0);
+    setPreparationInstructions("");
+    setRequiresAdvanceCollection(false);
+    setCollectionInstructions("");
     setError("");
   };
 
@@ -120,6 +131,8 @@ export default function PoojaTypeSetupModal({ editingPooja, onClose, onSave }) {
       rules,
       instructions,
       requiredMaterials,
+      minimumAdvanceBookingDays: Number(minimumAdvanceBookingDays) || 0,
+      strictAdvancePreparation,
       status: "Active"
     };
 
@@ -211,6 +224,20 @@ export default function PoojaTypeSetupModal({ editingPooja, onClose, onSave }) {
                   </li>
                 ))}
               </ul>
+
+              <div className="mt-4 pt-2 border-t border-[#f0ece6]">
+                <h5 className="font-bold text-[#323946] mb-2">Advance Booking Constraints</h5>
+                <div className="grid grid-cols-2 gap-4">
+                  <label className="block text-sm font-semibold text-[#4f4f4f]">
+                    Min. Advance Booking (Days)
+                    <input type="number" min="0" value={minimumAdvanceBookingDays} onChange={(e) => setMinimumAdvanceBookingDays(e.target.value)} className="mt-1 w-full rounded-xl border border-[#ded6c6] px-4 py-2 outline-none focus:border-[#8b5e3c]" />
+                  </label>
+                  <label className="flex items-center gap-2 text-sm font-semibold text-[#4f4f4f] mt-6">
+                    <input type="checkbox" checked={strictAdvancePreparation} onChange={(e) => setStrictAdvancePreparation(e.target.checked)} className="w-4 h-4 accent-[#1b7f77]" />
+                    Strict Validation (Block Booking)
+                  </label>
+                </div>
+              </div>
             </div>
 
             <div className="pt-2 border-t mt-2">
@@ -253,7 +280,16 @@ export default function PoojaTypeSetupModal({ editingPooja, onClose, onSave }) {
             <div className="rounded-xl border border-[#ece8e1] bg-[#faf9f7] p-4 space-y-3">
               <label className="block text-sm font-semibold text-[#4f4f4f]">
                 Select Inventory Item
-                <select value={selectedItem} onChange={(e) => setSelectedItem(e.target.value)} className="mt-1 w-full rounded-xl border border-[#ded6c6] px-4 py-2 outline-none focus:border-[#8b5e3c] bg-white">
+                <select 
+                  value={selectedItem} 
+                  onChange={(e) => {
+                    const id = e.target.value;
+                    setSelectedItem(id);
+                    const item = inventoryItems.find(i => i._id === id);
+                    if (item) setUnit(item.unit || "");
+                  }} 
+                  className="mt-1 w-full rounded-xl border border-[#ded6c6] px-4 py-2 outline-none focus:border-[#8b5e3c] bg-white"
+                >
                   <option value="">-- Choose Item --</option>
                   {inventoryItems.map(item => (
                     <option key={item._id} value={item._id}>{item.name} ({item.category})</option>
@@ -272,27 +308,52 @@ export default function PoojaTypeSetupModal({ editingPooja, onClose, onSave }) {
                 </label>
               </div>
 
+              <label className="block text-sm font-semibold text-[#4f4f4f] mt-3">
+                Responsibility Type
+                <select value={responsibilityType} onChange={(e) => setResponsibilityType(e.target.value)} className="mt-1 w-full rounded-xl border border-[#ded6c6] px-4 py-2 outline-none focus:border-[#8b5e3c] bg-white">
+                  <option value="TEMPLE_PROVIDES">Temple Provides (No Action from Devotee)</option>
+                  <option value="DEVOTEE_MUST_BRING">Devotee Must Bring (On Pooja Day)</option>
+                  <option value="DEVOTEE_OR_TEMPLE">Devotee Can Bring or Temple Arranges</option>
+                  <option value="DEVOTEE_PREPARATION_REQUIRED">Devotee Advance Preparation Required</option>
+                </select>
+              </label>
+
+              {responsibilityType === "DEVOTEE_OR_TEMPLE" && (
+                <label className="block text-sm font-semibold text-[#4f4f4f]">
+                  Temple Charge if Arranged (₹)
+                  <input type="number" min="0" value={templeCharge} onChange={(e) => setTempleCharge(e.target.value)} className="mt-1 w-full rounded-xl border border-[#ded6c6] px-4 py-2 outline-none focus:border-[#8b5e3c]" />
+                </label>
+              )}
+
+              {responsibilityType === "DEVOTEE_PREPARATION_REQUIRED" && (
+                <div className="bg-orange-50 border border-orange-200 p-3 rounded-xl space-y-3">
+                  <label className="block text-sm font-semibold text-[#4f4f4f]">
+                    Preparation Days Required Before Pooja
+                    <input type="number" min="1" value={preparationDaysBeforePooja} onChange={(e) => setPreparationDaysBeforePooja(e.target.value)} className="mt-1 w-full rounded-xl border border-[#ded6c6] px-4 py-2 outline-none focus:border-[#8b5e3c]" />
+                  </label>
+                  <label className="block text-sm font-semibold text-[#4f4f4f]">
+                    Preparation Instructions (For Devotee)
+                    <textarea value={preparationInstructions} onChange={(e) => setPreparationInstructions(e.target.value)} rows={2} className="mt-1 w-full rounded-xl border border-[#ded6c6] px-4 py-2 outline-none focus:border-[#8b5e3c]" placeholder="How to prepare the material..." />
+                  </label>
+                  <label className="flex items-center gap-2 text-sm font-semibold text-[#4f4f4f] mt-1 cursor-pointer">
+                    <input type="checkbox" checked={requiresAdvanceCollection} onChange={(e) => setRequiresAdvanceCollection(e.target.checked)} className="w-4 h-4 accent-orange-600" />
+                    Requires Advance Collection from Temple
+                  </label>
+                  {requiresAdvanceCollection && (
+                    <label className="block text-sm font-semibold text-[#4f4f4f]">
+                      Collection Instructions
+                      <input type="text" value={collectionInstructions} onChange={(e) => setCollectionInstructions(e.target.value)} className="mt-1 w-full rounded-xl border border-[#ded6c6] px-4 py-2 outline-none focus:border-[#8b5e3c]" placeholder="e.g. Collect from Temple Counter #1" />
+                    </label>
+                  )}
+                </div>
+              )}
+
               <div className="flex gap-4 pt-1 flex-wrap">
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
-                  <input type="checkbox" checked={mustBringByDevotee} onChange={(e) => setMustBringByDevotee(e.target.checked)} className="w-4 h-4 accent-[#1b7f77]" />
-                  Must Bring by Devotee
-                </label>
-                <label className={`flex items-center gap-2 text-sm font-medium ${mustBringByDevotee ? 'text-gray-400' : 'text-gray-700'} cursor-pointer`}>
-                  <input type="checkbox" checked={mustBringByDevotee ? false : canTempleArrange} disabled={mustBringByDevotee} onChange={(e) => setCanTempleArrange(e.target.checked)} className="w-4 h-4 accent-[#1b7f77]" />
-                  Temple Can Arrange
-                </label>
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
                   <input type="checkbox" checked={mandatory} onChange={(e) => setMandatory(e.target.checked)} className="w-4 h-4 accent-[#1b7f77]" />
                   Mandatory to have
                 </label>
               </div>
-
-              {(!mustBringByDevotee && canTempleArrange) && (
-                <label className="block text-sm font-semibold text-[#4f4f4f]">
-                  Temple Charge (₹)
-                  <input type="number" min="0" value={templeCharge} onChange={(e) => setTempleCharge(e.target.value)} className="mt-1 w-full rounded-xl border border-[#ded6c6] px-4 py-2 outline-none focus:border-[#8b5e3c]" />
-                </label>
-              )}
 
               <button type="button" onClick={handleAddMaterial} className="w-full mt-2 rounded-xl bg-[#15141f] py-2 text-sm font-bold text-white hover:bg-black">
                 + Add Material to Pooja
@@ -309,9 +370,11 @@ export default function PoojaTypeSetupModal({ editingPooja, onClose, onSave }) {
                       <button type="button" onClick={() => setRequiredMaterials(requiredMaterials.filter((_, i) => i !== idx))} className="absolute top-2 right-2 text-red-500 hover:text-red-700 font-bold">&times;</button>
                       <p className="font-bold text-[#15141f]">{mat.itemName} <span className="text-sm font-normal text-gray-500">({mat.qty} {mat.unit})</span></p>
                       <div className="mt-1 flex gap-2 flex-wrap">
-                        {mat.mustBringByDevotee && <span className="rounded bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700">Devotee Must Bring</span>}
-                        {mat.canTempleArrange && <span className="rounded bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700">Temple Arranges (₹{mat.templeCharge})</span>}
-                        {mat.mandatory && <span className="rounded bg-orange-100 px-2 py-0.5 text-xs font-semibold text-orange-700">Mandatory</span>}
+                        {mat.responsibilityType === "TEMPLE_PROVIDES" && <span className="rounded bg-teal-100 px-2 py-0.5 text-xs font-semibold text-teal-700">Temple Provides</span>}
+                        {mat.responsibilityType === "DEVOTEE_MUST_BRING" && <span className="rounded bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700">Devotee Must Bring</span>}
+                        {mat.responsibilityType === "DEVOTEE_OR_TEMPLE" && <span className="rounded bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700">Devotee / Temple Arrange (₹{mat.templeCharge})</span>}
+                        {mat.responsibilityType === "DEVOTEE_PREPARATION_REQUIRED" && <span className="rounded bg-orange-100 px-2 py-0.5 text-xs font-semibold text-orange-700">Adv. Prep ({mat.preparationDaysBeforePooja}d)</span>}
+                        {mat.mandatory && <span className="rounded bg-gray-200 px-2 py-0.5 text-xs font-semibold text-gray-700">Mandatory</span>}
                       </div>
                     </div>
                   ))}

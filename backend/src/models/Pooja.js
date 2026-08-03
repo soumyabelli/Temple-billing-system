@@ -39,6 +39,14 @@ const poojaSchema = new mongoose.Schema(
       type: String, // e.g. "08:00"
       default: "",
     },
+    minimumAdvanceBookingDays: {
+      type: Number,
+      default: 0,
+    },
+    strictAdvancePreparation: {
+      type: Boolean,
+      default: false,
+    },
     requiredMaterials: [
       {
         item: {
@@ -58,13 +66,27 @@ const poojaSchema = new mongoose.Schema(
           type: String,
           required: true,
         },
-        mustBringByDevotee: {
+        responsibilityType: {
+          type: String,
+          enum: ["TEMPLE_PROVIDES", "DEVOTEE_MUST_BRING", "DEVOTEE_PREPARATION_REQUIRED", "DEVOTEE_OR_TEMPLE"],
+          required: true,
+          default: "TEMPLE_PROVIDES",
+        },
+        preparationDaysBeforePooja: {
+          type: Number,
+          default: 0,
+        },
+        preparationInstructions: {
+          type: String,
+          default: "",
+        },
+        requiresAdvanceCollection: {
           type: Boolean,
           default: false,
         },
-        canTempleArrange: {
-          type: Boolean,
-          default: true,
+        collectionInstructions: {
+          type: String,
+          default: "",
         },
         mandatory: {
           type: Boolean,
