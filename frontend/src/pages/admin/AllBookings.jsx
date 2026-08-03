@@ -67,11 +67,11 @@ const AllBookings = () => {
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex h-11 items-center gap-2 rounded-xl border border-[#ece8e1] bg-[#faf9f7] px-3 text-[#858b96]">
               <MdOutlineSearch size={20} />
-              <input 
-                value={query} 
-                onChange={(e) => setQuery(e.target.value)} 
-                className="w-[240px] bg-transparent text-[15px] text-[#242938] outline-none placeholder:text-[#9ca3af]" 
-                placeholder="Search ID, Name or Pooja..." 
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="w-[240px] bg-transparent text-[15px] text-[#242938] outline-none placeholder:text-[#9ca3af]"
+                placeholder="Search ID, Name or Pooja..."
               />
             </div>
 
@@ -130,11 +130,10 @@ const AllBookings = () => {
                     </td>
                     <td className="px-4 py-3">
                       {row.materialStatus && row.materialStatus !== "N/A" ? (
-                        <span className={`text-[12px] font-bold ${
-                          row.materialStatus === "Issued" ? "text-emerald-600" :
+                        <span className={`text-[12px] font-bold ${row.materialStatus === "Issued" ? "text-emerald-600" :
                           row.materialStatus === "Ready for Collection" ? "text-amber-600" :
-                          "text-rose-500"
-                        }`}>
+                            "text-rose-500"
+                          }`}>
                           {row.materialStatus}
                         </span>
                       ) : (
