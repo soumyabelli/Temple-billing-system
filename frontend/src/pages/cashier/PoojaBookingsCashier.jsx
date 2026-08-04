@@ -465,7 +465,30 @@ const CashierPoojaBookings = () => {
                     type="date"
                     value={dateTime}
                     min={minDateTime}
-                    onChange={(e) => setDateTime(e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (!val) {
+                        setDateTime("");
+                        return;
+                      }
+                      
+                      const selectedType = poojaTypes.find((t) => t.name === service);
+                      if (selectedType && selectedType.availableDays && selectedType.availableDays.length > 0) {
+                        const isEveryday = selectedType.availableDays.some(d => d.toLowerCase() === "everyday");
+                        if (!isEveryday) {
+                          const dateObj = new Date(val);
+                          const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+                          const dayName = daysOfWeek[dateObj.getDay()];
+                          
+                          if (!selectedType.availableDays.includes(dayName)) {
+                            toast.error(`${selectedType.name} is only available on: ${selectedType.availableDays.join(", ")}`);
+                            setDateTime("");
+                            return;
+                          }
+                        }
+                      }
+                      setDateTime(val);
+                    }}
                   />
                 </div>
 

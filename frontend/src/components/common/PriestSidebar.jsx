@@ -16,7 +16,18 @@ const PriestSidebar = ({
   darkMode,
   onLogoutClick,
 }) => {
+  const [templeLogo, setTempleLogo] = useState(() => localStorage.getItem("templeLogo"));
+  const [templeName, setTempleName] = useState(() => localStorage.getItem("templeName") || "Sri Shanti Mahadev Mandir");
   const baseItem = "relative w-full flex items-center gap-3 rounded-xl transition-all duration-300 text-left";
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setTempleLogo(localStorage.getItem("templeLogo"));
+      setTempleName(localStorage.getItem("templeName") || "Sri Shanti Mahadev Mandir");
+    };
+    window.addEventListener("templeDataUpdated", handleUpdate);
+    return () => window.removeEventListener("templeDataUpdated", handleUpdate);
+  }, []);
 
   return (
     <>
@@ -48,11 +59,11 @@ const PriestSidebar = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5 min-w-0">
               <div
-                className={`h-9 w-9 rounded-lg flex items-center justify-center shrink-0 ${
+                className={`h-9 w-9 overflow-hidden rounded-lg flex items-center justify-center shrink-0 ${
                   darkMode ? "bg-orange-500/20 text-orange-400" : "bg-orange-50 text-[#e07a22]"
                 }`}
               >
-                <MdTempleBuddhist size={22} />
+                {templeLogo ? <img src={templeLogo} alt="Logo" className="w-full h-full object-cover" /> : <MdTempleBuddhist size={22} />}
               </div>
               {!collapsed && (
                 <h1
@@ -60,9 +71,7 @@ const PriestSidebar = ({
                     darkMode ? "text-slate-100" : "text-[#1d1b19]"
                   }`}
                 >
-                  Sri Shanti
-                  <br />
-                  Mahadev Mandir
+                  {templeName}
                 </h1>
               )}
             </div>

@@ -16,6 +16,17 @@ const CashierSidebar = ({
   onLogoutClick,
   unreadCount = 0,
 }) => {
+  const [templeLogo, setTempleLogo] = useState(() => localStorage.getItem("templeLogo"));
+  const [templeName, setTempleName] = useState(() => localStorage.getItem("templeName") || "Sri Shanti Mahadev Mandir");
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setTempleLogo(localStorage.getItem("templeLogo"));
+      setTempleName(localStorage.getItem("templeName") || "Sri Shanti Mahadev Mandir");
+    };
+    window.addEventListener("templeDataUpdated", handleUpdate);
+    return () => window.removeEventListener("templeDataUpdated", handleUpdate);
+  }, []);
   useEffect(() => {
     if (!mobileOpen) return;
     const onKeyDown = (event) => {
@@ -50,12 +61,12 @@ const CashierSidebar = ({
         <div className="border-b border-[#efd2a3] px-4 py-4">
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[#f2cf95] bg-white/80 text-[#8a4b00]">
-                <MdTempleBuddhist size={24} />
+              <div className="flex h-11 w-11 shrink-0 overflow-hidden items-center justify-center rounded-2xl border border-[#f2cf95] bg-white/80 text-[#8a4b00]">
+                {templeLogo ? <img src={templeLogo} alt="Logo" className="w-full h-full object-cover" /> : <MdTempleBuddhist size={24} />}
               </div>
               {!collapsed ? (
                 <div className="min-w-0">
-                  <p className="text-[18px] font-extrabold leading-tight text-slate-950">Sri Shanti Mahadev Mandir</p>
+                  <p className="text-[18px] font-extrabold leading-tight text-slate-950">{templeName}</p>
                   <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#8d5500]">Cashier Console</p>
                 </div>
               ) : null}

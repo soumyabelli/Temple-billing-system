@@ -1,18 +1,30 @@
+import { useState, useEffect } from "react";
 import { FaSignOutAlt } from "react-icons/fa";
 import { MdTempleBuddhist } from "react-icons/md";
 import templeBg from "../../../assets/temple-bg.jpg";
 import { accountantSidebarPrimary, accountantSidebarUtility } from "../accountantDashboardData";
 
 const AccountantSidebar = ({ activeItem = "Dashboard", onSelectItem = () => {}, onLogout = () => {} }) => {
+  const [templeLogo, setTempleLogo] = useState(() => localStorage.getItem("templeLogo"));
+  const [templeName, setTempleName] = useState(() => localStorage.getItem("templeName") || "Temple Billing System");
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setTempleLogo(localStorage.getItem("templeLogo"));
+      setTempleName(localStorage.getItem("templeName") || "Temple Billing System");
+    };
+    window.addEventListener("templeDataUpdated", handleUpdate);
+    return () => window.removeEventListener("templeDataUpdated", handleUpdate);
+  }, []);
   return (
     <aside className="accountant-sidebar" style={{ backgroundImage: `url(${templeBg})` }}>
       <div className="accountant-sidebar__scrim">
         <div className="accountant-brand">
-          <div className="accountant-brand__mark" aria-hidden="true">
-            <MdTempleBuddhist />
+          <div className="accountant-brand__mark flex items-center justify-center overflow-hidden" aria-hidden="true">
+            {templeLogo ? <img src={templeLogo} alt="Logo" className="w-full h-full object-cover" /> : <MdTempleBuddhist />}
           </div>
           <div className="accountant-brand__text">
-            <strong>Temple Billing System</strong>
+            <strong>{templeName}</strong>
             <span>Accountant Panel</span>
           </div>
         </div>

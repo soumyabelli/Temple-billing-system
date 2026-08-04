@@ -466,7 +466,7 @@ const DevoteeDashboard = () => {
   }, [availableRooms]);
 
   const [cartItems, setCartItems] = useState([]);
-  const [cartPaymentMethod, setCartPaymentMethod] = useState("Razorpay (UPI / Cards / Net Banking)");
+  const [cartPaymentMethod, setCartPaymentMethod] = useState("UPI");
   const [profileData, setProfileData] = useState({
     name: user?.name || "Devotee User",
     email: user?.email || "devotee@example.com",
@@ -2587,7 +2587,31 @@ const DevoteeDashboard = () => {
                       <input
                         type="date"
                         value={bookingDatetime}
-                        onChange={(e) => setBookingDatetime(e.target.value)}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (!val) {
+                            setBookingDatetime("");
+                            return;
+                          }
+                          
+                          const selectedType = poojaTypes.find((t) => t.name === bookingService);
+                          if (selectedType && selectedType.availableDays && selectedType.availableDays.length > 0) {
+                            // Check if "Everyday" is in the array, if so, allow it
+                            const isEveryday = selectedType.availableDays.some(d => d.toLowerCase() === "everyday");
+                            if (!isEveryday) {
+                              const dateObj = new Date(val);
+                              const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+                              const dayName = daysOfWeek[dateObj.getDay()];
+                              
+                              if (!selectedType.availableDays.includes(dayName)) {
+                                toast.error(`${selectedType.name} is only available on: ${selectedType.availableDays.join(", ")}`);
+                                setBookingDatetime("");
+                                return;
+                              }
+                            }
+                          }
+                          setBookingDatetime(val);
+                        }}
                         min={minBookingDatetime}
                         className="w-full rounded-2xl border border-amber-200 bg-amber-50/50 px-4 py-3.5 text-sm font-bold text-slate-900 outline-none focus:border-amber-500 focus:bg-white"
                       />
@@ -2820,12 +2844,12 @@ const DevoteeDashboard = () => {
                       onChange={(e) => setCartPaymentMethod(e.target.value)}
                       className="w-full rounded-2xl border border-amber-200 bg-white px-4 py-3.5 text-sm font-bold text-slate-900 outline-none focus:border-amber-500"
                     >
-                      <option value="Razorpay (UPI / QR / Cards / Net Banking)">
+                      <option value="UPI">
                         💳 Razorpay Gateway (UPI, GPay, PhonePe, Cards, Net Banking)
                       </option>
-                      <option value="UPI / QR (Razorpay)">📱 Razorpay UPI / QR Code</option>
-                      <option value="Credit / Debit Card (Razorpay)">💳 Razorpay Cards (Visa / Mastercard)</option>
-                      <option value="Net Banking (Razorpay)">🏦 Razorpay Net Banking</option>
+                      <option value="UPI">📱 Razorpay UPI / QR Code</option>
+                      <option value="Card">💳 Razorpay Cards (Visa / Mastercard)</option>
+                      <option value="Net Banking">🏦 Razorpay Net Banking</option>
                     </select>
                   </div>
 

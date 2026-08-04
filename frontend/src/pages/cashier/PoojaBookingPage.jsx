@@ -63,6 +63,30 @@ const PoojaBookingPage = () => {
         ...formData,
         [name]: e.target.checked
       });
+    } else if (name === "bookingDate") {
+      if (!value) {
+        setFormData({ ...formData, [name]: value });
+        return;
+      }
+      const selectedSetting = poojaSettings.find(p => p.poojaName === formData.service);
+      if (selectedSetting && selectedSetting.availableDays && selectedSetting.availableDays.length > 0) {
+        const isEveryday = selectedSetting.availableDays.some(d => d.toLowerCase() === "everyday");
+        if (!isEveryday) {
+          const dateObj = new Date(value);
+          const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+          const dayName = daysOfWeek[dateObj.getDay()];
+          
+          if (!selectedSetting.availableDays.includes(dayName)) {
+            toast.error(`${formData.service} is only available on: ${selectedSetting.availableDays.join(", ")}`);
+            setFormData({ ...formData, [name]: "" });
+            return;
+          }
+        }
+      }
+      setFormData({
+        ...formData,
+        [name]: value
+      });
     } else {
       setFormData({
         ...formData,

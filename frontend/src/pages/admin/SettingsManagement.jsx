@@ -41,6 +41,7 @@ const SettingsManagement = () => {
   const [templePhone, setTemplePhone] = useState(() => localStorage.getItem("templePhone") || "040-12345678");
   const [templeEmail, setTempleEmail] = useState(() => localStorage.getItem("templeEmail") || "info@ssmm.in");
   const [templeGst, setTempleGst] = useState(() => localStorage.getItem("templeGst") || "36AAATS1234A1Z5");
+  const [templeLogo, setTempleLogo] = useState(() => localStorage.getItem("templeLogo") || null);
 
   // Admin Account Settings State
   const [fullName, setFullName] = useState(user?.name || "Admin");
@@ -78,6 +79,11 @@ const SettingsManagement = () => {
     localStorage.setItem("templePhone", templePhone);
     localStorage.setItem("templeEmail", templeEmail);
     localStorage.setItem("templeGst", templeGst);
+    if (templeLogo) {
+      localStorage.setItem("templeLogo", templeLogo);
+    }
+    
+    window.dispatchEvent(new Event("templeDataUpdated"));
     
     setTempleMsg("Temple information saved successfully!");
     setTimeout(() => setTempleMsg(""), 3000);
@@ -205,12 +211,29 @@ const SettingsManagement = () => {
             <div className="pt-1">
               <p className="mb-2">Temple Logo</p>
               <div className="flex items-center gap-3">
-                <div className="flex h-14 w-14 items-center justify-center rounded-full border border-[#ece8e1] bg-orange-50 text-[#ff8b00]">
-                  <MdTempleBuddhist size={22} />
+                <div className="flex h-14 w-14 overflow-hidden items-center justify-center rounded-full border border-[#ece8e1] bg-orange-50 text-[#ff8b00]">
+                  {templeLogo ? (
+                    <img src={templeLogo} alt="Temple Logo" className="h-full w-full object-cover" />
+                  ) : (
+                    <MdTempleBuddhist size={22} />
+                  )}
                 </div>
-                <button className="h-10 rounded-lg border border-[#f4caa8] px-3 text-sm font-semibold text-[#f07f00]">
+                <label className="flex h-10 cursor-pointer items-center justify-center rounded-lg border border-[#f4caa8] px-3 text-sm font-semibold text-[#f07f00] hover:bg-orange-50 transition-colors">
                   Change Logo
-                </button>
+                  <input 
+                    type="file" 
+                    className="hidden" 
+                    accept="image/*" 
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onloadend = () => setTempleLogo(reader.result);
+                        reader.readAsDataURL(file);
+                      }
+                    }} 
+                  />
+                </label>
               </div>
             </div>
 
@@ -274,7 +297,7 @@ const SettingsManagement = () => {
                 onClick={() => setShowCurrentPass(!showCurrentPass)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7b8492]"
               >
-                {showCurrentPass ? <MdOutlineVisibility size={18} /> : <MdOutlineVisibilityOff size={18} />}
+                {showCurrentPass ? <MdOutlineVisibilityOff size={18} /> : <MdOutlineVisibility size={18} />}
               </button>
             </div>
 
@@ -292,7 +315,7 @@ const SettingsManagement = () => {
                 onClick={() => setShowNewPass(!showNewPass)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7b8492]"
               >
-                {showNewPass ? <MdOutlineVisibility size={18} /> : <MdOutlineVisibilityOff size={18} />}
+                {showNewPass ? <MdOutlineVisibilityOff size={18} /> : <MdOutlineVisibility size={18} />}
               </button>
             </div>
 
@@ -310,7 +333,7 @@ const SettingsManagement = () => {
                 onClick={() => setShowConfirmPass(!showConfirmPass)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7b8492]"
               >
-                {showConfirmPass ? <MdOutlineVisibility size={18} /> : <MdOutlineVisibilityOff size={18} />}
+                {showConfirmPass ? <MdOutlineVisibilityOff size={18} /> : <MdOutlineVisibility size={18} />}
               </button>
             </div>
 

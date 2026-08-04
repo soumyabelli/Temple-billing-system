@@ -6,6 +6,8 @@ import { MdMenu, MdTempleBuddhist, MdKeyboardArrowDown } from "react-icons/md";
 const Sidebar = ({ items, activeItem, activePath, onSelect, onNavigate, collapsed, setCollapsed, mobileOpen, setMobileOpen, darkMode, onLogoutClick }) => {
   const itemsToUse = items || defaultSidebarItems;
   const [openGroup, setOpenGroup] = useState(null);
+  const [templeLogo, setTempleLogo] = useState(() => localStorage.getItem("templeLogo"));
+  const [templeName, setTempleName] = useState(() => localStorage.getItem("templeName") || "Sri Shanti Mahadev Mandir");
   const baseItem = "relative w-full flex items-center gap-3 rounded-lg transition-all duration-300 text-left";
 
   useEffect(() => {
@@ -14,6 +16,15 @@ const Sidebar = ({ items, activeItem, activePath, onSelect, onNavigate, collapse
       setOpenGroup(activeGroup.title);
     }
   }, [activePath, itemsToUse]);
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setTempleLogo(localStorage.getItem("templeLogo"));
+      setTempleName(localStorage.getItem("templeName") || "Sri Shanti Mahadev Mandir");
+    };
+    window.addEventListener("templeDataUpdated", handleUpdate);
+    return () => window.removeEventListener("templeDataUpdated", handleUpdate);
+  }, []);
 
   return (
     <>
@@ -32,14 +43,12 @@ const Sidebar = ({ items, activeItem, activePath, onSelect, onNavigate, collapse
         <div className={`px-3 ${collapsed ? "pt-3 pb-2" : "pt-4 pb-3"} border-b ${darkMode ? "border-[#2e3749]" : "border-[#e5d5b8]/80"}`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 min-w-0">
-              <div className={`h-11 w-11 rounded-lg flex items-center justify-center shrink-0 ${darkMode ? "bg-white/10 text-amber-300" : "bg-white/65 text-[#5f3a1f]"}`}>
-                <MdTempleBuddhist size={24} />
+              <div className={`h-11 w-11 rounded-lg flex items-center justify-center shrink-0 overflow-hidden ${darkMode ? "bg-white/10 text-amber-300" : "bg-white/65 text-[#5f3a1f]"}`}>
+                {templeLogo ? <img src={templeLogo} alt="Logo" className="w-full h-full object-cover" /> : <MdTempleBuddhist size={24} />}
               </div>
               {!collapsed && (
                 <h1 className={`text-[18px] leading-tight font-bold ${darkMode ? "text-[#f7efe0]" : "text-[#5f3a1f]"}`}>
-                  Sri Shanti
-                  <br />
-                  Mahadev Mandir
+                  {templeName}
                 </h1>
               )}
             </div>
