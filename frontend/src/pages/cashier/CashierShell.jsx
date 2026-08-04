@@ -6,6 +6,7 @@ import Sidebar from "../../components/common/Sidebar";
 import Topbar from "../../components/common/Topbar";
 import LogoutModal from "../../components/LogoutModal";
 import { useAuth } from "../../context/AuthContext";
+import { useTheme } from "../../context/ThemeContext";
 import { cashierSidebarItems } from "../../data/cashierSidebarData";
 
 const findActiveItem = (path) => {
@@ -23,7 +24,7 @@ const CashierShell = ({ children }) => {
   const [activeItem, setActiveItem] = useState(findActiveItem(location.pathname));
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
+  const { darkMode, toggleDarkMode } = useTheme();
   const [showLogout, setShowLogout] = useState(false);
 
   const handleLogout = () => {
@@ -61,7 +62,7 @@ const CashierShell = ({ children }) => {
       >
         <Topbar
           darkMode={darkMode}
-          toggleDarkMode={() => setDarkMode((prev) => !prev)}
+          toggleDarkMode={toggleDarkMode}
           onOpenMobileSidebar={() => setMobileOpen(true)}
         />
 

@@ -6,12 +6,8 @@ const formatCurrency = (value) => `Rs ${Number(value || 0).toLocaleString()}`;
 
 const DevoteesManagement = ({ darkMode, devotees = [], bookings = [], donations = [], onEditProfile }) => {
   const [query, setQuery] = useState("");
-
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return devotees;
-    return devotees.filter((d) => (d.name || "").toLowerCase().includes(q) || (d.email || "").toLowerCase().includes(q));
-  }, [devotees, query]);
+  const [filterType, setFilterType] = useState("All");
+  const [showFilterMenu, setShowFilterMenu] = useState(false);
 
   const donationsByName = useMemo(() => {
     const map = new Map();
@@ -30,6 +26,22 @@ const DevoteesManagement = ({ darkMode, devotees = [], bookings = [], donations 
     });
     return map;
   }, [bookings]);
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    let result = devotees;
+    if (q) {
+      result = result.filter((d) => (d.name || "").toLowerCase().includes(q) || (d.email || "").toLowerCase().includes(q));
+    }
+    
+    if (filterType === "Has Bookings") {
+      result = result.filter(d => (bookingsByName.get((d.name || "").toLowerCase()) || 0) > 0);
+    } else if (filterType === "Has Donations") {
+      result = result.filter(d => (donationsByName.get((d.name || "").toLowerCase()) || 0) > 0);
+    }
+    
+    return result;
+  }, [devotees, query, filterType, bookingsByName, donationsByName]);
 
   const totalDonation = donations.reduce((sum, d) => sum + Number(d.amount || 0), 0);
 
@@ -85,9 +97,30 @@ const DevoteesManagement = ({ darkMode, devotees = [], bookings = [], donations 
             />
           </div>
 
-          <button className={`inline-flex h-10 items-center gap-2 rounded-xl border px-3 text-sm ${darkMode ? "border-[#334155] bg-[#111827] text-slate-200" : "border-[#ece8e1] bg-white text-gray-700"}`}>
-            <FaFilter className="text-[12px]" /> Filter
-          </button>
+          <div className="relative">
+            <button 
+              onClick={() => setShowFilterMenu(!showFilterMenu)}
+              className={`inline-flex h-10 items-center gap-2 rounded-xl border px-3 text-sm ${darkMode ? "border-[#334155] bg-[#111827] text-slate-200" : "border-[#ece8e1] bg-white text-gray-700"}`}
+            >
+              <FaFilter className="text-[12px]" /> {filterType}
+            </button>
+            {showFilterMenu && (
+              <div className={`absolute right-0 top-12 z-10 w-48 rounded-xl border p-2 shadow-lg ${darkMode ? "border-[#334155] bg-[#1f2937]" : "border-[#ece8e1] bg-white"}`}>
+                {["All", "Has Bookings", "Has Donations"].map((type) => (
+                  <button
+                    key={type}
+                    onClick={() => {
+                      setFilterType(type);
+                      setShowFilterMenu(false);
+                    }}
+                    className={`block w-full rounded-lg px-4 py-2 text-left text-sm ${filterType === type ? (darkMode ? "bg-[#374151] text-amber-400" : "bg-[#fff8ef] text-amber-600") : (darkMode ? "text-slate-300 hover:bg-[#374151]" : "text-gray-700 hover:bg-gray-50")}`}
+                  >
+                    {type}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="overflow-x-auto rounded-xl border border-[#ece8e1]/70">

@@ -4,6 +4,7 @@ import PriestSidebar from "../components/common/PriestSidebar";
 import PriestTopbar from "../components/common/PriestTopbar";
 import LogoutModal from "../components/LogoutModal";
 import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
 import { priestSidebarItems } from "../data/priestSidebarData";
 
 const findActiveItem = (path) => {
@@ -20,7 +21,7 @@ const PriestLayout = ({ children, onLogoutClick }) => {
   const [activeItem, setActiveItem] = useState(findActiveItem(location.pathname));
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
+  const { darkMode, toggleDarkMode } = useTheme();
   const [showLogout, setShowLogout] = useState(false);
 
   useEffect(() => {
@@ -67,7 +68,7 @@ const PriestLayout = ({ children, onLogoutClick }) => {
       >
         <PriestTopbar
           darkMode={darkMode}
-          toggleDarkMode={() => setDarkMode((prev) => !prev)}
+          toggleDarkMode={toggleDarkMode}
           onOpenMobileSidebar={() => setMobileOpen(true)}
         />
 

@@ -4,6 +4,7 @@ import Sidebar from "../components/common/Sidebar";
 import Topbar from "../components/common/Topbar";
 import LogoutModal from "../components/LogoutModal";
 import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
 import { sidebarItems } from "../data/sidebarData";
 
 const findActiveItem = (path) => {
@@ -18,7 +19,7 @@ const AdminLayout = ({ children, onLogoutClick }) => {
   const [activeItem, setActiveItem] = useState(findActiveItem(location.pathname));
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
+  const { darkMode, toggleDarkMode } = useTheme();
   const [showLogout, setShowLogout] = useState(false);
 
   useEffect(() => {
@@ -69,7 +70,7 @@ const AdminLayout = ({ children, onLogoutClick }) => {
       >
         <Topbar
           darkMode={darkMode}
-          toggleDarkMode={() => setDarkMode((prev) => !prev)}
+          toggleDarkMode={toggleDarkMode}
           onOpenMobileSidebar={() => setMobileOpen(true)}
         />
 

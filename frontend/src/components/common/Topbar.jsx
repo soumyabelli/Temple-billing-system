@@ -91,7 +91,10 @@ const Topbar = ({ darkMode, toggleDarkMode, onOpenMobileSidebar }) => {
           ) : null}
         </button>
 
-        <div className="hidden sm:flex items-center gap-3">
+        <div 
+          className="hidden sm:flex items-center gap-3 cursor-pointer"
+          onClick={() => navigate("/admin/settings")}
+        >
           <div className="h-10 w-10 overflow-hidden rounded-full border border-white/30 bg-white/70">
             {avatarSrc ? (
               <img src={avatarSrc} alt={displayName} className="h-full w-full object-cover" />
