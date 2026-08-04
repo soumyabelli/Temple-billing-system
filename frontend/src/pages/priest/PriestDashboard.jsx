@@ -378,6 +378,22 @@ const PriestDashboard = () => {
                           >
                             Assign to other priest
                           </button>
+                          {pooja.status !== "Completed" && (
+                            <button
+                              onClick={async () => {
+                                try {
+                                  const { updatePoojaStatus } = await import("../../services/priestService");
+                                  await updatePoojaStatus(pooja.id, "Completed");
+                                  window.location.reload();
+                                } catch (err) {
+                                  alert("Failed to complete pooja");
+                                }
+                              }}
+                              className="px-3 py-1 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-600 dark:bg-emerald-950/20 dark:text-emerald-400 hover:bg-emerald-100 transition-colors border border-emerald-100 dark:border-emerald-900/30"
+                            >
+                              ✓ Mark Complete
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>

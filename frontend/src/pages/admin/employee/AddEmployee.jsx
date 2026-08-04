@@ -43,6 +43,8 @@ const initialForm = {
   bankName: "",
   accountNumber: "",
   weeklyOff: "",
+  
+  eligiblePoojas: [],
 };
 
 import axios from "axios";
@@ -126,6 +128,22 @@ const AddEmployee = () => {
   const [credentials, setCredentials] = useState(null);
   const [createdEmployee, setCreatedEmployee] = useState(null);
   const [locations, setLocations] = useState([]);
+  const [poojas, setPoojas] = useState([]);
+
+  useEffect(() => {
+    const fetchPoojas = async () => {
+      try {
+        const token = getStoredToken();
+        const res = await axios.get("http://localhost:5000/api/admin/poojas", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.data.success) setPoojas(res.data.poojas);
+      } catch (err) {
+        console.error("Failed to fetch poojas", err);
+      }
+    };
+    fetchPoojas();
+  }, []);
 
   useEffect(() => {
     const fetchLocations = async () => {
@@ -323,6 +341,8 @@ const AddEmployee = () => {
   faceDescriptor: form.faceDescriptor,
   profilePhoto: form.profilePhoto || photoDataUrl,
   facePhotos: form.facePhotos || [],
+  weeklyOff: form.weeklyOff,
+  eligiblePoojas: form.eligiblePoojas,
   currentDuty: {
     dutyName: form.defaultDuty,
     shift: form.defaultShift,
@@ -768,14 +788,37 @@ const AddEmployee = () => {
                     onChange={handleChange("attendanceLocation")}
                     className={`w-full rounded-3xl border ${errors.attendanceLocation ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition`}
                   >
-                    <option value="">None (Global Settings)</option>
-                    {locations.map((loc) => (
-                      <option key={loc._id} value={loc._id}>
-                        {loc.locationName}
-                      </option>
+                    <option value="">Select Location</option>
+                    {locations.map(loc => (
+                      <option key={loc._id} value={loc._id}>{loc.locationName}</option>
                     ))}
                   </select>
                 </label>
+                
+                {form.role === "priest" && (
+                  <label className="block space-y-2 text-sm text-slate-700 md:col-span-2">
+                    Eligible Poojas
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2 border rounded-3xl border-slate-200 bg-slate-50 p-4">
+                      {poojas.map(pooja => (
+                        <label key={pooja._id} className="flex items-center gap-2 cursor-pointer text-sm">
+                          <input 
+                            type="checkbox" 
+                            checked={form.eligiblePoojas.includes(pooja._id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setForm(prev => ({ ...prev, eligiblePoojas: [...prev.eligiblePoojas, pooja._id] }));
+                              } else {
+                                setForm(prev => ({ ...prev, eligiblePoojas: prev.eligiblePoojas.filter(id => id !== pooja._id) }));
+                              }
+                            }}
+                            className="accent-amber-500 w-4 h-4"
+                          />
+                          {pooja.name}
+                        </label>
+                      ))}
+                    </div>
+                  </label>
+                )}
 
                 {/* Face Registration */}
                 <div className="md:col-span-2 space-y-2">

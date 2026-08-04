@@ -8,7 +8,7 @@ export default function PoojaTypeSetupModal({ editingPooja, onClose, onSave }) {
   const [description, setDescription] = useState(editingPooja?.description || "");
   const [price, setPrice] = useState(editingPooja?.price || 501);
   const [duration, setDuration] = useState(editingPooja?.duration || "");
-  const [dressCode, setDressCode] = useState(editingPooja?.dressCode || "");
+  const [dressCode, setDressCode] = useState(editingPooja?.dressCode || (editingPooja ? "" : "Traditional and modest attire is required inside the temple."));
   const [availableDays, setAvailableDays] = useState(editingPooja?.availableDays || ["Everyday"]);
   const [availableDates, setAvailableDates] = useState(editingPooja?.availableDates || []);
   const [newDate, setNewDate] = useState("");
@@ -26,6 +26,8 @@ export default function PoojaTypeSetupModal({ editingPooja, onClose, onSave }) {
   const [requiredMaterials, setRequiredMaterials] = useState(editingPooja?.requiredMaterials || []);
   
   const [inventoryItems, setInventoryItems] = useState([]);
+  const [materialSource, setMaterialSource] = useState("TEMPLE_INVENTORY");
+  const [externalMaterialName, setExternalMaterialName] = useState("");
   const [selectedItem, setSelectedItem] = useState("");
   const [qty, setQty] = useState("");
   const [unit, setUnit] = useState("");
@@ -78,16 +80,33 @@ export default function PoojaTypeSetupModal({ editingPooja, onClose, onSave }) {
   };
 
   const handleAddMaterial = () => {
-    if (!selectedItem || !qty || !unit.trim()) {
-      setError("Please select an item, quantity, and unit.");
-      return;
+    if (materialSource === "TEMPLE_INVENTORY") {
+      if (!selectedItem || !qty || !unit.trim()) {
+        setError("Please select an item, quantity, and unit.");
+        return;
+      }
+    } else {
+      if (!externalMaterialName.trim() || !qty || !unit.trim()) {
+        setError("Please enter a material name, quantity, and unit.");
+        return;
+      }
     }
-    const itemObj = inventoryItems.find(i => i._id === selectedItem);
-    if (!itemObj) return;
+    
+    let itemObj = null;
+    let nameToUse = externalMaterialName.trim();
+    let itemIdToUse = undefined;
+
+    if (materialSource === "TEMPLE_INVENTORY") {
+      itemObj = inventoryItems.find(i => i._id === selectedItem);
+      if (!itemObj) return;
+      nameToUse = itemObj.name;
+      itemIdToUse = selectedItem;
+    }
 
     setRequiredMaterials([...requiredMaterials, {
-      item: selectedItem,
-      itemName: itemObj.name,
+      item: itemIdToUse,
+      materialSource: materialSource,
+      itemName: nameToUse,
       qty: Number(qty),
       unit: unit.trim(),
       responsibilityType,
@@ -100,6 +119,8 @@ export default function PoojaTypeSetupModal({ editingPooja, onClose, onSave }) {
     }]);
 
     setSelectedItem("");
+    setExternalMaterialName("");
+    setMaterialSource("TEMPLE_INVENTORY");
     setQty("");
     setUnit("");
     setTempleCharge(0);
@@ -278,24 +299,45 @@ export default function PoojaTypeSetupModal({ editingPooja, onClose, onSave }) {
             <h4 className="text-lg font-bold text-[#323946]">Required Materials</h4>
             
             <div className="rounded-xl border border-[#ece8e1] bg-[#faf9f7] p-4 space-y-3">
-              <label className="block text-sm font-semibold text-[#4f4f4f]">
-                Select Inventory Item
-                <select 
-                  value={selectedItem} 
-                  onChange={(e) => {
-                    const id = e.target.value;
-                    setSelectedItem(id);
-                    const item = inventoryItems.find(i => i._id === id);
-                    if (item) setUnit(item.unit || "");
-                  }} 
-                  className="mt-1 w-full rounded-xl border border-[#ded6c6] px-4 py-2 outline-none focus:border-[#8b5e3c] bg-white"
-                >
-                  <option value="">-- Choose Item --</option>
-                  {inventoryItems.map(item => (
-                    <option key={item._id} value={item._id}>{item.name} ({item.category})</option>
-                  ))}
-                </select>
+              <label className="block text-sm font-semibold text-[#4f4f4f] mb-3">
+                Material Source
+                <div className="flex gap-4 mt-1">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="materialSource" value="TEMPLE_INVENTORY" checked={materialSource === "TEMPLE_INVENTORY"} onChange={() => setMaterialSource("TEMPLE_INVENTORY")} className="accent-[#1b7f77]" />
+                    Temple Inventory
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="materialSource" value="EXTERNAL_OR_DEVOTEE" checked={materialSource === "EXTERNAL_OR_DEVOTEE"} onChange={() => setMaterialSource("EXTERNAL_OR_DEVOTEE")} className="accent-[#1b7f77]" />
+                    External / Devotee Arranged
+                  </label>
+                </div>
               </label>
+
+              {materialSource === "TEMPLE_INVENTORY" ? (
+                <label className="block text-sm font-semibold text-[#4f4f4f]">
+                  Select Inventory Item
+                  <select 
+                    value={selectedItem} 
+                    onChange={(e) => {
+                      const id = e.target.value;
+                      setSelectedItem(id);
+                      const item = inventoryItems.find(i => i._id === id);
+                      if (item) setUnit(item.unit || "");
+                    }} 
+                    className="mt-1 w-full rounded-xl border border-[#ded6c6] px-4 py-2 outline-none focus:border-[#8b5e3c] bg-white"
+                  >
+                    <option value="">-- Choose Item --</option>
+                    {inventoryItems.map(item => (
+                      <option key={item._id} value={item._id}>{item.name} ({item.category})</option>
+                    ))}
+                  </select>
+                </label>
+              ) : (
+                <label className="block text-sm font-semibold text-[#4f4f4f]">
+                  Material Name
+                  <input type="text" value={externalMaterialName} onChange={(e) => setExternalMaterialName(e.target.value)} className="mt-1 w-full rounded-xl border border-[#ded6c6] px-4 py-2 outline-none focus:border-[#8b5e3c]" placeholder="e.g. Fresh Flowers" />
+                </label>
+              )}
 
               <div className="grid grid-cols-2 gap-3">
                 <label className="block text-sm font-semibold text-[#4f4f4f]">

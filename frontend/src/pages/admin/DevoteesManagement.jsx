@@ -12,8 +12,10 @@ const DevoteesManagement = ({ darkMode, devotees = [], bookings = [], donations 
   const donationsByName = useMemo(() => {
     const map = new Map();
     donations.forEach((d) => {
-      const key = (d.donorName || "").toLowerCase();
-      map.set(key, (map.get(key) || 0) + Number(d.amount || 0));
+      const nameKey = (d.donorName || "").toLowerCase();
+      const emailKey = (d.donorEmail || "").toLowerCase();
+      if (nameKey) map.set(nameKey, (map.get(nameKey) || 0) + Number(d.amount || 0));
+      if (emailKey) map.set(emailKey, (map.get(emailKey) || 0) + Number(d.amount || 0));
     });
     return map;
   }, [donations]);
@@ -21,8 +23,10 @@ const DevoteesManagement = ({ darkMode, devotees = [], bookings = [], donations 
   const bookingsByName = useMemo(() => {
     const map = new Map();
     bookings.forEach((b) => {
-      const key = (b.devoteeName || "").toLowerCase();
-      map.set(key, (map.get(key) || 0) + 1);
+      const nameKey = (b.devoteeName || b.customerName || "").toLowerCase();
+      const emailKey = (b.devoteeEmail || b.email || "").toLowerCase();
+      if (nameKey) map.set(nameKey, (map.get(nameKey) || 0) + 1);
+      if (emailKey) map.set(emailKey, (map.get(emailKey) || 0) + 1);
     });
     return map;
   }, [bookings]);
@@ -35,9 +39,9 @@ const DevoteesManagement = ({ darkMode, devotees = [], bookings = [], donations 
     }
     
     if (filterType === "Has Bookings") {
-      result = result.filter(d => (bookingsByName.get((d.name || "").toLowerCase()) || 0) > 0);
+      result = result.filter(d => (bookingsByName.get((d.name || "").toLowerCase()) || 0) > 0 || (bookingsByName.get((d.email || "").toLowerCase()) || 0) > 0);
     } else if (filterType === "Has Donations") {
-      result = result.filter(d => (donationsByName.get((d.name || "").toLowerCase()) || 0) > 0);
+      result = result.filter(d => (donationsByName.get((d.name || "").toLowerCase()) || 0) > 0 || (donationsByName.get((d.email || "").toLowerCase()) || 0) > 0);
     }
     
     return result;
@@ -137,8 +141,8 @@ const DevoteesManagement = ({ darkMode, devotees = [], bookings = [], donations 
             </thead>
             <tbody>
               {filtered.map((devotee, idx) => {
-                const bookingCount = bookingsByName.get((devotee.name || "").toLowerCase()) || 0;
-                const donationSum = donationsByName.get((devotee.name || "").toLowerCase()) || 0;
+                const bookingCount = (bookingsByName.get((devotee.name || "").toLowerCase()) || 0) || (bookingsByName.get((devotee.email || "").toLowerCase()) || 0);
+                const donationSum = (donationsByName.get((devotee.name || "").toLowerCase()) || 0) || (donationsByName.get((devotee.email || "").toLowerCase()) || 0);
                 return (
                   <tr key={devotee._id || devotee.email} className={`border-t ${darkMode ? "border-[#334155]" : "border-[#f1ede6]"} ${idx % 2 === 0 ? (darkMode ? "bg-[#1f2937]" : "bg-white") : (darkMode ? "bg-[#111827]" : "bg-[#fdfcfa]")}`}>
                     <td className="px-3 py-3 font-semibold">{devotee.name}</td>

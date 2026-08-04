@@ -279,7 +279,22 @@ exports.updateBookingStatus = async (req, res) => {
       return res.status(404).json({ message: "Booking not found or not assigned to you" });
     }
 
+    const previousStatus = booking.status;
     booking.status = status;
+    
+    if (status === "Completed") {
+      booking.completedAt = new Date();
+    }
+    
+    // Log history
+    booking.bookingHistory.push({
+      previousStatus: previousStatus,
+      newStatus: status,
+      updatedBy: priestId,
+      note: `Status updated by Priest`,
+      updatedAt: new Date(),
+    });
+
     await booking.save();
 
     return res.status(200).json({ message: "Status updated successfully", booking });

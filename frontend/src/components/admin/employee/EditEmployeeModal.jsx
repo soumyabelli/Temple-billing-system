@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { FiX, FiSave } from "react-icons/fi";
 import {
   employeeRoles,
@@ -28,6 +29,22 @@ const EditEmployeeModal = ({ employee, onClose, onSave }) => {
   const [form, setForm] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
+  const [poojas, setPoojas] = useState([]);
+
+  useEffect(() => {
+    const fetchPoojas = async () => {
+      try {
+        const token = localStorage.getItem("token") || "";
+        const res = await axios.get("http://localhost:5000/api/admin/poojas", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.data.success) setPoojas(res.data.poojas);
+      } catch (err) {
+        console.error("Failed to fetch poojas", err);
+      }
+    };
+    fetchPoojas();
+  }, []);
 
   useEffect(() => {
     if (employee) {
@@ -52,6 +69,7 @@ const EditEmployeeModal = ({ employee, onClose, onSave }) => {
         weeklyOff: employee.weeklyOff || "",
         bankName: employee.bankName || "",
         accountNumber: employee.accountNumber || "",
+        eligiblePoojas: employee.eligiblePoojas || [],
       });
     }
   }, [employee]);
@@ -101,6 +119,7 @@ const EditEmployeeModal = ({ employee, onClose, onSave }) => {
         weeklyOff: form.weeklyOff,
         bankName: form.bankName,
         accountNumber: form.accountNumber,
+        eligiblePoojas: form.eligiblePoojas,
       };
 
       await updateEmployee(employee._id, payload);
@@ -368,6 +387,30 @@ const EditEmployeeModal = ({ employee, onClose, onSave }) => {
                     ))}
                   </select>
                 </div>
+                {form.role === "priest" && (
+                  <div className="col-span-full">
+                    <label className="mb-1 block text-sm font-medium text-slate-700">Eligible Poojas</label>
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                      {poojas.map(pooja => (
+                        <label key={pooja._id} className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+                          <input 
+                            type="checkbox" 
+                            checked={form.eligiblePoojas.includes(pooja._id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setForm(prev => ({ ...prev, eligiblePoojas: [...prev.eligiblePoojas, pooja._id] }));
+                              } else {
+                                setForm(prev => ({ ...prev, eligiblePoojas: prev.eligiblePoojas.filter(id => id !== pooja._id) }));
+                              }
+                            }}
+                            className="accent-violet-600 w-4 h-4"
+                          />
+                          {pooja.name}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </section>
 

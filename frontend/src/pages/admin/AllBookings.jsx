@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { MdOutlineSearch, MdOutlineFilterAlt, MdChevronLeft, MdChevronRight } from "react-icons/md";
-import { getAllBookings } from "../../services/bookingService";
+import { getAllBookings, assignPriestToBooking } from "../../services/bookingService";
+import AssignPriestModal from "../../components/admin/AssignPriestModal";
 
 const formatCurrency = (value) => `₹ ${Number(value || 0).toLocaleString()}`;
 
@@ -19,6 +20,7 @@ const AllBookings = () => {
   const [dateFilter, setDateFilter] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [selectedBookingForPriest, setSelectedBookingForPriest] = useState(null);
   const limit = 10;
 
   const loadData = async () => {
@@ -101,6 +103,7 @@ const AllBookings = () => {
                 <th className="px-4 py-3 text-left font-semibold">Amount</th>
                 <th className="px-4 py-3 text-left font-semibold">Payment</th>
                 <th className="px-4 py-3 text-left font-semibold">Status</th>
+                <th className="px-4 py-3 text-left font-semibold">Priest</th>
                 <th className="px-4 py-3 text-left font-semibold">Materials</th>
               </tr>
             </thead>
@@ -111,7 +114,7 @@ const AllBookings = () => {
                 </tr>
               ) : bookings.length === 0 ? (
                 <tr>
-                  <td colSpan="9" className="py-8 text-center text-gray-500">No bookings found.</td>
+                  <td colSpan="10" className="py-8 text-center text-gray-500">No bookings found.</td>
                 </tr>
               ) : (
                 bookings.map((row) => (
@@ -127,6 +130,21 @@ const AllBookings = () => {
                       <span className={`rounded-lg px-2.5 py-1 text-[13px] font-semibold ${statusTheme[row.status] || statusTheme.Pending}`}>
                         {row.status}
                       </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      {row.priestName ? (
+                        <div className="flex flex-col">
+                          <span className="font-semibold text-violet-700">{row.priestName}</span>
+                          <button onClick={() => setSelectedBookingForPriest(row)} className="text-[11px] text-blue-600 hover:underline text-left mt-0.5">Reassign</button>
+                        </div>
+                      ) : (
+                        <button 
+                          onClick={() => setSelectedBookingForPriest(row)}
+                          className="rounded bg-rose-50 px-2 py-1 text-xs font-bold text-rose-600 border border-rose-200 hover:bg-rose-100 transition"
+                        >
+                          Assignment Pending
+                        </button>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       {row.materialStatus && row.materialStatus !== "N/A" ? (
@@ -171,6 +189,16 @@ const AllBookings = () => {
           </div>
         )}
       </div>
+      {selectedBookingForPriest && (
+        <AssignPriestModal
+          booking={selectedBookingForPriest}
+          onClose={() => setSelectedBookingForPriest(null)}
+          onAssigned={() => {
+            setSelectedBookingForPriest(null);
+            loadData();
+          }}
+        />
+      )}
     </div>
   );
 };

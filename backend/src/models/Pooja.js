@@ -52,7 +52,12 @@ const poojaSchema = new mongoose.Schema(
         item: {
           type: mongoose.Schema.Types.ObjectId,
           ref: "InventoryItem",
-          required: true,
+          // Not required for EXTERNAL_OR_DEVOTEE
+        },
+        materialSource: {
+          type: String,
+          enum: ["TEMPLE_INVENTORY", "EXTERNAL_OR_DEVOTEE"],
+          default: "TEMPLE_INVENTORY"
         },
         itemName: {
           type: String,

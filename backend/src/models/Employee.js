@@ -251,6 +251,11 @@ const employeeSchema = new mongoose.Schema({
     default: 0,
     min: 0,
   },
+  
+  eligiblePoojas: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Pooja"
+  }],
 }, { timestamps: true });
 
 module.exports = mongoose.model(

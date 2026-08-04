@@ -20,6 +20,7 @@ const { buildEmailLookup, normalizeEmail } = require("../utils/email");
 const { recordTransaction } = require("../services/accountingService");
 const InventoryRequest = require("../models/InventoryRequest");
 const InventoryItem = require("../models/InventoryItem");
+const Employee = require("../models/Employee");
 const Pooja = require("../models/Pooja");
 
 const generateInventoryRequestsForBooking = async (booking) => {
@@ -39,19 +40,35 @@ const generateInventoryRequestsForBooking = async (booking) => {
         
         // Find materials that the temple must provide (either implicitly or chosen by devotee)
         for (const reqMat of pooja.requiredMaterials) {
+          if (reqMat.materialSource !== "TEMPLE_INVENTORY") continue;
+          if (!reqMat.item) continue;
+
           const isTempleProvides = reqMat.responsibilityType === "TEMPLE_PROVIDES";
           const isDevoteeSelected = reqMat.responsibilityType === "DEVOTEE_OR_TEMPLE" && 
                                     item.selectedTempleMaterials && 
-                                    reqMat.item && 
                                     item.selectedTempleMaterials.includes(reqMat.item._id.toString());
+          const isAdvanceCollection = reqMat.responsibilityType === "DEVOTEE_PREPARATION_REQUIRED" && reqMat.requiresAdvanceCollection;
           
-          if (isTempleProvides || isDevoteeSelected) {
+          if (isTempleProvides || isDevoteeSelected || isAdvanceCollection) {
+            // Check stock availability
+            const invItem = await InventoryItem.findById(reqMat.item._id);
+            if (invItem && invItem.availableStock < reqMat.qty) {
+              await createStaffNotification({
+                title: `Low Stock Alert: ${invItem.name}`,
+                message: `Insufficient stock for upcoming Pooja Booking (${booking.service}). Required: ${reqMat.qty}, Available: ${invItem.availableStock}`,
+                audienceRole: "admin",
+                category: "inventory",
+              }).catch(() => {});
+            }
+
             // Check if this material is already in templeMaterialRequests
             const existingReq = booking.templeMaterialRequests.find(tmr => 
               tmr.item && tmr.item.toString() === reqMat.item._id.toString()
             );
 
             if (existingReq && !existingReq.inventoryRequestId) {
+              let reasonLabel = isAdvanceCollection ? "Advance Devotee Collection" : `System generated for Pooja Booking: ${item.name}`;
+              
               const invReq = await InventoryRequest.create({
                 userId: booking.createdBy || booking.devoteeEmail || "System",
                 userName: `${booking.devoteeName} (Online Pooja Booking)`,
@@ -59,12 +76,10 @@ const generateInventoryRequestsForBooking = async (booking) => {
                 itemName: reqMat.item.name,
                 quantity: reqMat.qty,
                 unit: reqMat.unit,
-                reason: `System generated for Pooja Booking: ${item.name}`,
+                reason: reasonLabel,
                 purpose: `Pooja Booking: ${item.name}`,
                 expectedDate: booking.datetime || new Date(),
-                status: "Approved",
-                approvedBy: "System",
-                approvedAt: new Date()
+                status: "Pending",
               });
               
               existingReq.inventoryRequestId = invReq._id;
@@ -183,18 +198,12 @@ const createBooking = async (req, res) => {
 
     const hasKeys = process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET;
     const isOnline = pm && pm !== "Cash";
-    const bookingStatus = "Completed";
+    const bookingStatus = "Confirmed";
     const paymentStatus = "Paid";
 
     let booking;
     let priestName = "";
-    if (assignedPriest) {
-      if (isDbConnected()) {
-        const priestUser = await User.findById(assignedPriest);
-        if (priestUser) priestName = priestUser.name;
-      }
-    }
-
+    
     // Resolve templeMaterialRequests and Approval requirements
     let templeMaterialRequests = [];
     let templeApprovalRequired = false;
@@ -206,38 +215,65 @@ const createBooking = async (req, res) => {
       selectedTempleMaterials: req.body.selectedTempleMaterials || []
     }];
 
+    // Snapshots
+    let poojaDuration = "";
+    let poojaRules = [];
+    let poojaDressCode = "";
+    let priestInstructions = [];
+    let preparationInstructions = [];
+    let snapshotMaterials = [];
+
     for (const item of allItems) {
       if (item.type === "pooja") {
         const pooja = await Pooja.findOne({ name: item.name }).populate("requiredMaterials.item");
-        if (pooja) {
-          const minAdvanceDays = pooja.minimumAdvanceBookingDays || 0;
-          let maxPrepDays = 0;
-          let hasMaterials = false;
-          
-          for (const reqMat of pooja.requiredMaterials) {
-            if (reqMat.responsibilityType === "DEVOTEE_PREPARATION_REQUIRED") {
-              maxPrepDays = Math.max(maxPrepDays, reqMat.preparationDaysBeforePooja || 0);
-            }
+          if (pooja) {
+            poojaDuration = pooja.duration;
+            poojaRules = pooja.rules || [];
+            poojaDressCode = pooja.dressCode || "";
+            if (pooja.priestInstructions) priestInstructions.push(pooja.priestInstructions);
             
-            const isTempleProvides = reqMat.responsibilityType === "TEMPLE_PROVIDES";
-            const isDevoteeSelected = reqMat.responsibilityType === "DEVOTEE_OR_TEMPLE" && 
-                                      item.selectedTempleMaterials && 
-                                      reqMat.item && 
-                                      item.selectedTempleMaterials.includes(reqMat.item._id.toString());
+            const minAdvanceDays = pooja.minimumAdvanceBookingDays || 0;
+            let maxPrepDays = 0;
+            let hasMaterials = false;
             
-            if (isTempleProvides || isDevoteeSelected) {
-              templeMaterialRequests.push({
-                item: reqMat.item._id,
-                itemName: reqMat.item.name,
-                qty: `${reqMat.qty} ${reqMat.unit}`
+            for (const reqMat of pooja.requiredMaterials) {
+              snapshotMaterials.push({
+                itemName: reqMat.itemName,
+                qty: reqMat.qty,
+                unit: reqMat.unit,
+                responsibilityType: reqMat.responsibilityType,
+                materialSource: reqMat.materialSource,
+                mandatory: reqMat.mandatory
               });
-              hasMaterials = true;
+
+              if (reqMat.responsibilityType === "DEVOTEE_PREPARATION_REQUIRED") {
+                maxPrepDays = Math.max(maxPrepDays, reqMat.preparationDaysBeforePooja || 0);
+                if (reqMat.preparationInstructions) {
+                  preparationInstructions.push(reqMat.preparationInstructions);
+                }
+              }
+              
+              if (reqMat.materialSource === "TEMPLE_INVENTORY" && reqMat.item) {
+                const isTempleProvides = reqMat.responsibilityType === "TEMPLE_PROVIDES";
+                const isDevoteeSelected = reqMat.responsibilityType === "DEVOTEE_OR_TEMPLE" && 
+                                          item.selectedTempleMaterials && 
+                                          item.selectedTempleMaterials.includes(reqMat.item._id.toString());
+                const isAdvanceCollection = reqMat.responsibilityType === "DEVOTEE_PREPARATION_REQUIRED" && reqMat.requiresAdvanceCollection;
+                
+                if (isTempleProvides || isDevoteeSelected || isAdvanceCollection) {
+                  templeMaterialRequests.push({
+                    item: reqMat.item._id,
+                    itemName: reqMat.item.name,
+                    qty: `${reqMat.qty} ${reqMat.unit}`
+                  });
+                  hasMaterials = true;
+                }
+              }
             }
-          }
-          if (hasMaterials) {
-             materialStatus = "Pending Approval";
-          }
-          
+            if (hasMaterials) {
+               materialStatus = "Pending Request";
+            }
+
           // Server-side validation of advance booking days
           const effectiveMinDays = Math.max(minAdvanceDays, maxPrepDays);
           if (effectiveMinDays > 0) {
@@ -263,6 +299,28 @@ const createBooking = async (req, res) => {
       }
     }
 
+    let finalAssignedPriest = assignedPriest;
+    if (!finalAssignedPriest && isDbConnected()) {
+      // Find eligible priests
+      const poojaDoc = await Pooja.findOne({ name: service });
+      if (poojaDoc) {
+        const eligiblePriests = await Employee.find({ 
+          role: "priest", 
+          status: "Active",
+          eligiblePoojas: poojaDoc._id 
+        });
+        if (eligiblePriests.length === 1) {
+          finalAssignedPriest = eligiblePriests[0]._id.toString();
+          priestName = eligiblePriests[0].name;
+        } else if (eligiblePriests.length > 0) {
+           // Keep unassigned for manual admin assignment
+        }
+      }
+    } else if (finalAssignedPriest && isDbConnected()) {
+      const priestEmp = await Employee.findById(finalAssignedPriest);
+      if (priestEmp) priestName = priestEmp.name;
+    }
+
     const bookingPayload = {
       devoteeId: devoteeId || undefined,
       eventId: eventId || undefined,
@@ -278,7 +336,7 @@ const createBooking = async (req, res) => {
       transactionId: transactionId || undefined,
       contactNumber,
       notes,
-      assignedPriest: assignedPriest || undefined,
+      assignedPriest: finalAssignedPriest || undefined,
       priestName: priestName || undefined,
       isCombined: isCombined || false,
       items: items || [],
@@ -287,6 +345,14 @@ const createBooking = async (req, res) => {
       materialStatus,
       templeApprovalRequired,
       preparationAcknowledged: true,
+      
+      // Snapshots
+      poojaDuration,
+      poojaRules,
+      poojaDressCode,
+      snapshotMaterials,
+      priestInstructions: priestInstructions.join("\n"),
+      preparationInstructions: preparationInstructions.join("\n"),
     };
 
     if (isDbConnected()) {

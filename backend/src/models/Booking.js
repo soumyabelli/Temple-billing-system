@@ -113,6 +113,16 @@ const bookingSchema = new mongoose.Schema(
       poojaCompleted: { type: Boolean, default: false },
       inventoryConsumed: { type: Boolean, default: false },
     },
+    
+    // Pooja Snapshot fields (Stored at booking time)
+    poojaDuration: { type: String, trim: true, default: "" },
+    poojaRules: { type: [String], default: [] },
+    poojaDressCode: { type: String, trim: true, default: "" },
+    priestInstructions: { type: [String], default: [] },
+    snapshotMaterials: { type: Array, default: [] },
+    
+    // Completion tracking
+    completedBy: { type: String, trim: true, default: "" },
 
     // Combined booking fields
     isCombined: { type: Boolean, default: false },

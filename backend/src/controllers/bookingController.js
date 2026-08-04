@@ -316,10 +316,54 @@ const getBookingById = async (req, res) => {
   }
 };
 
+const assignPriest = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { priestId, priestName } = req.body;
+    
+    if (!priestId || !priestName) {
+      return res.status(400).json({ message: "Priest ID and Name are required." });
+    }
+
+    const booking = await Booking.findById(id);
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found." });
+    }
+
+    booking.assignedPriest = priestId;
+    booking.priestName = priestName;
+    
+    // Log history
+    booking.bookingHistory.push({
+      previousStatus: booking.status,
+      newStatus: booking.status,
+      updatedBy: req.user ? req.user.id : "Admin",
+      note: `Assigned Priest: ${priestName}`,
+      updatedAt: new Date(),
+    });
+
+    await booking.save();
+    
+    const { createStaffNotification } = require("../services/notificationService");
+    await createStaffNotification({
+      title: "Pooja Assigned",
+      message: `You have been assigned to perform ${booking.service} on ${new Date(booking.datetime).toLocaleString()}`,
+      audienceRole: "priest",
+      category: "duty",
+    }).catch(() => {});
+
+    res.status(200).json({ message: "Priest assigned successfully", booking });
+  } catch (error) {
+    console.error("assignPriest error:", error);
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
+
 module.exports = {
   getDashboardBookings,
   getAllBookings,
   updateBookingStatus,
   getBookingReceipt,
   getBookingById,
+  assignPriest,
 };

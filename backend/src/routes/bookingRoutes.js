@@ -17,4 +17,7 @@ router.get("/:id", bookingController.getBookingById);
 // Update booking status (workflow transition)
 router.patch("/:id/status", bookingController.updateBookingStatus);
 
+// Assign priest to booking
+router.patch("/:id/assignPriest", bookingController.assignPriest);
+
 module.exports = router;

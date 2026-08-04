@@ -22,6 +22,11 @@ export const updateBookingStatusAdmin = async (id, status, note = "", updatedBy 
   return response.data;
 };
 
+export const assignPriestToBooking = async (id, priestId, priestName) => {
+  const response = await axios.patch(`${API_BASE}/${id}/assignPriest`, { priestId, priestName });
+  return response.data;
+};
+
 export const getBookingReceipt = async (bookingId) => {
   const response = await axios.get(`${API_BASE}/receipt/${bookingId}`);
   return response.data;
