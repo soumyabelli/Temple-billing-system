@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { MdTempleBuddhist, MdMenu } from "react-icons/md";
 import { FaSignOutAlt } from "react-icons/fa";
 import templeSidebarImg from "../../assets/temple-sidebar.png";

@@ -60,6 +60,9 @@ export const NotificationProvider = ({ children }) => {
 
 export const useNotifications = () => {
   const ctx = useContext(NotificationContext);
-  if (!ctx) throw new Error("useNotifications must be used within NotificationProvider");
+  if (!ctx) {
+    console.warn("useNotifications used outside of NotificationProvider, returning fallback.");
+    return { notifications: [], unreadCount: 0, loading: false, loadNotifications: async () => {}, markRead: async () => {} };
+  }
   return ctx;
 };

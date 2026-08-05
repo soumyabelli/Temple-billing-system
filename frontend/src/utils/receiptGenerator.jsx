@@ -1,7 +1,7 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
+import { jsPDF } from 'jspdf';
 import BookingReceipt from '../components/common/BookingReceipt';
 
 export const downloadReceiptPDF = (receiptData, filename) => {

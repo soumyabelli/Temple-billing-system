@@ -360,6 +360,7 @@ const createBooking = async (req, res) => {
       snapshotMaterials,
       priestInstructions: priestInstructions.join("\n"),
       preparationInstructions: preparationInstructions.join("\n"),
+      source: "Online Portal",
     };
 
     if (isDbConnected()) {
@@ -376,6 +377,7 @@ const createBooking = async (req, res) => {
       billType: "Pooja Booking",
       referenceNo: `BK-${String(booking._id).slice(-6).toUpperCase()}`,
       sourceId: booking._id.toString(),
+      source: "Online Portal",
       notes,
       status: bookingStatus === "Confirmed" ? "Paid" : "Pending",
     });
