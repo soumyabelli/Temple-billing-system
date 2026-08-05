@@ -41,15 +41,15 @@ const generateBookingReceiptPDF = (devotee, booking) => {
       // Booking Details
       doc.font("Helvetica-Bold").text("Booking Details:");
       doc.font("Helvetica").text(`Service: ${booking.service || "N/A"}`);
-      
-      const dateText = booking.datetime 
+
+      const dateText = booking.datetime
         ? new Date(booking.datetime).toLocaleString("en-IN")
         : "N/A";
       doc.text(`Date & Time: ${dateText}`);
-      
+
       doc.text(`Amount: Rs ${booking.amount || 0}`);
       doc.text(`Status: ${booking.status || "Confirmed"}`);
-      
+
       doc.moveDown(2);
 
       // Note
