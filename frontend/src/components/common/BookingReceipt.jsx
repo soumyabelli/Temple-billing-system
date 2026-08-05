@@ -68,7 +68,8 @@ const BookingReceipt = ({
   templeCharges = 50.00,
   grandTotal = 730.00,
   amountInWords = "Rupees Seven Hundred Thirty Only",
-  materials = ["Coconut (2)", "Flowers", "Banana (6)", "Prasadam Leaves", "Camphor"],
+  devoteeMaterials = [],
+  templeMaterials = [],
   notes = [
     "Please report 15 minutes before the Pooja time.",
     "Pooja once booked will not be cancelled.",
@@ -247,20 +248,46 @@ const BookingReceipt = ({
         {/* Footer Panels */}
         <div className="footer-panels">
           <div className="materials-panel">
-            <div className="materials-title">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                <line x1="16" y1="2" x2="16" y2="6"></line>
-                <line x1="8" y1="2" x2="8" y2="6"></line>
-                <line x1="3" y1="10" x2="21" y2="10"></line>
-              </svg>
-              Pooja Material to be Brought by Devotee
-            </div>
-            <ul className="materials-list">
-              {materials.map((mat, i) => (
-                <li key={i}>{mat}</li>
-              ))}
-            </ul>
+            {devoteeMaterials && devoteeMaterials.length > 0 && (
+              <>
+                <div className="materials-title">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                  </svg>
+                  To be Brought by Devotee
+                </div>
+                <ul className="materials-list" style={{ marginBottom: templeMaterials && templeMaterials.length > 0 ? '12px' : '0' }}>
+                  {devoteeMaterials.map((mat, i) => (
+                    <li key={i}>{mat}</li>
+                  ))}
+                </ul>
+              </>
+            )}
+
+            {templeMaterials && templeMaterials.length > 0 && (
+              <>
+                <div className="materials-title">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                  </svg>
+                  Arranged by Temple
+                </div>
+                <ul className="materials-list">
+                  {templeMaterials.map((mat, i) => (
+                    <li key={i}>{mat}</li>
+                  ))}
+                </ul>
+              </>
+            )}
+
+            {(!devoteeMaterials || devoteeMaterials.length === 0) && (!templeMaterials || templeMaterials.length === 0) && (
+              <div className="materials-title" style={{ color: '#888', fontStyle: 'italic', borderBottom: 'none' }}>
+                No specific materials required.
+              </div>
+            )}
           </div>
           
           <div className="totals-panel">

@@ -16,15 +16,15 @@ export default function PoojaTypeSetupModal({ editingPooja, onClose, onSave }) {
   const [availableEndTime, setAvailableEndTime] = useState(editingPooja?.availableEndTime || "");
   const [minimumAdvanceBookingDays, setMinimumAdvanceBookingDays] = useState(editingPooja?.minimumAdvanceBookingDays || 0);
   const [strictAdvancePreparation, setStrictAdvancePreparation] = useState(editingPooja?.strictAdvancePreparation ?? false);
-  
+
   const [rules, setRules] = useState(editingPooja?.rules || []);
   const [newRule, setNewRule] = useState("");
-  
+
   const [instructions, setInstructions] = useState(editingPooja?.instructions || []);
   const [newInstruction, setNewInstruction] = useState("");
-  
+
   const [requiredMaterials, setRequiredMaterials] = useState(editingPooja?.requiredMaterials || []);
-  
+
   const [inventoryItems, setInventoryItems] = useState([]);
   const [materialSource, setMaterialSource] = useState("TEMPLE_INVENTORY");
   const [externalMaterialName, setExternalMaterialName] = useState("");
@@ -91,7 +91,7 @@ export default function PoojaTypeSetupModal({ editingPooja, onClose, onSave }) {
         return;
       }
     }
-    
+
     let itemObj = null;
     let nameToUse = externalMaterialName.trim();
     let itemIdToUse = undefined;
@@ -167,19 +167,19 @@ export default function PoojaTypeSetupModal({ editingPooja, onClose, onSave }) {
         <h3 className="text-2xl font-bold text-[#15141f] mb-6 border-b pb-4">
           {editingPooja ? "Edit Pooja Setup" : "Create New Pooja"}
         </h3>
-        
+
         {error && <div className="mb-4 rounded-xl bg-red-50 p-3 text-red-600 font-medium">{error}</div>}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Basic Details */}
           <div className="space-y-4">
             <h4 className="text-lg font-bold text-[#323946]">Basic Details</h4>
-            
+
             <label className="block text-sm font-semibold text-[#4f4f4f]">
               Pooja Name <span className="text-red-500">*</span>
               <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="mt-1 w-full rounded-xl border border-[#ded6c6] px-4 py-2.5 outline-none focus:border-[#8b5e3c]" placeholder="e.g. Satyanarayana Vratha" />
             </label>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <label className="block text-sm font-semibold text-[#4f4f4f]">
                 Price (₹) <span className="text-red-500">*</span>
@@ -190,7 +190,7 @@ export default function PoojaTypeSetupModal({ editingPooja, onClose, onSave }) {
                 <input type="text" value={duration} onChange={(e) => setDuration(e.target.value)} className="mt-1 w-full rounded-xl border border-[#ded6c6] px-4 py-2.5 outline-none focus:border-[#8b5e3c]" placeholder="e.g. 2 Hours" />
               </label>
             </div>
-            
+
             <label className="block text-sm font-semibold text-[#4f4f4f]">
               Description
               <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className="mt-1 w-full rounded-xl border border-[#ded6c6] px-4 py-2 outline-none focus:border-[#8b5e3c]" placeholder="Pooja description..." />
@@ -207,8 +207,8 @@ export default function PoojaTypeSetupModal({ editingPooja, onClose, onSave }) {
               <div className="flex flex-wrap gap-2 mb-3">
                 {WEEKDAYS.map(day => (
                   <label key={day} className="flex items-center gap-1 text-sm bg-gray-50 border px-2 py-1 rounded cursor-pointer">
-                    <input 
-                      type="checkbox" 
+                    <input
+                      type="checkbox"
                       checked={availableDays.includes(day)}
                       onChange={(e) => {
                         if (e.target.checked) {
@@ -297,7 +297,7 @@ export default function PoojaTypeSetupModal({ editingPooja, onClose, onSave }) {
           {/* Materials Section */}
           <div className="space-y-4 border-l pl-6 border-[#f0ece6]">
             <h4 className="text-lg font-bold text-[#323946]">Required Materials</h4>
-            
+
             <div className="rounded-xl border border-[#ece8e1] bg-[#faf9f7] p-4 space-y-3">
               <label className="block text-sm font-semibold text-[#4f4f4f] mb-3">
                 Material Source
@@ -316,14 +316,14 @@ export default function PoojaTypeSetupModal({ editingPooja, onClose, onSave }) {
               {materialSource === "TEMPLE_INVENTORY" ? (
                 <label className="block text-sm font-semibold text-[#4f4f4f]">
                   Select Inventory Item
-                  <select 
-                    value={selectedItem} 
+                  <select
+                    value={selectedItem}
                     onChange={(e) => {
                       const id = e.target.value;
                       setSelectedItem(id);
                       const item = inventoryItems.find(i => i._id === id);
                       if (item) setUnit(item.unit || "");
-                    }} 
+                    }}
                     className="mt-1 w-full rounded-xl border border-[#ded6c6] px-4 py-2 outline-none focus:border-[#8b5e3c] bg-white"
                   >
                     <option value="">-- Choose Item --</option>
@@ -342,7 +342,7 @@ export default function PoojaTypeSetupModal({ editingPooja, onClose, onSave }) {
               <div className="grid grid-cols-2 gap-3">
                 <label className="block text-sm font-semibold text-[#4f4f4f]">
                   Quantity
-                  <input type="number" step="0.01" min="0" value={qty} onChange={(e) => setQty(e.target.value)} className="mt-1 w-full rounded-xl border border-[#ded6c6] px-4 py-2 outline-none focus:border-[#8b5e3c]" placeholder="e.g. 2" />
+                  <input type="number" step="1" min="0" value={qty} onChange={(e) => setQty(e.target.value)} className="mt-1 w-full rounded-xl border border-[#ded6c6] px-4 py-2 outline-none focus:border-[#8b5e3c]" placeholder="e.g. 2" />
                 </label>
                 <label className="block text-sm font-semibold text-[#4f4f4f]">
                   Unit
@@ -426,7 +426,7 @@ export default function PoojaTypeSetupModal({ editingPooja, onClose, onSave }) {
 
           </div>
         </div>
-        
+
         <div className="mt-8 flex justify-end gap-3 border-t border-[#f0ece6] pt-4">
           <button type="button" onClick={onClose} className="rounded-xl border border-[#d1d5db] bg-white px-6 py-2.5 font-bold text-[#374151] hover:bg-gray-50">Cancel</button>
           <button type="button" onClick={handleSave} className="rounded-xl bg-[#1b7f77] px-8 py-2.5 font-bold text-white hover:bg-[#146059]">Save Pooja</button>

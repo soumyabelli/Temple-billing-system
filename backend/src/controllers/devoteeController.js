@@ -227,9 +227,15 @@ const createBooking = async (req, res) => {
       if (item.type === "pooja") {
         const pooja = await Pooja.findOne({ name: item.name }).populate("requiredMaterials.item");
           if (pooja) {
-            poojaDuration = pooja.duration;
-            poojaRules = pooja.rules || [];
-            poojaDressCode = pooja.dressCode || "";
+            if (pooja.duration) poojaDuration = poojaDuration ? `${poojaDuration} + ${pooja.duration}` : pooja.duration;
+            if (pooja.rules && pooja.rules.length > 0) {
+              pooja.rules.forEach(rule => {
+                if (!poojaRules.includes(rule)) poojaRules.push(rule);
+              });
+            }
+            if (pooja.dressCode && !poojaDressCode.includes(pooja.dressCode)) {
+              poojaDressCode = poojaDressCode ? `${poojaDressCode} | ${pooja.dressCode}` : pooja.dressCode;
+            }
             if (pooja.priestInstructions) priestInstructions.push(pooja.priestInstructions);
             
             const minAdvanceDays = pooja.minimumAdvanceBookingDays || 0;
@@ -271,7 +277,7 @@ const createBooking = async (req, res) => {
               }
             }
             if (hasMaterials) {
-               materialStatus = "Pending Request";
+               materialStatus = "Pending";
             }
 
           // Server-side validation of advance booking days
@@ -279,7 +285,8 @@ const createBooking = async (req, res) => {
           if (effectiveMinDays > 0) {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-            const selectedDate = new Date(datetime);
+            const dateToUse = (isCombined && item.date) ? item.date : datetime;
+            const selectedDate = new Date(dateToUse);
             selectedDate.setHours(0, 0, 0, 0);
             const diffDays = Math.ceil(Math.abs(selectedDate - today) / (1000 * 60 * 60 * 24));
             
@@ -500,7 +507,7 @@ const createBooking = async (req, res) => {
     });
   } catch (error) {
     console.error("createBooking error:", error);
-    return res.status(500).json({ error: "Unable to create booking." });
+    return res.status(500).json({ error: "Unable to create booking. Details: " + (error.message || error) });
   }
 };
 

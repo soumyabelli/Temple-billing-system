@@ -11,6 +11,7 @@ import {
 } from "react-icons/fa";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import { downloadReceiptPDF } from "../../utils/receiptGenerator";
 import {
   Area,
   AreaChart,
@@ -257,133 +258,69 @@ const ReceiptsPage = () => {
     }
   };
 
-  const handlePrintReceipt = (bill, index) => {
-    const doc = new jsPDF({ unit: "mm", format: "a4" });
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    const margin = 16;
-    let y = 18;
+  const handlePrintReceipt = async (bill, index) => {
+    try {
+      const type = inferBillType(bill);
+      const isOnline = bill.source === "Online Portal" || false;
+      const refNo = getBillReference(bill, index);
+      const amount = Number(bill.amount) || 0;
+      
+      let poojaBookings = [];
+      let prasadamOrders = [];
+      
+      if (type === "Pooja Booking" || type === "Combined") {
+        poojaBookings = [{
+          slNo: 1,
+          name: bill.sevaType || "Pooja Booking",
+          date: formatDateTime(bill.billDate || bill.createdAt),
+          qty: 1,
+          amount: amount
+        }];
+      } else if (type === "Prasadam Sale") {
+        prasadamOrders = [{
+          slNo: 1,
+          name: bill.sevaType || "Prasadam",
+          date: "-",
+          qty: 1,
+          amount: amount
+        }];
+      } else {
+        poojaBookings = [{
+          slNo: 1,
+          name: bill.sevaType || type,
+          date: formatDateTime(bill.billDate || bill.createdAt),
+          qty: 1,
+          amount: amount
+        }];
+      }
 
-    // Header Band
-    doc.setFillColor(180, 106, 19);
-    doc.rect(0, 0, pageWidth, 34, "F");
-    doc.setTextColor(255, 255, 255);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(17);
-    doc.text("Sri Shanti Mahadev Mandir", margin, y);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.text("Official Temple Receipt", margin, y + 8);
+      const receiptData = {
+        isOnline,
+        receiptNo: refNo,
+        bookingDate: formatDateTime(bill.billDate || bill.createdAt),
+        paymentMode: bill.paymentMode || "Cash",
+        transactionId: bill.transactionId || "-",
+        cashierName: bill.cashierName || "Cashier",
+        devoteeName: bill.devoteeName || "-",
+        mobile: bill.mobile || "-",
+        email: bill.email || "-",
+        address: bill.address || "-",
+        poojaBookings,
+        prasadamOrders,
+        subTotal: amount,
+        templeCharges: 0,
+        grandTotal: amount,
+        amountInWords: `Rs. ${amount}`,
+        devoteeMaterials: [],
+        templeMaterials: [],
+        notes: bill.notes ? [String(bill.notes)] : []
+      };
 
-    const refNo = getBillReference(bill, index);
-    doc.text(`Receipt No: ${refNo}`, pageWidth - margin, y, { align: "right" });
-    doc.text(`Date: ${formatDateTime(bill.billDate || bill.createdAt)}`, pageWidth - margin, y + 8, { align: "right" });
-
-    y = 48;
-    doc.setTextColor(31, 29, 25);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(15);
-    const type = inferBillType(bill);
-    doc.text(`${type} Receipt`, margin, y);
-
-    // Status Badge
-    doc.setFontSize(9);
-    doc.setFillColor(250, 247, 241);
-    doc.setDrawColor(229, 217, 197);
-    doc.roundedRect(pageWidth - margin - 40, y - 7, 40, 10, 2, 2, "FD");
-    doc.setTextColor(116, 81, 25);
-    doc.text(String(bill.status || "Paid"), pageWidth - margin - 20, y - 1, { align: "center" });
-
-    y += 12;
-    // Devotee Details Box
-    doc.setFillColor(255, 252, 246);
-    doc.setDrawColor(235, 226, 213);
-    doc.roundedRect(margin, y, pageWidth - margin * 2, 26, 2, 2, "FD");
-    doc.setTextColor(31, 29, 25);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(10);
-    doc.text("Devotee Details", margin + 4, y + 7);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    doc.text(`Name: ${bill.devoteeName || "-"}`, margin + 4, y + 15);
-    
-    y += 36;
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(10);
-    doc.text("Receipt Details", margin, y);
-    y += 6;
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-
-    const details = [
-      ["Payment Mode", bill.paymentMode || "Cash"],
-      ["Seva Type / Service", bill.sevaType || "-"],
-    ];
-
-    details.forEach(([label, value]) => {
-      doc.setTextColor(112, 92, 62);
-      doc.text(`${label}:`, margin, y);
-      doc.setTextColor(31, 29, 25);
-      doc.text(String(value || "-"), margin + 42, y);
-      y += 7;
-    });
-
-    y += 4;
-    const tableX = margin;
-    const tableWidth = pageWidth - margin * 2;
-    const colWidths = [tableWidth - 38, 38];
-    const headerHeight = 10;
-    doc.setFillColor(255, 240, 223);
-    doc.setDrawColor(241, 206, 156);
-    doc.rect(tableX, y, tableWidth, headerHeight, "FD");
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(9);
-    doc.setTextColor(110, 69, 7);
-    doc.text("Description", tableX + 3, y + 6.5);
-    doc.text("Amount", tableX + colWidths[0] + colWidths[1] - 3, y + 6.5, { align: "right" });
-
-    y += headerHeight;
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(31, 29, 25);
-
-    const rowHeight = 12;
-    doc.setDrawColor(232, 225, 214);
-    doc.rect(tableX, y, tableWidth, rowHeight, "S");
-    doc.text(String(bill.sevaType || "-"), tableX + 3, y + 7);
-    doc.text(formatCurrency(bill.amount), tableX + tableWidth - 3, y + 7, { align: "right" });
-    y += rowHeight;
-
-    y += 6;
-    doc.setFillColor(250, 247, 241);
-    doc.roundedRect(pageWidth - margin - 72, y, 72, 18, 2, 2, "F");
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(9);
-    doc.setTextColor(112, 92, 62);
-    doc.text("Total Amount", pageWidth - margin - 68, y + 7);
-    doc.setTextColor(31, 29, 25);
-    doc.setFontSize(12);
-    doc.text(formatCurrency(bill.amount), pageWidth - margin - 4, y + 13, { align: "right" });
-
-    if (bill.notes) {
-      y += 28;
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(10);
-      doc.text("Notes", margin, y);
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(9);
-      doc.text(doc.splitTextToSize(String(bill.notes), pageWidth - margin * 2), margin, y + 7);
+      await downloadReceiptPDF(receiptData, `receipt-${refNo}.pdf`);
+    } catch (err) {
+      console.error("Failed to generate PDF:", err);
+      alert("Failed to generate PDF receipt.");
     }
-
-    // Footer
-    doc.setDrawColor(229, 217, 197);
-    doc.line(margin, pageHeight - 18, pageWidth - margin, pageHeight - 18);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
-    doc.setTextColor(112, 103, 94);
-    doc.text("Generated by Temple Billing System", margin, pageHeight - 10);
-    doc.text("Thank you for your devotion and support.", pageWidth - margin, pageHeight - 10, { align: "right" });
-
-    doc.save(`receipt-${refNo}.pdf`);
   };
 
   const renderTableRow = (bill, index) => {

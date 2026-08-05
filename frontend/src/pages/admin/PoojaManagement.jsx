@@ -12,7 +12,8 @@ import {
 } from "react-icons/md";
 import { FaDownload } from "react-icons/fa6";
 import { jsPDF } from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
+import { downloadReceiptPDF } from "../../utils/receiptGenerator";
 import { getDevoteeDonations } from "../../services/devoteeService";
 import { getDashboardBookings, updateBookingStatusAdmin, getBookingReceipt } from "../../services/bookingService";
 import { getPoojaTypes, savePoojaType, updatePoojaType, removePoojaType } from "../../services/poojaTypeService";
@@ -110,168 +111,62 @@ const PoojaManagement = () => {
 
   const handleDownloadReceipt = async (row) => {
     try {
-      const bookingId = row.raw?._id;
-      let receiptData;
+      const rawBooking = row.raw || {};
       
-      if (bookingId) {
-        try {
-          const res = await getBookingReceipt(bookingId);
-          receiptData = res.receipt;
-        } catch (e) {
-          console.warn("Could not fetch online receipt data, fallback to row details", e);
-        }
+      let poojaBookings = [];
+      let prasadamOrders = [];
+      if (rawBooking.isCombined && rawBooking.items && rawBooking.items.length > 0) {
+        poojaBookings = rawBooking.items.filter(i => i.type !== "prasadam").map((i, idx) => ({
+          slNo: idx + 1,
+          name: i.description || i.name,
+          date: i.date || (rawBooking.datetime ? new Date(rawBooking.datetime).toLocaleDateString() : "-"),
+          qty: i.quantity || 1,
+          amount: (i.price || 0) * (i.quantity || 1)
+        }));
+        prasadamOrders = rawBooking.items.filter(i => i.type === "prasadam").map((i, idx) => ({
+          slNo: idx + 1,
+          name: i.description || i.name,
+          date: "-",
+          qty: i.quantity || 1,
+          amount: (i.price || 0) * (i.quantity || 1)
+        }));
+      } else {
+        poojaBookings = [{
+          slNo: 1,
+          name: rawBooking.service || "Pooja Booking",
+          date: rawBooking.datetime ? new Date(rawBooking.datetime).toLocaleDateString() : "-",
+          qty: 1,
+          amount: rawBooking.amount || 0
+        }];
       }
 
-      if (!receiptData) {
-        const rawBooking = row.raw || {};
-        receiptData = {
-          receiptNumber: row.receiptId || `RC-BK${String(rawBooking._id || '').slice(-6).toUpperCase()}`,
-          bookingId: row.bookingId || `BK${String(rawBooking._id || '').slice(-6).toUpperCase()}`,
-          bookingNumber: rawBooking.bookingNumber || "",
-          transactionId: rawBooking.transactionId || "N/A",
-          devotee: {
-            name:   row.devotee || rawBooking.devoteeName || rawBooking.customerName || "N/A",
-            mobile: rawBooking.devoteePhone || rawBooking.contactNumber || "N/A",
-            email:  rawBooking.devoteeEmail || "N/A",
-          },
-          pooja: {
-            name:   rawBooking.service || "N/A",
-            date:   rawBooking.datetime || new Date().toISOString(),
-            slot:   rawBooking.datetime ? new Date(rawBooking.datetime).toLocaleTimeString("en-IN") : "N/A",
-            priest: rawBooking.priestName || "Not Assigned",
-          },
-          payment: {
-            baseAmount:  rawBooking.amount || 0,
-            gst:         rawBooking.gst || 0,
-            totalAmount: (rawBooking.amount || 0) + (rawBooking.gst || 0),
-            method:      row.method || rawBooking.paymentMethod || "UPI",
-            status:      rawBooking.paymentStatus || "Pending",
-          },
-          status:    rawBooking.status || "Pending",
-          createdAt: rawBooking.createdAt || new Date(),
-        };
-      }
+      const receiptPayload = {
+        isOnline: rawBooking.source === "Online Portal" || false,
+        receiptNo: row.receiptId || `RC-BK${String(rawBooking._id || '').slice(-6).toUpperCase()}`,
+        bookingDate: rawBooking.createdAt ? new Date(rawBooking.createdAt).toLocaleDateString() : new Date().toLocaleDateString(),
+        paymentMode: row.method || rawBooking.paymentMethod || "UPI",
+        transactionId: rawBooking.transactionId || "-",
+        cashierName: "Admin",
+        devoteeName: row.devotee || rawBooking.devoteeName || rawBooking.customerName || "-",
+        mobile: rawBooking.devoteePhone || rawBooking.contactNumber || "-",
+        email: rawBooking.devoteeEmail || "-",
+        address: rawBooking.devoteeAddress || "-",
+        poojaBookings,
+        prasadamOrders,
+        subTotal: rawBooking.amount || 0,
+        templeCharges: 0,
+        grandTotal: (rawBooking.amount || 0) + (rawBooking.gst || 0),
+        amountInWords: `Rs. ${(rawBooking.amount || 0) + (rawBooking.gst || 0)}`,
+        devoteeMaterials: [],
+        templeMaterials: [],
+        notes: rawBooking.notes ? [String(rawBooking.notes)] : []
+      };
 
-      const doc = new jsPDF({ unit: "mm", format: "a4" });
-      const pageW = doc.internal.pageSize.getWidth();
-      let currentY = 15;
+      await downloadReceiptPDF(receiptPayload, `receipt-${receiptPayload.receiptNo}.pdf`);
 
-      doc.setFillColor(212, 120, 32);
-      doc.rect(0, 0, pageW, 40, "F");
-
-      doc.setTextColor(255, 255, 255);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(22);
-      doc.text("SRI HARIDHARA TEMPLE", pageW / 2, currentY + 5, { align: "center" });
-
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(10);
-      doc.text("123 Temple Road, Heritage Town, Bangalore - 560001", pageW / 2, currentY + 12, { align: "center" });
-      doc.text("Email: contact@haridharatemple.org | Tel: +91 80 2345 6789", pageW / 2, currentY + 17, { align: "center" });
-
-      doc.setFillColor(243, 235, 220);
-      doc.rect(15, 48, pageW - 30, 10, "F");
-      
-      doc.setTextColor(139, 69, 19);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(12);
-      doc.text("POOJA BOOKING RECEIPT", pageW / 2, 54, { align: "center" });
-
-      currentY = 68;
-
-      doc.setTextColor(50, 50, 50);
-      doc.setFontSize(10);
-      doc.setFont("helvetica", "bold");
-      doc.text(`Receipt No: ${receiptData.receiptNumber}`, 15, currentY);
-      doc.text(`Booking Date: ${new Date(receiptData.createdAt).toLocaleDateString("en-IN")}`, pageW - 15, currentY, { align: "right" });
-      currentY += 6;
-      doc.setFont("helvetica", "normal");
-      doc.text(`Booking ID: ${receiptData.bookingId}`, 15, currentY);
-      doc.text(`Transaction ID: ${receiptData.transactionId}`, pageW - 15, currentY, { align: "right" });
-
-      currentY += 10;
-
-      doc.autoTable({
-        startY: currentY,
-        theme: "plain",
-        headStyles: { fillColor: [243, 235, 220], textColor: [139, 69, 19], fontStyle: "bold" },
-        bodyStyles: { textColor: [50, 50, 50] },
-        head: [["DEVOTEE DETAILS", ""]],
-        body: [
-          ["Name:", receiptData.devotee.name],
-          ["Mobile:", receiptData.devotee.mobile],
-          ["Email:", receiptData.devotee.email],
-        ],
-        margin: { left: 15, right: 15 },
-        styles: { fontSize: 9, cellPadding: 2 }
-      });
-
-      currentY = doc.previousAutoTable.finalY + 6;
-
-      doc.autoTable({
-        startY: currentY,
-        theme: "plain",
-        headStyles: { fillColor: [243, 235, 220], textColor: [139, 69, 19], fontStyle: "bold" },
-        bodyStyles: { textColor: [50, 50, 50] },
-        head: [["POOJA DETAILS", ""]],
-        body: [
-          ["Pooja Name:", receiptData.pooja.name],
-          ["Pooja Date:", new Date(receiptData.pooja.date).toLocaleDateString("en-IN")],
-          ["Time Slot:", receiptData.pooja.slot],
-          ["Priest Assigned:", receiptData.pooja.priest],
-        ],
-        margin: { left: 15, right: 15 },
-        styles: { fontSize: 9, cellPadding: 2 }
-      });
-
-      currentY = doc.previousAutoTable.finalY + 6;
-
-      const gstText = receiptData.payment.gst > 0 ? `Rs ${receiptData.payment.gst}` : "Nil (0%)";
-      doc.autoTable({
-        startY: currentY,
-        theme: "striped",
-        headStyles: { fillColor: [212, 120, 32], textColor: [255, 255, 255], fontStyle: "bold" },
-        head: [["Description", "Amount"]],
-        body: [
-          [`Base Price for ${receiptData.pooja.name}`, `Rs ${Number(receiptData.payment.baseAmount).toLocaleString()}`],
-          ["GST (CGST/SGST)", gstText],
-          [`Total Paid (${receiptData.payment.method})`, `Rs ${Number(receiptData.payment.totalAmount).toLocaleString()}`]
-        ],
-        margin: { left: 15, right: 15 },
-        styles: { fontSize: 9, cellPadding: 3 },
-        columnStyles: {
-          1: { halign: "right", fontStyle: "bold" }
-        }
-      });
-
-      currentY = doc.previousAutoTable.finalY + 12;
-
-      doc.setFillColor(240, 240, 240);
-      doc.rect(15, currentY, 60, 10, "F");
-      doc.setTextColor(30, 30, 30);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(9);
-      doc.text(`Payment Status: ${receiptData.payment.status}`, 18, currentY + 6);
-
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(8);
-      doc.setTextColor(100, 100, 100);
-      doc.line(pageW - 65, currentY + 12, pageW - 15, currentY + 12);
-      doc.text("Authorized Signatory", pageW - 40, currentY + 16, { align: "center" });
-
-      currentY += 28;
-
-      doc.setFillColor(212, 120, 32);
-      doc.rect(0, 280, pageW, 17, "F");
-      doc.setTextColor(255, 255, 255);
-      doc.setFont("helvetica", "italic");
-      doc.setFontSize(9);
-      doc.text("Thank you for your booking. May the Lord shower His divine blessings upon you and your family.", pageW / 2, 290, { align: "center" });
-
-      doc.save(`Receipt_${receiptData.receiptNumber}.pdf`);
     } catch (error) {
-      console.error("PDF generation failed", error);
-      alert("Failed to generate PDF receipt. Please check console for details.");
+      console.error("Error generating receipt:", error);
+      alert("Failed to generate receipt. Please try again.");
     }
   };
 

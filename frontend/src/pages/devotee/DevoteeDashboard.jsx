@@ -1946,6 +1946,26 @@ const DevoteeDashboard = () => {
 
     const devotee = getReceiptDevotee(item);
 
+    let devoteeMaterialsArr = [];
+    let templeMaterialsArr = [];
+    if (item.snapshotMaterials && Array.isArray(item.snapshotMaterials)) {
+      const templeReqs = (item.templeMaterialRequests || []).map(r => r.itemName);
+      item.snapshotMaterials.forEach(m => {
+        const matString = `${m.itemName} (${m.qty} ${m.unit})`;
+        if (templeReqs.includes(m.itemName) || m.responsibilityType === 'TEMPLE_PROVIDES') {
+          if (!templeMaterialsArr.includes(matString)) templeMaterialsArr.push(matString);
+        } else {
+          if (!devoteeMaterialsArr.includes(matString)) devoteeMaterialsArr.push(matString);
+        }
+      });
+    }
+
+    if (item.poojaRules && Array.isArray(item.poojaRules)) {
+      item.poojaRules.forEach(rule => {
+        if (!notesArr.includes(rule)) notesArr.push(rule);
+      });
+    }
+
     setViewingReceiptData({
       isOnline,
       receiptNo,
@@ -1963,7 +1983,8 @@ const DevoteeDashboard = () => {
       templeCharges: 0,
       grandTotal: amount,
       amountInWords: `Rs. ${amount}`,
-      materials: [],
+      devoteeMaterials: devoteeMaterialsArr,
+      templeMaterials: templeMaterialsArr,
       notes: notesArr
     });
   };
