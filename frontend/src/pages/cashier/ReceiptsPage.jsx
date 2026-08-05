@@ -345,16 +345,7 @@ const ReceiptsPage = () => {
         </td>
         <td className="px-4 py-3 text-center">
           <div className="flex items-center justify-center gap-2">
-            {(bill.status === "Pending") && (
-              <button
-                type="button"
-                onClick={() => handleMarkAsPaid(bill._id)}
-                className="rounded-lg bg-[#166534] px-3 py-1 text-xs font-bold text-white transition hover:bg-[#15803d]"
-                title="Mark as Paid"
-              >
-                Mark as Paid
-              </button>
-            )}
+
             <button
               type="button"
               onClick={() => handlePrintReceipt(bill, index)}

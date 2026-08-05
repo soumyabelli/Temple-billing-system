@@ -1272,3 +1272,16 @@ Thank you!
 To: 8095146883
 Message: Pooja booking confirmed! Service: Multiple Items on 2026-08-10T08:30. Amount: ₹1256. -Temple
 
+[2026-08-05T12:23:58.935Z] EMAIL
+To: naikashwitha08@gmail.com
+Subject: Donation Receipt
+Donation Receipt
+Amount: ₹5000
+Category: Bonda Abhishekaa
+Transaction ID: N/A
+Thank you for your donation!
+
+[2026-08-05T12:23:58.939Z] SMS
+To: 8095146883
+Message: Donation received! Amount: ₹5000. Transaction ID: N/A. Thank you! -Temple
+

@@ -35,7 +35,7 @@ const initTransporter = () => {
   return transporter;
 };
 
-const sendEmail = async ({ to, subject, html, text }) => {
+const sendEmail = async ({ to, subject, html, text, attachments }) => {
   try {
     const mailTransporter = initTransporter();
     if (mailTransporter) {
@@ -46,6 +46,7 @@ const sendEmail = async ({ to, subject, html, text }) => {
         subject,
         html,
         text,
+        attachments,
       });
       console.log(`📧 Real Email sent to ${to}`);
     } else {
@@ -122,6 +123,8 @@ const sendNotification = async ({ to, subject, message, messageType = "text" }) 
   }
 };
 
+const { generateBookingReceiptPDF } = require("./pdfGenerator");
+
 /**
  * Send booking confirmation across multiple channels
  * @param {Object} devotee - Devotee information
@@ -140,16 +143,31 @@ const sendBookingConfirmation = async (devotee, booking) => {
         <p><strong>Amount:</strong> ₹${booking.amount}</p>
         <p><strong>Status:</strong> ${booking.status}</p>
       </div>
+      <p style="font-weight: bold; color: #d4a574; font-size: 1.1em; padding: 10px; border-left: 4px solid #d4a574; background: #fff8f0;">
+        Please bring the receipt at the time of visiting the temple to perform the pooja.
+      </p>
       <p>Thank you for choosing our temple. We look forward to serving you!</p>
       <p>Best regards,<br>Temple Management</p>
     </div>
   `;
 
-  const textMessage = `Pooja Booking Confirmation\nService: ${booking.service}\nDate & Time: ${booking.datetime}\nAmount: ₹${booking.amount}\nThank you!`;
+  const textMessage = `Pooja Booking Confirmation\nService: ${booking.service}\nDate & Time: ${booking.datetime}\nAmount: ₹${booking.amount}\n\nPlease bring the receipt at the time of visiting the temple to perform the pooja.\nThank you!`;
 
-  const smsMessage = `Pooja booking confirmed! Service: ${booking.service} on ${booking.datetime}. Amount: ₹${booking.amount}. -Temple`;
+  const smsMessage = `Pooja booking confirmed! Service: ${booking.service} on ${booking.datetime}. Amount: ₹${booking.amount}. Please bring receipt at temple. -Temple`;
 
   const results = [];
+
+  let attachments = [];
+  try {
+    const pdfBuffer = await generateBookingReceiptPDF(devotee, booking);
+    attachments.push({
+      filename: `Receipt_${(booking.service || 'Pooja').replace(/[^a-zA-Z0-9]/g, '_')}.pdf`,
+      content: pdfBuffer,
+      contentType: 'application/pdf'
+    });
+  } catch (err) {
+    console.error("Failed to generate PDF for email attachment:", err.message);
+  }
 
   // Send email
   if (devotee.email) {
@@ -159,6 +177,7 @@ const sendBookingConfirmation = async (devotee, booking) => {
         subject,
         html: emailHtml,
         text: textMessage,
+        attachments,
       })
     );
   }

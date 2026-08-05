@@ -204,7 +204,7 @@ const updateDonationStatus = async (req, res) => {
     // Sync bill ledger status as well
     await Bill.updateMany(
       { sourceId: donation._id.toString() },
-      { $set: { status: status === "Collected" ? "Paid" : "Pending" } }
+      { $set: { status: (status === "Collected" || status === "Completed") ? "Paid" : "Pending" } }
     );
 
     if (previousStatus !== status && (status === "Collected" || status === "Completed")) {

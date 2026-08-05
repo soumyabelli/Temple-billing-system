@@ -682,7 +682,7 @@ const DevoteeDashboard = () => {
               // Download Receipt
               handleReceiptDownload(createdBooking, "combined");
               setCartItems([]);
-              alert(`Combined Bill Paid & Generated Successfully! Receipt downloaded.`);
+              alert(`Combined Bill Paid & Generated Successfully! Receipt downloaded. Please bring the receipt at the time of visiting the temple to perform the pooja.`);
               setActivePage("My Bookings");
             } catch (err) {
               alert(err?.response?.data?.error || "Payment verification failed.");
@@ -702,7 +702,7 @@ const DevoteeDashboard = () => {
         // Simulated or Cash checkout
         handleReceiptDownload(createdBooking, "combined");
         setCartItems([]);
-        alert(`Combined Bill Generated Successfully! Receipt downloaded.`);
+        alert(`Combined Bill Generated Successfully! Receipt downloaded. Please bring the receipt at the time of visiting the temple to perform the pooja.`);
         setActivePage("My Bookings");
       }
     } catch (error) {
@@ -1244,7 +1244,7 @@ const DevoteeDashboard = () => {
               setBookingsData(bookingsRes.bookings || []);
               setNotificationsData(formatNotifications(notificationsRes.notifications || []));
 
-              setBookingSuccess("Booking successful! Your order has been placed and payment is confirmed. Please note: This payment is final and non-refundable.");
+              setBookingSuccess("Booking successful! Your order has been placed and payment is confirmed. Please note: This payment is final and non-refundable. Please bring the receipt at the time of visiting the temple to perform the pooja.");
               const firstPooja = poojaTypes[0];
               setBookingService(firstPooja?.name || "");
               setBookingDatetime("");
@@ -1295,7 +1295,7 @@ const DevoteeDashboard = () => {
       setBookingNotes("");
       setBookingPaymentMethod("UPI");
       setSelectedTempleMaterials([]);
-      setBookingSuccess("Booking successful! Your order has been placed and payment is confirmed. Please note: This payment is final and non-refundable.");
+      setBookingSuccess("Booking successful! Your order has been placed and payment is confirmed. Please note: This payment is final and non-refundable. Please bring the receipt at the time of visiting the temple to perform the pooja.");
       setActivePage("My Bookings");
     } catch (error) {
       console.warn("Unable to create booking", error);

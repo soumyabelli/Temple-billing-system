@@ -725,7 +725,7 @@ const createDonation = async (req, res) => {
       referenceNo: `DN-${String(donation._id).slice(-6).toUpperCase()}`,
       sourceId: donation._id.toString(),
       notes,
-      status: donationStatus === "Completed" ? "Paid" : "Pending",
+      status: (donationStatus === "Completed" || donationStatus === "Collected") ? "Paid" : "Pending",
     });
 
     if (hasKeys && isOnline) {
