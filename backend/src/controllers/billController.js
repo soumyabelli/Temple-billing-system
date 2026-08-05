@@ -1,5 +1,6 @@
 const Bill = require("../models/Bill");
 const { createStaffNotification } = require("../utils/notificationService");
+const { sendBillReceipt } = require("../utils/communicationService");
 
 const crypto = require("crypto");
 const Razorpay = require("razorpay");
@@ -17,6 +18,9 @@ const createBill = async (req, res) => {
   try {
     const {
       devoteeName,
+      devoteeEmail,
+      devoteePhone,
+      devoteeAddress,
       sevaType,
       items,
       amount,
@@ -26,6 +30,7 @@ const createBill = async (req, res) => {
       referenceNo,
       sourceId,
       notes,
+      isOnline,
     } = req.body;
 
     if (!devoteeName || !amount) {
@@ -37,7 +42,8 @@ const createBill = async (req, res) => {
     }
 
     const numericAmount = Number(amount);
-    const billStatus = "Paid";
+    const billStatus = isOnline ? "Pending" : "Paid";
+    const hasKeys = process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET;
 
     let finalRef = referenceNo;
     if (!finalRef) {
@@ -45,9 +51,12 @@ const createBill = async (req, res) => {
     }
 
     const bill = await Bill.create({
-      devoteeName,
-      sevaType,
-      items,
+      devoteeName: devoteeName.trim(),
+      devoteeEmail: devoteeEmail ? devoteeEmail.trim() : undefined,
+      devoteePhone: devoteePhone ? devoteePhone.trim() : undefined,
+      devoteeAddress: devoteeAddress ? devoteeAddress.trim() : undefined,
+      sevaType: sevaType ? sevaType.trim() : undefined,
+      items: items || [],
       amount: numericAmount,
       paymentMode,
       billDate,
@@ -91,6 +100,9 @@ const createBill = async (req, res) => {
       category: "billing",
     }).catch(() => { });
 
+    // Send receipt to Devotee
+    sendBillReceipt(bill).catch((e) => console.error("Email send failed:", e));
+
     return res.status(201).json({
       bill,
       simulated: true,
@@ -122,6 +134,9 @@ const verifyBillPayment = async (req, res) => {
     bill.razorpayPaymentId = razorpay_payment_id;
     bill.razorpaySignature = razorpay_signature;
     await bill.save();
+
+    // Send receipt to Devotee
+    sendBillReceipt(bill).catch((e) => console.error("Email send failed:", e));
 
     // Fire notification to cashier role
     createStaffNotification({

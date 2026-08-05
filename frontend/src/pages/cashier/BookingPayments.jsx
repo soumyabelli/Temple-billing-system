@@ -14,15 +14,17 @@ import {
   sumBy,
 } from "../../services/cashierService";
 import { getPoojaTypes } from "../../services/poojaTypeService";
+import { getPrasadamTypes } from "../../services/prasadamTypeService";
 import { useNotifications } from "../../context/NotificationContext";
+import { useAuth } from "../../context/AuthContext";
+import { downloadReceiptPDF } from "../../utils/receiptGenerator";
 
 const emptyForm = {
   devoteeName: "",
   devoteeEmail: "",
   devoteePhone: "",
-  service: "",
+  cartItems: [],
   datetime: "",
-  amount: "",
   paymentMethod: "Cash",
   notes: "",
 };
@@ -47,6 +49,7 @@ const buildMinDateTime = () => {
 const BookingPayments = () => {
   const navigate = useNavigate();
   const { loadNotifications } = useNotifications();
+  const { user } = useAuth();
   const [poojaTypes, setPoojaTypes] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [bills, setBills] = useState([]);
@@ -54,8 +57,11 @@ const BookingPayments = () => {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [query, setQuery] = useState("");
+  const [serviceSearch, setServiceSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [showHistory, setShowHistory] = useState(false);
+  const [activeCategory, setActiveCategory] = useState("pooja");
+  const [expandedSections, setExpandedSections] = useState({ pooja: false, prasadam: false, room: false });
   const [form, setForm] = useState({
     ...emptyForm,
     datetime: buildMinDateTime(),
@@ -69,7 +75,20 @@ const BookingPayments = () => {
       setBills(billRows.status === "fulfilled" ? billRows.value : []);
 
       const loadedPoojas = poojaRes.status === "fulfilled" ? (poojaRes.value.poojas || poojaRes.value || []) : [];
-      setPoojaTypes(loadedPoojas);
+      const loadedPrasadams = getPrasadamTypes();
+      
+      const combinedCatalog = [
+        ...loadedPoojas.map(p => ({ ...p, catalogType: "pooja" })),
+        ...loadedPrasadams.map(p => ({ ...p, catalogType: "prasadam" })),
+        { name: "Standard Room - AC", price: 1500, catalogType: "room" },
+        { name: "Standard Room - Non AC", price: 800, catalogType: "room" },
+        { name: "Family Suite - AC", price: 2500, catalogType: "room" },
+        { name: "Premium Suite - AC", price: 4000, catalogType: "room" },
+        { name: "Dormitory Bed", price: 200, catalogType: "room" },
+        { name: "Cottage - AC", price: 3000, catalogType: "room" },
+      ];
+      
+      setPoojaTypes(combinedCatalog);
 
       if (loadedPoojas.length > 0) {
         setForm((prev) => {
@@ -109,20 +128,7 @@ const BookingPayments = () => {
 
   useEffect(() => {
     if (!poojaTypes.length) return;
-    setForm((prev) => {
-      const selected = poojaTypes.find((type) => type.name === prev.service) || poojaTypes[0];
-      if (!selected) return prev;
-      const nextService = prev.service && poojaTypes.some((type) => type.name === prev.service) ? prev.service : selected.name;
-      const nextAmount = prev.amount ? prev.amount : selected.price;
-      if (nextService === prev.service && String(nextAmount) === String(prev.amount || "")) {
-        return prev;
-      }
-      return {
-        ...prev,
-        service: nextService,
-        amount: nextAmount,
-      };
-    });
+    // Removed old auto-select logic to prevent adding a random pooja to the cart automatically
   }, [poojaTypes]);
 
   const billMap = useMemo(() => {
@@ -183,17 +189,37 @@ const BookingPayments = () => {
   const handleServiceSelect = (service) => {
     setForm((prev) => ({
       ...prev,
-      service: service.name,
-      amount: service.price || prev.amount,
+      cartItems: [
+        ...prev.cartItems,
+        {
+          type: service.catalogType || "pooja",
+          name: service.name,
+          date: prev.datetime,
+          qty: 1,
+          amount: service.price || 0,
+        },
+      ],
     }));
   };
+
+  const handleRemoveItem = (index) => {
+    setForm((prev) => {
+      const newItems = [...prev.cartItems];
+      newItems.splice(index, 1);
+      return { ...prev, cartItems: newItems };
+    });
+  };
+
+  const totalAmount = useMemo(() => {
+    return form.cartItems.reduce((acc, item) => acc + (Number(item.amount) || 0), 0);
+  }, [form.cartItems]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setMessage("");
 
-    if (!form.devoteeName.trim() || !form.service.trim() || !form.datetime || Number(form.amount) <= 0) {
-      setMessage("Please fill devotee name, service, date/time and amount.");
+    if (!form.devoteeName.trim() || form.cartItems.length === 0 || totalAmount <= 0) {
+      setMessage("Please fill devotee name and add at least one item to the cart.");
       return;
     }
 
@@ -203,12 +229,14 @@ const BookingPayments = () => {
         devoteeName: form.devoteeName.trim(),
         devoteeEmail: form.devoteeEmail.trim() || undefined,
         devoteePhone: form.devoteePhone.trim() || undefined,
-        service: form.service.trim(),
-        datetime: form.datetime,
-        amount: Number(form.amount),
+        service: "Multiple Items", // Fallback for schema
+        datetime: form.datetime || buildMinDateTime(),
+        amount: totalAmount,
         paymentMethod: form.paymentMethod,
         notes: form.notes.trim(),
         status: "Pending",
+        isCombined: true,
+        items: form.cartItems,
       });
 
       const { booking: createdBooking, order, key, simulated } = bookingRes;
@@ -236,7 +264,7 @@ const BookingPayments = () => {
           amount: order.amount,
           currency: order.currency,
           name: "Temple Pooja Booking",
-          description: form.service.trim(),
+          description: "Multiple Items Cart",
           order_id: order.id,
           prefill: {
             name: form.devoteeName.trim(),
@@ -255,13 +283,36 @@ const BookingPayments = () => {
 
               setForm({
                 ...emptyForm,
-                service: poojaTypes[0]?.name || "",
-                amount: poojaTypes[0]?.price || "",
                 datetime: buildMinDateTime(),
               });
               setMessage("Pooja booking saved successfully and paid.");
               await loadData();
               loadNotifications().catch(() => { });
+
+              // Generate Receipt
+              const receiptData = {
+                isOnline: false,
+                receiptNo: createdBooking.bookingNumber || createdBooking.referenceNo || `BK-${Date.now().toString().slice(-6)}`,
+                bookingDate: formatDateTime(createdBooking.createdAt || new Date()),
+                paymentMode: createdBooking.paymentMethod || form.paymentMethod,
+                transactionId: resp.razorpay_payment_id || "-",
+                cashierName: user?.name || "Cashier",
+                devoteeName: createdBooking.devoteeName || form.devoteeName,
+                mobile: createdBooking.devoteePhone || createdBooking.contactNumber || form.devoteePhone || "-",
+                email: createdBooking.devoteeEmail || form.devoteeEmail || "-",
+                address: createdBooking.address || "-",
+                poojaBookings: (createdBooking.items || form.cartItems).map((i, idx) => ({ slNo: idx + 1, name: i.name, date: formatDateTime(i.date || form.datetime), qty: i.qty || 1, amount: i.amount })),
+                prasadamOrders: [],
+                subTotal: createdBooking.amount || totalAmount,
+                templeCharges: 0,
+                grandTotal: createdBooking.amount || totalAmount,
+                amountInWords: `Rs. ${createdBooking.amount || totalAmount}`,
+                devoteeMaterials: [],
+                templeMaterials: [],
+                notes: [createdBooking.notes || form.notes].filter(Boolean),
+              };
+              downloadReceiptPDF(receiptData, `receipt-${receiptData.receiptNo}.pdf`).catch(err => console.error("Receipt generation failed", err));
+
             } catch (err) {
               setMessage("Payment verification failed.");
               console.warn("verify booking payment handler error", err);
@@ -283,13 +334,36 @@ const BookingPayments = () => {
 
       setForm({
         ...emptyForm,
-        service: poojaTypes[0]?.name || "",
-        amount: poojaTypes[0]?.price || "",
         datetime: buildMinDateTime(),
       });
       setMessage("Pooja booking saved successfully. The history and bill ledger were updated.");
       await loadData();
       loadNotifications().catch(() => { });
+
+      // Generate Receipt
+      const receiptData = {
+        isOnline: false,
+        receiptNo: createdBooking.bookingNumber || createdBooking.referenceNo || `BK-${Date.now().toString().slice(-6)}`,
+        bookingDate: formatDateTime(createdBooking.createdAt || new Date()),
+        paymentMode: createdBooking.paymentMethod || form.paymentMethod,
+        transactionId: "-",
+        cashierName: user?.name || "Cashier",
+        devoteeName: createdBooking.devoteeName || form.devoteeName,
+        mobile: createdBooking.devoteePhone || createdBooking.contactNumber || form.devoteePhone || "-",
+        email: createdBooking.devoteeEmail || form.devoteeEmail || "-",
+        address: createdBooking.address || "-",
+        poojaBookings: (createdBooking.items || form.cartItems).map((i, idx) => ({ slNo: idx + 1, name: i.name, date: formatDateTime(i.date || form.datetime), qty: i.qty || 1, amount: i.amount })),
+        prasadamOrders: [],
+        subTotal: createdBooking.amount || totalAmount,
+        templeCharges: 0,
+        grandTotal: createdBooking.amount || totalAmount,
+        amountInWords: `Rs. ${createdBooking.amount || totalAmount}`,
+        devoteeMaterials: [],
+        templeMaterials: [],
+        notes: [createdBooking.notes || form.notes].filter(Boolean),
+      };
+      downloadReceiptPDF(receiptData, `receipt-${receiptData.receiptNo}.pdf`).catch(err => console.error("Receipt generation failed", err));
+
     } catch (error) {
       setMessage(error.response?.data?.error || error.response?.data?.message || "Failed to save booking.");
     } finally {
@@ -342,24 +416,92 @@ const BookingPayments = () => {
               <FaCalendarAlt className="text-[#f28c18]" size={22} />
             </div>
 
-            <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              {poojaTypes.map((type) => {
-                const active = form.service === type.name;
-                return (
+            <div className="mt-5">
+              <label className="block mb-4">
+                <span className="mb-2 block text-sm font-bold text-slate-800">Search & Add Services to Cart</span>
+                <div className="relative">
+                  <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-[#f28c18]" />
+                  <input
+                    type="text"
+                    value={serviceSearch}
+                    onChange={(e) => setServiceSearch(e.target.value)}
+                    placeholder="Search for pooja, homa, or prasadam..."
+                    className="w-full rounded-2xl border border-[#ead7bb] bg-[#fffaf4] py-3 pl-12 pr-4 text-base outline-none transition focus:border-[#f28c18] focus:ring-2 focus:ring-[#f28c18]/20"
+                  />
+                </div>
+              </label>
+
+              <div className="mb-4 flex space-x-2 border-b border-[#f2e7d7] pb-2">
+                {["pooja", "prasadam", "room"].map((cat) => (
                   <button
-                    key={type.name}
+                    key={cat}
                     type="button"
-                    onClick={() => handleServiceSelect(type)}
-                    className={`rounded-[18px] border p-4 text-left transition ${active
-                      ? "border-[#f28c18] bg-[#fff4e6] shadow-[0_10px_24px_rgba(242,140,24,0.15)]"
-                      : "border-[#f1dfc0] bg-[#fffaf4] hover:bg-[#fff7ec]"
-                      }`}
+                    onClick={() => setActiveCategory(cat)}
+                    className={`rounded-full px-4 py-2 text-sm font-bold capitalize transition ${
+                      activeCategory === cat
+                        ? "bg-[#f28c18] text-white shadow-sm"
+                        : "bg-[#fffaf4] text-slate-600 hover:bg-[#fff4e6] hover:text-slate-800"
+                    }`}
                   >
-                    <p className="text-base font-extrabold text-slate-950">{type.name}</p>
-                    <p className="mt-2 text-sm font-semibold text-[#8a5200]">{formatCurrency(type.price)}</p>
+                    {cat} Booking
                   </button>
-                );
-              })}
+                ))}
+              </div>
+
+              <div className="space-y-5">
+                {[activeCategory].map((cat) => {
+                  const filtered = poojaTypes
+                    .filter((p) => p.catalogType === cat)
+                    .filter((p) => p.name.toLowerCase().includes(serviceSearch.toLowerCase()));
+
+                  if (filtered.length === 0) {
+                    return (
+                      <div key={cat} className="rounded-2xl border border-[#ead7bb] bg-white p-8 text-center text-slate-500">
+                        No {cat}s found matching "{serviceSearch}"
+                      </div>
+                    );
+                  }
+
+                  const isExpanded = expandedSections[cat];
+                  const displayed = isExpanded ? filtered : filtered.slice(0, 5);
+
+                  return (
+                    <div key={cat} className="rounded-2xl border border-[#ead7bb] bg-white shadow-sm overflow-hidden">
+                      <div className="bg-[#fff4e6] px-4 py-3 flex items-center justify-between border-b border-[#f2e7d7]">
+                        <h3 className="font-bold text-slate-800 capitalize">{cat} Booking ({filtered.length})</h3>
+                        {filtered.length > 5 && (
+                          <button
+                            type="button"
+                            onClick={() => setExpandedSections(prev => ({ ...prev, [cat]: !prev[cat] }))}
+                            className="text-sm font-bold text-[#f28c18] hover:underline"
+                          >
+                            {isExpanded ? "Show Less" : "View All"}
+                          </button>
+                        )}
+                      </div>
+                      <table className="w-full text-left text-sm">
+                        <tbody className="divide-y divide-[#f2e7d7]">
+                          {displayed.map((type) => (
+                            <tr key={type.name} className="transition hover:bg-[#fff7ec]">
+                              <td className="px-4 py-3 font-extrabold text-slate-900 w-1/2">{type.name}</td>
+                              <td className="px-4 py-3 font-bold text-[#8a5200]">{formatCurrency(type.price)}</td>
+                              <td className="px-4 py-3 text-right">
+                                <button
+                                  type="button"
+                                  onClick={() => handleServiceSelect(type)}
+                                  className="rounded-full bg-[#f28c18] px-4 py-1.5 text-xs font-bold text-white shadow-sm transition hover:opacity-90"
+                                >
+                                  + Add
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
             <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
@@ -393,27 +535,6 @@ const BookingPayments = () => {
                   />
                 </label>
                 <label className="block">
-                  <span className="mb-2 block text-sm font-bold text-slate-800">Service</span>
-                  <select
-                    value={form.service}
-                    onChange={(e) => {
-                      const selected = poojaTypes.find((type) => type.name === e.target.value);
-                      setForm((prev) => ({
-                        ...prev,
-                        service: e.target.value,
-                        amount: selected?.price || prev.amount,
-                      }));
-                    }}
-                    className="w-full rounded-2xl border border-[#ead7bb] bg-[#fffaf4] px-4 py-3 text-base outline-none focus:border-[#f28c18]"
-                  >
-                    {poojaTypes.map((type) => (
-                      <option key={type.name} value={type.name}>
-                        {type.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="block">
                   <span className="mb-2 block text-sm font-bold text-slate-800">Date</span>
                   <input
                     type="datetime-local"
@@ -422,17 +543,7 @@ const BookingPayments = () => {
                     onChange={(e) => setForm((prev) => ({ ...prev, datetime: e.target.value }))}
                     className="w-full rounded-2xl border border-[#ead7bb] bg-[#fffaf4] px-4 py-3 text-base outline-none focus:border-[#f28c18]"
                   />
-                </label>
-                <label className="block">
-                  <span className="mb-2 block text-sm font-bold text-slate-800">Amount</span>
-                  <input
-                    type="number"
-                    min="1"
-                    value={form.amount}
-                    onChange={(e) => setForm((prev) => ({ ...prev, amount: e.target.value }))}
-                    className="w-full rounded-2xl border border-[#ead7bb] bg-[#fffaf4] px-4 py-3 text-base outline-none focus:border-[#f28c18]"
-                    placeholder="0"
-                  />
+                  <span className="mt-1 block text-xs text-slate-500">Set this date before adding a service above.</span>
                 </label>
                 <label className="block">
                   <span className="mb-2 block text-sm font-bold text-slate-800">Payment mode</span>
@@ -449,6 +560,41 @@ const BookingPayments = () => {
                   </select>
                 </label>
               </div>
+
+              {form.cartItems.length > 0 && (
+                <div className="mt-6 overflow-hidden rounded-2xl border border-[#f0c58f] bg-[#fffaf4] shadow-sm">
+                  <div className="border-b border-[#f0c58f] bg-[#fff4e6] px-4 py-3 text-sm font-bold text-slate-800">
+                    Cart Items ({form.cartItems.length})
+                  </div>
+                  <ul className="divide-y divide-[#f2e7d7]">
+                    {form.cartItems.map((item, index) => (
+                      <li key={index} className="flex items-center justify-between px-4 py-3">
+                        <div>
+                          <p className="font-bold text-slate-900">{item.name}</p>
+                          <p className="text-xs font-semibold text-slate-500">
+                            {item.type.toUpperCase()} • {formatDateTime(item.date)}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <p className="font-bold text-[#8a5200]">{formatCurrency(item.amount)}</p>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveItem(index)}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="bg-[#fff4e6] px-4 py-3 text-right">
+                    <p className="text-sm font-bold text-slate-600">
+                      Total Amount: <span className="text-lg text-slate-950">{formatCurrency(totalAmount)}</span>
+                    </p>
+                  </div>
+                </div>
+              )}
 
               <label className="block">
                 <span className="mb-2 block text-sm font-bold text-slate-800">Notes</span>

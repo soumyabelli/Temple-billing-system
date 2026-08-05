@@ -14,6 +14,8 @@ import {
   isToday,
   sumBy,
 } from "../../services/cashierService";
+import { useAuth } from "../../context/AuthContext";
+import { downloadReceiptPDF } from "../../utils/receiptGenerator";
 import { useNotifications } from "../../context/NotificationContext";
 
 const emptyForm = {
@@ -43,6 +45,7 @@ const PrasadamSales = () => {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [query, setQuery] = useState("");
+  const { user } = useAuth();
   const [statusFilter, setStatusFilter] = useState("All");
   const [showHistory, setShowHistory] = useState(false);
   const [form, setForm] = useState({
@@ -216,6 +219,30 @@ const PrasadamSales = () => {
               setMessage("Prasadam order saved successfully and paid.");
               await loadData();
               loadNotifications().catch(() => {});
+
+              const receiptData = {
+                isOnline: false,
+                receiptNo: order.referenceNo || `PR-${Date.now().toString().slice(-6)}`,
+                bookingDate: formatDateTime(order.createdAt || new Date()),
+                paymentMode: order.paymentMethod || form.paymentMethod,
+                transactionId: resp.razorpay_payment_id || "-",
+                cashierName: user?.name || "Cashier",
+                devoteeName: order.devoteeName || form.devoteeName,
+                mobile: order.phone || form.devoteePhone || "-",
+                email: order.email || form.devoteeEmail || "-",
+                address: "-",
+                poojaBookings: [],
+                prasadamOrders: [{ slNo: 1, name: order.itemName || form.itemName, date: "-", qty: order.quantity || form.quantity, amount: order.totalAmount || (unitPrice * form.quantity) }],
+                subTotal: order.totalAmount || (unitPrice * form.quantity),
+                templeCharges: 0,
+                grandTotal: order.totalAmount || (unitPrice * form.quantity),
+                amountInWords: `Rs. ${order.totalAmount || (unitPrice * form.quantity)}`,
+                devoteeMaterials: [],
+                templeMaterials: [],
+                notes: [],
+              };
+              downloadReceiptPDF(receiptData, `receipt-${receiptData.receiptNo}.pdf`).catch(err => console.error("Receipt generation failed", err));
+
             } catch (err) {
               setMessage("Payment verification failed.");
               console.warn("verify prasadam payment handler error", err);
@@ -242,6 +269,30 @@ const PrasadamSales = () => {
       setMessage("Prasadam order saved successfully. The bill and history were updated.");
       await loadData();
       loadNotifications().catch(() => {});
+
+      const receiptData = {
+        isOnline: false,
+        receiptNo: order.referenceNo || `PR-${Date.now().toString().slice(-6)}`,
+        bookingDate: formatDateTime(order.createdAt || new Date()),
+        paymentMode: order.paymentMethod || form.paymentMethod,
+        transactionId: "-",
+        cashierName: user?.name || "Cashier",
+        devoteeName: order.devoteeName || form.devoteeName,
+        mobile: order.phone || form.devoteePhone || "-",
+        email: order.email || form.devoteeEmail || "-",
+        address: "-",
+        poojaBookings: [],
+        prasadamOrders: [{ slNo: 1, name: order.itemName || form.itemName, date: "-", qty: order.quantity || form.quantity, amount: order.totalAmount || (unitPrice * form.quantity) }],
+        subTotal: order.totalAmount || (unitPrice * form.quantity),
+        templeCharges: 0,
+        grandTotal: order.totalAmount || (unitPrice * form.quantity),
+        amountInWords: `Rs. ${order.totalAmount || (unitPrice * form.quantity)}`,
+        devoteeMaterials: [],
+        templeMaterials: [],
+        notes: [],
+      };
+      downloadReceiptPDF(receiptData, `receipt-${receiptData.receiptNo}.pdf`).catch(err => console.error("Receipt generation failed", err));
+
     } catch (error) {
       setMessage(error.response?.data?.error || error.response?.data?.message || "Failed to save prasadam order.");
     } finally {

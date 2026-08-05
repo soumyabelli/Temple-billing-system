@@ -284,6 +284,82 @@ const sendPrasadamOrderConfirmation = async (devotee, order) => {
   return results;
 };
 
+/**
+ * Send Consolidated Bill receipt across multiple channels
+ * @param {Object} bill - Bill details (with items, amount, etc.)
+ */
+const sendBillReceipt = async (bill) => {
+  const subject = "Temple Billing Receipt";
+  const itemsHtml = (bill.items || []).map(i => `<tr><td>${i.itemType}</td><td>${i.itemName}</td><td>₹${i.amount}</td></tr>`).join('');
+  const emailHtml = `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+      <h2 style="color: #d4a574;">Consolidated Receipt</h2>
+      <p>Dear ${bill.devoteeName},</p>
+      <p>Thank you for your booking! Here are your receipt details:</p>
+      <div style="background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
+        <p><strong>Receipt No:</strong> ${bill.referenceNo}</p>
+        <p><strong>Date:</strong> ${new Date(bill.billDate || bill.createdAt).toLocaleString()}</p>
+        <p><strong>Payment Mode:</strong> ${bill.paymentMode}</p>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+          <tr style="background: #e2e8f0; text-align: left;"><th>Type</th><th>Item</th><th>Amount</th></tr>
+          ${itemsHtml}
+          ${bill.sevaType && bill.items?.length === 0 ? `<tr><td>Service</td><td>${bill.sevaType}</td><td>₹${bill.amount}</td></tr>` : ''}
+        </table>
+        <p style="text-align: right; font-size: 1.2em; margin-top: 10px;"><strong>Total Amount:</strong> ₹${bill.amount}</p>
+      </div>
+      <p>You can also download a PDF receipt by logging into your portal or requesting it from the counter.</p>
+      <p>Best regards,<br>Temple Management</p>
+    </div>
+  `;
+
+  const textMessage = `Receipt ${bill.referenceNo}\nTotal Amount: ₹${bill.amount}\nThank you!`;
+  const smsMessage = `Receipt ${bill.referenceNo} generated for ₹${bill.amount}. -Temple`;
+
+  const results = [];
+  if (bill.devoteeEmail) {
+    results.push(await sendEmail({ to: bill.devoteeEmail, subject, html: emailHtml, text: textMessage }));
+  }
+  if (bill.devoteePhone) {
+    results.push(await sendSMS({ to: bill.devoteePhone, message: smsMessage }));
+  }
+  return results;
+};
+
+/**
+ * Send Festival Notification to Devotees
+ * @param {Object} event - Event details
+ * @param {Array} devotees - List of devotee objects
+ */
+const sendFestivalNotification = async (event, devotees) => {
+  const subject = `Upcoming Festival: ${event.title}`;
+  const emailHtml = `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+      <h2 style="color: #d4a574;">New Festival Announcement</h2>
+      <p>Dear Devotee,</p>
+      <p>We are delighted to invite you to <strong>${event.title}</strong> at our temple.</p>
+      <div style="background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
+        <p><strong>Date:</strong> ${new Date(event.date).toLocaleDateString()}</p>
+        <p><strong>Location:</strong> ${event.location}</p>
+        <p><strong>Description:</strong> ${event.description}</p>
+      </div>
+      <p>Join us to seek blessings. We look forward to your presence.</p>
+      <p>Best regards,<br>Temple Management</p>
+    </div>
+  `;
+
+  const textMessage = `Upcoming Festival: ${event.title} on ${new Date(event.date).toLocaleDateString()} at ${event.location}. ${event.description}`;
+  const smsMessage = `Join us for ${event.title} on ${new Date(event.date).toLocaleDateString()}! - Temple`;
+
+  for (const devotee of devotees) {
+    if (devotee.email) {
+      await sendEmail({ to: devotee.email, subject, html: emailHtml, text: textMessage });
+    }
+    if (devotee.phone) {
+      await sendSMS({ to: devotee.phone, message: smsMessage });
+    }
+  }
+};
+
 module.exports = {
   sendEmail,
   sendSMS,
@@ -291,4 +367,6 @@ module.exports = {
   sendBookingConfirmation,
   sendDonationReceipt,
   sendPrasadamOrderConfirmation,
+  sendBillReceipt,
+  sendFestivalNotification,
 };

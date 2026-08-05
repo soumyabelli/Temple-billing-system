@@ -16,6 +16,7 @@ const prasadamOrderSchema = new mongoose.Schema(
     devoteeName: { type: String, required: true, trim: true },
     email: { type: String, trim: true },
     phone: { type: String, trim: true },
+    address: { type: String, trim: true },
     itemName: { type: String, required: true, trim: true },
     quantity: { type: Number, required: true, min: 1, default: 1 },
     unitPrice: { type: Number, required: true, min: 0 },

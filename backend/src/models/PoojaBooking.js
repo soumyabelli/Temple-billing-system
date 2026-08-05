@@ -28,6 +28,14 @@ const poojaBookingSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    email: {
+      type: String,
+      trim: true,
+    },
+    address: {
+      type: String,
+      trim: true,
+    },
     notes: {
       type: String,
       default: "",

@@ -3,9 +3,12 @@ const mongoose = require("mongoose");
 const billSchema = new mongoose.Schema(
   {
     devoteeName: { type: String, required: true, trim: true },
+    devoteeEmail: { type: String, trim: true },
+    devoteePhone: { type: String, trim: true },
+    devoteeAddress: { type: String, trim: true },
     sevaType: { type: String, required: false, trim: true }, // Optional for consolidated
     items: [{
-      itemType: { type: String, enum: ["Pooja", "Donation", "Prasadam", "Other"] },
+      itemType: { type: String, enum: ["Pooja", "Donation", "Prasadam", "Room", "Other"] },
       itemName: { type: String },
       amount: { type: Number }
     }],

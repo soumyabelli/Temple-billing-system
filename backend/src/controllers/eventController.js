@@ -1,9 +1,19 @@
 const Event = require("../models/Event");
+const User = require("../models/User");
 const { createStaffBroadcastNotifications } = require("../utils/notificationService");
+const { sendFestivalNotification } = require("../utils/communicationService");
 
 exports.createEvent = async (req, res) => {
   try {
     const event = await Event.create(req.body);
+
+    // Send notifications to all devotees in the background
+    User.find({ role: "devotee" }).then(devotees => {
+      if (devotees && devotees.length > 0) {
+        sendFestivalNotification(event, devotees).catch(e => console.error("Festival notification error:", e));
+      }
+    }).catch(e => console.error("Error fetching devotees for notification:", e));
+
     await createStaffBroadcastNotifications({
       title: "Festival Duty Assigned",
       message: `${event.title} has been scheduled at ${event.location}.`,
