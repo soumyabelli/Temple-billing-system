@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { changePassword, googleLogin, login } from "../../services/authService";
+import { FiRefreshCw } from "react-icons/fi";
 
 import { useAuth } from "../../context/AuthContext";
 
@@ -227,9 +228,10 @@ const LoginForm = () => {
               <button 
                 type="button" 
                 onClick={generateCaptcha} 
-                className="text-amber-100 hover:text-white underline text-sm whitespace-nowrap"
+                className="text-amber-100 hover:text-white transition-transform hover:rotate-180 duration-300 p-2 bg-black/20 rounded-xl border border-white/20 shadow-sm flex items-center justify-center"
+                title="Refresh CAPTCHA"
               >
-                Refresh
+                <FiRefreshCw className="w-5 h-5" />
               </button>
             </div>
             <input
