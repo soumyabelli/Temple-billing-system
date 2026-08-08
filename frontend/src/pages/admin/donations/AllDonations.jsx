@@ -227,30 +227,6 @@ const AllDonations = () => {
         </div>
       </SectionCard>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <SectionCard title="Donation Summary" subtitle="Key insights from the current donation ledger." className="h-full">
-          <div className="grid gap-4">
-            <div className="rounded-3xl bg-slate-950/10 p-5">
-              <p className="text-sm text-slate-400">Total donations recorded</p>
-              <p className="mt-3 text-3xl font-semibold text-white">{filteredDonations.length}</p>
-            </div>
-            <div className="rounded-3xl bg-slate-950/10 p-5">
-              <p className="text-sm text-slate-400">Latest donation</p>
-              <p className="mt-3 text-xl text-white">
-                {filteredDonations[0]?.donorName ? `${filteredDonations[0].donorName} - ₹${filteredDonations[0].amount?.toLocaleString()}` : "No donations yet"}
-              </p>
-            </div>
-          </div>
-        </SectionCard>
-
-        <SectionCard title="Quick Actions" subtitle="Fast access to receipts, verification and campaign tools." className="h-full">
-          <div className="space-y-4">
-            <button className="w-full rounded-2xl bg-violet-700 px-4 py-3 text-white transition hover:bg-violet-600">View Donation Details</button>
-            <button className="w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-white transition hover:bg-white/20">Print Receipt</button>
-            <button className="w-full rounded-2xl bg-amber-400 px-4 py-3 text-slate-950 transition hover:bg-amber-300">Verify Payment</button>
-          </div>
-        </SectionCard>
-      </div>
     </DonationPageShell>
   );
 };
