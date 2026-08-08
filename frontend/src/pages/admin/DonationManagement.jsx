@@ -26,7 +26,17 @@ const DonationManagement = () => {
   const fetchDonations = async () => {
     try {
       const res = await axios.get("http://localhost:5000/api/donations");
-      const donations = Array.isArray(res.data?.donations) ? res.data.donations : [];
+      let donations = Array.isArray(res.data?.donations) ? res.data.donations : [];
+      
+      // Exclude non-donation categories
+      donations = donations.filter((donation) => {
+        const cat = donation.category?.toLowerCase() || "";
+        if (cat.includes("pooja") || cat.includes("prasada") || cat.includes("room") || cat.includes("abhishekam")) {
+          return false;
+        }
+        return true;
+      });
+
       setDonations(donations);
       setFilteredDonations(donations);
       loadCategories(donations);
@@ -80,18 +90,12 @@ const DonationManagement = () => {
               verification workflows and donation-type governance.
             </p>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-1">
             <button
               onClick={() => navigate("/admin/donations/reports")}
               className="rounded-3xl bg-white px-6 py-3 font-semibold text-slate-950 transition hover:bg-slate-200"
             >
               View Reports
-            </button>
-            <button
-              onClick={() => navigate("/admin/donations/verification")}
-              className="rounded-3xl border border-white/20 bg-white/10 px-6 py-3 font-semibold text-white transition hover:bg-white/20"
-            >
-              Open Verification
             </button>
           </div>
         </div>

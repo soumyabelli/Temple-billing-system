@@ -211,16 +211,16 @@ const sendDonationReceipt = async (devotee, donation) => {
         <p><strong>Amount:</strong> ₹${donation.amount}</p>
         <p><strong>Category:</strong> ${donation.category}</p>
         <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
-        <p><strong>Transaction ID:</strong> ${donation.transactionId || "N/A"}</p>
+        <p><strong>Transaction ID:</strong> ${donation.paymentMethod === "Cash" ? "Offline Payment" : (donation.transactionId || "N/A")}</p>
       </div>
       <p>Your contribution helps us maintain and serve the community better. May you be blessed!</p>
       <p>Best regards,<br>Temple Management</p>
     </div>
   `;
 
-  const textMessage = `Donation Receipt\nAmount: ₹${donation.amount}\nCategory: ${donation.category}\nTransaction ID: ${donation.transactionId || "N/A"}\nThank you for your donation!`;
+  const textMessage = `Donation Receipt\nAmount: ₹${donation.amount}\nCategory: ${donation.category}\nTransaction ID: ${donation.paymentMethod === "Cash" ? "Offline Payment" : (donation.transactionId || "N/A")}\nThank you for your donation!`;
 
-  const smsMessage = `Donation received! Amount: ₹${donation.amount}. Transaction ID: ${donation.transactionId || "N/A"}. Thank you! -Temple`;
+  const smsMessage = `Donation received! Amount: ₹${donation.amount}. Transaction ID: ${donation.paymentMethod === "Cash" ? "Offline Payment" : (donation.transactionId || "N/A")}. Thank you! -Temple`;
 
   const results = [];
 

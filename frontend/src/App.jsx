@@ -430,16 +430,7 @@ function App() {
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/admin/donations/verification"
-        element={
-          <ProtectedRoute allowedRoles={["admin"]}>
-            <AdminLayout>
-              <PaymentVerification />
-            </AdminLayout>
-          </ProtectedRoute>
-        }
-      />
+
       <Route
         path="/admin/donations/analytics"
         element={

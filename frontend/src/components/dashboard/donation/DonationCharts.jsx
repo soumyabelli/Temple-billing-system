@@ -72,7 +72,11 @@ const DonationCharts = ({ donations = [] }) => {
               </defs>
               <CartesianGrid stroke="rgba(148,163,184,0.12)" vertical={false} />
               <XAxis dataKey="month" stroke="#94a3b8" />
-              <YAxis stroke="#94a3b8" />
+              <YAxis stroke="#94a3b8" width={60} tickFormatter={(value) => {
+                if (value >= 1000000) return (value / 1000000).toFixed(1) + 'M';
+                if (value >= 1000) return (value / 1000).toFixed(1) + 'k';
+                return value;
+              }} />
               <Tooltip contentStyle={{ backgroundColor: "#0f172a", border: "1px solid #334155" }} />
               <Area type="monotone" dataKey="collected" stroke="#f59e0b" fillOpacity={1} fill="url(#colCollected)" />
               <Area type="monotone" dataKey="target" stroke="#7c3aed" fillOpacity={1} fill="url(#colTarget)" />

@@ -16,7 +16,18 @@ const AllDonations = () => {
     setLoading(true);
     try {
       const res = await axios.get("http://localhost:5000/api/donations");
-      setDonations(Array.isArray(res.data?.donations) ? res.data.donations : []);
+      let fetchedDonations = Array.isArray(res.data?.donations) ? res.data.donations : [];
+      
+      // Exclude non-donation categories
+      fetchedDonations = fetchedDonations.filter((donation) => {
+        const cat = donation.category?.toLowerCase() || "";
+        if (cat.includes("pooja") || cat.includes("prasada") || cat.includes("room") || cat.includes("abhishekam")) {
+          return false;
+        }
+        return true;
+      });
+
+      setDonations(fetchedDonations);
     } catch (error) {
       console.error("Unable to fetch donations:", error);
     } finally {
@@ -72,12 +83,12 @@ const AllDonations = () => {
     ];
 
     const rows = filteredDonations.map((item) => [
-      item._id || "",
+      item._id ? `DN-${item._id.slice(-6).toUpperCase()}` : "",
       item.donorName || "",
       item.category || "",
       item.amount != null ? item.amount.toString() : "",
       item.paymentMethod || "",
-      item.transactionId || "",
+      item.paymentMethod === "Cash" ? "Offline Payment" : (item.transactionId || ""),
       new Date(item.createdAt || Date.now()).toLocaleDateString(),
       item.status || "",
     ]);
@@ -195,12 +206,12 @@ const AllDonations = () => {
               ) : (
                 filteredDonations.map((item) => (
                   <tr key={item._id} className="border-b border-slate-200 hover:bg-slate-50 transition">
-                    <td className="py-4 px-3 font-medium text-slate-900">{item._id?.slice(-8).toUpperCase()}</td>
+                    <td className="py-4 px-3 font-medium text-slate-900">DN-{item._id?.slice(-6).toUpperCase()}</td>
                     <td className="py-4 px-3">{item.donorName}</td>
                     <td className="py-4 px-3">{item.category}</td>
                     <td className="py-4 px-3 text-amber-600 font-semibold">₹{item.amount?.toLocaleString()}</td>
                     <td className="py-4 px-3">{item.paymentMethod}</td>
-                    <td className="py-4 px-3">{item.transactionId || "—"}</td>
+                    <td className="py-4 px-3">{item.paymentMethod === "Cash" ? "Offline Payment" : (item.transactionId || "—")}</td>
                     <td className="py-4 px-3">{new Date(item.createdAt).toLocaleDateString()}</td>
                     <td className="py-4 px-3">
                       <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${item.status === "Completed" ? "bg-emerald-100 text-emerald-700" : item.status === "Pending" ? "bg-amber-100 text-amber-700" : "bg-rose-100 text-rose-700"}`}>

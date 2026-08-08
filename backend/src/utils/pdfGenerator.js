@@ -48,6 +48,10 @@ const generateBookingReceiptPDF = (devotee, booking) => {
       doc.text(`Date & Time: ${dateText}`);
 
       doc.text(`Amount: Rs ${booking.amount || 0}`);
+      
+      const txnDisplay = booking.paymentMethod === "Cash" ? "Offline Payment" : (booking.transactionId || "N/A");
+      doc.text(`Transaction ID: ${txnDisplay}`);
+      
       doc.text(`Status: ${booking.status || "Confirmed"}`);
 
       doc.moveDown(2);

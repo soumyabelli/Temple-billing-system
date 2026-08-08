@@ -147,25 +147,19 @@ const BookingReceipt = ({
               <span className="detail-colon">:</span>
               <span className="detail-value">{paymentMode}</span>
             </div>
-            {isOnline ? (
+            <div className="detail-row">
+              <span className="detail-label">Transaction ID</span>
+              <span className="detail-colon">:</span>
+              <span className="detail-value">
+                {paymentMode === "Cash" || paymentMode === "Offline" ? "Offline Payment" : (transactionId || "-")}
+              </span>
+            </div>
+            {!isOnline && (
               <div className="detail-row">
-                <span className="detail-label">Transaction ID</span>
+                <span className="detail-label">Cashier Name</span>
                 <span className="detail-colon">:</span>
-                <span className="detail-value">{transactionId}</span>
+                <span className="detail-value">{cashierName}</span>
               </div>
-            ) : (
-              <>
-                <div className="detail-row">
-                  <span className="detail-label">Transaction ID</span>
-                  <span className="detail-colon">:</span>
-                  <span className="detail-value">{transactionId || '-'}</span>
-                </div>
-                <div className="detail-row">
-                  <span className="detail-label">Cashier Name</span>
-                  <span className="detail-colon">:</span>
-                  <span className="detail-value">{cashierName}</span>
-                </div>
-              </>
             )}
           </div>
           

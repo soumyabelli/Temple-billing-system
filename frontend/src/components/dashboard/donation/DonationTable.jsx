@@ -34,7 +34,7 @@ const DonationTable = ({ donations = [], onRefresh }) => {
     () =>
       donations.slice(0, 8).map((donation) => ({
         raw: donation,
-        id: donation._id || donation.id || "-",
+        id: donation._id ? `DN-${donation._id.slice(-6).toUpperCase()}` : donation.id ? `DN-${donation.id.slice(-6).toUpperCase()}` : "-",
         donor: donation.donorName || donation.donor || "Unknown",
         category: donation.category || "General",
         amount: formatCurrency(donation.amount),

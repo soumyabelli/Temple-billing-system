@@ -4,6 +4,7 @@ import SectionCard from "../../../components/admin/employee/SectionCard";
 import DonationPageShell from "../../../components/admin/donations/DonationPageShell";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import { getDonationTypes } from "../../../services/donationTypeService";
 
 const DonationReports = () => {
   const [donations, setDonations] = useState([]);
@@ -75,6 +76,13 @@ const DonationReports = () => {
         if (!matchesName && !matchesCategory && !matchesTxId && !matchesId) return false;
       }
 
+      // Exclude non-donation categories
+      const validTypes = getDonationTypes().map(t => t.toLowerCase());
+      const cat = donation.category?.toLowerCase() || "";
+      if (cat.includes("pooja") || cat.includes("prasada") || cat.includes("room") || cat.includes("abhishekam")) {
+        return false;
+      }
+
       return true;
     });
   }, [donations, startDate, endDate, searchTerm]);
@@ -89,12 +97,12 @@ const DonationReports = () => {
       .map(
         (donation) => `
           <tr>
-            <td style="padding:10px;border:1px solid #d1d5db">${donation._id?.slice(-8).toUpperCase() || "—"}</td>
+            <td style="padding:10px;border:1px solid #d1d5db">DN-${donation._id?.slice(-6).toUpperCase() || "—"}</td>
             <td style="padding:10px;border:1px solid #d1d5db">${donation.donorName || "—"}</td>
             <td style="padding:10px;border:1px solid #d1d5db">${donation.category || "—"}</td>
             <td style="padding:10px;border:1px solid #d1d5db">₹${donation.amount?.toLocaleString() || "0"}</td>
             <td style="padding:10px;border:1px solid #d1d5db">${donation.paymentMethod || "—"}</td>
-            <td style="padding:10px;border:1px solid #d1d5db">${donation.transactionId || "—"}</td>
+            <td style="padding:10px;border:1px solid #d1d5db">${donation.paymentMethod === "Cash" ? "Offline Payment" : donation.transactionId || "—"}</td>
             <td style="padding:10px;border:1px solid #d1d5db">${new Date(donation.createdAt || Date.now()).toLocaleDateString()}</td>
             <td style="padding:10px;border:1px solid #d1d5db">${donation.status || "—"}</td>
           </tr>`
@@ -191,12 +199,12 @@ const DonationReports = () => {
 
     // Main records table
     const tableBody = filteredDonations.map((donation) => [
-      donation._id?.slice(-8).toUpperCase() || "—",
+      `DN-${donation._id?.slice(-6).toUpperCase() || "—"}`,
       donation.donorName || "—",
       donation.category || "—",
       `₹${donation.amount?.toLocaleString("en-IN") || "0"}`,
       donation.paymentMethod || "—",
-      donation.transactionId || "—",
+      donation.paymentMethod === "Cash" ? "Offline Payment" : (donation.transactionId || "—"),
       donation.createdAt ? new Date(donation.createdAt).toLocaleDateString("en-IN") : "—",
       donation.status || "—"
     ]);
@@ -220,6 +228,9 @@ const DonationReports = () => {
       subtitle="Filter, review, and export PDF reports for temple finance and donors."
       actions={
         <div className="flex flex-col gap-3 sm:flex-row">
+          <button onClick={() => window.location.href = '/admin/donations'} className="rounded-2xl border border-slate-700 bg-slate-800 px-5 py-3 font-semibold text-white transition hover:bg-slate-700">
+            Back to Donations
+          </button>
           <button onClick={handleViewReport} className="rounded-2xl bg-white px-5 py-3 font-semibold text-slate-950 transition hover:bg-slate-200">
             View Live Print Preview
           </button>
@@ -277,9 +288,9 @@ const DonationReports = () => {
       {/* Live Table Preview */}
       <SectionCard title="Filtered Donation Activity Log" subtitle="Live view of records matching active filters.">
         <div className="overflow-x-auto">
-          <table className="min-w-full text-left text-sm text-slate-300">
+          <table className="min-w-full text-left text-sm text-slate-700">
             <thead>
-              <tr className="border-b border-slate-700 text-slate-400">
+              <tr className="border-b border-slate-200 text-slate-900">
                 <th className="py-4 px-3">Receipt ID</th>
                 <th className="py-4 px-3">Donor</th>
                 <th className="py-4 px-3">Category</th>
@@ -293,13 +304,13 @@ const DonationReports = () => {
             <tbody>
               {filteredDonations.length > 0 ? (
                 filteredDonations.map((donation) => (
-                  <tr key={donation._id} className="border-b border-slate-800 hover:bg-slate-900/60 transition">
-                    <td className="py-4 px-3 font-medium text-white">{donation._id?.slice(-8).toUpperCase()}</td>
+                  <tr key={donation._id} className="border-b border-slate-200 hover:bg-slate-50 transition">
+                    <td className="py-4 px-3 font-medium text-slate-900">DN-{donation._id?.slice(-6).toUpperCase()}</td>
                     <td className="py-4 px-3">{donation.donorName}</td>
                     <td className="py-4 px-3">{donation.category}</td>
-                    <td className="py-4 px-3 text-amber-300 font-semibold">₹{donation.amount?.toLocaleString("en-IN")}</td>
+                    <td className="py-4 px-3 text-amber-600 font-semibold">₹{donation.amount?.toLocaleString("en-IN")}</td>
                     <td className="py-4 px-3">{donation.paymentMethod}</td>
-                    <td className="py-4 px-3">{donation.transactionId || "—"}</td>
+                    <td className="py-4 px-3">{donation.paymentMethod === "Cash" ? "Offline Payment" : (donation.transactionId || "—")}</td>
                     <td className="py-4 px-3">{donation.createdAt ? new Date(donation.createdAt).toLocaleDateString("en-IN") : "—"}</td>
                     <td className="py-4 px-3">
                       <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${

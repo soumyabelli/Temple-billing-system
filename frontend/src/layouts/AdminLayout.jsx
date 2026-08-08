@@ -8,7 +8,11 @@ import { useTheme } from "../context/ThemeContext";
 import { sidebarItems } from "../data/sidebarData";
 
 const findActiveItem = (path) => {
-  const matched = sidebarItems.find((item) => item.path === path || item.subItems?.some((sub) => sub.path === path));
+  let matched = sidebarItems.find((item) => item.path === path || item.subItems?.some((sub) => sub.path === path));
+  if (matched) return matched.title;
+
+  const sortedItems = [...sidebarItems].sort((a, b) => b.path.length - a.path.length);
+  matched = sortedItems.find((item) => path.startsWith(item.path) && item.path !== "/admin");
   return matched ? matched.title : "Dashboard";
 };
 

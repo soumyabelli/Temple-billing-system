@@ -34,8 +34,8 @@ const DonationSettings = () => {
       title="Donation Settings"
       subtitle="Configure categories, receipts, UPI IDs and donation gateway preferences."
       actions={
-        <button onClick={handleSaveSettings} className="rounded-2xl bg-slate-900/90 px-5 py-3 font-semibold text-white transition hover:bg-slate-800">
-          Save Settings
+        <button onClick={() => window.location.href = '/admin/donations'} className="rounded-2xl bg-slate-900/90 px-5 py-3 font-semibold text-white transition hover:bg-slate-800">
+          Back to Donations
         </button>
       }
     >
@@ -76,18 +76,6 @@ const DonationSettings = () => {
         </div>
       </SectionCard>
 
-      <SectionCard title="Gateway & Receipt Settings" subtitle="Donation type choices are now persistent across the app." className="bg-white/95 text-slate-950">
-        <div className="grid gap-4 lg:grid-cols-2">
-          <div className="rounded-3xl border border-slate-200 bg-slate-100 p-5">
-            <p className="text-sm text-slate-600">Saved types</p>
-            <p className="mt-3 text-slate-950">{types.length} categories configured</p>
-          </div>
-          <div className="rounded-3xl border border-slate-200 bg-slate-100 p-5">
-            <p className="text-sm text-slate-600">Next steps</p>
-            <p className="mt-3 text-slate-950">Open Add Donation and refresh to apply the updated categories.</p>
-          </div>
-        </div>
-      </SectionCard>
     </DonationPageShell>
   );
 };

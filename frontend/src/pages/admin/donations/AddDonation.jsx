@@ -63,6 +63,11 @@ const AddDonation = () => {
       return;
     }
 
+    if (method !== "Cash" && !transactionId.trim()) {
+      alert("Please enter a Transaction ID for online payments.");
+      return;
+    }
+
     try {
       setIsSaving(true);
       // Devotee side filters donations by donorEmail, so we must send it.
