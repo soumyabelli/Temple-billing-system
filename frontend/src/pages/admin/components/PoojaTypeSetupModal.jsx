@@ -162,7 +162,7 @@ export default function PoojaTypeSetupModal({ editingPooja, onClose, onSave }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-8 overflow-y-auto">
-      <div className="w-full max-w-4xl rounded-3xl border border-[#f0f0f0] bg-white p-8 shadow-2xl relative my-auto">
+      <div className="w-full max-w-4xl rounded-3xl border border-[#f0f0f0] bg-temple-100 p-8 shadow-2xl relative my-auto">
         <button type="button" onClick={onClose} className="absolute top-4 right-4 text-[#858b96] hover:text-[#15141f] text-3xl font-bold">&times;</button>
         <h3 className="text-2xl font-bold text-[#15141f] mb-6 border-b pb-4">
           {editingPooja ? "Edit Pooja Setup" : "Create New Pooja"}
@@ -324,7 +324,7 @@ export default function PoojaTypeSetupModal({ editingPooja, onClose, onSave }) {
                       const item = inventoryItems.find(i => i._id === id);
                       if (item) setUnit(item.unit || "");
                     }}
-                    className="mt-1 w-full rounded-xl border border-[#ded6c6] px-4 py-2 outline-none focus:border-[#8b5e3c] bg-white"
+                    className="mt-1 w-full rounded-xl border border-[#ded6c6] px-4 py-2 outline-none focus:border-[#8b5e3c] bg-temple-100"
                   >
                     <option value="">-- Choose Item --</option>
                     {inventoryItems.map(item => (
@@ -352,7 +352,7 @@ export default function PoojaTypeSetupModal({ editingPooja, onClose, onSave }) {
 
               <label className="block text-sm font-semibold text-[#4f4f4f] mt-3">
                 Responsibility Type
-                <select value={responsibilityType} onChange={(e) => setResponsibilityType(e.target.value)} className="mt-1 w-full rounded-xl border border-[#ded6c6] px-4 py-2 outline-none focus:border-[#8b5e3c] bg-white">
+                <select value={responsibilityType} onChange={(e) => setResponsibilityType(e.target.value)} className="mt-1 w-full rounded-xl border border-[#ded6c6] px-4 py-2 outline-none focus:border-[#8b5e3c] bg-temple-100">
                   <option value="TEMPLE_PROVIDES">Temple Provides (No Action from Devotee)</option>
                   <option value="DEVOTEE_MUST_BRING">Devotee Must Bring (On Pooja Day)</option>
                   <option value="DEVOTEE_OR_TEMPLE">Devotee Can Bring or Temple Arranges</option>
@@ -408,7 +408,7 @@ export default function PoojaTypeSetupModal({ editingPooja, onClose, onSave }) {
               ) : (
                 <div className="space-y-2">
                   {requiredMaterials.map((mat, idx) => (
-                    <div key={idx} className="relative rounded-xl border border-[#ece8e1] bg-white p-3 shadow-sm">
+                    <div key={idx} className="relative rounded-xl border border-[#ece8e1] bg-temple-100 p-3 shadow-sm">
                       <button type="button" onClick={() => setRequiredMaterials(requiredMaterials.filter((_, i) => i !== idx))} className="absolute top-2 right-2 text-red-500 hover:text-red-700 font-bold">&times;</button>
                       <p className="font-bold text-[#15141f]">{mat.itemName} <span className="text-sm font-normal text-gray-500">({mat.qty} {mat.unit})</span></p>
                       <div className="mt-1 flex gap-2 flex-wrap">
@@ -428,7 +428,7 @@ export default function PoojaTypeSetupModal({ editingPooja, onClose, onSave }) {
         </div>
 
         <div className="mt-8 flex justify-end gap-3 border-t border-[#f0ece6] pt-4">
-          <button type="button" onClick={onClose} className="rounded-xl border border-[#d1d5db] bg-white px-6 py-2.5 font-bold text-[#374151] hover:bg-gray-50">Cancel</button>
+          <button type="button" onClick={onClose} className="rounded-xl border border-[#d1d5db] bg-temple-100 px-6 py-2.5 font-bold text-[#374151] hover:bg-gray-50">Cancel</button>
           <button type="button" onClick={handleSave} className="rounded-xl bg-[#1b7f77] px-8 py-2.5 font-bold text-white hover:bg-[#146059]">Save Pooja</button>
         </div>
       </div>

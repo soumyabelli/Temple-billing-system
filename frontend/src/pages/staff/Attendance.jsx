@@ -905,7 +905,7 @@ const Attendance = () => {
 
       {showAttendanceFlow && (
         <div className="attendance-modal-backdrop" role="presentation">
-          <div className="bg-white rounded-3xl overflow-hidden shadow-2xl relative w-full max-w-lg">
+          <div className="bg-temple-100 rounded-3xl overflow-hidden shadow-2xl relative w-full max-w-lg">
             <StaffAttendanceFlow
               staffId={staffId}
               staffName={displayName}

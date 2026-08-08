@@ -127,11 +127,11 @@ const MyDuties = ({ darkMode }) => {
 
   const glassClass = darkMode 
     ? "bg-slate-900/60 backdrop-blur-xl border border-slate-700/50 shadow-xl shadow-slate-900/20" 
-    : "bg-white/70 backdrop-blur-xl border border-white/40 shadow-xl shadow-slate-200/50";
+    : "bg-temple-100/70 backdrop-blur-xl border border-white/40 shadow-xl shadow-slate-200/50";
     
   const inputClass = darkMode
     ? "bg-slate-800/50 border-slate-700 text-slate-100 focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 transition-all placeholder:text-slate-500"
-    : "bg-white/80 border-slate-200 text-slate-900 focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 transition-all placeholder:text-slate-400";
+    : "bg-temple-100/80 border-slate-200 text-slate-900 focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 transition-all placeholder:text-slate-400";
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10">
@@ -166,7 +166,7 @@ const MyDuties = ({ darkMode }) => {
           </div>
           <button 
             onClick={fetchDuties} 
-            className="px-6 py-3 rounded-2xl text-sm font-bold bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:shadow-lg hover:-translate-y-0.5 transition-all active:scale-95 flex items-center gap-2 w-fit"
+            className="px-6 py-3 rounded-2xl text-sm font-bold bg-temple-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:shadow-lg hover:-translate-y-0.5 transition-all active:scale-95 flex items-center gap-2 w-fit"
           >
             <FaExchangeAlt className="rotate-90" /> Refresh List
           </button>
@@ -174,7 +174,7 @@ const MyDuties = ({ darkMode }) => {
       </div>
 
       {/* Duties Schedule View */}
-      <div className={`rounded-2xl p-6 border transition-colors ${darkMode ? "bg-slate-900/60 backdrop-blur-xl border-slate-700/50 shadow-xl shadow-slate-900/20" : "bg-white border-[#ece8e1] shadow-xl shadow-slate-200/50"}`}>
+      <div className={`rounded-2xl p-6 border transition-colors ${darkMode ? "bg-slate-900/60 backdrop-blur-xl border-slate-700/50 shadow-xl shadow-slate-900/20" : "bg-temple-100 border-[#ece8e1] shadow-xl shadow-slate-200/50"}`}>
         <div className="flex items-center justify-between mb-6">
           <h3 className={`text-lg font-bold flex items-center gap-2 ${darkMode ? "text-slate-100" : "text-[#1d1b19]"}`}>
             <FaCalendarDay className="text-orange-500" /> Daily Duty Schedule
@@ -248,7 +248,7 @@ const MyDuties = ({ darkMode }) => {
 
       {/* Incoming Transfer Requests */}
       {incomingTransfers.length > 0 && (
-        <div className={`rounded-2xl p-6 border transition-colors mt-8 ${darkMode ? "bg-slate-900/60 backdrop-blur-xl border-slate-700/50 shadow-xl shadow-slate-900/20" : "bg-white border-[#ece8e1] shadow-xl shadow-slate-200/50"}`}>
+        <div className={`rounded-2xl p-6 border transition-colors mt-8 ${darkMode ? "bg-slate-900/60 backdrop-blur-xl border-slate-700/50 shadow-xl shadow-slate-900/20" : "bg-temple-100 border-[#ece8e1] shadow-xl shadow-slate-200/50"}`}>
           <div className="flex items-center justify-between mb-6">
             <h3 className={`text-lg font-bold flex items-center gap-2 ${darkMode ? "text-slate-100" : "text-[#1d1b19]"}`}>
               <FaExchangeAlt className="text-orange-500" /> Incoming Duty Transfers
@@ -300,7 +300,7 @@ const MyDuties = ({ darkMode }) => {
       {showTransferModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-in fade-in" onClick={() => setShowTransferModal(false)}></div>
-          <div className={`relative w-full max-w-lg rounded-[2rem] p-8 shadow-2xl animate-in fade-in zoom-in-95 duration-200 ${glassClass} border-slate-200/50 dark:border-slate-700/50 bg-white dark:bg-slate-900`}>
+          <div className={`relative w-full max-w-lg rounded-[2rem] p-8 shadow-2xl animate-in fade-in zoom-in-95 duration-200 ${glassClass} border-slate-200/50 dark:border-slate-700/50 bg-temple-100 dark:bg-slate-900`}>
             
             <div className="absolute top-0 right-0 -mr-20 -mt-20 w-40 h-40 bg-orange-500/20 blur-3xl rounded-full pointer-events-none"></div>
             

@@ -295,7 +295,7 @@ export default function DonationsPage() {
           <button
             type="button"
             onClick={loadData}
-            className="rounded-full border border-[#f0c58f] bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:bg-[#fff8ef]"
+            className="rounded-full border border-[#f0c58f] bg-temple-100 px-5 py-3 text-sm font-bold text-slate-900 transition hover:bg-[#fff8ef]"
           >
             Refresh Donations
           </button>
@@ -318,7 +318,7 @@ export default function DonationsPage() {
     >
       <div className="w-full">
         {!showHistory ? (
-          <section className="rounded-[22px] border border-[#f0d3a2] bg-white/95 p-5 shadow-sm">
+          <section className="rounded-[22px] border border-[#f0d3a2] bg-temple-100/95 p-5 shadow-sm">
           <div className="flex items-center justify-between gap-3">
             <div>
               <h2 className="text-2xl font-extrabold text-slate-950">Donation entry form</h2>
@@ -466,11 +466,11 @@ export default function DonationsPage() {
           <div>
             <button
               onClick={() => setShowHistory(false)}
-              className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#f0c58f] bg-white px-4 py-2 text-sm font-bold text-slate-800 shadow-sm transition hover:bg-[#fff8ef]"
+              className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#f0c58f] bg-temple-100 px-4 py-2 text-sm font-bold text-slate-800 shadow-sm transition hover:bg-[#fff8ef]"
             >
               ← Back to Donation Form
             </button>
-            <section className="rounded-[22px] border border-[#f0d3a2] bg-white/95 p-5 shadow-sm">
+            <section className="rounded-[22px] border border-[#f0d3a2] bg-temple-100/95 p-5 shadow-sm">
           <div className="flex items-center justify-between gap-3">
             <div>
               <h2 className="text-2xl font-extrabold text-slate-950">Donation history</h2>
@@ -498,7 +498,7 @@ export default function DonationsPage() {
                 className={`rounded-full border px-3 py-2 text-sm font-semibold transition ${
                   modeFilter === mode
                     ? "border-[#f28c18] bg-[#fff1df] text-[#8a5200]"
-                    : "border-[#ead7bb] bg-white text-slate-700 hover:bg-[#fff8ef]"
+                    : "border-[#ead7bb] bg-temple-100 text-slate-700 hover:bg-[#fff8ef]"
                 }`}
               >
                 {mode}

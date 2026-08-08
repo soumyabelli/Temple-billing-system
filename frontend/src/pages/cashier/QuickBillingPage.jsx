@@ -31,7 +31,7 @@ export default function QuickBillingPage() {
     <div className="p-6 bg-slate-50 min-h-screen">
 
       {/* Header */}
-      <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
+      <div className="bg-temple-100 rounded-xl shadow-sm p-6 mb-6">
         <h1 className="text-3xl font-bold">Quick Billing</h1>
         <p className="text-gray-500">
           Generate bill for services, poojas and prasadam
@@ -69,7 +69,7 @@ export default function QuickBillingPage() {
 
         {/* Services */}
 
-        <div className="col-span-4 bg-white rounded-xl shadow-sm p-5">
+        <div className="col-span-4 bg-temple-100 rounded-xl shadow-sm p-5">
 
           <h2 className="font-bold text-xl mb-4">
             Select Service / Item
@@ -106,7 +106,7 @@ export default function QuickBillingPage() {
 
         {/* Bill Items */}
 
-        <div className="col-span-5 bg-white rounded-xl shadow-sm p-5">
+        <div className="col-span-5 bg-temple-100 rounded-xl shadow-sm p-5">
 
           <h2 className="font-bold text-xl mb-4">
             Bill Items
@@ -150,7 +150,7 @@ export default function QuickBillingPage() {
 
         {/* Payment Summary */}
 
-        <div className="col-span-3 bg-white rounded-xl shadow-sm p-5">
+        <div className="col-span-3 bg-temple-100 rounded-xl shadow-sm p-5">
 
           <h2 className="font-bold text-xl mb-4">
             Payment Summary

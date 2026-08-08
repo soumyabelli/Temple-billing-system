@@ -54,13 +54,13 @@ const FestivalDuties = () => {
       {loading ? (
         <div className="p-10 text-center text-slate-500">Loading festival duties...</div>
       ) : duties.length === 0 ? (
-        <div className="rounded-[24px] border border-slate-200 bg-white p-10 text-center shadow-sm">
+        <div className="rounded-[24px] border border-slate-200 bg-temple-100 p-10 text-center shadow-sm">
           <p className="text-slate-500">No festival duties assigned to you currently.</p>
         </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {duties.map((duty) => (
-            <div key={duty.id} className="flex flex-col overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm transition-all hover:shadow-md">
+            <div key={duty.id} className="flex flex-col overflow-hidden rounded-[24px] border border-slate-200 bg-temple-100 shadow-sm transition-all hover:shadow-md">
               <div className="px-6 py-5 border-b border-slate-100 bg-gradient-to-br from-amber-50 to-orange-50">
                 <span className="inline-flex rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800 mb-2">
                   {duty.festivalName}

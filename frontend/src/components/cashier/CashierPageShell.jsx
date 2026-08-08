@@ -41,7 +41,7 @@ const CashierPageShell = ({
       >
         <div className="grid gap-0">
           <div className="p-6 md:p-8 lg:p-10">
-            <div className="inline-flex items-center rounded-full border border-[#f6d29b] bg-white/85 px-3 py-1 text-xs font-bold uppercase tracking-[0.22em] text-[#8a5200]">
+            <div className="inline-flex items-center rounded-full border border-[#f6d29b] bg-temple-100/85 px-3 py-1 text-xs font-bold uppercase tracking-[0.22em] text-[#8a5200]">
               {eyebrow}
             </div>
             {title ? (

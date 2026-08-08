@@ -64,7 +64,7 @@ const AllBookings = () => {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-[#ece8e1] bg-white p-5">
+      <div className="rounded-2xl border border-[#ece8e1] bg-temple-100 p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-4">
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex h-11 items-center gap-2 rounded-xl border border-[#ece8e1] bg-[#faf9f7] px-3 text-[#858b96]">

@@ -427,7 +427,7 @@ const ReportsAnalytics = () => {
 
   return (
       <div className="mt-5 space-y-8">
-        <div className="rounded-3xl border border-[#e5e7eb] bg-white p-8 shadow-sm">
+        <div className="rounded-3xl border border-[#e5e7eb] bg-temple-100 p-8 shadow-sm">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <h1 className="text-[34px] font-bold text-[#111827]">Reports & Analytics</h1>
@@ -443,7 +443,7 @@ const ReportsAnalytics = () => {
                     type="date"
                     value={formatDateInput(normalizedStart)}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="mt-2 rounded-2xl border border-[#cbd5e1] bg-white px-4 py-2 text-sm text-[#0f172a] outline-none"
+                    className="mt-2 rounded-2xl border border-[#cbd5e1] bg-temple-100 px-4 py-2 text-sm text-[#0f172a] outline-none"
                   />
                 </label>
                 <label className="flex flex-col text-sm text-[#334155]">
@@ -452,7 +452,7 @@ const ReportsAnalytics = () => {
                     type="date"
                     value={formatDateInput(normalizedEnd)}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="mt-2 rounded-2xl border border-[#cbd5e1] bg-white px-4 py-2 text-sm text-[#0f172a] outline-none"
+                    className="mt-2 rounded-2xl border border-[#cbd5e1] bg-temple-100 px-4 py-2 text-sm text-[#0f172a] outline-none"
                   />
                 </label>
               </div>
@@ -497,7 +497,7 @@ const ReportsAnalytics = () => {
             </div>
 
             <div className="grid gap-4 xl:grid-cols-2">
-              <div className="rounded-3xl border border-[#e5e7eb] bg-white p-6 shadow-sm">
+              <div className="rounded-3xl border border-[#e5e7eb] bg-temple-100 p-6 shadow-sm">
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <h2 className="text-xl font-semibold text-[#111827]">Revenue Overview (Monthly)</h2>
@@ -517,7 +517,7 @@ const ReportsAnalytics = () => {
                 </div>
               </div>
 
-              <div className="rounded-3xl border border-[#e5e7eb] bg-white p-6 shadow-sm">
+              <div className="rounded-3xl border border-[#e5e7eb] bg-temple-100 p-6 shadow-sm">
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <h2 className="text-xl font-semibold text-[#111827]">Donation Sources</h2>
@@ -555,7 +555,7 @@ const ReportsAnalytics = () => {
             </div>
 
             <div className="grid gap-4 xl:grid-cols-2">
-              <div className="rounded-3xl border border-[#e5e7eb] bg-white p-6 shadow-sm">
+              <div className="rounded-3xl border border-[#e5e7eb] bg-temple-100 p-6 shadow-sm">
                 <h2 className="text-xl font-semibold text-[#111827]">Pooja Booking Analytics</h2>
                 <p className="mt-2 text-sm text-[#64748b]">Top booked pooja services in the selected period.</p>
                 <div className="mt-6 space-y-4">
@@ -576,7 +576,7 @@ const ReportsAnalytics = () => {
                 </div>
               </div>
 
-              <div className="rounded-3xl border border-[#e5e7eb] bg-white p-6 shadow-sm">
+              <div className="rounded-3xl border border-[#e5e7eb] bg-temple-100 p-6 shadow-sm">
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <h2 className="text-xl font-semibold text-[#111827]">Employee Attendance Overview</h2>
@@ -613,7 +613,7 @@ const ReportsAnalytics = () => {
             </div>
 
             <div className="grid gap-4 xl:grid-cols-2">
-              <div className="rounded-3xl border border-[#e5e7eb] bg-white p-6 shadow-sm">
+              <div className="rounded-3xl border border-[#e5e7eb] bg-temple-100 p-6 shadow-sm">
                 <h2 className="text-xl font-semibold text-[#111827]">Inventory Analytics</h2>
                 <p className="mt-2 text-sm text-[#64748b]">Current stock status and low stock alerts.</p>
                 <div className="mt-6 grid gap-3">
@@ -629,7 +629,7 @@ const ReportsAnalytics = () => {
                 </div>
               </div>
 
-              <div className="rounded-3xl border border-[#e5e7eb] bg-white p-6 shadow-sm">
+              <div className="rounded-3xl border border-[#e5e7eb] bg-temple-100 p-6 shadow-sm">
                 <h2 className="text-xl font-semibold text-[#111827]">Festival Analytics</h2>
                 <p className="mt-2 text-sm text-[#64748b]">Upcoming and completed festival activity.</p>
                 <div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -659,12 +659,12 @@ const ReportsAnalytics = () => {
                 <p className="mt-4 text-3xl font-bold text-[#111827]">{totalDevotees}</p>
                 <p className="mt-2 text-sm text-[#475569]">All registered devotees</p>
               </div>
-              <div className="rounded-3xl border border-[#e5e7eb] bg-white p-6 shadow-sm">
+              <div className="rounded-3xl border border-[#e5e7eb] bg-temple-100 p-6 shadow-sm">
                 <p className="text-sm uppercase tracking-[0.24em] text-[#475569]">New This Month</p>
                 <p className="mt-4 text-3xl font-bold text-[#111827]">{newThisMonth}</p>
                 <p className="mt-2 text-sm text-[#475569]">New devotee registrations</p>
               </div>
-              <div className="rounded-3xl border border-[#e5e7eb] bg-white p-6 shadow-sm">
+              <div className="rounded-3xl border border-[#e5e7eb] bg-temple-100 p-6 shadow-sm">
                 <p className="text-sm uppercase tracking-[0.24em] text-[#475569]">Active Devotees</p>
                 <p className="mt-4 text-3xl font-bold text-[#111827]">{activeDevotees}</p>
                 <p className="mt-2 text-sm text-[#475569]">Recent donations/bookings</p>
@@ -672,7 +672,7 @@ const ReportsAnalytics = () => {
             </div>
 
             <div className="grid gap-4 xl:grid-cols-2">
-              <div className="rounded-3xl border border-[#e5e7eb] bg-white p-6 shadow-sm">
+              <div className="rounded-3xl border border-[#e5e7eb] bg-temple-100 p-6 shadow-sm">
                 <h2 className="text-xl font-semibold text-[#111827]">Recent Transactions</h2>
                 <p className="mt-2 text-sm text-[#64748b]">Most recent donations, pooja payments, and prasadam sales.</p>
                 <div className="mt-6 space-y-3">
@@ -691,7 +691,7 @@ const ReportsAnalytics = () => {
                 </div>
               </div>
 
-              <div className="rounded-3xl border border-[#e5e7eb] bg-white p-6 shadow-sm">
+              <div className="rounded-3xl border border-[#e5e7eb] bg-temple-100 p-6 shadow-sm">
                 <h2 className="text-xl font-semibold text-[#111827]">Reports Summary</h2>
                 <p className="mt-2 text-sm text-[#64748b]">Quick access to downloadable report types.</p>
                 <div className="mt-6 space-y-3">

@@ -170,7 +170,7 @@ const LoginForm = () => {
   };
 
   return (
-    <div className="w-[480px] bg-white/20 backdrop-blur-2xl border border-white/30 rounded-[35px] p-10 shadow-2xl text-white">
+    <div className="w-[480px] bg-temple-100/20 backdrop-blur-2xl border border-white/30 rounded-[35px] p-10 shadow-2xl text-white">
       <div className="text-center mb-8">
         <h1 className="text-4xl font-bold text-white drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)] tracking-wide">Sri Shanti Mahadev Mandir</h1>
         <div className="flex items-center justify-center gap-3 mt-4">
@@ -196,7 +196,7 @@ const LoginForm = () => {
             value={formData.email}
             onChange={handleChange}
             required
-            className="w-full p-4 rounded-2xl bg-white/90 text-black outline-none text-lg shadow-lg"
+            className="w-full p-4 rounded-2xl bg-temple-100/90 text-black outline-none text-lg shadow-lg"
           />
         </div>
 
@@ -209,7 +209,7 @@ const LoginForm = () => {
             value={formData.password}
             onChange={handleChange}
             required
-            className="w-full p-4 rounded-2xl bg-white/90 text-black outline-none text-lg shadow-lg"
+            className="w-full p-4 rounded-2xl bg-temple-100/90 text-black outline-none text-lg shadow-lg"
           />
         </div>
 
@@ -240,7 +240,7 @@ const LoginForm = () => {
               value={userCaptcha}
               onChange={(e) => { setErrorMessage(""); setUserCaptcha(e.target.value); }}
               required
-              className="w-full p-4 rounded-2xl bg-white/90 text-black outline-none text-lg shadow-lg"
+              className="w-full p-4 rounded-2xl bg-temple-100/90 text-black outline-none text-lg shadow-lg"
             />
           </div>
         </div>
@@ -263,7 +263,7 @@ const LoginForm = () => {
             minLength={6}
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            className="w-full p-3 rounded-xl bg-white/90 text-black outline-none"
+            className="w-full p-3 rounded-xl bg-temple-100/90 text-black outline-none"
             required
           />
           <button type="submit" className="w-full bg-amber-600 p-3 rounded-xl font-semibold">

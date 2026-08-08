@@ -43,7 +43,7 @@ const Sidebar = ({ items, activeItem, activePath, onSelect, onNavigate, collapse
         <div className={`px-3 ${collapsed ? "pt-3 pb-2" : "pt-4 pb-3"} border-b ${darkMode ? "border-[#2e3749]" : "border-[#e5d5b8]/80"}`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 min-w-0">
-              <div className={`h-11 w-11 rounded-lg flex items-center justify-center shrink-0 overflow-hidden ${darkMode ? "bg-white/10 text-amber-300" : "bg-white/65 text-[#5f3a1f]"}`}>
+              <div className={`h-11 w-11 rounded-lg flex items-center justify-center shrink-0 overflow-hidden ${darkMode ? "bg-temple-100/10 text-amber-300" : "bg-temple-100/65 text-[#5f3a1f]"}`}>
                 {templeLogo ? <img src={templeLogo} alt="Logo" className="w-full h-full object-cover" /> : <MdTempleBuddhist size={24} />}
               </div>
               {!collapsed && (
@@ -56,7 +56,7 @@ const Sidebar = ({ items, activeItem, activePath, onSelect, onNavigate, collapse
             <button
               type="button"
               onClick={() => setCollapsed(!collapsed)}
-              className={`hidden lg:flex h-8 w-8 items-center justify-center rounded-md ${darkMode ? "text-slate-200 hover:bg-white/10" : "text-[#5f3a1f] hover:bg-white/70"}`}
+              className={`hidden lg:flex h-8 w-8 items-center justify-center rounded-md ${darkMode ? "text-slate-200 hover:bg-temple-100/10" : "text-[#5f3a1f] hover:bg-temple-100/70"}`}
               aria-label="Toggle sidebar"
             >
               <MdMenu size={18} />
@@ -92,10 +92,10 @@ const Sidebar = ({ items, activeItem, activePath, onSelect, onNavigate, collapse
                     }
                     setMobileOpen(false);
                   }}
-                  className={`${baseItem} ${collapsed ? "px-3 py-4 justify-center" : "px-4 py-3.5"} ${isActive ? "bg-gradient-to-r from-amber-600 to-amber-500 text-white shadow-[0_0_15px_rgba(245,158,11,0.4)]" : darkMode ? "text-slate-200 hover:bg-white/10" : "text-[#372818] hover:bg-white/60"}`}
+                  className={`${baseItem} ${collapsed ? "px-3 py-4 justify-center" : "px-4 py-3.5"} ${isActive ? "bg-gradient-to-r from-amber-600 to-amber-500 text-white shadow-[0_0_15px_rgba(245,158,11,0.4)]" : darkMode ? "text-slate-200 hover:bg-temple-100/10" : "text-[#372818] hover:bg-temple-100/60"}`}
                   title={item.title}
                 >
-                  {isActive && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-7 w-1.5 bg-white rounded-r" />}
+                  {isActive && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-7 w-1.5 bg-temple-100 rounded-r" />}
                   <Icon size={24} className="shrink-0" />
                   {!collapsed && <span className="flex-1 text-lg font-medium leading-tight">{item.title}</span>}
                   {!collapsed && item.subItems && <MdKeyboardArrowDown size={22} className={`transition ${showSubItems ? "rotate-180" : ""}`} />}
@@ -121,7 +121,7 @@ const Sidebar = ({ items, activeItem, activePath, onSelect, onNavigate, collapse
                                 onSelect(item.title);
                                 setMobileOpen(false);
                               }}
-                              className={`w-full rounded-2xl px-4 py-2.5 text-left text-base transition ${isSubActive ? "bg-white/20 text-white" : darkMode ? "text-slate-300 hover:bg-white/10" : "text-slate-700 hover:bg-slate-100"}`}
+                              className={`w-full rounded-2xl px-4 py-2.5 text-left text-base transition ${isSubActive ? "bg-temple-100/20 text-white" : darkMode ? "text-slate-300 hover:bg-temple-100/10" : "text-slate-700 hover:bg-slate-100"}`}
                             >
                               {sub.title}
                             </button>

@@ -169,13 +169,13 @@ const Payroll = () => {
               type="month"
               value={monthKey}
               onChange={(event) => setMonthKey(event.target.value)}
-              className="ml-3 rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-white outline-none"
+              className="ml-3 rounded-xl border border-white/20 bg-temple-100/10 px-3 py-2 text-white outline-none"
             />
           </label>
         </div>
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
           {summaryTiles.map((tile) => (
-            <div key={tile.title} className={`rounded-[28px] border border-white/10 px-5 py-6 ${tile.accent} bg-white/10 shadow-xl shadow-slate-900/10`}>
+            <div key={tile.title} className={`rounded-[28px] border border-white/10 px-5 py-6 ${tile.accent} bg-temple-100/10 shadow-xl shadow-slate-900/10`}>
               <p className="text-sm uppercase tracking-[0.16em] text-slate-100/70">{tile.title}</p>
               <p className="mt-4 text-3xl font-semibold text-white">{tile.value}</p>
             </div>
@@ -190,7 +190,7 @@ const Payroll = () => {
       <div className="grid gap-5 xl:grid-cols-[1.7fr_0.9fr]">
         <div className="space-y-5">
           <SectionCard title="Payroll Table" subtitle="Salary calculated from present, absent, leave, and admin-entered extra duty pay." className="overflow-hidden">
-            <div className="overflow-x-auto rounded-[28px] border border-slate-200 bg-white shadow-sm">
+            <div className="overflow-x-auto rounded-[28px] border border-slate-200 bg-temple-100 shadow-sm">
               <table className="min-w-full text-left text-sm text-slate-600">
                 <thead className="bg-slate-100 text-slate-500">
                   <tr>
@@ -329,7 +329,7 @@ const Payroll = () => {
                 <p className="text-sm text-slate-500">All salaries are paid for this month.</p>
               ) : (
                 dashboard.upcomingPayments.map((item) => (
-                  <div key={item.employeeId} className="rounded-[22px] border border-slate-200 bg-white p-4 shadow-sm">
+                  <div key={item.employeeId} className="rounded-[22px] border border-slate-200 bg-temple-100 p-4 shadow-sm">
                     <div className="flex items-center justify-between gap-3">
                       <div>
                         <p className="font-semibold text-slate-900">{item.name}</p>

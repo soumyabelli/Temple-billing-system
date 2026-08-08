@@ -349,7 +349,7 @@ const ReceiptsPage = () => {
             <button
               type="button"
               onClick={() => handlePrintReceipt(bill, index)}
-              className="inline-flex items-center gap-1 rounded-lg border border-[#f0c58f] bg-white px-3 py-1 text-xs font-bold text-slate-900 transition hover:bg-[#fff8ef]"
+              className="inline-flex items-center gap-1 rounded-lg border border-[#f0c58f] bg-temple-100 px-3 py-1 text-xs font-bold text-slate-900 transition hover:bg-[#fff8ef]"
               title="Print Receipt"
             >
               <FaPrint className="text-xs" /> Print
@@ -478,7 +478,7 @@ const ReceiptsPage = () => {
             <button
               type="button"
               onClick={loadData}
-              className="inline-flex items-center gap-2 rounded-full border border-[#f0c58f] bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:bg-[#fff8ef]"
+              className="inline-flex items-center gap-2 rounded-full border border-[#f0c58f] bg-temple-100 px-5 py-3 text-sm font-bold text-slate-900 transition hover:bg-[#fff8ef]"
             >
               <FaSyncAlt /> Refresh Reports
             </button>
@@ -510,7 +510,7 @@ const ReceiptsPage = () => {
           <button
             type="button"
             onClick={loadData}
-            className="rounded-full border border-[#f0c58f] bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:bg-[#fff8ef]"
+            className="rounded-full border border-[#f0c58f] bg-temple-100 px-5 py-3 text-sm font-bold text-slate-900 transition hover:bg-[#fff8ef]"
           >
             Refresh Ledger
           </button>
@@ -544,7 +544,7 @@ const ReceiptsPage = () => {
       actions={shellProps.actions}
     >
       {/* Navigation Sub-Tabs */}
-      <section className="flex border-b border-[#f2e7d7] bg-white px-4 py-2 shadow-sm rounded-t-[22px]">
+      <section className="flex border-b border-[#f2e7d7] bg-temple-100 px-4 py-2 shadow-sm rounded-t-[22px]">
         {["ledger", "payments", "reports"].map((section) => (
           <button
             key={section}
@@ -564,7 +564,7 @@ const ReceiptsPage = () => {
       {/* RENDER ACTIVE TAB */}
       {activeSection === "ledger" && !showAllReceipts && (
         <>
-          <section className="rounded-b-[22px] border-x border-b border-[#f0d3a2] bg-white/95 p-5 shadow-sm">
+          <section className="rounded-b-[22px] border-x border-b border-[#f0d3a2] bg-temple-100/95 p-5 shadow-sm">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
               <div>
                 <h2 className="text-2xl font-extrabold text-slate-950">Receipt sections</h2>
@@ -586,14 +586,14 @@ const ReceiptsPage = () => {
                 <button
                   type="button"
                   onClick={handleDownloadLedgerCsv}
-                  className="inline-flex items-center gap-2 rounded-2xl border border-[#ead7bb] bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition hover:bg-[#fff8ef]"
+                  className="inline-flex items-center gap-2 rounded-2xl border border-[#ead7bb] bg-temple-100 px-4 py-3 text-sm font-semibold text-slate-900 transition hover:bg-[#fff8ef]"
                 >
                   <FaDownload /> CSV
                 </button>
                 <button
                   type="button"
                   onClick={handleDownloadLedgerPdf}
-                  className="inline-flex items-center gap-2 rounded-2xl border border-[#ead7bb] bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition hover:bg-[#fff8ef]"
+                  className="inline-flex items-center gap-2 rounded-2xl border border-[#ead7bb] bg-temple-100 px-4 py-3 text-sm font-semibold text-slate-900 transition hover:bg-[#fff8ef]"
                 >
                   <FaDownload /> PDF
                 </button>
@@ -609,7 +609,7 @@ const ReceiptsPage = () => {
                   className={`rounded-full border px-4 py-2 text-sm font-bold transition ${
                     tab === item
                       ? "border-[#f28c18] bg-[#fff1df] text-[#8a5200]"
-                      : "border-[#ead7bb] bg-white text-slate-700 hover:bg-[#fff8ef]"
+                      : "border-[#ead7bb] bg-temple-100 text-slate-700 hover:bg-[#fff8ef]"
                   }`}
                 >
                   {item}
@@ -619,7 +619,7 @@ const ReceiptsPage = () => {
           </section>
 
           <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-            <section className="rounded-[22px] border border-[#f0d3a2] bg-white/95 p-5 shadow-sm">
+            <section className="rounded-[22px] border border-[#f0d3a2] bg-temple-100/95 p-5 shadow-sm">
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <h2 className="text-2xl font-extrabold text-slate-950">Receipt ledger</h2>
@@ -678,7 +678,7 @@ const ReceiptsPage = () => {
             </section>
 
             <aside className="space-y-6">
-              <section className="rounded-[22px] border border-[#f0d3a2] bg-white/95 p-5 shadow-sm">
+              <section className="rounded-[22px] border border-[#f0d3a2] bg-temple-100/95 p-5 shadow-sm">
                 <h2 className="text-2xl font-extrabold text-slate-950">Receipt summary</h2>
                 <div className="mt-4 space-y-3 text-sm">
                   {shellProps.stats.map((item) => (
@@ -690,7 +690,7 @@ const ReceiptsPage = () => {
                 </div>
               </section>
 
-              <section className="rounded-[22px] border border-[#f0d3a2] bg-white/95 p-5 shadow-sm">
+              <section className="rounded-[22px] border border-[#f0d3a2] bg-temple-100/95 p-5 shadow-sm">
                 <h2 className="text-2xl font-extrabold text-slate-950">Grouped sections</h2>
                 <div className="mt-4 space-y-3">
                   {receiptTabs
@@ -709,7 +709,7 @@ const ReceiptsPage = () => {
       )}
 
       {activeSection === "ledger" && showAllReceipts && (
-        <section className="rounded-[22px] border border-[#f0d3a2] bg-white/95 p-5 shadow-sm mt-4">
+        <section className="rounded-[22px] border border-[#f0d3a2] bg-temple-100/95 p-5 shadow-sm mt-4">
           <div className="mb-4">
             <button
               onClick={() => setShowAllReceipts(false)}
@@ -729,14 +729,14 @@ const ReceiptsPage = () => {
               <button
                 type="button"
                 onClick={handleDownloadLedgerCsv}
-                className="inline-flex items-center gap-2 rounded-2xl border border-[#ead7bb] bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition hover:bg-[#fff8ef]"
+                className="inline-flex items-center gap-2 rounded-2xl border border-[#ead7bb] bg-temple-100 px-4 py-3 text-sm font-semibold text-slate-900 transition hover:bg-[#fff8ef]"
               >
                 <FaDownload /> CSV
               </button>
               <button
                 type="button"
                 onClick={handleDownloadLedgerPdf}
-                className="inline-flex items-center gap-2 rounded-2xl border border-[#ead7bb] bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition hover:bg-[#fff8ef]"
+                className="inline-flex items-center gap-2 rounded-2xl border border-[#ead7bb] bg-temple-100 px-4 py-3 text-sm font-semibold text-slate-900 transition hover:bg-[#fff8ef]"
               >
                 <FaDownload /> PDF
               </button>
@@ -768,7 +768,7 @@ const ReceiptsPage = () => {
 
       {activeSection === "payments" && (
         <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-          <section className="rounded-[22px] border border-[#f0d3a2] bg-white/95 p-5 shadow-sm">
+          <section className="rounded-[22px] border border-[#f0d3a2] bg-temple-100/95 p-5 shadow-sm">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <h2 className="text-2xl font-extrabold text-slate-950">Payment channels</h2>
@@ -799,7 +799,7 @@ const ReceiptsPage = () => {
             </div>
           </section>
 
-          <section className="rounded-[22px] border border-[#f0d3a2] bg-white/95 p-5 shadow-sm">
+          <section className="rounded-[22px] border border-[#f0d3a2] bg-temple-100/95 p-5 shadow-sm">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <h2 className="text-2xl font-extrabold text-slate-950">Recent payments</h2>
@@ -864,7 +864,7 @@ const ReceiptsPage = () => {
 
       {activeSection === "reports" && (
         <>
-          <section className="rounded-b-[22px] border-x border-b border-[#f0d3a2] bg-white/95 p-5 shadow-sm">
+          <section className="rounded-b-[22px] border-x border-b border-[#f0d3a2] bg-temple-100/95 p-5 shadow-sm">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
               <div>
                 <h2 className="text-2xl font-extrabold text-slate-950">Report range</h2>
@@ -881,7 +881,7 @@ const ReceiptsPage = () => {
                     className={`rounded-full border px-4 py-2 text-sm font-bold capitalize transition ${
                       range === item
                         ? "border-[#f28c18] bg-[#fff1df] text-[#8a5200]"
-                        : "border-[#ead7bb] bg-white text-slate-700 hover:bg-[#fff8ef]"
+                        : "border-[#ead7bb] bg-temple-100 text-slate-700 hover:bg-[#fff8ef]"
                     }`}
                   >
                     {item}
@@ -911,7 +911,7 @@ const ReceiptsPage = () => {
           </section>
 
           <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-            <section className="rounded-[22px] border border-[#f0d3a2] bg-white/95 p-5 shadow-sm">
+            <section className="rounded-[22px] border border-[#f0d3a2] bg-temple-100/95 p-5 shadow-sm">
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <h2 className="text-2xl font-extrabold text-slate-950">Seven day collection trend</h2>
@@ -944,7 +944,7 @@ const ReceiptsPage = () => {
               </div>
             </section>
 
-            <section className="rounded-[22px] border border-[#f0d3a2] bg-white/95 p-5 shadow-sm">
+            <section className="rounded-[22px] border border-[#f0d3a2] bg-temple-100/95 p-5 shadow-sm">
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <h2 className="text-2xl font-extrabold text-slate-950">Payment methods</h2>
@@ -986,7 +986,7 @@ const ReceiptsPage = () => {
             </section>
           </div>
 
-          <section className="rounded-[22px] border border-[#f0d3a2] bg-white/95 p-5 shadow-sm">
+          <section className="rounded-[22px] border border-[#f0d3a2] bg-temple-100/95 p-5 shadow-sm">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <h2 className="text-2xl font-extrabold text-slate-950">Recent report rows</h2>

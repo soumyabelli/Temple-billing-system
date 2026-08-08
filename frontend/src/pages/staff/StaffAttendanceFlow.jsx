@@ -270,7 +270,7 @@ const StaffAttendanceFlow = ({ staffId, staffName, staffEmail, action, onComplet
         <button
           onClick={onCancel}
           disabled={isSubmitting}
-          className="flex-1 bg-white border border-slate-200 text-slate-700 font-semibold py-3 rounded-full hover:bg-slate-50 transition disabled:opacity-50"
+          className="flex-1 bg-temple-100 border border-slate-200 text-slate-700 font-semibold py-3 rounded-full hover:bg-slate-50 transition disabled:opacity-50"
         >
           Cancel
         </button>

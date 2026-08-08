@@ -272,7 +272,7 @@ const AssignTask = () => {
             ["In Progress", taskSummary.inProgress],
             ["Completed", taskSummary.completed],
           ].map(([label, value]) => (
-            <div key={label} className="rounded-2xl border border-white/70 bg-white/75 px-4 py-3 shadow-lg shadow-slate-900/5">
+            <div key={label} className="rounded-2xl border border-white/70 bg-temple-100/75 px-4 py-3 shadow-lg shadow-slate-900/5">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{label}</p>
               <strong className="text-2xl text-slate-950">{value}</strong>
             </div>
@@ -295,7 +295,7 @@ const AssignTask = () => {
       ) : null}
 
       <div className="grid gap-5 xl:grid-cols-[390px_1fr]">
-        <section className="rounded-[28px] border border-white/70 bg-white/85 p-6 shadow-2xl shadow-slate-900/5">
+        <section className="rounded-[28px] border border-white/70 bg-temple-100/85 p-6 shadow-2xl shadow-slate-900/5">
           <div className="mb-6">
             <h2 className="text-xl font-bold text-slate-950">Assign New Task</h2>
             <div className="mt-3 h-1 w-16 rounded-full bg-orange-500" />
@@ -304,14 +304,14 @@ const AssignTask = () => {
           <form onSubmit={handleSubmit} className="space-y-5">
             <label className="block">
               <span className="mb-2 block text-sm font-semibold text-slate-700">Select Employee <b className="text-rose-500">*</b></span>
-              <div className="flex overflow-hidden rounded-xl border border-slate-200 bg-white">
+              <div className="flex overflow-hidden rounded-xl border border-slate-200 bg-temple-100">
                 <span className="flex w-11 items-center justify-center border-r border-slate-200 text-[#5f3a1f]">
                   <FiUser />
                 </span>
                 <select
                   value={form.employeeId}
                   onChange={updateField("employeeId")}
-                  className="min-h-12 flex-1 bg-white px-4 text-sm outline-none"
+                  className="min-h-12 flex-1 bg-temple-100 px-4 text-sm outline-none"
                   disabled={loading}
                 >
                   <option value="">-- Select Employee --</option>
@@ -326,7 +326,7 @@ const AssignTask = () => {
 
             <label className="block">
               <span className="mb-2 block text-sm font-semibold text-slate-700">Task Title <b className="text-rose-500">*</b></span>
-              <div className="flex overflow-hidden rounded-xl border border-slate-200 bg-white">
+              <div className="flex overflow-hidden rounded-xl border border-slate-200 bg-temple-100">
                 <span className="flex w-11 items-center justify-center border-r border-slate-200 text-[#5f3a1f]">
                   <FiFileText />
                 </span>
@@ -342,7 +342,7 @@ const AssignTask = () => {
 
             <label className="block">
               <span className="mb-2 block text-sm font-semibold text-slate-700">Task Description <b className="text-rose-500">*</b></span>
-              <div className="flex overflow-hidden rounded-xl border border-slate-200 bg-white">
+              <div className="flex overflow-hidden rounded-xl border border-slate-200 bg-temple-100">
                 <span className="flex w-11 items-start justify-center border-r border-slate-200 pt-4 text-[#5f3a1f]">
                   <FiEdit3 />
                 </span>
@@ -358,7 +358,7 @@ const AssignTask = () => {
 
             <label className="block">
               <span className="mb-2 block text-sm font-semibold text-slate-700">Due Date <b className="text-rose-500">*</b></span>
-              <div className="flex overflow-hidden rounded-xl border border-slate-200 bg-white">
+              <div className="flex overflow-hidden rounded-xl border border-slate-200 bg-temple-100">
                 <span className="flex w-11 items-center justify-center border-r border-slate-200 text-[#5f3a1f]">
                   <FiCalendar />
                 </span>
@@ -413,7 +413,7 @@ const AssignTask = () => {
               <button
                 type="button"
                 onClick={resetForm}
-                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 font-semibold text-slate-700 transition hover:bg-slate-50"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-temple-100 px-5 font-semibold text-slate-700 transition hover:bg-slate-50"
               >
                 <FiRefreshCw /> Reset
               </button>
@@ -421,7 +421,7 @@ const AssignTask = () => {
           </form>
         </section>
 
-        <section className="rounded-[28px] border border-white/70 bg-white/85 p-6 shadow-2xl shadow-slate-900/5">
+        <section className="rounded-[28px] border border-white/70 bg-temple-100/85 p-6 shadow-2xl shadow-slate-900/5">
           <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h2 className="text-xl font-bold text-slate-950">Assigned Tasks</h2>
@@ -432,7 +432,7 @@ const AssignTask = () => {
               <select
                 value={employeeFilter}
                 onChange={(event) => setEmployeeFilter(event.target.value)}
-                className="min-h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none"
+                className="min-h-11 rounded-xl border border-slate-200 bg-temple-100 px-4 text-sm outline-none"
               >
                 <option value="all">All Employees</option>
                 {employees.map((employee) => (
@@ -444,7 +444,7 @@ const AssignTask = () => {
               <select
                 value={statusFilter}
                 onChange={(event) => setStatusFilter(event.target.value)}
-                className="min-h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none"
+                className="min-h-11 rounded-xl border border-slate-200 bg-temple-100 px-4 text-sm outline-none"
               >
                 <option value="all">All Status</option>
                 {TASK_STATUSES.map((status) => (
@@ -456,7 +456,7 @@ const AssignTask = () => {
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-temple-100">
             <div className="overflow-x-auto">
               <table className="min-w-[900px] w-full text-left text-sm">
                 <thead className="bg-[#f8f1e8] text-slate-800">
@@ -575,7 +575,7 @@ const AssignTask = () => {
             <button
               type="button"
               onClick={fetchPageData}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 font-semibold text-slate-700 transition hover:bg-slate-50"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-temple-100 px-4 py-2 font-semibold text-slate-700 transition hover:bg-slate-50"
             >
               <FiRefreshCw /> Refresh
             </button>

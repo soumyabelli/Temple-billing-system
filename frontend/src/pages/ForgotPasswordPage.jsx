@@ -68,7 +68,7 @@ const ForgotPasswordPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-100 via-orange-100 to-yellow-50 flex items-center justify-center px-4 py-10">
-      <div className="w-full max-w-lg bg-white/25 backdrop-blur-2xl border border-white/60 shadow-[0_20px_70px_rgba(130,50,0,0.18)] rounded-3xl p-8">
+      <div className="w-full max-w-lg bg-temple-100/25 backdrop-blur-2xl border border-white/60 shadow-[0_20px_70px_rgba(130,50,0,0.18)] rounded-3xl p-8">
         <div className="text-center mb-6">
           <h1 className="text-3xl font-extrabold text-amber-900">Forgot Password</h1>
           <p className="text-amber-800/90 mt-2">
@@ -89,7 +89,7 @@ const ForgotPasswordPage = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full rounded-xl border border-white/70 bg-white/80 p-3.5 outline-none focus:ring-2 focus:ring-amber-400"
+                className="w-full rounded-xl border border-white/70 bg-temple-100/80 p-3.5 outline-none focus:ring-2 focus:ring-amber-400"
                 placeholder="Enter registered email"
               />
             </div>
@@ -161,7 +161,7 @@ const ForgotPasswordPage = () => {
                 onChange={(e) => setNewPassword(e.target.value)}
                 required
                 minLength={6}
-                className="w-full rounded-xl border border-white/70 bg-white/80 p-3.5 outline-none focus:ring-2 focus:ring-amber-400"
+                className="w-full rounded-xl border border-white/70 bg-temple-100/80 p-3.5 outline-none focus:ring-2 focus:ring-amber-400"
                 placeholder="Minimum 6 characters"
               />
             </div>

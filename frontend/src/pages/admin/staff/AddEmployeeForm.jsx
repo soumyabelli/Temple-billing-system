@@ -41,7 +41,7 @@ const AddEmployeeForm = () => {
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-white p-6 rounded-3xl shadow"
+      className="bg-temple-100 p-6 rounded-3xl shadow"
     >
 
       <h2 className="text-2xl font-bold mb-5">

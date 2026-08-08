@@ -469,7 +469,7 @@ const CashierDashboardPage = () => {
                   value={fromDate}
                   max={toDateKey(new Date())}
                   onChange={(e) => handleFromDateChange(e.target.value)}
-                  className="rounded-full border border-[#f0c58f] bg-white px-3 py-1.5 text-xs font-semibold text-slate-800 outline-none focus:ring-1 focus:ring-[#f28c18]"
+                  className="rounded-full border border-[#f0c58f] bg-temple-100 px-3 py-1.5 text-xs font-semibold text-slate-800 outline-none focus:ring-1 focus:ring-[#f28c18]"
                 />
               </div>
               <div className="flex items-center gap-1.5">
@@ -479,7 +479,7 @@ const CashierDashboardPage = () => {
                   value={toDate}
                   max={toDateKey(new Date())}
                   onChange={(e) => handleToDateChange(e.target.value)}
-                  className="rounded-full border border-[#f0c58f] bg-white px-3 py-1.5 text-xs font-semibold text-slate-800 outline-none focus:ring-1 focus:ring-[#f28c18]"
+                  className="rounded-full border border-[#f0c58f] bg-temple-100 px-3 py-1.5 text-xs font-semibold text-slate-800 outline-none focus:ring-1 focus:ring-[#f28c18]"
                 />
               </div>
             </div>
@@ -506,28 +506,28 @@ const CashierDashboardPage = () => {
           <button
             type="button"
             onClick={() => navigate("/cashier/pooja-bookings")}
-            className="rounded-full border border-[#f0c58f] bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:bg-[#fff8ef]"
+            className="rounded-full border border-[#f0c58f] bg-temple-100 px-5 py-3 text-sm font-bold text-slate-900 transition hover:bg-[#fff8ef]"
           >
             Pooja Bookings
           </button>
           <button
             type="button"
             onClick={() => navigate("/cashier/donations")}
-            className="rounded-full border border-[#f0c58f] bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:bg-[#fff8ef]"
+            className="rounded-full border border-[#f0c58f] bg-temple-100 px-5 py-3 text-sm font-bold text-slate-900 transition hover:bg-[#fff8ef]"
           >
             Donations
           </button>
           <button
             type="button"
             onClick={() => navigate("/cashier/receipts")}
-            className="rounded-full border border-[#f0c58f] bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:bg-[#fff8ef]"
+            className="rounded-full border border-[#f0c58f] bg-temple-100 px-5 py-3 text-sm font-bold text-slate-900 transition hover:bg-[#fff8ef]"
           >
             Receipts
           </button>
           <button
             type="button"
             onClick={() => navigate("/cashier/inventory-requests")}
-            className="rounded-full border border-[#f0c58f] bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:bg-[#fff8ef]"
+            className="rounded-full border border-[#f0c58f] bg-temple-100 px-5 py-3 text-sm font-bold text-slate-900 transition hover:bg-[#fff8ef]"
           >
             Inventory Requests
           </button>
@@ -535,7 +535,7 @@ const CashierDashboardPage = () => {
       }
     >
       <div className="grid gap-6 xl:grid-cols-[1.35fr_0.65fr]">
-        <section className="rounded-[22px] border border-[#f0d3a2] bg-white/90 p-5 shadow-sm">
+        <section className="rounded-[22px] border border-[#f0d3a2] bg-temple-100/90 p-5 shadow-sm">
           <div className="flex items-center justify-between gap-3">
             <div>
               <h2 className="text-xl font-extrabold text-slate-950">Seven day collection trend</h2>
@@ -567,7 +567,7 @@ const CashierDashboardPage = () => {
           </div>
         </section>
 
-        <section className="rounded-[22px] border border-[#f0d3a2] bg-white/90 p-5 shadow-sm">
+        <section className="rounded-[22px] border border-[#f0d3a2] bg-temple-100/90 p-5 shadow-sm">
           <div className="flex items-center justify-between gap-3">
             <div>
               <h2 className="text-xl font-extrabold text-slate-950">Payment methods</h2>
@@ -598,7 +598,7 @@ const CashierDashboardPage = () => {
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <section className="rounded-[22px] border border-[#f0d3a2] bg-white/90 p-5 shadow-sm">
+        <section className="rounded-[22px] border border-[#f0d3a2] bg-temple-100/90 p-5 shadow-sm">
           <div className="flex items-center justify-between gap-3">
             <div>
               <h2 className="text-xl font-extrabold text-slate-950">Recent cashier activity</h2>
@@ -647,7 +647,7 @@ const CashierDashboardPage = () => {
         </section>
 
         <aside className="space-y-6">
-          <section className="rounded-[22px] border border-[#f0d3a2] bg-white/90 p-5 shadow-sm">
+          <section className="rounded-[22px] border border-[#f0d3a2] bg-temple-100/90 p-5 shadow-sm">
             <h2 className="text-xl font-extrabold text-slate-950">Quick actions</h2>
             <div className="mt-4 grid grid-cols-2 gap-3">
               {[
@@ -662,7 +662,7 @@ const CashierDashboardPage = () => {
                   key={item.label}
                   type="button"
                   onClick={() => navigate(item.path)}
-                  className="rounded-2xl border border-[#f2e2c7] bg-[#fff8ef] px-3 py-4 text-sm font-bold text-slate-900 transition hover:bg-white"
+                  className="rounded-2xl border border-[#f2e2c7] bg-[#fff8ef] px-3 py-4 text-sm font-bold text-slate-900 transition hover:bg-temple-100"
                 >
                   {item.label}
                 </button>

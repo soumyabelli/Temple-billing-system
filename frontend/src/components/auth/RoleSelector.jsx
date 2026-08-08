@@ -30,7 +30,7 @@ const RoleSelector = ({ selectedRole, setSelectedRole }) => {
             ${
               selectedRole === role
                 ? "bg-orange-500 text-white border-orange-600 scale-105"
-                : "bg-white/90 text-black border-white hover:bg-orange-100"
+                : "bg-temple-100/90 text-black border-white hover:bg-orange-100"
             }
           `}
         >

@@ -151,14 +151,14 @@ const RegisterDevoteesPage = () => {
       image={templeBg}
       imageAlt="Temple devotee registration"
       actions={
-        <div className="inline-flex items-center gap-2 rounded-full border border-[#f0c58f] bg-white px-4 py-2 text-sm font-bold text-slate-900">
+        <div className="inline-flex items-center gap-2 rounded-full border border-[#f0c58f] bg-temple-100 px-4 py-2 text-sm font-bold text-slate-900">
           <FaUserPlus className="text-[#f28c18]" />
           Full devotee directory
         </div>
       }
     >
       <div className="max-w-4xl mx-auto">
-        <section className="rounded-[22px] border border-[#f0d3a2] bg-white/95 p-5 shadow-sm">
+        <section className="rounded-[22px] border border-[#f0d3a2] bg-temple-100/95 p-5 shadow-sm">
           <h2 className="text-2xl font-extrabold text-slate-950">New devotee registration</h2>
           <p className="mt-1 text-sm font-medium text-slate-700">
             Fill every required field so the devotee account is ready for bookings and donations.
@@ -252,7 +252,7 @@ const RegisterDevoteesPage = () => {
         </section>
       </div>
 
-      <section className="mt-8 rounded-[22px] border border-[#f0d3a2] bg-white/95 p-6 shadow-sm">
+      <section className="mt-8 rounded-[22px] border border-[#f0d3a2] bg-temple-100/95 p-6 shadow-sm">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-2xl font-extrabold text-slate-950">Registered Devotees</h2>
@@ -344,7 +344,7 @@ const RegisterDevoteesPage = () => {
       {/* Devotee Details Modal */}
       {selectedDevotee && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-[28px] border border-[#f0c58f] bg-white p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+          <div className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-[28px] border border-[#f0c58f] bg-temple-100 p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-[#f2e7d7] pb-4">
               <div>
@@ -389,7 +389,7 @@ const RegisterDevoteesPage = () => {
               {/* Lists Section */}
               <div className="grid gap-6 md:grid-cols-2">
                 {/* Bookings */}
-                <div className="rounded-2xl border border-[#f2e7d7] bg-white p-4">
+                <div className="rounded-2xl border border-[#f2e7d7] bg-temple-100 p-4">
                   <h4 className="text-lg font-bold text-slate-950 border-b border-[#f2e7d7] pb-2 flex items-center justify-between">
                     <span>Bookings</span>
                     <span className="rounded-full bg-[#fff8ef] px-2 py-0.5 text-xs font-bold text-[#8a5200]">
@@ -421,7 +421,7 @@ const RegisterDevoteesPage = () => {
                 </div>
 
                 {/* Donations */}
-                <div className="rounded-2xl border border-[#f2e7d7] bg-white p-4">
+                <div className="rounded-2xl border border-[#f2e7d7] bg-temple-100 p-4">
                   <h4 className="text-lg font-bold text-slate-950 border-b border-[#f2e7d7] pb-2 flex items-center justify-between">
                     <span>Donations & Receipts</span>
                     <span className="rounded-full bg-[#fff8ef] px-2 py-0.5 text-xs font-bold text-[#8a5200]">

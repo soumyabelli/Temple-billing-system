@@ -72,7 +72,7 @@ const CashierLayout = ({ children, onLogoutClick }) => {
               <button
                 type="button"
                 onClick={() => setMobileOpen(true)}
-                className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[#f1d2a2] bg-white/90 text-[#8a5200] shadow-sm transition hover:bg-white lg:hidden"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[#f1d2a2] bg-temple-100/90 text-[#8a5200] shadow-sm transition hover:bg-temple-100 lg:hidden"
                 aria-label="Open cashier menu"
               >
                 <MdMenu size={22} />
@@ -86,7 +86,7 @@ const CashierLayout = ({ children, onLogoutClick }) => {
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="hidden h-11 w-11 overflow-hidden rounded-2xl border border-[#f1d2a2] bg-white shadow-sm md:block">
+              <div className="hidden h-11 w-11 overflow-hidden rounded-2xl border border-[#f1d2a2] bg-temple-100 shadow-sm md:block">
                 {avatarSrc ? (
                   <img src={avatarSrc} alt={user?.name || "Cashier"} className="h-full w-full object-cover" />
                 ) : (
@@ -95,7 +95,7 @@ const CashierLayout = ({ children, onLogoutClick }) => {
                   </div>
                 )}
               </div>
-              <div className="hidden rounded-full border border-[#f1d2a2] bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm md:block">
+              <div className="hidden rounded-full border border-[#f1d2a2] bg-temple-100 px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm md:block">
                 {new Date().toLocaleDateString("en-IN", {
                   weekday: "long",
                   day: "2-digit",
@@ -106,7 +106,7 @@ const CashierLayout = ({ children, onLogoutClick }) => {
               <button
                 type="button"
                 onClick={() => navigate("/cashier/notifications")}
-                className="relative inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[#f1d2a2] bg-white/90 text-[#8a5200] shadow-sm transition hover:bg-white"
+                className="relative inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[#f1d2a2] bg-temple-100/90 text-[#8a5200] shadow-sm transition hover:bg-temple-100"
                 aria-label="Notifications"
                 id="cashier-bell-btn"
               >

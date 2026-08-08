@@ -136,7 +136,7 @@ const LeaveManagement = () => {
       >
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
           {leaveTiles.map((tile) => (
-            <div key={tile.title} className="rounded-[28px] border border-white/10 px-5 py-6 bg-white/10 shadow-xl shadow-slate-900/10">
+            <div key={tile.title} className="rounded-[28px] border border-white/10 px-5 py-6 bg-temple-100/10 shadow-xl shadow-slate-900/10">
               <p className="text-sm uppercase tracking-[0.16em] text-slate-100/70">{tile.title}</p>
               <p className="mt-4 text-3xl font-semibold text-white">{tile.value}</p>
             </div>
@@ -148,7 +148,7 @@ const LeaveManagement = () => {
 
       <div className="grid gap-5 xl:grid-cols-[1.4fr_0.8fr]">
         <SectionCard title="Leave Requests" subtitle="Review pending requests and update approval status." className="overflow-hidden">
-          <div className="overflow-x-auto rounded-[28px] border border-slate-200 bg-white shadow-sm">
+          <div className="overflow-x-auto rounded-[28px] border border-slate-200 bg-temple-100 shadow-sm">
             <table className="min-w-full text-left text-sm text-slate-600">
               <thead className="bg-slate-100 text-slate-500">
                 <tr>
@@ -226,10 +226,10 @@ const LeaveManagement = () => {
         <SectionCard title="Upcoming Leaves" subtitle="Recently approved employee leaves." className="overflow-hidden">
           <div className="space-y-4">
             {approvedUpcomingLeaves.length === 0 ? (
-              <div className="rounded-[22px] border border-slate-200 bg-white p-4 text-sm text-slate-500">No approved leaves yet.</div>
+              <div className="rounded-[22px] border border-slate-200 bg-temple-100 p-4 text-sm text-slate-500">No approved leaves yet.</div>
             ) : (
               approvedUpcomingLeaves.map((leave) => (
-                <div key={leave.id} className="rounded-[22px] border border-slate-200 bg-white p-4 shadow-sm">
+                <div key={leave.id} className="rounded-[22px] border border-slate-200 bg-temple-100 p-4 shadow-sm">
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <p className="font-semibold text-slate-900">{leave.name}</p>

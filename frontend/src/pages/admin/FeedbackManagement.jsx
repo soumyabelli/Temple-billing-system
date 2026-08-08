@@ -44,13 +44,13 @@ const FeedbackManagement = () => {
 
   return (
     <div className="mt-5 space-y-4">
-      <div className="rounded-2xl border border-[#ece8e1] bg-white p-5 shadow-sm">
+      <div className="rounded-2xl border border-[#ece8e1] bg-temple-100 p-5 shadow-sm">
         <h1 className="text-[42px] font-bold text-[#15141f]">Feedback & Complaints</h1>
         <p className="mt-1 text-[18px] text-[#5d6674]">Review devotee feedback submissions and reply to each request directly.</p>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
-        <div className="rounded-2xl border border-[#ece8e1] bg-white p-5 shadow-sm">
+        <div className="rounded-2xl border border-[#ece8e1] bg-temple-100 p-5 shadow-sm">
           <h2 className="text-[30px] font-bold text-[#15141f]">Open Feedback Requests</h2>
           <div className="mt-5 space-y-4">
             {supportRequests.length > 0 ? (
@@ -68,7 +68,7 @@ const FeedbackManagement = () => {
                   <p className="mt-4 text-sm leading-relaxed text-[#374151]">{request.message}</p>
 
                   {request.reply ? (
-                    <div className="mt-4 rounded-3xl border border-[#e5e7eb] bg-white p-4 text-sm text-[#1f2937]">
+                    <div className="mt-4 rounded-3xl border border-[#e5e7eb] bg-temple-100 p-4 text-sm text-[#1f2937]">
                       <p className="font-semibold">Reply Sent</p>
                       <p className="mt-2">{request.reply}</p>
                     </div>
@@ -79,7 +79,7 @@ const FeedbackManagement = () => {
                         value={replyTexts[request._id] || ""}
                         onChange={(e) => handleReplyChange(request._id, e.target.value)}
                         placeholder="Write your reply here"
-                        className="w-full rounded-3xl border border-[#d1d5db] bg-white px-4 py-3 text-sm outline-none"
+                        className="w-full rounded-3xl border border-[#d1d5db] bg-temple-100 px-4 py-3 text-sm outline-none"
                       />
                       <button
                         type="button"
@@ -99,7 +99,7 @@ const FeedbackManagement = () => {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-[#ece8e1] bg-white p-5 shadow-sm">
+        <div className="rounded-2xl border border-[#ece8e1] bg-temple-100 p-5 shadow-sm">
           <h2 className="text-[24px] font-bold text-[#15141f]">How this works</h2>
           <ul className="mt-4 space-y-3 text-sm text-[#4b5563]">
             <li className="rounded-2xl bg-[#f8fafc] p-4">Devotees submit feedback from their dashboard.</li>

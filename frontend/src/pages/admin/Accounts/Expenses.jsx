@@ -89,7 +89,7 @@ const Expenses = () => {
             className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${
               filterCategory === cat
                 ? "bg-[#ff8b00] text-white border-[#ff8b00]"
-                : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                : "bg-temple-100 text-slate-600 border-slate-200 hover:bg-slate-50"
             }`}
           >
             {cat}
@@ -99,11 +99,11 @@ const Expenses = () => {
 
       {/* Controls */}
       <div className="flex flex-wrap items-center gap-4 mb-6">
-        <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-600">
+        <div className="flex items-center gap-2 bg-temple-100 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-600">
           <span className="text-slate-400">01/07/2026 - 27/07/2026</span>
         </div>
         <select 
-          className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-600 outline-none"
+          className="bg-temple-100 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-600 outline-none"
           value={paymentMethod}
           onChange={(e) => { setPaymentMethod(e.target.value); setCurrentPage(1); }}
         >
@@ -114,7 +114,7 @@ const Expenses = () => {
           <option>Bank Transfer</option>
           <option>System</option>
         </select>
-        <div className="flex items-center bg-white border border-slate-200 rounded-lg px-3 py-2 flex-grow max-w-md">
+        <div className="flex items-center bg-temple-100 border border-slate-200 rounded-lg px-3 py-2 flex-grow max-w-md">
           <FiSearch className="text-slate-400 mr-2" />
           <input
             type="text"
@@ -124,7 +124,7 @@ const Expenses = () => {
             onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
           />
         </div>
-        <button className="flex items-center gap-2 bg-white border border-slate-200 text-slate-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-50 ml-auto">
+        <button className="flex items-center gap-2 bg-temple-100 border border-slate-200 text-slate-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-50 ml-auto">
           <FiFilter /> Filter
         </button>
         <button className="flex items-center gap-2 bg-[#ff8b00] hover:bg-[#e67a00] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm">
@@ -134,7 +134,7 @@ const Expenses = () => {
 
       {/* Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+        <div className="bg-temple-100 p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
           <div>
             <p className="text-xs text-slate-500 font-medium mb-1">Total Expenses</p>
             <p className="text-xl font-bold text-slate-800">₹{totalExpenses.toLocaleString("en-IN")}</p>
@@ -143,7 +143,7 @@ const Expenses = () => {
             <BiTrendingDown size={20} />
           </div>
         </div>
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+        <div className="bg-temple-100 p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
           <div>
             <p className="text-xs text-slate-500 font-medium mb-1">Cash Expenses</p>
             <p className="text-xl font-bold text-slate-800">₹{cashExpenses.toLocaleString("en-IN")}</p>
@@ -152,7 +152,7 @@ const Expenses = () => {
             <BiMoney size={20} />
           </div>
         </div>
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+        <div className="bg-temple-100 p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
           <div>
             <p className="text-xs text-slate-500 font-medium mb-1">Bank Expenses</p>
             <p className="text-xl font-bold text-slate-800">₹{bankExpenses.toLocaleString("en-IN")}</p>
@@ -161,7 +161,7 @@ const Expenses = () => {
             <BiLibrary size={20} />
           </div>
         </div>
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+        <div className="bg-temple-100 p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
           <div>
             <p className="text-xs text-slate-500 font-medium mb-1">Pending Bills</p>
             <p className="text-xl font-bold text-slate-800">{pendingBills}</p>
@@ -170,7 +170,7 @@ const Expenses = () => {
             <BiTimeFive size={20} />
           </div>
         </div>
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+        <div className="bg-temple-100 p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
           <div>
             <p className="text-xs text-slate-500 font-medium mb-1">Paid Bills</p>
             <p className="text-xl font-bold text-slate-800">{paidBills}</p>
@@ -182,7 +182,7 @@ const Expenses = () => {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="bg-temple-100 rounded-xl shadow-sm border border-slate-200 overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-200">
           <h2 className="text-lg font-bold text-slate-800">Expense Transactions</h2>
         </div>

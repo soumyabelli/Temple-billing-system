@@ -228,7 +228,7 @@ const ManualEntriesView = () => {
             Record manual debit vouchers, specify where money is spent, attach receipts (PDF/Image), and reflect on debits.
           </p>
         </div>
-        <div className="flex items-center gap-3 rounded-2xl bg-white/80 border border-amber-200 px-5 py-3 shadow-sm">
+        <div className="flex items-center gap-3 rounded-2xl bg-temple-100/80 border border-amber-200 px-5 py-3 shadow-sm">
           <FaWallet className="h-6 w-6 text-amber-600" />
           <div>
             <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Total Recorded Debits</p>
@@ -238,7 +238,7 @@ const ManualEntriesView = () => {
       </div>
 
       {/* FIRST CARD: NEW MANUAL ENTRY (SPACIOUS & EXPANDED) */}
-      <section className="mx-auto max-w-5xl rounded-3xl border border-white/80 bg-white p-6 sm:p-10 shadow-xl backdrop-blur-xl mb-10 transition-all hover:shadow-2xl">
+      <section className="mx-auto max-w-5xl rounded-3xl border border-white/80 bg-temple-100 p-6 sm:p-10 shadow-xl backdrop-blur-xl mb-10 transition-all hover:shadow-2xl">
         <div className="mb-6 flex items-center justify-between border-b border-slate-100 pb-5">
           <div className="flex items-center gap-3">
             <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-amber-700 text-xl font-bold shadow-xs">
@@ -267,7 +267,7 @@ const ManualEntriesView = () => {
                 value={form.whereSpent}
                 onChange={(e) => setForm({ ...form, whereSpent: e.target.value })}
                 placeholder="e.g. Sanctum Electrical Lighting Repairs, Annadanam Rice Purchase, Priest Honorarium"
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-5 py-4 text-base font-bold text-slate-900 outline-none transition focus:border-amber-500 focus:bg-white focus:ring-4 focus:ring-amber-500/15 shadow-inner"
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-5 py-4 text-base font-bold text-slate-900 outline-none transition focus:border-amber-500 focus:bg-temple-100 focus:ring-4 focus:ring-amber-500/15 shadow-inner"
               />
             </div>
 
@@ -279,7 +279,7 @@ const ManualEntriesView = () => {
               <select
                 value={form.category}
                 onChange={(e) => setForm({ ...form, category: e.target.value })}
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-5 py-4 text-base font-bold text-slate-900 outline-none transition focus:border-amber-500 focus:bg-white focus:ring-4 focus:ring-amber-500/15 shadow-inner"
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-5 py-4 text-base font-bold text-slate-900 outline-none transition focus:border-amber-500 focus:bg-temple-100 focus:ring-4 focus:ring-amber-500/15 shadow-inner"
               >
                 {categories.map((c) => (
                   <option key={c} value={c}>
@@ -334,7 +334,7 @@ const ManualEntriesView = () => {
                   value={form.amount}
                   onChange={(e) => setForm({ ...form, amount: e.target.value })}
                   placeholder="0.00"
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50/80 pl-11 pr-5 py-4 text-xl font-black text-slate-900 outline-none transition focus:border-amber-500 focus:bg-white focus:ring-4 focus:ring-amber-500/15 shadow-inner"
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50/80 pl-11 pr-5 py-4 text-xl font-black text-slate-900 outline-none transition focus:border-amber-500 focus:bg-temple-100 focus:ring-4 focus:ring-amber-500/15 shadow-inner"
                 />
               </div>
             </div>
@@ -348,7 +348,7 @@ const ManualEntriesView = () => {
                 required
                 value={form.paymentMethod}
                 onChange={(e) => setForm({ ...form, paymentMethod: e.target.value })}
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-5 py-4 text-base font-bold text-slate-900 outline-none transition focus:border-amber-500 focus:bg-white focus:ring-4 focus:ring-amber-500/15 shadow-inner"
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-5 py-4 text-base font-bold text-slate-900 outline-none transition focus:border-amber-500 focus:bg-temple-100 focus:ring-4 focus:ring-amber-500/15 shadow-inner"
               >
                 <option value="Cash">Cash</option>
                 <option value="UPI">UPI / QR</option>
@@ -372,14 +372,14 @@ const ManualEntriesView = () => {
                   onChange={handleFileChange}
                   className="absolute inset-0 h-full w-full opacity-0 cursor-pointer"
                 />
-                <div className="flex flex-col items-center gap-2 rounded-xl bg-white border border-amber-200 px-6 py-4 shadow-sm hover:bg-amber-100/50 transition">
+                <div className="flex flex-col items-center gap-2 rounded-xl bg-temple-100 border border-amber-200 px-6 py-4 shadow-sm hover:bg-amber-100/50 transition">
                   <FaCloudUploadAlt className="h-8 w-8 text-amber-600" />
                   <span className="text-sm font-bold text-amber-900">Click to upload Receipt (PDF, PNG, JPG)</span>
                   <span className="text-xs text-slate-500">Max file size: 5MB</span>
                 </div>
               </div>
             ) : (
-              <div className="flex items-center justify-between rounded-xl bg-white p-4 border border-amber-200 shadow-sm max-w-xl mx-auto">
+              <div className="flex items-center justify-between rounded-xl bg-temple-100 p-4 border border-amber-200 shadow-sm max-w-xl mx-auto">
                 <div className="flex items-center gap-3">
                   {form.receiptType?.includes("pdf") ? (
                     <FaFilePdf className="h-8 w-8 text-red-500" />
@@ -413,7 +413,7 @@ const ManualEntriesView = () => {
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
               placeholder="Provide invoice details, vendor name, or voucher notes..."
-              className="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-5 py-4 text-base font-semibold text-slate-900 outline-none transition focus:border-amber-500 focus:bg-white focus:ring-4 focus:ring-amber-500/15 shadow-inner"
+              className="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-5 py-4 text-base font-semibold text-slate-900 outline-none transition focus:border-amber-500 focus:bg-temple-100 focus:ring-4 focus:ring-amber-500/15 shadow-inner"
             />
           </div>
 
@@ -428,7 +428,7 @@ const ManualEntriesView = () => {
       </section>
 
       {/* SECOND SECTION: HISTORY ("then the history should come") */}
-      <section className="mx-auto max-w-6xl rounded-3xl border border-white/80 bg-white p-6 sm:p-10 shadow-xl backdrop-blur-xl">
+      <section className="mx-auto max-w-6xl rounded-3xl border border-white/80 bg-temple-100 p-6 sm:p-10 shadow-xl backdrop-blur-xl">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-5">
           <div>
             <h2 className="text-2xl sm:text-3xl font-black text-slate-900">Manual Entries & Debits History</h2>
@@ -442,7 +442,7 @@ const ManualEntriesView = () => {
               placeholder="Search by purpose or ID..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-10 pr-4 text-sm font-semibold text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-10 pr-4 text-sm font-semibold text-slate-800 outline-none focus:border-amber-500 focus:bg-temple-100"
             />
             <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
           </div>
@@ -524,7 +524,7 @@ const ManualEntriesView = () => {
       {/* RECEIPT PREVIEW MODAL */}
       {previewReceipt && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-xl rounded-3xl bg-white p-6 shadow-2xl">
+          <div className="w-full max-w-xl rounded-3xl bg-temple-100 p-6 shadow-2xl">
             <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
                 <h3 className="text-xl font-extrabold text-slate-900">Receipt Attachment</h3>

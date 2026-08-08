@@ -109,7 +109,7 @@ const AllPrasadaBookings = () => {
 
   return (
     <div className="mt-5 space-y-6">
-      <div className="rounded-2xl border border-[#ece8e1] bg-white p-8 shadow-sm">
+      <div className="rounded-2xl border border-[#ece8e1] bg-temple-100 p-8 shadow-sm">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
             <h1 className="text-[42px] font-bold text-[#111827]">All Prasada Bookings</h1>
@@ -143,7 +143,7 @@ const AllPrasadaBookings = () => {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-[#ece8e1] bg-white p-6 shadow-sm">
+      <div className="rounded-2xl border border-[#ece8e1] bg-temple-100 p-6 shadow-sm">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <h2 className="text-2xl font-bold text-[#111827]">All Prasada Bookings</h2>
           <div className="flex flex-wrap gap-3">
@@ -169,7 +169,7 @@ const AllPrasadaBookings = () => {
             <button
               type="button"
               onClick={loadOrders}
-              className="rounded-full border border-[#cbd5e1] bg-white px-4 py-2 text-sm font-semibold text-[#1f2937] hover:bg-[#f8fafc]"
+              className="rounded-full border border-[#cbd5e1] bg-temple-100 px-4 py-2 text-sm font-semibold text-[#1f2937] hover:bg-[#f8fafc]"
             >
               Refresh
             </button>

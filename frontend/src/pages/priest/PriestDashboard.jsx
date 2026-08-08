@@ -121,7 +121,7 @@ const PriestDashboard = () => {
   const DashboardView = ({ darkMode }) => (
     <div className="space-y-6 fade-in">
       {/* Welcome Header */}
-      <div className={`p-6 rounded-2xl border flex flex-col md:flex-row md:items-center md:justify-between transition-colors ${darkMode ? "bg-[#1f2937] border-slate-700 text-slate-100" : "bg-white border-[#ece8e1] text-[#1d1b19]"
+      <div className={`p-6 rounded-2xl border flex flex-col md:flex-row md:items-center md:justify-between transition-colors ${darkMode ? "bg-[#1f2937] border-slate-700 text-slate-100" : "bg-temple-100 border-[#ece8e1] text-[#1d1b19]"
         }`}>
         <div>
           <h2 className="text-2xl md:text-3xl font-extrabold flex items-center gap-2">
@@ -145,7 +145,7 @@ const PriestDashboard = () => {
         ].map((card, i) => (
           <div
             key={i}
-            className={`rounded-2xl p-5 border transition-all duration-300 hover:shadow-md ${darkMode ? "bg-[#1f2937] border-slate-700" : "bg-white border-[#ece8e1]"
+            className={`rounded-2xl p-5 border transition-all duration-300 hover:shadow-md ${darkMode ? "bg-[#1f2937] border-slate-700" : "bg-temple-100 border-[#ece8e1]"
               }`}
           >
             <div className="flex items-center gap-4">
@@ -181,7 +181,7 @@ const PriestDashboard = () => {
       {/* Main Grid: Today's Schedule (spans 2), Upcoming Poojas (span 1) */}
       <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
         {/* Today's Schedule Table */}
-        <div className={`rounded-2xl p-6 border transition-colors ${darkMode ? "bg-[#1f2937] border-slate-700" : "bg-white border-[#ece8e1]"
+        <div className={`rounded-2xl p-6 border transition-colors ${darkMode ? "bg-[#1f2937] border-slate-700" : "bg-temple-100 border-[#ece8e1]"
           }`}>
           <div className="flex items-center justify-between mb-6">
             <h3 className={`text-lg font-bold flex items-center gap-2 ${darkMode ? "text-slate-100" : "text-[#1d1b19]"}`}>
@@ -238,7 +238,7 @@ const PriestDashboard = () => {
       <div className="grid grid-cols-1 gap-6">
 
         {/* Announcements */}
-        <div className={`rounded-2xl p-6 border transition-colors ${darkMode ? "bg-[#1f2937] border-slate-700" : "bg-white border-[#ece8e1]"
+        <div className={`rounded-2xl p-6 border transition-colors ${darkMode ? "bg-[#1f2937] border-slate-700" : "bg-temple-100 border-[#ece8e1]"
           }`}>
           <div className="flex items-center justify-between mb-5">
             <h3 className={`text-lg font-bold flex items-center gap-2 ${darkMode ? "text-slate-100" : "text-[#1d1b19]"}`}>
@@ -289,7 +289,7 @@ const PriestDashboard = () => {
 
     return (
       <div className="space-y-6 fade-in">
-        <div className={`p-6 rounded-2xl border transition-colors ${darkMode ? "bg-[#1f2937] border-slate-700 text-slate-100" : "bg-white border-[#ece8e1] text-[#1d1b19]"
+        <div className={`p-6 rounded-2xl border transition-colors ${darkMode ? "bg-[#1f2937] border-slate-700 text-slate-100" : "bg-temple-100 border-[#ece8e1] text-[#1d1b19]"
           }`}>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
@@ -302,7 +302,7 @@ const PriestDashboard = () => {
             </div>
 
             {/* Search Input */}
-            <div className={`relative px-4 py-2 border rounded-xl flex items-center gap-2 max-w-sm ${darkMode ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"
+            <div className={`relative px-4 py-2 border rounded-xl flex items-center gap-2 max-w-sm ${darkMode ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-temple-100"
               }`}>
               <FaSearch className="text-slate-400" />
               <input
@@ -335,7 +335,7 @@ const PriestDashboard = () => {
         </div>
 
         {/* Assigned Poojas Table */}
-        <div className={`rounded-2xl p-6 border transition-colors ${darkMode ? "bg-[#1f2937] border-slate-700 text-slate-100" : "bg-white border-[#ece8e1]"
+        <div className={`rounded-2xl p-6 border transition-colors ${darkMode ? "bg-[#1f2937] border-slate-700 text-slate-100" : "bg-temple-100 border-[#ece8e1]"
           }`}>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -416,7 +416,7 @@ const PriestDashboard = () => {
   // 3. SEVA SCHEDULE VIEW
   const SevaScheduleView = ({ darkMode }) => (
     <div className="space-y-6 fade-in">
-      <div className={`p-6 rounded-2xl border transition-colors ${darkMode ? "bg-[#1f2937] border-slate-700 text-slate-100" : "bg-white border-[#ece8e1] text-[#1d1b19]"
+      <div className={`p-6 rounded-2xl border transition-colors ${darkMode ? "bg-[#1f2937] border-slate-700 text-slate-100" : "bg-temple-100 border-[#ece8e1] text-[#1d1b19]"
         }`}>
         <h2 className="text-2xl font-extrabold flex items-center gap-2">
           <FaCalendarAlt className="text-orange-500" /> Daily Seva Schedule
@@ -428,7 +428,7 @@ const PriestDashboard = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Timeline Flow */}
-        <div className={`lg:col-span-2 rounded-2xl p-6 border transition-colors ${darkMode ? "bg-[#1f2937] border-slate-700" : "bg-white border-[#ece8e1]"
+        <div className={`lg:col-span-2 rounded-2xl p-6 border transition-colors ${darkMode ? "bg-[#1f2937] border-slate-700" : "bg-temple-100 border-[#ece8e1]"
           }`}>
           <h3 className="font-bold text-lg mb-6 flex items-center gap-2">
             🧭 Ritual Sequence
@@ -455,7 +455,7 @@ const PriestDashboard = () => {
 
         {/* Special Instructions & Items Needed */}
         <div className="space-y-6">
-          <div className={`rounded-2xl p-6 border transition-colors ${darkMode ? "bg-[#1f2937] border-slate-700" : "bg-white border-[#ece8e1]"
+          <div className={`rounded-2xl p-6 border transition-colors ${darkMode ? "bg-[#1f2937] border-slate-700" : "bg-temple-100 border-[#ece8e1]"
             }`}>
             <h4 className="font-bold text-base mb-4">🔔 Special Instructions</h4>
             <ul className="space-y-3 text-sm list-disc pl-4 text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -466,7 +466,7 @@ const PriestDashboard = () => {
             </ul>
           </div>
 
-          <div className={`rounded-2xl p-6 border transition-colors ${darkMode ? "bg-[#1f2937] border-slate-700" : "bg-white border-[#ece8e1]"
+          <div className={`rounded-2xl p-6 border transition-colors ${darkMode ? "bg-[#1f2937] border-slate-700" : "bg-temple-100 border-[#ece8e1]"
             }`}>
             <h4 className="font-bold text-base mb-4">📦 Material inventory Checklist</h4>
             <div className="space-y-2.5 text-sm">
@@ -564,11 +564,11 @@ const PriestDashboard = () => {
       return pages;
     };
 
-    const card = darkMode ? "bg-[#1f2937] border-slate-700" : "bg-white border-[#ece8e1]";
+    const card = darkMode ? "bg-[#1f2937] border-slate-700" : "bg-temple-100 border-[#ece8e1]";
     const txt = darkMode ? "text-slate-100" : "text-[#1d1b19]";
     const sub = darkMode ? "text-slate-400" : "text-slate-500";
     const row = darkMode ? "hover:bg-slate-800/40 border-slate-700" : "hover:bg-slate-50/50 border-slate-100";
-    const inp = darkMode ? "bg-slate-800 border-slate-700 text-slate-100 placeholder-slate-500" : "bg-white border-slate-200 text-slate-800";
+    const inp = darkMode ? "bg-slate-800 border-slate-700 text-slate-100 placeholder-slate-500" : "bg-temple-100 border-slate-200 text-slate-800";
 
     const FILTERS = [
       { id: "all", label: "All Time" },
@@ -666,7 +666,7 @@ const PriestDashboard = () => {
               <span className={`text-xs font-semibold ${sub}`}>Sort:</span>
               <button
                 onClick={() => setSort(sort === "latest" ? "oldest" : "latest")}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all border ${darkMode ? "bg-slate-800 border-slate-700 text-slate-300" : "bg-white border-slate-200 text-slate-700"
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all border ${darkMode ? "bg-slate-800 border-slate-700 text-slate-300" : "bg-temple-100 border-slate-200 text-slate-700"
                   }`}
               >
                 {sort === "latest" ? "⬇️ Latest First" : "⬆️ Oldest First"}
@@ -817,7 +817,7 @@ const PriestDashboard = () => {
   // 5. SPECIAL DUTIES VIEW
   const SpecialDutiesView = ({ darkMode }) => (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 fade-in">
-      <div className={`lg:col-span-2 rounded-2xl p-6 border transition-colors space-y-5 ${darkMode ? "bg-[#1f2937] border-slate-700 text-slate-100" : "bg-white border-[#ece8e1]"
+      <div className={`lg:col-span-2 rounded-2xl p-6 border transition-colors space-y-5 ${darkMode ? "bg-[#1f2937] border-slate-700 text-slate-100" : "bg-temple-100 border-[#ece8e1]"
         }`}>
         <div>
           <h2 className="text-2xl font-extrabold flex items-center gap-2">
@@ -860,7 +860,7 @@ const PriestDashboard = () => {
       </div>
 
       {/* Special Duties Note */}
-      <div className={`rounded-2xl p-6 border transition-colors space-y-4 ${darkMode ? "bg-[#1f2937] border-slate-700 text-slate-100" : "bg-white border-[#ece8e1] text-[#1d1b19]"
+      <div className={`rounded-2xl p-6 border transition-colors space-y-4 ${darkMode ? "bg-[#1f2937] border-slate-700 text-slate-100" : "bg-temple-100 border-[#ece8e1] text-[#1d1b19]"
         }`}>
         <h4 className="font-bold text-lg border-b pb-2">Duty Regulations</h4>
         <p className={`text-sm leading-relaxed ${darkMode ? "text-slate-300" : "text-slate-600"}`}>
@@ -876,7 +876,7 @@ const PriestDashboard = () => {
   // 6. FESTIVAL DUTIES VIEW
   const FestivalDutiesView = ({ darkMode }) => (
     <div className="space-y-6 fade-in">
-      <div className={`p-6 rounded-2xl border transition-colors ${darkMode ? "bg-[#1f2937] border-slate-700 text-slate-100" : "bg-white border-[#ece8e1]"
+      <div className={`p-6 rounded-2xl border transition-colors ${darkMode ? "bg-[#1f2937] border-slate-700 text-slate-100" : "bg-temple-100 border-[#ece8e1]"
         }`}>
         <h2 className="text-2xl font-extrabold flex items-center gap-2">
           <MdFestival className="text-orange-500" /> Festival Duty Schedule (2025)
@@ -894,7 +894,7 @@ const PriestDashboard = () => {
         ].map((fest, idx) => (
           <div
             key={idx}
-            className={`rounded-2xl p-5 border flex flex-col justify-between transition-all duration-300 hover:shadow-md ${darkMode ? "bg-[#1f2937] border-slate-700" : "bg-white border-[#ece8e1]"
+            className={`rounded-2xl p-5 border flex flex-col justify-between transition-all duration-300 hover:shadow-md ${darkMode ? "bg-[#1f2937] border-slate-700" : "bg-temple-100 border-[#ece8e1]"
               }`}
           >
             <div>
@@ -919,7 +919,7 @@ const PriestDashboard = () => {
   // 7. NOTIFICATIONS VIEW
   const NotificationsView = ({ darkMode }) => (
     <div className="space-y-6 fade-in">
-      <div className={`p-6 rounded-2xl border transition-colors ${darkMode ? "bg-[#1f2937] border-slate-700 text-slate-100" : "bg-white border-[#ece8e1]"
+      <div className={`p-6 rounded-2xl border transition-colors ${darkMode ? "bg-[#1f2937] border-slate-700 text-slate-100" : "bg-temple-100 border-[#ece8e1]"
         }`}>
         <h2 className="text-2xl font-extrabold flex items-center gap-2">
           <FaBell className="text-orange-500 animate-swing" /> Announcements & Notifications
@@ -929,7 +929,7 @@ const PriestDashboard = () => {
         </p>
       </div>
 
-      <div className={`rounded-2xl p-6 border transition-colors space-y-4 ${darkMode ? "bg-[#1f2937] border-slate-700" : "bg-white border-[#ece8e1]"
+      <div className={`rounded-2xl p-6 border transition-colors space-y-4 ${darkMode ? "bg-[#1f2937] border-slate-700" : "bg-temple-100 border-[#ece8e1]"
         }`}>
         {announcements.map((note) => (
           <div
@@ -957,7 +957,7 @@ const PriestDashboard = () => {
   const ProfileView = ({ darkMode }) => (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 fade-in">
       {/* Profile summary card */}
-      <div className={`rounded-2xl p-6 border transition-colors flex flex-col items-center text-center ${darkMode ? "bg-[#1f2937] border-slate-700 text-slate-100" : "bg-white border-[#ece8e1] text-[#1d1b19]"
+      <div className={`rounded-2xl p-6 border transition-colors flex flex-col items-center text-center ${darkMode ? "bg-[#1f2937] border-slate-700 text-slate-100" : "bg-temple-100 border-[#ece8e1] text-[#1d1b19]"
         }`}>
         <img
           src={user?.photo || priestAvatar}
@@ -987,7 +987,7 @@ const PriestDashboard = () => {
       </div>
 
       {/* Professional Details & Qualifications */}
-      <div className={`lg:col-span-2 rounded-2xl p-6 border transition-colors space-y-6 ${darkMode ? "bg-[#1f2937] border-slate-700 text-slate-100" : "bg-white border-[#ece8e1]"
+      <div className={`lg:col-span-2 rounded-2xl p-6 border transition-colors space-y-6 ${darkMode ? "bg-[#1f2937] border-slate-700 text-slate-100" : "bg-temple-100 border-[#ece8e1]"
         }`}>
         <div>
           <h3 className="text-lg font-bold border-b pb-2 flex items-center gap-2">

@@ -65,7 +65,7 @@ const AccountantInventory = () => {
         </div>
       </section>
 
-      <div className="flex gap-2 rounded-2xl border bg-white p-2 shadow-sm mb-6 max-w-full overflow-x-auto" style={{ marginTop: "24px" }}>
+      <div className="flex gap-2 rounded-2xl border bg-temple-100 p-2 shadow-sm mb-6 max-w-full overflow-x-auto" style={{ marginTop: "24px" }}>
         {[
           { id: "suppliers", label: "Supplier Ledger", icon: FaTruck },
           { id: "assets", label: "Asset Register", icon: FaBoxes },
@@ -84,7 +84,7 @@ const AccountantInventory = () => {
         ))}
       </div>
 
-      <div className="rounded-2xl border bg-white p-6 shadow-sm min-h-[50vh]">
+      <div className="rounded-2xl border bg-temple-100 p-6 shadow-sm min-h-[50vh]">
         {loading && <p className="text-slate-500 font-bold py-10 text-center">Loading ledger data...</p>}
 
         {!loading && activeTab === "suppliers" && (

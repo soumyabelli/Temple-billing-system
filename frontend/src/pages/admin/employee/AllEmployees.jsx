@@ -444,7 +444,7 @@ const AllEmployees = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="rounded-[28px] border border-white/15 bg-white/80 p-5 shadow-2xl shadow-slate-900/5 backdrop-blur-xl"
+            className="rounded-[28px] border border-white/15 bg-temple-100/80 p-5 shadow-2xl shadow-slate-900/5 backdrop-blur-xl"
           >
             <div className="flex items-center justify-between gap-3">
               <div>
@@ -466,37 +466,37 @@ const AllEmployees = () => {
           <button onClick={() => setShowFilters((current) => !current)} className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-lg hover:bg-slate-800 transition">
             <FiFilter /> Filters
           </button>
-          <button onClick={handleExport} className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-white px-4 py-2 text-sm font-semibold text-amber-600 shadow-sm hover:bg-amber-50 transition">
+          <button onClick={handleExport} className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-temple-100 px-4 py-2 text-sm font-semibold text-amber-600 shadow-sm hover:bg-amber-50 transition">
             <FiUpload /> Export
           </button>
         </div>}>
         {showFilters && (
           <div className="mb-5 grid gap-3 rounded-[28px] border border-slate-200 bg-slate-50 p-4 md:grid-cols-2 xl:grid-cols-4">
-            <select value={filters.role} onChange={(e) => setFilters((prev) => ({ ...prev, role: e.target.value }))} className="rounded-3xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none">
+            <select value={filters.role} onChange={(e) => setFilters((prev) => ({ ...prev, role: e.target.value }))} className="rounded-3xl border border-slate-200 bg-temple-100 px-4 py-3 text-sm outline-none">
               <option value="">Role</option>
               {roleFilterOptions.filter((role) => role !== "All").map((role) => <option key={role}>{role}</option>)}
             </select>
-            <select value={filters.department} onChange={(e) => setFilters((prev) => ({ ...prev, department: e.target.value }))} className="rounded-3xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none">
+            <select value={filters.department} onChange={(e) => setFilters((prev) => ({ ...prev, department: e.target.value }))} className="rounded-3xl border border-slate-200 bg-temple-100 px-4 py-3 text-sm outline-none">
               <option value="">Department</option>
               {filterOptions.departments.map((department) => <option key={department}>{department}</option>)}
             </select>
-            <select value={filters.status} onChange={(e) => setFilters((prev) => ({ ...prev, status: e.target.value }))} className="rounded-3xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none">
+            <select value={filters.status} onChange={(e) => setFilters((prev) => ({ ...prev, status: e.target.value }))} className="rounded-3xl border border-slate-200 bg-temple-100 px-4 py-3 text-sm outline-none">
               <option value="">Status</option>
               {statusFilterOptions.map((status) => <option key={status}>{status}</option>)}
             </select>
-            <select value={filters.shift} onChange={(e) => setFilters((prev) => ({ ...prev, shift: e.target.value }))} className="rounded-3xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none">
+            <select value={filters.shift} onChange={(e) => setFilters((prev) => ({ ...prev, shift: e.target.value }))} className="rounded-3xl border border-slate-200 bg-temple-100 px-4 py-3 text-sm outline-none">
               <option value="">Shift</option>
               {filterOptions.shifts.map((shift) => <option key={shift}>{shift}</option>)}
             </select>
-            <select value={filters.employmentType} onChange={(e) => setFilters((prev) => ({ ...prev, employmentType: e.target.value }))} className="rounded-3xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none">
+            <select value={filters.employmentType} onChange={(e) => setFilters((prev) => ({ ...prev, employmentType: e.target.value }))} className="rounded-3xl border border-slate-200 bg-temple-100 px-4 py-3 text-sm outline-none">
               <option value="">Employment Type</option>
               {employmentTypeOptions.map((type) => <option key={type}>{type}</option>)}
             </select>
-            <input type="date" value={filters.joiningDate} onChange={(e) => setFilters((prev) => ({ ...prev, joiningDate: e.target.value }))} className="rounded-3xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none" />
-            <input type="number" min="0" value={filters.salaryMin} onChange={(e) => setFilters((prev) => ({ ...prev, salaryMin: e.target.value }))} placeholder="Salary Min" className="rounded-3xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none" />
+            <input type="date" value={filters.joiningDate} onChange={(e) => setFilters((prev) => ({ ...prev, joiningDate: e.target.value }))} className="rounded-3xl border border-slate-200 bg-temple-100 px-4 py-3 text-sm outline-none" />
+            <input type="number" min="0" value={filters.salaryMin} onChange={(e) => setFilters((prev) => ({ ...prev, salaryMin: e.target.value }))} placeholder="Salary Min" className="rounded-3xl border border-slate-200 bg-temple-100 px-4 py-3 text-sm outline-none" />
             <div className="flex gap-2">
-              <input type="number" min="0" value={filters.salaryMax} onChange={(e) => setFilters((prev) => ({ ...prev, salaryMax: e.target.value }))} placeholder="Salary Max" className="min-w-0 flex-1 rounded-3xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none" />
-              <button type="button" onClick={() => setFilters(emptyFilters)} className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600">
+              <input type="number" min="0" value={filters.salaryMax} onChange={(e) => setFilters((prev) => ({ ...prev, salaryMax: e.target.value }))} placeholder="Salary Max" className="min-w-0 flex-1 rounded-3xl border border-slate-200 bg-temple-100 px-4 py-3 text-sm outline-none" />
+              <button type="button" onClick={() => setFilters(emptyFilters)} className="rounded-full border border-slate-200 bg-temple-100 px-4 py-2 text-sm font-semibold text-slate-600">
                 Clear
               </button>
             </div>
@@ -506,7 +506,7 @@ const AllEmployees = () => {
       </SectionCard>
 
       {selectedEmployee && (
-        <SectionCard title="Selected Employee" subtitle="Review detailed employee profile." className="bg-white/95 text-slate-950 relative">
+        <SectionCard title="Selected Employee" subtitle="Review detailed employee profile." className="bg-temple-100/95 text-slate-950 relative">
           <div className="absolute right-6 top-6">
             <button
               onClick={() => setIsEditModalOpen(true)}
@@ -554,7 +554,7 @@ const AllEmployees = () => {
                 key={tab}
                 type="button"
                 onClick={() => setSelectedTab(tab)}
-                className={`rounded-full px-4 py-2 text-sm font-semibold transition ${selectedTab === tab ? "bg-slate-900 text-white" : "border border-slate-200 bg-white text-slate-600"}`}
+                className={`rounded-full px-4 py-2 text-sm font-semibold transition ${selectedTab === tab ? "bg-slate-900 text-white" : "border border-slate-200 bg-temple-100 text-slate-600"}`}
               >
                 {tab}
               </button>
@@ -564,89 +564,89 @@ const AllEmployees = () => {
           {selectedTab === "Profile" && (
           <>
           <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            <div className="rounded-3xl border border-slate-200 bg-white p-4">
+            <div className="rounded-3xl border border-slate-200 bg-temple-100 p-4">
               <p className="text-sm text-slate-500">Email</p>
               <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.email || "-"}</p>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-4">
+            <div className="rounded-3xl border border-slate-200 bg-temple-100 p-4">
               <p className="text-sm text-slate-500">Gender</p>
               <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.gender || "-"}</p>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-4">
+            <div className="rounded-3xl border border-slate-200 bg-temple-100 p-4">
               <p className="text-sm text-slate-500">Date of Birth</p>
               <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.dob || "-"}</p>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-4">
+            <div className="rounded-3xl border border-slate-200 bg-temple-100 p-4">
               <p className="text-sm text-slate-500">Blood Group</p>
               <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.bloodGroup || "-"}</p>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-4">
+            <div className="rounded-3xl border border-slate-200 bg-temple-100 p-4">
               <p className="text-sm text-slate-500">Aadhaar</p>
               <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.aadhaar || "-"}</p>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-4">
+            <div className="rounded-3xl border border-slate-200 bg-temple-100 p-4">
               <p className="text-sm text-slate-500">Emergency Contact</p>
               <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.emergencyContact || "-"}</p>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-4">
+            <div className="rounded-3xl border border-slate-200 bg-temple-100 p-4">
               <p className="text-sm text-slate-500">Employment Type</p>
               <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.employmentType || "-"}</p>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-4">
+            <div className="rounded-3xl border border-slate-200 bg-temple-100 p-4">
               <p className="text-sm text-slate-500">Salary</p>
               <p className="mt-1 font-semibold text-slate-900">{formatCurrency(selectedEmployee.salary)}</p>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-4">
+            <div className="rounded-3xl border border-slate-200 bg-temple-100 p-4">
               <p className="text-sm text-slate-500">Bank Name</p>
               <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.bankName || "-"}</p>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-4">
+            <div className="rounded-3xl border border-slate-200 bg-temple-100 p-4">
               <p className="text-sm text-slate-500">Account Number</p>
               <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.accountNumber || "-"}</p>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-4">
+            <div className="rounded-3xl border border-slate-200 bg-temple-100 p-4">
               <p className="text-sm text-slate-500">Current Duty</p>
               <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.currentDuty?.dutyName || selectedEmployee.defaultDuty || "-"}</p>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-4">
+            <div className="rounded-3xl border border-slate-200 bg-temple-100 p-4">
               <p className="text-sm text-slate-500">Default Shift</p>
               <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.defaultShift || "-"}</p>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-4">
+            <div className="rounded-3xl border border-slate-200 bg-temple-100 p-4">
               <p className="text-sm text-slate-500">Default Duty</p>
               <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.defaultDuty || "-"}</p>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-4">
+            <div className="rounded-3xl border border-slate-200 bg-temple-100 p-4">
               <p className="text-sm text-slate-500">Duty Location</p>
               <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.currentDuty?.dutyLocation || selectedEmployee.dutyLocation || "-"}</p>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-4">
+            <div className="rounded-3xl border border-slate-200 bg-temple-100 p-4">
               <p className="text-sm text-slate-500">Attendance Status</p>
               <p className="mt-1 break-words font-semibold text-slate-900">{selectedEmployee.attendanceStatus || "Not Marked"}</p>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-4">
+            <div className="rounded-3xl border border-slate-200 bg-temple-100 p-4">
               <p className="text-sm text-slate-500">Leave Balance</p>
               <p className="mt-1 break-words font-semibold text-slate-900">{selectedEmployee.leaveBalance ?? 0} days</p>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-4">
+            <div className="rounded-3xl border border-slate-200 bg-temple-100 p-4">
               <p className="text-sm text-slate-500">Created Date</p>
               <p className="mt-1 break-words font-semibold text-slate-900">{formatDate(selectedEmployee.createdAt)}</p>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-4">
+            <div className="rounded-3xl border border-slate-200 bg-temple-100 p-4">
               <p className="text-sm text-slate-500">Updated Date</p>
               <p className="mt-1 break-words font-semibold text-slate-900">{formatDate(selectedEmployee.updatedAt)}</p>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-4">
+            <div className="rounded-3xl border border-slate-200 bg-temple-100 p-4">
               <p className="text-sm text-slate-500">Created By</p>
               <p className="mt-1 break-words font-semibold text-slate-900">{selectedEmployee.createdBy || "Admin"}</p>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-4">
+            <div className="rounded-3xl border border-slate-200 bg-temple-100 p-4">
               <p className="text-sm text-slate-500">Last Login</p>
               <p className="mt-1 break-words font-semibold text-slate-900">{formatDate(selectedEmployee.lastLogin)}</p>
             </div>
           </div>
 
-          <div className="mt-4 rounded-3xl border border-slate-200 bg-white p-4">
+          <div className="mt-4 rounded-3xl border border-slate-200 bg-temple-100 p-4">
             <p className="text-sm text-slate-500">Address</p>
             <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.address || "-"}</p>
           </div>
@@ -666,7 +666,7 @@ const AllEmployees = () => {
           )}
 
           {selectedTab !== "Profile" && selectedTab !== "Face Registration" && (
-            <div className="mt-4 rounded-3xl border border-slate-200 bg-white p-4">
+            <div className="mt-4 rounded-3xl border border-slate-200 bg-temple-100 p-4">
               {selectedTab === "Attendance" && (
                 <DetailRows rows={selectedEmployee.details?.attendance || []} empty="No attendance records found." getKey={(row) => row._id || row.id} render={(row) => `${formatDate(row.dateKey)} - ${row.status || "Pending"} - ${row.checkIn || "--"} to ${row.checkOut || "--"}`} />
               )}
@@ -696,22 +696,22 @@ const AllEmployees = () => {
               className="h-full"
               topRight={
                 <div className="flex flex-wrap items-center gap-2">
-                  <select value={attendanceFilters.role} onChange={(e) => setAttendanceFilters((prev) => ({ ...prev, role: e.target.value }))} className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs outline-none">
+                  <select value={attendanceFilters.role} onChange={(e) => setAttendanceFilters((prev) => ({ ...prev, role: e.target.value }))} className="rounded-full border border-slate-200 bg-temple-100 px-3 py-2 text-xs outline-none">
                     <option value="All">All Roles</option>
                     {roleFilterOptions.filter((role) => role !== "All").map((role) => <option key={role}>{role}</option>)}
                   </select>
-                  <select value={attendanceFilters.department} onChange={(e) => setAttendanceFilters((prev) => ({ ...prev, department: e.target.value }))} className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs outline-none">
+                  <select value={attendanceFilters.department} onChange={(e) => setAttendanceFilters((prev) => ({ ...prev, department: e.target.value }))} className="rounded-full border border-slate-200 bg-temple-100 px-3 py-2 text-xs outline-none">
                     <option value="">All Departments</option>
                     {filterOptions.departments.map((department) => <option key={department}>{department}</option>)}
                   </select>
-                  <select value={attendanceFilters.month} onChange={(e) => setAttendanceFilters((prev) => ({ ...prev, month: e.target.value }))} className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs outline-none">
+                  <select value={attendanceFilters.month} onChange={(e) => setAttendanceFilters((prev) => ({ ...prev, month: e.target.value }))} className="rounded-full border border-slate-200 bg-temple-100 px-3 py-2 text-xs outline-none">
                     {Array.from({ length: 12 }, (_, index) => {
                       const monthNumber = String(index + 1).padStart(2, "0");
                       const label = new Date(2026, index, 1).toLocaleDateString("en-IN", { month: "short" });
                       return <option key={monthNumber} value={monthNumber}>{label}</option>;
                     })}
                   </select>
-                  <select value={attendanceFilters.year} onChange={(e) => setAttendanceFilters((prev) => ({ ...prev, year: e.target.value }))} className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs outline-none">
+                  <select value={attendanceFilters.year} onChange={(e) => setAttendanceFilters((prev) => ({ ...prev, year: e.target.value }))} className="rounded-full border border-slate-200 bg-temple-100 px-3 py-2 text-xs outline-none">
                     {Array.from({ length: 5 }, (_, index) => {
                       const year = String(new Date().getFullYear() - index);
                       return <option key={year} value={year}>{year}</option>;
@@ -738,7 +738,7 @@ const AllEmployees = () => {
               subtitle="Team distribution across temple departments."
               className="h-full"
               topRight={
-                <select value={departmentRoleFilter} onChange={(e) => setDepartmentRoleFilter(e.target.value)} className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs outline-none">
+                <select value={departmentRoleFilter} onChange={(e) => setDepartmentRoleFilter(e.target.value)} className="rounded-full border border-slate-200 bg-temple-100 px-3 py-2 text-xs outline-none">
                   {roleFilterOptions.map((role) => <option key={role}>{role}</option>)}
                 </select>
               }
@@ -768,7 +768,7 @@ const AllEmployees = () => {
             subtitle="Newest additions to the temple team."
             className="overflow-hidden"
             topRight={
-              <select value={recentRoleFilter} onChange={(e) => setRecentRoleFilter(e.target.value)} className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs outline-none">
+              <select value={recentRoleFilter} onChange={(e) => setRecentRoleFilter(e.target.value)} className="rounded-full border border-slate-200 bg-temple-100 px-3 py-2 text-xs outline-none">
                 {roleFilterOptions.map((role) => <option key={role}>{role}</option>)}
               </select>
             }

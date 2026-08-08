@@ -69,7 +69,7 @@ const AdminAssetManagement = () => {
         {assets.map((asset) => {
           const qrUrl = `${window.location.origin}/admin/assets/scan/${asset.assetId}`;
           return (
-            <div key={asset._id} className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow p-6 relative overflow-hidden group">
+            <div key={asset._id} className="bg-temple-100 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow p-6 relative overflow-hidden group">
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <h3 className="font-bold text-lg text-slate-800">{asset.name}</h3>
@@ -112,12 +112,12 @@ const AdminAssetManagement = () => {
         {/* QR Modal */}
         {showQRModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-            <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full overflow-hidden transform transition-all">
+            <div className="bg-temple-100 rounded-2xl shadow-xl max-w-sm w-full overflow-hidden transform transition-all">
               <div className="p-6 text-center">
                 <h3 className="text-xl font-bold text-slate-800 mb-2">{showQRModal.name}</h3>
                 <p className="text-sm text-slate-500 mb-6">Asset ID: {showQRModal.assetId}</p>
                 
-                <div className="flex justify-center mb-6 p-4 bg-white rounded-xl border border-slate-100 shadow-sm inline-block">
+                <div className="flex justify-center mb-6 p-4 bg-temple-100 rounded-xl border border-slate-100 shadow-sm inline-block">
                   <QRCodeCanvas 
                     id={`qr-code-${showQRModal.assetId}`}
                     value={`${window.location.origin}/admin/assets/scan/${showQRModal.assetId}`} 
@@ -167,7 +167,7 @@ const AdminAssetManagement = () => {
             onClick={() => setActiveTab(tab)}
             className={`px-5 py-2.5 text-sm font-medium rounded-t-xl transition-all whitespace-nowrap ${
               activeTab === tab
-                ? "bg-white text-[#ff8b00] border-t border-l border-r border-slate-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] translate-y-px"
+                ? "bg-temple-100 text-[#ff8b00] border-t border-l border-r border-slate-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] translate-y-px"
                 : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
             }`}
           >
@@ -178,7 +178,7 @@ const AdminAssetManagement = () => {
 
       <div className="min-h-[400px]">
         {activeTab === "Assets" ? renderAssetsTab() : (
-          <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center text-slate-500 shadow-sm flex items-center justify-center h-64">
+          <div className="bg-temple-100 rounded-2xl border border-slate-200 p-8 text-center text-slate-500 shadow-sm flex items-center justify-center h-64">
             {activeTab} module under development.
           </div>
         )}

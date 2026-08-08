@@ -114,7 +114,7 @@ const DevoateeProfileComponent = () => {
   }
 
   return (
-    <div className={`rounded-[28px] border border-white/45 bg-white/60 p-6 shadow-[0_28px_80px_rgba(115,83,27,0.12)] backdrop-blur-xl`}>
+    <div className={`rounded-[28px] border border-white/45 bg-temple-100/60 p-6 shadow-[0_28px_80px_rgba(115,83,27,0.12)] backdrop-blur-xl`}>
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-amber-900">👤 My Profile</h2>
         <button
@@ -146,7 +146,7 @@ const DevoateeProfileComponent = () => {
             disabled={!isEditing}
             className={`w-full rounded-xl border ${
               errors.name ? "border-red-500" : "border-white/70"
-            } ${isEditing ? "bg-white/80 cursor-text" : "bg-gray-100 cursor-default"} p-3.5 outline-none ${
+            } ${isEditing ? "bg-temple-100/80 cursor-text" : "bg-gray-100 cursor-default"} p-3.5 outline-none ${
               isEditing ? "focus:ring-2 focus:ring-amber-400" : ""
             } transition-all`}
           />
@@ -164,7 +164,7 @@ const DevoateeProfileComponent = () => {
             disabled={!isEditing}
             className={`w-full rounded-xl border ${
               errors.email ? "border-red-500" : "border-white/70"
-            } ${isEditing ? "bg-white/80 cursor-text" : "bg-gray-100 cursor-default"} p-3.5 outline-none ${
+            } ${isEditing ? "bg-temple-100/80 cursor-text" : "bg-gray-100 cursor-default"} p-3.5 outline-none ${
               isEditing ? "focus:ring-2 focus:ring-amber-400" : ""
             } transition-all`}
           />
@@ -183,7 +183,7 @@ const DevoateeProfileComponent = () => {
             placeholder="Enter 10-digit phone number"
             className={`w-full rounded-xl border ${
               errors.phone ? "border-red-500" : "border-white/70"
-            } ${isEditing ? "bg-white/80 cursor-text" : "bg-gray-100 cursor-default"} p-3.5 outline-none ${
+            } ${isEditing ? "bg-temple-100/80 cursor-text" : "bg-gray-100 cursor-default"} p-3.5 outline-none ${
               isEditing ? "focus:ring-2 focus:ring-amber-400" : ""
             } transition-all`}
           />
@@ -201,7 +201,7 @@ const DevoateeProfileComponent = () => {
             disabled={!isEditing}
             className={`w-full rounded-xl border ${
               errors.place ? "border-red-500" : "border-white/70"
-            } ${isEditing ? "bg-white/80 cursor-text" : "bg-gray-100 cursor-default"} p-3.5 outline-none ${
+            } ${isEditing ? "bg-temple-100/80 cursor-text" : "bg-gray-100 cursor-default"} p-3.5 outline-none ${
               isEditing ? "focus:ring-2 focus:ring-amber-400" : ""
             } transition-all`}
           />
@@ -219,7 +219,7 @@ const DevoateeProfileComponent = () => {
             rows="3"
             className={`w-full rounded-xl border ${
               errors.address ? "border-red-500" : "border-white/70"
-            } ${isEditing ? "bg-white/80 cursor-text" : "bg-gray-100 cursor-default"} p-3.5 outline-none ${
+            } ${isEditing ? "bg-temple-100/80 cursor-text" : "bg-gray-100 cursor-default"} p-3.5 outline-none ${
               isEditing ? "focus:ring-2 focus:ring-amber-400" : ""
             } resize-none transition-all`}
           />
@@ -256,14 +256,14 @@ const DevoateeProfileComponent = () => {
           You will receive notifications on these channels for all your bookings, donations, and prasadam orders:
         </p>
         <div className="space-y-2 mt-3">
-          <div className="flex items-center space-x-2 p-2 bg-white rounded border border-blue-100">
+          <div className="flex items-center space-x-2 p-2 bg-temple-100 rounded border border-blue-100">
             <span className="text-lg">📧</span>
             <div>
               <p className="text-xs font-semibold text-blue-900">Email</p>
               <p className="text-sm text-blue-800">{profile.email || "Not provided"}</p>
             </div>
           </div>
-          <div className="flex items-center space-x-2 p-2 bg-white rounded border border-blue-100">
+          <div className="flex items-center space-x-2 p-2 bg-temple-100 rounded border border-blue-100">
             <span className="text-lg">📱</span>
             <div>
               <p className="text-xs font-semibold text-blue-900">SMS/WhatsApp</p>

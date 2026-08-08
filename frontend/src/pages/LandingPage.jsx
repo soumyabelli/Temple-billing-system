@@ -72,7 +72,7 @@ const LandingPage = () => {
               { title: "Daily Rituals", line1: "Mangala Aarti, Rudrabhishek", line2: "Sandhya Aarti & Prasad Seva" },
               { title: "Temple Values", line1: "Devotion, Service, Discipline", line2: "Transparency, Compassion" }
             ].map((info, idx) => (
-              <div key={idx} className="group rounded-2xl border border-white/5 bg-white/5 p-4 transition duration-300 hover:bg-white/10 hover:border-white/10">
+              <div key={idx} className="group rounded-2xl border border-white/5 bg-temple-100/5 p-4 transition duration-300 hover:bg-temple-100/10 hover:border-white/10">
                 <p className="text-temple-300 font-medium mb-2">{info.title}</p>
                 <p className="text-white/80">{info.line1}</p>
                 <p className="text-white/80">{info.line2}</p>
@@ -87,7 +87,7 @@ const LandingPage = () => {
               className="group flex h-[72px] w-full sm:w-auto min-w-[320px] items-center justify-between rounded-full bg-gradient-to-r from-temple-500 to-temple-600 px-6 text-2xl font-semibold text-white shadow-[0_8px_30px_rgba(229,130,32,0.3)] transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_10px_40px_rgba(229,130,32,0.4)]"
             >
               <span className="flex items-center gap-4">
-                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-temple-600 shadow-sm transition-transform duration-300 group-hover:scale-110">
+                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-temple-100 text-temple-600 shadow-sm transition-transform duration-300 group-hover:scale-110">
                   <IoPerson size={20} />
                 </span>
                 Login
@@ -96,7 +96,7 @@ const LandingPage = () => {
             </button>
           </motion.div>
 
-          <motion.div variants={itemVariants} className="mt-10 grid grid-cols-2 gap-4 rounded-[24px] border border-white/5 bg-white/5 p-6 backdrop-blur-md md:grid-cols-4">
+          <motion.div variants={itemVariants} className="mt-10 grid grid-cols-2 gap-4 rounded-[24px] border border-white/5 bg-temple-100/5 p-6 backdrop-blur-md md:grid-cols-4">
             {[
               { icon: FaFileInvoice, text: "Easy Billing" },
               { icon: FaUsers, text: "Devotee Mgmt" },

@@ -285,7 +285,7 @@ const ProfilePage = () => {
       <div className="grid gap-8 lg:grid-cols-3">
         {/* EDIT PROFILE FORM */}
         <div className="lg:col-span-2 space-y-6">
-          <section className="rounded-3xl border border-[#f0d3a2] bg-white p-6 shadow-sm transition hover:shadow-md">
+          <section className="rounded-3xl border border-[#f0d3a2] bg-temple-100 p-6 shadow-sm transition hover:shadow-md">
             <div className="flex items-center justify-between border-b border-[#f9ebdf] pb-4">
               <div>
                 <h2 className="text-2xl font-extrabold text-slate-900">Edit Profile</h2>
@@ -511,12 +511,12 @@ const ProfilePage = () => {
                         </button>
                       </div>
                     ) : (
-                      <div className="flex h-20 w-20 items-center justify-center rounded-2xl border border-[#ead7bb] bg-white text-slate-400">
+                      <div className="flex h-20 w-20 items-center justify-center rounded-2xl border border-[#ead7bb] bg-temple-100 text-slate-400">
                         <FaUserCircle className="text-4xl text-[#f28c18]/70" />
                       </div>
                     )}
                     <div className="flex flex-col gap-1.5 items-center sm:items-start w-full sm:w-auto">
-                      <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-2xl border border-[#f0c58f] bg-white px-4 py-2.5 text-sm font-bold text-slate-900 transition hover:bg-[#fff8ef]">
+                      <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-2xl border border-[#f0c58f] bg-temple-100 px-4 py-2.5 text-sm font-bold text-slate-900 transition hover:bg-[#fff8ef]">
                         <svg className="w-4 h-4 text-[#f28c18]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                         </svg>
@@ -580,7 +580,7 @@ const ProfilePage = () => {
         {/* PROFILE SNAPSHOT & SECURITY */}
         <div className="space-y-6">
           {/* SNAPSHOT CARD */}
-          <div className="rounded-3xl border border-[#f0d3a2] bg-white p-6 shadow-sm transition hover:shadow-md">
+          <div className="rounded-3xl border border-[#f0d3a2] bg-temple-100 p-6 shadow-sm transition hover:shadow-md">
             <h2 className="text-xl font-extrabold text-slate-900 border-b border-[#f9ebdf] pb-3">Profile Snapshot</h2>
             <div className="mt-4 rounded-2xl border border-[#ead7bb] bg-[#fffaf4] p-4 flex flex-col items-center text-center">
               {profileForm.photo ? (
@@ -619,7 +619,7 @@ const ProfilePage = () => {
           </div>
 
           {/* PASSWORD SECURITY CARD */}
-          <div className="rounded-3xl border border-[#f0d3a2] bg-white p-6 shadow-sm transition hover:shadow-md">
+          <div className="rounded-3xl border border-[#f0d3a2] bg-temple-100 p-6 shadow-sm transition hover:shadow-md">
             <div className="flex items-center justify-between border-b border-[#f9ebdf] pb-3">
               <h2 className="text-xl font-extrabold text-slate-900">Security</h2>
               <div className="rounded-full bg-[#fff6e6] p-2 text-[#f28c18]">
@@ -664,7 +664,7 @@ const ProfilePage = () => {
               <button
                 type="submit"
                 disabled={savingPassword || loading}
-                className="w-full rounded-2xl border border-[#f0c58f] bg-white py-3.5 text-base font-extrabold text-slate-900 transition hover:bg-[#fff8ef] disabled:cursor-not-allowed disabled:opacity-70 flex items-center justify-center gap-2 shadow-sm"
+                className="w-full rounded-2xl border border-[#f0c58f] bg-temple-100 py-3.5 text-base font-extrabold text-slate-900 transition hover:bg-[#fff8ef] disabled:cursor-not-allowed disabled:opacity-70 flex items-center justify-center gap-2 shadow-sm"
               >
                 <FaShieldAlt className="text-[#f28c18]" />
                 {savingPassword ? "Updating..." : "Update Security Password"}

@@ -21,7 +21,7 @@ const AdminInventoryReports = () => {
             onClick={() => setActiveTab(tab)}
             className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors whitespace-nowrap ${
               activeTab === tab
-                ? "bg-white text-[#ff8b00] border-t border-l border-r border-slate-200 shadow-sm"
+                ? "bg-temple-100 text-[#ff8b00] border-t border-l border-r border-slate-200 shadow-sm"
                 : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
             }`}
           >
@@ -30,7 +30,7 @@ const AdminInventoryReports = () => {
         ))}
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm flex items-center justify-center min-h-[400px] text-slate-500">
+      <div className="rounded-2xl border border-slate-200 bg-temple-100 p-6 shadow-sm flex items-center justify-center min-h-[400px] text-slate-500">
         {activeTab} UI goes here.
       </div>
     </div>

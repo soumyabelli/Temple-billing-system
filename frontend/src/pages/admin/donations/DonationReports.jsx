@@ -231,7 +231,7 @@ const DonationReports = () => {
           <button onClick={() => window.location.href = '/admin/donations'} className="rounded-2xl border border-slate-700 bg-slate-800 px-5 py-3 font-semibold text-white transition hover:bg-slate-700">
             Back to Donations
           </button>
-          <button onClick={handleViewReport} className="rounded-2xl bg-white px-5 py-3 font-semibold text-slate-950 transition hover:bg-slate-200">
+          <button onClick={handleViewReport} className="rounded-2xl bg-temple-100 px-5 py-3 font-semibold text-slate-950 transition hover:bg-slate-200">
             View Live Print Preview
           </button>
           <button onClick={handleExportPdf} className="rounded-2xl bg-amber-400 px-5 py-3 font-semibold text-slate-950 transition hover:bg-amber-300">

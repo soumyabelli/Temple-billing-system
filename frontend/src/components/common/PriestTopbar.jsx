@@ -40,7 +40,7 @@ const PriestTopbar = ({ darkMode, toggleDarkMode, onOpenMobileSidebar }) => {
       ${
         darkMode
           ? "bg-[#1f2937]/75 border-slate-700 shadow-lg"
-          : "bg-white/70 border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.06)]"
+          : "bg-temple-100/70 border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.06)]"
       }`}
     >
       {/* Left side: Hamburger (mobile) and Search */}
@@ -49,7 +49,7 @@ const PriestTopbar = ({ darkMode, toggleDarkMode, onOpenMobileSidebar }) => {
           type="button"
           onClick={onOpenMobileSidebar}
           className={`lg:hidden h-10 w-10 rounded-xl border flex items-center justify-center transition-colors ${
-            darkMode ? "border-slate-700 text-slate-100 bg-slate-800/50" : "border-[#ece8e1] text-[#6b4c2e] bg-white"
+            darkMode ? "border-slate-700 text-slate-100 bg-slate-800/50" : "border-[#ece8e1] text-[#6b4c2e] bg-temple-100"
           }`}
         >
           <MdMenu size={20} />
@@ -57,7 +57,7 @@ const PriestTopbar = ({ darkMode, toggleDarkMode, onOpenMobileSidebar }) => {
 
         <div
           className={`w-[220px] md:w-[340px] px-4 py-2.5 rounded-xl border flex items-center gap-3 transition-colors ${
-            darkMode ? "border-slate-700 text-slate-300 bg-slate-800/40" : "border-[#ece8e1] text-gray-500 bg-white"
+            darkMode ? "border-slate-700 text-slate-300 bg-slate-800/40" : "border-[#ece8e1] text-gray-500 bg-temple-100"
           }`}
         >
           <FiSearch className="text-orange-500 font-bold shrink-0" />
@@ -80,7 +80,7 @@ const PriestTopbar = ({ darkMode, toggleDarkMode, onOpenMobileSidebar }) => {
           className={`h-10 w-10 rounded-xl border flex items-center justify-center transition-colors ${
             darkMode
               ? "border-slate-700 bg-slate-800/50 text-amber-300 hover:bg-slate-800"
-              : "border-[#ece8e1] bg-white text-[#e07a22] hover:bg-slate-50"
+              : "border-[#ece8e1] bg-temple-100 text-[#e07a22] hover:bg-slate-50"
           }`}
           aria-label="Toggle theme"
         >
@@ -94,7 +94,7 @@ const PriestTopbar = ({ darkMode, toggleDarkMode, onOpenMobileSidebar }) => {
           className={`relative rounded-xl p-2.5 border transition-colors ${
             darkMode
               ? "border-slate-700 bg-slate-800/50 text-slate-200 hover:bg-slate-800"
-              : "border-[#ece8e1] bg-white text-[#5c544d] hover:bg-slate-50"
+              : "border-[#ece8e1] bg-temple-100 text-[#5c544d] hover:bg-slate-50"
           }`}
           aria-label="Open notifications"
         >

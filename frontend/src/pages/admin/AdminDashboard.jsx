@@ -54,7 +54,7 @@ const cardIcons = {
 };
 
 const PlaceholderView = ({ title, darkMode }) => (
-  <div className={`mt-5 rounded-2xl border p-8 ${darkMode ? "bg-[#1f2937] border-[#334155]" : "bg-white border-[#ece8e1]"}`}>
+  <div className={`mt-5 rounded-2xl border p-8 ${darkMode ? "bg-[#1f2937] border-[#334155]" : "bg-temple-100 border-[#ece8e1]"}`}>
     <h2 className={`text-3xl font-bold ${darkMode ? "text-slate-100" : "text-[#1d1b19]"}`}>{title}</h2>
     <p className={`mt-2 ${darkMode ? "text-slate-300" : "text-gray-600"}`}>Module layout is ready. Connect forms, APIs, and database operations next.</p>
   </div>
@@ -80,7 +80,7 @@ const AdminDashboard = () => {
           getAdminUsers(token),
           getAdminBookings(),
           getAdminDonations(),
-          axios.get("http://localhost:5000/api/admin/inventory-items").catch(() => ({ data: { items: [] } })),
+          axios.get("http://localhost:5000/api/admin/inventory-items", { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: { items: [] } })),
           getAdminPrasadamOrders(),
           getAdminRooms().catch(() => []),
           getAdminAllBookings().catch(() => ({ bookings: [] })),
@@ -290,7 +290,7 @@ const AdminDashboard = () => {
                 <DashboardCards cards={dynamicStatCards} />
 
                 <div className="mt-4">
-                  <div className={`rounded-2xl border p-5 ${darkMode ? "bg-[#1f2937] border-[#334155]" : "bg-white border-[#ece8e1]"}`}>
+                  <div className={`rounded-2xl border p-5 ${darkMode ? "bg-[#1f2937] border-[#334155]" : "bg-temple-100 border-[#ece8e1]"}`}>
                     <h3 className={`text-2xl font-bold ${darkMode ? "text-slate-100" : "text-[#1d1b19]"}`}>Donation Sources</h3>
                     {donationSources.length ? (
                       <DonationChart sources={donationSources} showCounts />
@@ -301,11 +301,11 @@ const AdminDashboard = () => {
                 </div>
 
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 mt-5">
-                  <div className={`rounded-2xl border p-6 ${darkMode ? "bg-[#1f2937] border-[#334155]" : "bg-white border-[#ece8e1]"}`}>
+                  <div className={`rounded-2xl border p-6 ${darkMode ? "bg-[#1f2937] border-[#334155]" : "bg-temple-100 border-[#ece8e1]"}`}>
                     <h3 className={`text-3xl font-bold mb-4 ${darkMode ? "text-slate-100" : "text-[#1d1b19]"}`}>Recent Bookings</h3>
                     <RecentBookings bookings={recentBookings} />
                   </div>
-                  <div className={`rounded-2xl border p-6 ${darkMode ? "bg-[#1f2937] border-[#334155]" : "bg-white border-[#ece8e1]"}`}>
+                  <div className={`rounded-2xl border p-6 ${darkMode ? "bg-[#1f2937] border-[#334155]" : "bg-temple-100 border-[#ece8e1]"}`}>
                     <h3 className={`text-3xl font-bold mb-4 ${darkMode ? "text-slate-100" : "text-[#1d1b19]"}`}>Low Stock Alerts</h3>
                     <LowStock items={inventoryItems.map(i => ({ name: i.name, stock: i.currentStock, status: i.currentStock <= i.minimumStock ? "Low" : "OK" }))} />
                   </div>

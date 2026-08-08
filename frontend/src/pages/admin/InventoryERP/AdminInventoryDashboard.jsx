@@ -28,7 +28,7 @@ const AdminInventoryDashboard = () => {
 
       {/* SUMMARY CARDS */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 bg-temple-100 p-5 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-50 text-[#ff8b00]">
               <FaMoneyBillWave size={24} />
@@ -40,7 +40,7 @@ const AdminInventoryDashboard = () => {
           </div>
         </div>
         
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 bg-temple-100 p-5 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
               <FaBoxes size={24} />
@@ -80,7 +80,7 @@ const AdminInventoryDashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* PENDING APPROVALS */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="rounded-2xl border border-slate-200 bg-temple-100 p-6 shadow-sm">
             <h3 className="text-lg font-bold text-slate-800 mb-4">Pending Approvals & Workflows</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 flex flex-col items-center justify-center text-center">
@@ -106,7 +106,7 @@ const AdminInventoryDashboard = () => {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="rounded-2xl border border-slate-200 bg-temple-100 p-6 shadow-sm">
              <h3 className="text-lg font-bold text-slate-800 mb-4">Inventory Analytics (Coming Soon)</h3>
              <div className="h-48 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-center text-slate-400">
                 [ Chart: Monthly Purchase vs Consumption ]
@@ -116,7 +116,7 @@ const AdminInventoryDashboard = () => {
 
         {/* NOTIFICATIONS & ACTIVITY */}
         <div className="space-y-6">
-          <div className="rounded-2xl border border-red-100 bg-white p-6 shadow-sm">
+          <div className="rounded-2xl border border-red-100 bg-temple-100 p-6 shadow-sm">
             <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
               <FaExclamationTriangle className="text-red-500" /> Action Required
             </h3>
@@ -136,7 +136,7 @@ const AdminInventoryDashboard = () => {
             </ul>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="rounded-2xl border border-slate-200 bg-temple-100 p-6 shadow-sm">
             <h3 className="text-lg font-bold text-slate-800 mb-4">Recent Activity</h3>
             <ul className="space-y-4">
               <li className="flex gap-3 text-sm text-slate-600 border-b border-slate-50 pb-3">

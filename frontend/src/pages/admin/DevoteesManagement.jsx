@@ -63,7 +63,7 @@ const DevoteesManagement = ({ darkMode, devotees = [], bookings = [], donations 
           <p className={`${darkMode ? "text-slate-300" : "text-gray-600"}`}>Live backend data for devotees, bookings and donations.</p>
         </div>
 
-        <div className={`inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm ${darkMode ? "border-[#334155] bg-[#1f2937] text-slate-200" : "border-[#ece8e1] bg-white text-[#6b4c2e]"}`}>
+        <div className={`inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm ${darkMode ? "border-[#334155] bg-[#1f2937] text-slate-200" : "border-[#ece8e1] bg-temple-100 text-[#6b4c2e]"}`}>
           <MdCalendarMonth className="text-[18px]" />
           {new Date().toLocaleString()}
         </div>
@@ -73,7 +73,7 @@ const DevoteesManagement = ({ darkMode, devotees = [], bookings = [], donations 
         {statCards.map((card) => {
           const Icon = card.icon;
           return (
-            <div key={card.title} className={`rounded-2xl border p-4 ${darkMode ? "bg-[#1f2937] border-[#334155]" : "bg-white border-[#ece8e1]"}`}>
+            <div key={card.title} className={`rounded-2xl border p-4 ${darkMode ? "bg-[#1f2937] border-[#334155]" : "bg-temple-100 border-[#ece8e1]"}`}>
               <div className="flex items-center gap-3">
                 <div className={`h-12 w-12 rounded-full flex items-center justify-center ${card.iconWrap}`}>
                   <Icon className="text-[20px]" />
@@ -88,7 +88,7 @@ const DevoteesManagement = ({ darkMode, devotees = [], bookings = [], donations 
         })}
       </div>
 
-      <div className={`rounded-2xl border p-4 ${darkMode ? "bg-[#1f2937] border-[#334155]" : "bg-white border-[#ece8e1]"}`}>
+      <div className={`rounded-2xl border p-4 ${darkMode ? "bg-[#1f2937] border-[#334155]" : "bg-temple-100 border-[#ece8e1]"}`}>
         <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <h2 className={`text-[24px] font-bold ${darkMode ? "text-slate-100" : "text-[#1d1b19]"}`}>Devotee List</h2>
@@ -104,12 +104,12 @@ const DevoteesManagement = ({ darkMode, devotees = [], bookings = [], donations 
           <div className="relative">
             <button 
               onClick={() => setShowFilterMenu(!showFilterMenu)}
-              className={`inline-flex h-10 items-center gap-2 rounded-xl border px-3 text-sm ${darkMode ? "border-[#334155] bg-[#111827] text-slate-200" : "border-[#ece8e1] bg-white text-gray-700"}`}
+              className={`inline-flex h-10 items-center gap-2 rounded-xl border px-3 text-sm ${darkMode ? "border-[#334155] bg-[#111827] text-slate-200" : "border-[#ece8e1] bg-temple-100 text-gray-700"}`}
             >
               <FaFilter className="text-[12px]" /> {filterType}
             </button>
             {showFilterMenu && (
-              <div className={`absolute right-0 top-12 z-10 w-48 rounded-xl border p-2 shadow-lg ${darkMode ? "border-[#334155] bg-[#1f2937]" : "border-[#ece8e1] bg-white"}`}>
+              <div className={`absolute right-0 top-12 z-10 w-48 rounded-xl border p-2 shadow-lg ${darkMode ? "border-[#334155] bg-[#1f2937]" : "border-[#ece8e1] bg-temple-100"}`}>
                 {["All", "Has Bookings", "Has Donations"].map((type) => (
                   <button
                     key={type}
@@ -144,7 +144,7 @@ const DevoteesManagement = ({ darkMode, devotees = [], bookings = [], donations 
                 const bookingCount = (bookingsByName.get((devotee.name || "").toLowerCase()) || 0) || (bookingsByName.get((devotee.email || "").toLowerCase()) || 0);
                 const donationSum = (donationsByName.get((devotee.name || "").toLowerCase()) || 0) || (donationsByName.get((devotee.email || "").toLowerCase()) || 0);
                 return (
-                  <tr key={devotee._id || devotee.email} className={`border-t ${darkMode ? "border-[#334155]" : "border-[#f1ede6]"} ${idx % 2 === 0 ? (darkMode ? "bg-[#1f2937]" : "bg-white") : (darkMode ? "bg-[#111827]" : "bg-[#fdfcfa]")}`}>
+                  <tr key={devotee._id || devotee.email} className={`border-t ${darkMode ? "border-[#334155]" : "border-[#f1ede6]"} ${idx % 2 === 0 ? (darkMode ? "bg-[#1f2937]" : "bg-temple-100") : (darkMode ? "bg-[#111827]" : "bg-[#fdfcfa]")}`}>
                     <td className="px-3 py-3 font-semibold">{devotee.name}</td>
                     <td className="px-3 py-3">{devotee.email}</td>
                     <td className="px-3 py-3">{bookingCount}</td>

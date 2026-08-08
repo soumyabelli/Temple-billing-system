@@ -128,7 +128,7 @@ const CashierAccounts = () => {
         </button>
       </div>
 
-      <div className="bg-white backdrop-blur-md border border-slate-200 p-6 rounded-2xl shadow-xl min-h-[400px]">
+      <div className="bg-temple-100 backdrop-blur-md border border-slate-200 p-6 rounded-2xl shadow-xl min-h-[400px]">
         {loading ? (
           <div className="flex justify-center items-center h-40">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500"></div>

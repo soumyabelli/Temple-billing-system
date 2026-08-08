@@ -93,7 +93,7 @@ const RegisterPage = () => {
       <div className="absolute bottom-[-140px] left-[-90px] h-80 w-80 bg-orange-300/35 blur-3xl rounded-full"></div>
 
       {linkSent ? (
-        <div className="w-full max-w-md bg-white/70 backdrop-blur-2xl border border-white/60 shadow-[0_20px_70px_rgba(130,50,0,0.18)] rounded-3xl p-8 md:p-10 text-center">
+        <div className="w-full max-w-md bg-temple-100/70 backdrop-blur-2xl border border-white/60 shadow-[0_20px_70px_rgba(130,50,0,0.18)] rounded-3xl p-8 md:p-10 text-center">
           <div className="text-6xl mb-6">📧</div>
           <h1 className="text-3xl font-extrabold text-amber-900 mb-4">Verification Sent</h1>
           <p className="text-amber-950 font-medium mb-8">
@@ -128,7 +128,7 @@ const RegisterPage = () => {
       ) : (
         <form
           onSubmit={handleSubmit}
-          className="w-full max-w-2xl bg-white/25 backdrop-blur-2xl border border-white/60 shadow-[0_20px_70px_rgba(130,50,0,0.18)] rounded-3xl p-8 md:p-10"
+          className="w-full max-w-2xl bg-temple-100/25 backdrop-blur-2xl border border-white/60 shadow-[0_20px_70px_rgba(130,50,0,0.18)] rounded-3xl p-8 md:p-10"
         >
           <h1 className="text-3xl md:text-4xl font-extrabold text-amber-900 mb-2">Create Account</h1>
           <p className="text-amber-800/90 mb-7">Self registration is only for devotee. Other roles are created by admin.</p>
@@ -143,7 +143,7 @@ const RegisterPage = () => {
                 placeholder="Enter your full name"
                 value={formData.name}
                 className={`w-full rounded-xl border ${errors.name ? "border-red-500" : "border-white/70"
-                  } bg-white/80 p-3.5 outline-none focus:ring-2 focus:ring-amber-400`}
+                  } bg-temple-100/80 p-3.5 outline-none focus:ring-2 focus:ring-amber-400`}
                 onChange={handleChange}
               />
               {errors.name && <p className="text-red-600 text-sm mt-1">{errors.name}</p>}
@@ -158,7 +158,7 @@ const RegisterPage = () => {
                 placeholder="Enter your email"
                 value={formData.email}
                 className={`w-full rounded-xl border ${errors.email ? "border-red-500" : "border-white/70"
-                  } bg-white/80 p-3.5 outline-none focus:ring-2 focus:ring-amber-400`}
+                  } bg-temple-100/80 p-3.5 outline-none focus:ring-2 focus:ring-amber-400`}
                 onChange={handleChange}
               />
               {errors.email && <p className="text-red-600 text-sm mt-1">{errors.email}</p>}
@@ -173,7 +173,7 @@ const RegisterPage = () => {
                 placeholder="Enter 10-digit phone number"
                 value={formData.phone}
                 className={`w-full rounded-xl border ${errors.phone ? "border-red-500" : "border-white/70"
-                  } bg-white/80 p-3.5 outline-none focus:ring-2 focus:ring-amber-400`}
+                  } bg-temple-100/80 p-3.5 outline-none focus:ring-2 focus:ring-amber-400`}
                 onChange={handleChange}
               />
               {errors.phone && <p className="text-red-600 text-sm mt-1">{errors.phone}</p>}
@@ -188,7 +188,7 @@ const RegisterPage = () => {
                 placeholder="Enter your city/place"
                 value={formData.place}
                 className={`w-full rounded-xl border ${errors.place ? "border-red-500" : "border-white/70"
-                  } bg-white/80 p-3.5 outline-none focus:ring-2 focus:ring-amber-400`}
+                  } bg-temple-100/80 p-3.5 outline-none focus:ring-2 focus:ring-amber-400`}
                 onChange={handleChange}
               />
               {errors.place && <p className="text-red-600 text-sm mt-1">{errors.place}</p>}
@@ -203,7 +203,7 @@ const RegisterPage = () => {
                 value={formData.address}
                 rows="3"
                 className={`w-full rounded-xl border ${errors.address ? "border-red-500" : "border-white/70"
-                  } bg-white/80 p-3.5 outline-none focus:ring-2 focus:ring-amber-400 resize-none`}
+                  } bg-temple-100/80 p-3.5 outline-none focus:ring-2 focus:ring-amber-400 resize-none`}
                 onChange={handleChange}
               />
               {errors.address && <p className="text-red-600 text-sm mt-1">{errors.address}</p>}
@@ -218,7 +218,7 @@ const RegisterPage = () => {
                 placeholder="Minimum 6 characters"
                 value={formData.password}
                 className={`w-full rounded-xl border ${errors.password ? "border-red-500" : "border-white/70"
-                  } bg-white/80 p-3.5 outline-none focus:ring-2 focus:ring-amber-400`}
+                  } bg-temple-100/80 p-3.5 outline-none focus:ring-2 focus:ring-amber-400`}
                 onChange={handleChange}
               />
               {errors.password && <p className="text-red-600 text-sm mt-1">{errors.password}</p>}
@@ -233,7 +233,7 @@ const RegisterPage = () => {
                 placeholder="Re-enter your password"
                 value={formData.confirmPassword}
                 className={`w-full rounded-xl border ${errors.confirmPassword ? "border-red-500" : "border-white/70"
-                  } bg-white/80 p-3.5 outline-none focus:ring-2 focus:ring-amber-400`}
+                  } bg-temple-100/80 p-3.5 outline-none focus:ring-2 focus:ring-amber-400`}
                 onChange={handleChange}
               />
               {errors.confirmPassword && <p className="text-red-600 text-sm mt-1">{errors.confirmPassword}</p>}

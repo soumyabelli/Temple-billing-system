@@ -16,7 +16,7 @@ const CampaignManagement = () => {
       <div className="grid gap-6">
         {campaigns.map((item) => (
           <SectionCard key={item.title} title={item.title} subtitle={`Raised ${item.raised} of ${item.target}`} className="overflow-hidden">
-            <div className="h-4 overflow-hidden rounded-full bg-white/10">
+            <div className="h-4 overflow-hidden rounded-full bg-temple-100/10">
               <div className="h-full rounded-full bg-gradient-to-r from-amber-400 to-yellow-300" style={{ width: `${(parseInt(item.raised.replace(/[^0-9]/g, "")) / parseInt(item.target.replace(/[^0-9]/g, "")))*100}%` }} />
             </div>
           </SectionCard>

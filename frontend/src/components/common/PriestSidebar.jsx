@@ -47,7 +47,7 @@ const PriestSidebar = ({
         } ${mobileOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 ${
           darkMode
             ? "bg-[#1e293b] border-slate-700 text-slate-100"
-            : "bg-white border-[#ece8e1] text-[#372818]"
+            : "bg-temple-100 border-[#ece8e1] text-[#372818]"
         } flex flex-col`}
       >
         {/* Sidebar Header/Logo */}
@@ -127,7 +127,7 @@ const PriestSidebar = ({
                 title={item.title}
               >
                 {isActive && (
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 bg-white rounded-r-lg" />
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 bg-temple-100 rounded-r-lg" />
                 )}
                 <Icon size={18} className="shrink-0" />
                 {!collapsed && (

@@ -28,7 +28,7 @@ const Toggle = ({ checked, onChange }) => (
       className="peer sr-only"
     />
     <span className="h-6 w-11 rounded-full bg-[#d7dbe1] transition peer-checked:bg-[#ff8b00]" />
-    <span className="absolute left-0.5 h-5 w-5 rounded-full bg-white transition peer-checked:translate-x-5" />
+    <span className="absolute left-0.5 h-5 w-5 rounded-full bg-temple-100 transition peer-checked:translate-x-5" />
   </label>
 );
 

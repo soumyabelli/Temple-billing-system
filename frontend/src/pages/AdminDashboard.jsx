@@ -62,10 +62,10 @@ const buildPath = (points, width = 720, height = 220) => {
 const ChartCard = ({ title, points, color, darkMode }) => {
   const linePath = useMemo(() => buildPath(points), [points]);
   return (
-    <div className={`rounded-[24px] border p-6 transition-all duration-300 hover:shadow-lg ${darkMode ? "bg-[#1e293b]/70 backdrop-blur-xl border-white/5" : "bg-white/60 backdrop-blur-xl border-white/40 shadow-sm"}`}>
+    <div className={`rounded-[24px] border p-6 transition-all duration-300 hover:shadow-lg ${darkMode ? "bg-[#1e293b]/70 backdrop-blur-xl border-white/5" : "bg-temple-100/60 backdrop-blur-xl border-white/40 shadow-sm"}`}>
       <div className="flex items-center justify-between mb-5">
         <h3 className={`text-xl font-bold font-serif ${darkMode ? "text-slate-100" : "text-slate-800"}`}>{title}</h3>
-        <button className={`text-xs rounded-xl px-3 py-1.5 font-medium transition-colors ${darkMode ? "bg-white/5 text-slate-300 hover:bg-white/10" : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"}`}>Monthly</button>
+        <button className={`text-xs rounded-xl px-3 py-1.5 font-medium transition-colors ${darkMode ? "bg-temple-100/5 text-slate-300 hover:bg-temple-100/10" : "bg-temple-100 text-slate-600 border border-slate-200 hover:bg-slate-50"}`}>Monthly</button>
       </div>
       <svg viewBox="0 0 720 220" className="w-full h-[180px] md:h-[220px] drop-shadow-md">
         <defs>
@@ -121,13 +121,13 @@ const DashboardView = ({ darkMode }) => {
         <ChartCard title="Donations Trend" points={donationsTrend} color="#10b981" darkMode={darkMode} />
       </div>
 
-      <div className={`mt-5 rounded-[24px] border p-6 ${darkMode ? "bg-[#1e293b]/70 backdrop-blur-xl border-white/5" : "bg-white/60 backdrop-blur-xl border-white/40 shadow-sm"}`}>
+      <div className={`mt-5 rounded-[24px] border p-6 ${darkMode ? "bg-[#1e293b]/70 backdrop-blur-xl border-white/5" : "bg-temple-100/60 backdrop-blur-xl border-white/40 shadow-sm"}`}>
         <h3 className={`text-2xl font-bold font-serif mb-4 ${darkMode ? "text-slate-100" : "text-slate-800"}`}>Recent Activities</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {recentActivities.map((activity, idx) => (
             <motion.div 
               initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 * idx }}
-              key={activity} className={`rounded-xl px-4 py-3 text-sm flex items-start gap-3 border transition-colors hover:border-temple-300 ${darkMode ? "bg-white/5 border-white/5 text-slate-300" : "bg-white border-slate-100 text-slate-600"}`}>
+              key={activity} className={`rounded-xl px-4 py-3 text-sm flex items-start gap-3 border transition-colors hover:border-temple-300 ${darkMode ? "bg-temple-100/5 border-white/5 text-slate-300" : "bg-temple-100 border-slate-100 text-slate-600"}`}>
               <div className="h-2 w-2 rounded-full bg-temple-500 mt-1.5 shrink-0" />
               {activity}
             </motion.div>
@@ -153,7 +153,7 @@ const DevoteesView = ({ darkMode }) => {
           <p className={`mt-2 ${darkMode ? "text-slate-400" : "text-slate-500"}`}>Register devotees, track bookings and donations, and send personalized notifications.</p>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full xl:w-auto">
-          <div className={`rounded-xl px-4 py-2.5 flex items-center gap-2 w-full sm:w-[320px] border transition-colors ${darkMode ? "bg-white/5 border-white/10 text-slate-300 focus-within:border-temple-500/50" : "bg-white/80 border-slate-200 text-slate-600 focus-within:border-temple-400"}`}>
+          <div className={`rounded-xl px-4 py-2.5 flex items-center gap-2 w-full sm:w-[320px] border transition-colors ${darkMode ? "bg-temple-100/5 border-white/10 text-slate-300 focus-within:border-temple-500/50" : "bg-temple-100/80 border-slate-200 text-slate-600 focus-within:border-temple-400"}`}>
             <FaSearch className="text-slate-400" />
             <input className="w-full bg-transparent outline-none text-sm placeholder:text-slate-400" placeholder="Search devotee by name / mobile" />
           </div>
@@ -170,7 +170,7 @@ const DevoteesView = ({ darkMode }) => {
         <DashboardCard title="Notifications" amount="1,284" trend="Sent today" trendUp icon={<FaBell />} accent="bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400" />
       </div>
 
-      <div className={`mt-5 rounded-[24px] border p-6 ${darkMode ? "bg-[#1e293b]/70 backdrop-blur-xl border-white/5" : "bg-white/60 backdrop-blur-xl border-white/40 shadow-sm"}`}>
+      <div className={`mt-5 rounded-[24px] border p-6 ${darkMode ? "bg-[#1e293b]/70 backdrop-blur-xl border-white/5" : "bg-temple-100/60 backdrop-blur-xl border-white/40 shadow-sm"}`}>
         <div className="flex items-center justify-between mb-5">
           <h2 className={`text-2xl font-bold font-serif ${darkMode ? "text-slate-100" : "text-slate-800"}`}>Devotee Details</h2>
           <button className="text-temple-500 hover:text-temple-600 text-sm font-semibold transition-colors">Export Records</button>
@@ -178,7 +178,7 @@ const DevoteesView = ({ darkMode }) => {
 
         <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-white/10">
           <table className="w-full text-[14px] min-w-[980px]">
-            <thead className={`${darkMode ? "bg-white/5 text-slate-300" : "bg-slate-50 text-slate-600"}`}>
+            <thead className={`${darkMode ? "bg-temple-100/5 text-slate-300" : "bg-slate-50 text-slate-600"}`}>
               <tr>
                 <th className="py-4 px-4 text-left font-medium">Devotee Name</th>
                 <th className="py-4 px-4 text-left font-medium">Contact Number</th>
@@ -191,7 +191,7 @@ const DevoteesView = ({ darkMode }) => {
               {pageRows.map((devotee) => (
                 <tr
                   key={devotee.contact}
-                  className={`transition-colors ${darkMode ? "hover:bg-white/5" : "bg-white hover:bg-slate-50/80"}`}
+                  className={`transition-colors ${darkMode ? "hover:bg-temple-100/5" : "bg-temple-100 hover:bg-slate-50/80"}`}
                 >
                   <td className={`py-4 px-4 font-semibold flex items-center gap-3 ${darkMode ? "text-slate-100" : "text-slate-800"}`}>
                     <div className="h-8 w-8 rounded-full bg-temple-100 dark:bg-temple-500/20 text-temple-600 dark:text-temple-400 flex items-center justify-center">
@@ -202,12 +202,12 @@ const DevoteesView = ({ darkMode }) => {
                   <td className={`py-4 px-4 ${darkMode ? "text-slate-300" : "text-slate-600"}`}>{devotee.contact}</td>
                   <td className={`py-4 px-4 ${darkMode ? "text-slate-300" : "text-slate-600"}`}>{devotee.address}</td>
                   <td className={`py-4 px-4 ${darkMode ? "text-slate-300" : "text-slate-600"}`}>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800 dark:bg-white/10 dark:text-slate-300">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800 dark:bg-temple-100/10 dark:text-slate-300">
                       {devotee.bookings}
                     </span>
                   </td>
                   <td className={`py-4 px-4 ${darkMode ? "text-slate-300" : "text-slate-600"}`}>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-temple-50 text-temple-700 dark:bg-temple-500/20 dark:text-temple-300 border border-temple-100 dark:border-transparent">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-temple-100 text-temple-700 dark:bg-temple-500/20 dark:text-temple-300 border border-temple-100 dark:border-transparent">
                       {devotee.donations}
                     </span>
                   </td>
@@ -220,9 +220,9 @@ const DevoteesView = ({ darkMode }) => {
         <div className="mt-5 flex items-center justify-between">
           <p className={`text-sm ${darkMode ? "text-slate-400" : "text-slate-500"}`}>Showing {start + 1}-{Math.min(start + perPage, devotees.length)} of {devotees.length}</p>
           <div className="flex items-center gap-2">
-            <button disabled={page === 1} onClick={() => setPage((p) => Math.max(1, p - 1))} className="px-4 py-2 text-sm font-medium rounded-lg border transition-colors disabled:opacity-50 dark:border-white/10 dark:text-slate-300 dark:hover:bg-white/5 border-slate-200 text-slate-600 hover:bg-slate-50">Previous</button>
+            <button disabled={page === 1} onClick={() => setPage((p) => Math.max(1, p - 1))} className="px-4 py-2 text-sm font-medium rounded-lg border transition-colors disabled:opacity-50 dark:border-white/10 dark:text-slate-300 dark:hover:bg-temple-100/5 border-slate-200 text-slate-600 hover:bg-slate-50">Previous</button>
             <span className={`text-sm font-medium px-2 ${darkMode ? "text-slate-300" : "text-slate-700"}`}>Page {page} of {totalPages}</span>
-            <button disabled={page === totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))} className="px-4 py-2 text-sm font-medium rounded-lg border transition-colors disabled:opacity-50 dark:border-white/10 dark:text-slate-300 dark:hover:bg-white/5 border-slate-200 text-slate-600 hover:bg-slate-50">Next</button>
+            <button disabled={page === totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))} className="px-4 py-2 text-sm font-medium rounded-lg border transition-colors disabled:opacity-50 dark:border-white/10 dark:text-slate-300 dark:hover:bg-temple-100/5 border-slate-200 text-slate-600 hover:bg-slate-50">Next</button>
           </div>
         </div>
       </div>
@@ -231,7 +231,7 @@ const DevoteesView = ({ darkMode }) => {
 };
 
 const PlaceholderView = ({ title, darkMode }) => (
-  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className={`mt-6 rounded-[24px] border p-10 text-center ${darkMode ? "bg-[#1e293b]/70 backdrop-blur-xl border-white/5" : "bg-white/60 backdrop-blur-xl border-white/40 shadow-sm"}`}>
+  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className={`mt-6 rounded-[24px] border p-10 text-center ${darkMode ? "bg-[#1e293b]/70 backdrop-blur-xl border-white/5" : "bg-temple-100/60 backdrop-blur-xl border-white/40 shadow-sm"}`}>
     <h2 className={`text-3xl font-bold font-serif ${darkMode ? "text-slate-100" : "text-slate-800"}`}>{title}</h2>
     <p className={`mt-3 max-w-lg mx-auto ${darkMode ? "text-slate-400" : "text-slate-500"}`}>This module layout has been standardized. Connect it with specific components and forms next.</p>
   </motion.div>

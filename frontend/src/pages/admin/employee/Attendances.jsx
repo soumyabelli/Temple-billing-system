@@ -380,7 +380,7 @@ const Attendances = () => {
   return (
     <div className="space-y-6">
       {/* FILTERS PANEL */}
-      <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="rounded-[28px] border border-slate-200 bg-temple-100 p-6 shadow-sm">
         <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
           <div>
             <h2 className="text-lg font-bold text-slate-800">Attendance Search Filters</h2>
@@ -401,7 +401,7 @@ const Attendances = () => {
             <select
               value={selectedEmployeeId}
               onChange={(event) => setSelectedEmployeeId(event.target.value)}
-              className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 outline-none"
+              className="rounded-full border border-slate-200 bg-temple-100 px-4 py-2 text-sm font-medium text-slate-700 outline-none"
             >
               <option value="">All Employees</option>
               {employees.map((employee) => (
@@ -417,7 +417,7 @@ const Attendances = () => {
             <select
               value={filterRole}
               onChange={(event) => setFilterRole(event.target.value)}
-              className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 outline-none"
+              className="rounded-full border border-slate-200 bg-temple-100 px-4 py-2 text-sm font-medium text-slate-700 outline-none"
             >
               <option value="all">All Roles</option>
               <option value="priest">Priest</option>
@@ -432,7 +432,7 @@ const Attendances = () => {
             <select
               value={filterDepartment}
               onChange={(event) => setFilterDepartment(event.target.value)}
-              className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 outline-none"
+              className="rounded-full border border-slate-200 bg-temple-100 px-4 py-2 text-sm font-medium text-slate-700 outline-none"
             >
               <option value="all">All Departments</option>
               {departments.map((dept) => (
@@ -448,7 +448,7 @@ const Attendances = () => {
             <select
               value={filterStatus}
               onChange={(event) => setFilterStatus(event.target.value)}
-              className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 outline-none"
+              className="rounded-full border border-slate-200 bg-temple-100 px-4 py-2 text-sm font-medium text-slate-700 outline-none"
             >
               <option value="all">All Statuses</option>
               <option value="Present">Present</option>
@@ -471,7 +471,7 @@ const Attendances = () => {
                   setMonthKey(ym);
                 }
               }}
-              className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 outline-none"
+              className="rounded-full border border-slate-200 bg-temple-100 px-4 py-2 text-sm font-medium text-slate-700 outline-none"
             />
           </label>
 
@@ -481,7 +481,7 @@ const Attendances = () => {
               type="month"
               value={monthKey}
               onChange={(event) => setMonthKey(event.target.value)}
-              className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 outline-none"
+              className="rounded-full border border-slate-200 bg-temple-100 px-4 py-2 text-sm font-medium text-slate-700 outline-none"
             />
           </label>
         </div>
@@ -501,7 +501,7 @@ const Attendances = () => {
           return (
             <div
               key={card.label || card.title}
-              className="rounded-[28px] border border-slate-200 bg-white px-5 py-5 shadow-lg shadow-slate-900/5"
+              className="rounded-[28px] border border-slate-200 bg-temple-100 px-5 py-5 shadow-lg shadow-slate-900/5"
             >
               <div className="flex items-start gap-4">
                 <div
@@ -542,7 +542,7 @@ const Attendances = () => {
                 type="text"
                 value={correctionForm.checkIn}
                 onChange={(event) => setCorrectionForm((current) => ({ ...current, checkIn: event.target.value }))}
-                className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none"
+                className="rounded-2xl border border-slate-200 bg-temple-100 px-4 py-3 text-sm outline-none"
                 placeholder="e.g. 09:00 AM"
               />
             </label>
@@ -552,7 +552,7 @@ const Attendances = () => {
                 type="text"
                 value={correctionForm.checkOut}
                 onChange={(event) => setCorrectionForm((current) => ({ ...current, checkOut: event.target.value }))}
-                className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none"
+                className="rounded-2xl border border-slate-200 bg-temple-100 px-4 py-3 text-sm outline-none"
                 placeholder="e.g. 05:00 PM"
               />
             </label>
@@ -561,7 +561,7 @@ const Attendances = () => {
               <select
                 value={correctionForm.status}
                 onChange={(event) => setCorrectionForm((current) => ({ ...current, status: event.target.value }))}
-                className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none"
+                className="rounded-2xl border border-slate-200 bg-temple-100 px-4 py-3 text-sm outline-none"
               >
                 <option value="Present">Present</option>
                 <option value="Working">Working</option>
@@ -576,7 +576,7 @@ const Attendances = () => {
               <textarea
                 value={correctionForm.reason}
                 onChange={(event) => setCorrectionForm((current) => ({ ...current, reason: event.target.value }))}
-                className="min-h-[96px] rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none"
+                className="min-h-[96px] rounded-2xl border border-slate-200 bg-temple-100 px-4 py-3 text-sm outline-none"
                 placeholder="Reason for making manual changes"
                 required
               />
@@ -594,7 +594,7 @@ const Attendances = () => {
             <button
               type="button"
               onClick={() => setEditingRecord(null)}
-              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-temple-100 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
             >
               Cancel
             </button>
@@ -688,14 +688,14 @@ const Attendances = () => {
                         <button
                           type="button"
                           onClick={() => setViewingDetailsRecord(record)}
-                          className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-sky-700 transition hover:bg-sky-50"
+                          className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-temple-100 px-3 py-1.5 text-xs font-semibold text-sky-700 transition hover:bg-sky-50"
                         >
                           Details
                         </button>
                         <button
                           type="button"
                           onClick={() => openCorrection(record)}
-                          className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+                          className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-temple-100 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
                         >
                           <FiEdit2 /> Correct
                         </button>
@@ -779,14 +779,14 @@ const Attendances = () => {
                         <button
                           type="button"
                           onClick={() => setViewingDetailsRecord(record)}
-                          className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-sky-700 transition hover:bg-sky-50"
+                          className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-temple-100 px-3 py-1.5 text-xs font-semibold text-sky-700 transition hover:bg-sky-50"
                         >
                           Details
                         </button>
                         <button
                           type="button"
                           onClick={() => openCorrection(record)}
-                          className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+                          className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-temple-100 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
                         >
                           <FiEdit2 /> Correct
                         </button>
@@ -821,7 +821,7 @@ const Attendances = () => {
                 key={`${day.dateKey}-${idx}`}
                 type="button"
                 onClick={() => setSelectedCalDate(day.dateKey)}
-                className={`rounded-2xl border text-left p-2.5 transition flex flex-col justify-between ${day.muted ? "bg-slate-50 opacity-40" : "bg-white"
+                className={`rounded-2xl border text-left p-2.5 transition flex flex-col justify-between ${day.muted ? "bg-slate-50 opacity-40" : "bg-temple-100"
                   } ${day.today ? "ring-2 ring-amber-400 border-amber-400" : "border-slate-200"
                   } ${selectedCalDate === day.dateKey ? "border-slate-800 ring-2 ring-slate-800" : ""
                   } hover:bg-slate-50`}

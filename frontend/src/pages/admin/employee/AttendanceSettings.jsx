@@ -149,11 +149,11 @@ const AttendanceSettings = () => {
         <div className="grid gap-6 md:grid-cols-2">
           <div>
             <label className="mb-2 block text-sm font-semibold text-slate-700">Late Threshold (minutes)</label>
-            <input type="number" name="lateThreshold" value={settings.lateThreshold} onChange={handleSettingsChange} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 focus:bg-white" />
+            <input type="number" name="lateThreshold" value={settings.lateThreshold} onChange={handleSettingsChange} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 focus:bg-temple-100" />
           </div>
           <div>
             <label className="mb-2 block text-sm font-semibold text-slate-700">Early Check-in Window (minutes)</label>
-            <input type="number" name="earlyCheckInWindow" value={settings.earlyCheckInWindow} onChange={handleSettingsChange} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 focus:bg-white" />
+            <input type="number" name="earlyCheckInWindow" value={settings.earlyCheckInWindow} onChange={handleSettingsChange} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 focus:bg-temple-100" />
           </div>
         </div>
       </SectionCard>
@@ -193,19 +193,19 @@ const AttendanceSettings = () => {
                         📍 Use My Current Location
                       </button>
                     </div>
-                    <input required type="text" name="locationName" value={locationForm.locationName} onChange={handleLocationChange} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 outline-none focus:border-amber-400" placeholder="e.g. Main Temple" />
+                    <input required type="text" name="locationName" value={locationForm.locationName} onChange={handleLocationChange} className="w-full rounded-xl border border-slate-200 bg-temple-100 px-3 py-2 outline-none focus:border-amber-400" placeholder="e.g. Main Temple" />
                  </div>
                  <div>
                     <label className="mb-1 block text-sm font-semibold text-slate-700">Latitude</label>
-                    <input required type="number" step="any" name="latitude" value={locationForm.latitude} onChange={handleLocationChange} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 outline-none focus:border-amber-400" />
+                    <input required type="number" step="any" name="latitude" value={locationForm.latitude} onChange={handleLocationChange} className="w-full rounded-xl border border-slate-200 bg-temple-100 px-3 py-2 outline-none focus:border-amber-400" />
                  </div>
                  <div>
                     <label className="mb-1 block text-sm font-semibold text-slate-700">Longitude</label>
-                    <input required type="number" step="any" name="longitude" value={locationForm.longitude} onChange={handleLocationChange} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 outline-none focus:border-amber-400" />
+                    <input required type="number" step="any" name="longitude" value={locationForm.longitude} onChange={handleLocationChange} className="w-full rounded-xl border border-slate-200 bg-temple-100 px-3 py-2 outline-none focus:border-amber-400" />
                  </div>
                  <div>
                     <label className="mb-1 block text-sm font-semibold text-slate-700">Allowed Radius (meters)</label>
-                    <input required type="number" name="allowedRadius" value={locationForm.allowedRadius} onChange={handleLocationChange} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 outline-none focus:border-amber-400" />
+                    <input required type="number" name="allowedRadius" value={locationForm.allowedRadius} onChange={handleLocationChange} className="w-full rounded-xl border border-slate-200 bg-temple-100 px-3 py-2 outline-none focus:border-amber-400" />
                  </div>
                  
                  <div className="flex gap-2 pt-2">
@@ -228,7 +228,7 @@ const AttendanceSettings = () => {
                     <p className="text-slate-500 text-sm">No attendance locations found. Add one to assign to employees.</p>
                  ) : (
                     locations.map(loc => (
-                       <div key={loc._id} className="bg-white border border-slate-200 p-4 rounded-xl flex items-center justify-between hover:shadow-md transition">
+                       <div key={loc._id} className="bg-temple-100 border border-slate-200 p-4 rounded-xl flex items-center justify-between hover:shadow-md transition">
                           <div>
                              <h4 className="font-bold text-slate-900">{loc.locationName}</h4>
                              <p className="text-xs text-slate-500 mt-0.5">Lat: {loc.latitude} | Lng: {loc.longitude}</p>

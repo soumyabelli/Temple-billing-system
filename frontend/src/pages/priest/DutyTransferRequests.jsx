@@ -56,7 +56,7 @@ const DutyTransferRequests = ({ darkMode }) => {
 
   return (
     <div className="space-y-6 fade-in">
-      <div className={`p-6 rounded-2xl border transition-colors ${darkMode ? "bg-[#1f2937] border-slate-700 text-slate-100" : "bg-white border-[#ece8e1] text-[#1d1b19]"}`}>
+      <div className={`p-6 rounded-2xl border transition-colors ${darkMode ? "bg-[#1f2937] border-slate-700 text-slate-100" : "bg-temple-100 border-[#ece8e1] text-[#1d1b19]"}`}>
         <h2 className="text-2xl font-extrabold flex items-center gap-2">
           <FaExchangeAlt className="text-orange-500" /> Duty Transfer Requests
         </h2>
@@ -65,7 +65,7 @@ const DutyTransferRequests = ({ darkMode }) => {
         </p>
       </div>
 
-      <div className={`rounded-2xl border overflow-hidden transition-colors ${darkMode ? "bg-[#1f2937] border-slate-700" : "bg-white border-[#ece8e1]"}`}>
+      <div className={`rounded-2xl border overflow-hidden transition-colors ${darkMode ? "bg-[#1f2937] border-slate-700" : "bg-temple-100 border-[#ece8e1]"}`}>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead>

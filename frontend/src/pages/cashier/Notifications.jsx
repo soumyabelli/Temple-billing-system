@@ -69,18 +69,18 @@ const Notifications = () => {
           <button
             type="button"
             onClick={loadNotifications}
-            className="inline-flex items-center gap-2 rounded-full border border-[#f0c58f] bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:bg-[#fff8ef]"
+            className="inline-flex items-center gap-2 rounded-full border border-[#f0c58f] bg-temple-100 px-5 py-3 text-sm font-bold text-slate-900 transition hover:bg-[#fff8ef]"
           >
             <FaSyncAlt /> Refresh
           </button>
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#f0c58f] bg-white px-4 py-3 text-sm font-bold text-slate-900">
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#f0c58f] bg-temple-100 px-4 py-3 text-sm font-bold text-slate-900">
             <FaBell className="text-[#f28c18]" />
             {unreadCount} unread
           </div>
         </>
       }
     >
-      <section className="rounded-[22px] border border-[#f0d3a2] bg-white/95 p-5 shadow-sm">
+      <section className="rounded-[22px] border border-[#f0d3a2] bg-temple-100/95 p-5 shadow-sm">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <h2 className="text-2xl font-extrabold text-slate-950">Notifications inbox</h2>
@@ -98,7 +98,7 @@ const Notifications = () => {
                 className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-bold transition ${
                   filter === item
                     ? "border-[#f28c18] bg-[#fff1df] text-[#8a5200]"
-                    : "border-[#ead7bb] bg-white text-slate-700 hover:bg-[#fff8ef]"
+                    : "border-[#ead7bb] bg-temple-100 text-slate-700 hover:bg-[#fff8ef]"
                 }`}
               >
                 <FaFilter />
@@ -116,7 +116,7 @@ const Notifications = () => {
       </section>
 
       <div className="grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
-        <section className="rounded-[22px] border border-[#f0d3a2] bg-white/95 p-5 shadow-sm">
+        <section className="rounded-[22px] border border-[#f0d3a2] bg-temple-100/95 p-5 shadow-sm">
           <div className="flex items-center justify-between gap-3">
             <div>
               <h2 className="text-2xl font-extrabold text-slate-950">Inbox list</h2>
@@ -155,8 +155,8 @@ const Notifications = () => {
                   </div>
                   <p className="mt-3 text-sm leading-6 text-slate-700">{notification.message}</p>
                   <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold text-slate-600">
-                    {notification.category ? <span className="rounded-full bg-white px-3 py-1">{notification.category}</span> : null}
-                    {notification.audienceRole ? <span className="rounded-full bg-white px-3 py-1">{notification.audienceRole}</span> : null}
+                    {notification.category ? <span className="rounded-full bg-temple-100 px-3 py-1">{notification.category}</span> : null}
+                    {notification.audienceRole ? <span className="rounded-full bg-temple-100 px-3 py-1">{notification.audienceRole}</span> : null}
                   </div>
                 </button>
               ))
@@ -167,7 +167,7 @@ const Notifications = () => {
         </section>
 
         <aside className="space-y-6">
-          <section className="rounded-[22px] border border-[#f0d3a2] bg-white/95 p-5 shadow-sm">
+          <section className="rounded-[22px] border border-[#f0d3a2] bg-temple-100/95 p-5 shadow-sm">
             <h2 className="text-2xl font-extrabold text-slate-950">Quick facts</h2>
             <div className="mt-4 space-y-3">
               <div className="rounded-2xl bg-[#fff8ef] px-4 py-3 text-sm text-slate-700">

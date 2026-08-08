@@ -21,7 +21,7 @@ const Sidebar = ({ activeItem, onSelect, collapsed, setCollapsed, mobileOpen, se
         ${mobileOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0
         ${darkMode
             ? "bg-[#0f172a]/90 backdrop-blur-xl border-white/5"
-            : "bg-white/80 backdrop-blur-xl border-slate-200"}`}
+            : "bg-temple-100/80 backdrop-blur-xl border-slate-200"}`}
       >
         <div className={`px-4 ${collapsed ? "pt-5 pb-4" : "pt-6 pb-5"} border-b ${darkMode ? "border-white/5" : "border-slate-100"}`}>
           <div className="flex items-center justify-between">
@@ -44,7 +44,7 @@ const Sidebar = ({ activeItem, onSelect, collapsed, setCollapsed, mobileOpen, se
               type="button"
               onClick={() => setCollapsed(!collapsed)}
               className={`hidden lg:flex h-8 w-8 items-center justify-center rounded-lg transition-colors
-                ${darkMode ? "text-slate-400 hover:bg-white/10 hover:text-slate-200" : "text-slate-500 hover:bg-slate-100 hover:text-slate-700"}`}
+                ${darkMode ? "text-slate-400 hover:bg-temple-100/10 hover:text-slate-200" : "text-slate-500 hover:bg-slate-100 hover:text-slate-700"}`}
               aria-label="Toggle sidebar"
             >
               <MdMenu size={20} />
@@ -69,14 +69,14 @@ const Sidebar = ({ activeItem, onSelect, collapsed, setCollapsed, mobileOpen, se
                   ${isActive
                     ? "bg-gradient-to-r from-temple-500 to-temple-600 text-white shadow-md shadow-temple-500/20"
                     : darkMode
-                      ? "text-slate-400 hover:bg-white/5 hover:text-slate-200"
+                      ? "text-slate-400 hover:bg-temple-100/5 hover:text-slate-200"
                       : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                   }`}
                 title={collapsed ? item.title : undefined}
               >
                 {/* Active Indicator Line */}
                 {isActive && (
-                  <span className="absolute left-0 top-0 bottom-0 w-1 bg-white/30 rounded-r-full" />
+                  <span className="absolute left-0 top-0 bottom-0 w-1 bg-temple-100/30 rounded-r-full" />
                 )}
 
                 {/* Hover Background Effect */}

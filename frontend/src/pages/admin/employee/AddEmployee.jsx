@@ -419,7 +419,7 @@ const AddEmployee = () => {
                     ? "border-amber-400 bg-amber-50 shadow-lg"
                     : index < step
                     ? "border-emerald-300 bg-emerald-50"
-                    : "border-slate-200 bg-white/90"
+                    : "border-slate-200 bg-temple-100/90"
                 }`}
               >
                 <div
@@ -600,7 +600,7 @@ const AddEmployee = () => {
                     />
                     <label
                       htmlFor="photo-upload"
-                      className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-100 transition"
+                      className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-temple-100 px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-100 transition"
                     >
                       <FiUpload /> {form.photo ? "Change Photo" : "Choose Photo"}
                     </label>
@@ -993,7 +993,7 @@ const AddEmployee = () => {
                 type="button"
                 onClick={handlePrev}
                 disabled={step === 0}
-                className="rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-full border border-slate-300 bg-temple-100 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Back
               </button>
@@ -1070,7 +1070,7 @@ const AddEmployee = () => {
       </div>
       {credentials && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/40 px-4">
-          <div className="w-full max-w-md rounded-[28px] border border-slate-200 bg-white p-6 shadow-2xl">
+          <div className="w-full max-w-md rounded-[28px] border border-slate-200 bg-temple-100 p-6 shadow-2xl">
             <p className="text-sm uppercase tracking-[0.2em] text-emerald-600">Success</p>
             <h3 className="mt-2 text-2xl font-bold text-slate-900">Employee Created</h3>
             <div className="mt-5 space-y-3 rounded-3xl bg-slate-50 p-4 text-sm text-slate-700">
@@ -1102,7 +1102,7 @@ const AddEmployee = () => {
 
 // Small helper component for preview rows
 const InfoRow = ({ label, value, highlight }) => (
-  <div className={`rounded-2xl px-4 py-3 ${highlight ? "bg-violet-50" : "bg-white"} shadow-sm`}>
+  <div className={`rounded-2xl px-4 py-3 ${highlight ? "bg-violet-50" : "bg-temple-100"} shadow-sm`}>
     <p className="text-xs text-slate-400">{label}</p>
     <p className={`mt-0.5 text-sm font-semibold ${highlight ? "text-violet-800" : "text-slate-800"}`}>{value}</p>
   </div>

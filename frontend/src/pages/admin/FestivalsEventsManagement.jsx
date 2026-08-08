@@ -295,7 +295,7 @@ const FestivalsEventsManagement = () => {
           <h1 className="text-[46px] leading-tight font-bold text-[#17151f]">Temple Events</h1>
           <p className="mt-1 text-[20px] text-[#5c6675]">Manage temple events, schedules, cultural programs, and celebrations.</p>
         </div>
-        <div className="inline-flex h-11 items-center gap-2 rounded-xl border border-[#ece8e1] bg-white px-4 text-[20px] text-[#7b4a1f]">
+        <div className="inline-flex h-11 items-center gap-2 rounded-xl border border-[#ece8e1] bg-temple-100 px-4 text-[20px] text-[#7b4a1f]">
           <MdCalendarMonth size={21} />
           21 May 2026, Thursday
         </div>
@@ -305,7 +305,7 @@ const FestivalsEventsManagement = () => {
         {stats.map((card) => {
           const Icon = card.icon;
           return (
-            <div key={card.title} className="rounded-2xl border border-[#ece8e1] bg-white p-4">
+            <div key={card.title} className="rounded-2xl border border-[#ece8e1] bg-temple-100 p-4">
               <div className="flex items-center gap-4">
                 <div className={`flex h-20 w-20 items-center justify-center rounded-full ${card.iconTone}`}>
                   <Icon size={36} />
@@ -322,7 +322,7 @@ const FestivalsEventsManagement = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[2.25fr_1.1fr]">
-        <div className="rounded-2xl border border-[#ece8e1] bg-white p-4">
+        <div className="rounded-2xl border border-[#ece8e1] bg-temple-100 p-4">
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-[40px] font-bold text-[#17151f]">Event Schedule</h2>
             <div className="flex items-center gap-2">
@@ -423,7 +423,7 @@ const FestivalsEventsManagement = () => {
         </div>
 
         <div className="space-y-4">
-          <div className="rounded-2xl border border-[#ece8e1] bg-white p-4">
+          <div className="rounded-2xl border border-[#ece8e1] bg-temple-100 p-4">
             <h3 className="text-[40px] font-bold text-[#17151f]">Upcoming Event</h3>
             {upcomingFestival ? (
               <>
@@ -445,7 +445,7 @@ const FestivalsEventsManagement = () => {
             )}
           </div>
 
-          <div className="rounded-2xl border border-[#ece8e1] bg-white p-4">
+          <div className="rounded-2xl border border-[#ece8e1] bg-temple-100 p-4">
             <h3 className="text-[36px] font-bold text-[#17151f]">Quick Actions</h3>
             <div className="mt-3 grid grid-cols-2 gap-2">
               {quickActions.map((action) => {
@@ -474,7 +474,7 @@ const FestivalsEventsManagement = () => {
       {/* Add Event Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="w-full max-w-md rounded-2xl border border-[#ece8e1] bg-white p-6 shadow-2xl">
+          <div className="w-full max-w-md rounded-2xl border border-[#ece8e1] bg-temple-100 p-6 shadow-2xl">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-[28px] font-bold text-[#17151f]">{isEditing ? "Edit Event" : "Add New Event"}</h2>
               <button
@@ -560,7 +560,7 @@ const FestivalsEventsManagement = () => {
       {/* View Event Modal */}
       {viewEvent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="w-full max-w-lg rounded-2xl border border-[#ece8e1] bg-white p-6 shadow-2xl">
+          <div className="w-full max-w-lg rounded-2xl border border-[#ece8e1] bg-temple-100 p-6 shadow-2xl">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-[24px] font-bold text-[#17151f]">{viewEvent.title}</h2>
               <button onClick={() => setViewEvent(null)} className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[#ece8e1] bg-[#faf7f2] text-[#7b5324] hover:bg-[#f0ebe3]">Close</button>
@@ -597,7 +597,7 @@ const FestivalsEventsManagement = () => {
       {/* Send Invitation Modal */}
       {showInvitationModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="w-full max-w-md rounded-2xl border border-[#ece8e1] bg-white p-6 shadow-2xl">
+          <div className="w-full max-w-md rounded-2xl border border-[#ece8e1] bg-temple-100 p-6 shadow-2xl">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-[28px] font-bold text-[#17151f]">Send Invitation</h2>
               <button

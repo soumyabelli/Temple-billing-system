@@ -382,7 +382,7 @@ const BookingPayments = () => {
           <button
             type="button"
             onClick={loadData}
-            className="rounded-full border border-[#f0c58f] bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:bg-[#fff8ef]"
+            className="rounded-full border border-[#f0c58f] bg-temple-100 px-5 py-3 text-sm font-bold text-slate-900 transition hover:bg-[#fff8ef]"
           >
             Refresh History
           </button>
@@ -405,7 +405,7 @@ const BookingPayments = () => {
     >
       <div className="w-full">
         {!showHistory ? (
-          <section className="rounded-[22px] border border-[#f0d3a2] bg-white/95 p-5 shadow-sm">
+          <section className="rounded-[22px] border border-[#f0d3a2] bg-temple-100/95 p-5 shadow-sm">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <h2 className="text-2xl font-extrabold text-slate-950">Admin added services</h2>
@@ -456,7 +456,7 @@ const BookingPayments = () => {
 
                   if (filtered.length === 0) {
                     return (
-                      <div key={cat} className="rounded-2xl border border-[#ead7bb] bg-white p-8 text-center text-slate-500">
+                      <div key={cat} className="rounded-2xl border border-[#ead7bb] bg-temple-100 p-8 text-center text-slate-500">
                         No {cat}s found matching "{serviceSearch}"
                       </div>
                     );
@@ -466,7 +466,7 @@ const BookingPayments = () => {
                   const displayed = isExpanded ? filtered : filtered.slice(0, 5);
 
                   return (
-                    <div key={cat} className="rounded-2xl border border-[#ead7bb] bg-white shadow-sm overflow-hidden">
+                    <div key={cat} className="rounded-2xl border border-[#ead7bb] bg-temple-100 shadow-sm overflow-hidden">
                       <div className="bg-[#fff4e6] px-4 py-3 flex items-center justify-between border-b border-[#f2e7d7]">
                         <h3 className="font-bold text-slate-800 capitalize">{cat} Booking ({filtered.length})</h3>
                         {filtered.length > 5 && (
@@ -626,11 +626,11 @@ const BookingPayments = () => {
           <div>
             <button
               onClick={() => setShowHistory(false)}
-              className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#f0c58f] bg-white px-4 py-2 text-sm font-bold text-slate-800 shadow-sm transition hover:bg-[#fff8ef]"
+              className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#f0c58f] bg-temple-100 px-4 py-2 text-sm font-bold text-slate-800 shadow-sm transition hover:bg-[#fff8ef]"
             >
               ← Back to Booking Form
             </button>
-            <section className="rounded-[22px] border border-[#f0d3a2] bg-white/95 p-5 shadow-sm">
+            <section className="rounded-[22px] border border-[#f0d3a2] bg-temple-100/95 p-5 shadow-sm">
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <h2 className="text-2xl font-extrabold text-slate-950">Booking history</h2>
@@ -657,7 +657,7 @@ const BookingPayments = () => {
                     onClick={() => setStatusFilter(status)}
                     className={`rounded-full border px-3 py-2 text-sm font-semibold transition ${statusFilter === status
                       ? "border-[#f28c18] bg-[#fff1df] text-[#8a5200]"
-                      : "border-[#ead7bb] bg-white text-slate-700 hover:bg-[#fff8ef]"
+                      : "border-[#ead7bb] bg-temple-100 text-slate-700 hover:bg-[#fff8ef]"
                       }`}
                   >
                     {status}

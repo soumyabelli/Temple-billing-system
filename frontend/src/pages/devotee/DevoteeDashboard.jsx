@@ -243,17 +243,17 @@ const canCancelPrasadamOrder = (status) => {
 };
 
 const glassCard =
-  "rounded-[32px] border border-white/60 bg-white/50 p-6 sm:p-8 shadow-[0_25px_60px_rgba(0,0,0,0.07)] backdrop-blur-xl";
+  "rounded-[32px] border border-white/60 bg-temple-100/50 p-6 sm:p-8 shadow-[0_25px_60px_rgba(0,0,0,0.07)] backdrop-blur-xl";
 const glassSection =
-  "rounded-[32px] border border-white/50 bg-white/35 p-6 sm:p-8 shadow-[0_18px_45px_rgba(0,0,0,0.05)] backdrop-blur-xl";
+  "rounded-[32px] border border-white/50 bg-temple-100/35 p-6 sm:p-8 shadow-[0_18px_45px_rgba(0,0,0,0.05)] backdrop-blur-xl";
 const glassInput =
-  "w-full rounded-[24px] border border-white/80 bg-white/90 px-5 py-4 text-lg font-semibold text-[#2d2214] outline-none shadow-md shadow-[#d9c8a1]/30 backdrop-blur-md focus:border-[#d97706] focus:ring-4 focus:ring-[#d97706]/15";
+  "w-full rounded-[24px] border border-white/80 bg-temple-100/90 px-5 py-4 text-lg font-semibold text-[#2d2214] outline-none shadow-md shadow-[#d9c8a1]/30 backdrop-blur-md focus:border-[#d97706] focus:ring-4 focus:ring-[#d97706]/15";
 const glassButton =
   "rounded-[24px] bg-gradient-to-r from-[#b46a13] via-[#f29f41] to-[#ffbc6e] px-7 py-4 text-base font-bold text-white shadow-[0_16px_35px_rgba(184,122,57,0.25)] transition hover:scale-[1.02] hover:shadow-[0_20px_42px_rgba(184,122,57,0.3)]";
 const glassButtonSoft =
-  "rounded-[24px] border border-white/60 bg-white/65 px-7 py-4 text-base font-bold text-[#7f470a] shadow-md transition hover:bg-white/85 hover:scale-[1.02]";
+  "rounded-[24px] border border-white/60 bg-temple-100/65 px-7 py-4 text-base font-bold text-[#7f470a] shadow-md transition hover:bg-temple-100/85 hover:scale-[1.02]";
 const glassItem =
-  "rounded-[26px] border border-white/60 bg-white/70 p-5 text-base shadow-sm backdrop-blur-md hover:shadow-md transition-shadow";
+  "rounded-[26px] border border-white/60 bg-temple-100/70 p-5 text-base shadow-sm backdrop-blur-md hover:shadow-md transition-shadow";
 
 const AppIcon = ({ name, className = "h-5 w-5" }) => {
   const base = "fill-none stroke-current stroke-2";
@@ -362,7 +362,7 @@ const SidebarItem = ({ label, icon, active, onClick }) => (
     className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[18px] font-semibold transition ${
       active
         ? "bg-gradient-to-r from-[#ff9f2f] to-[#ff6a00] text-white shadow-[0_8px_24px_rgba(255,106,0,0.38)]"
-        : "text-[#2d1608] border border-white/35 bg-white/35 backdrop-blur-sm hover:bg-white/60"
+        : "text-[#2d1608] border border-white/35 bg-temple-100/35 backdrop-blur-sm hover:bg-temple-100/60"
     }`}
   >
     <AppIcon name={icon} className="h-[21px] w-[21px]" />
@@ -2215,7 +2215,7 @@ const DevoteeDashboard = () => {
 
       <section className="mt-6 grid gap-6 xl:grid-cols-3">
         {/* Upcoming Bookings Card */}
-        <article className="flex flex-col justify-between rounded-3xl border border-gray-100 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
+        <article className="flex flex-col justify-between rounded-3xl border border-gray-100 bg-temple-100 p-6 shadow-sm hover:shadow-md transition-shadow">
           <div>
             <div className="mb-5 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
@@ -2256,7 +2256,7 @@ const DevoteeDashboard = () => {
         </article>
 
         {/* Recent Donations Card */}
-        <article className="flex flex-col justify-between rounded-3xl border border-gray-100 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
+        <article className="flex flex-col justify-between rounded-3xl border border-gray-100 bg-temple-100 p-6 shadow-sm hover:shadow-md transition-shadow">
           <div>
             <div className="mb-5 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
@@ -2297,7 +2297,7 @@ const DevoteeDashboard = () => {
         </article>
 
         {/* Notifications Card */}
-        <article className="flex flex-col justify-between rounded-3xl border border-gray-100 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
+        <article className="flex flex-col justify-between rounded-3xl border border-gray-100 bg-temple-100 p-6 shadow-sm hover:shadow-md transition-shadow">
           <div>
             <div className="mb-5 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
@@ -2351,7 +2351,7 @@ const DevoteeDashboard = () => {
           <button
             type="button"
             onClick={() => setActivePage("Festival Events")}
-            className="rounded-2xl border border-white/40 bg-white/20 px-5 py-2.5 text-sm font-bold text-white backdrop-blur-md hover:bg-white/30 transition-colors shadow-sm"
+            className="rounded-2xl border border-white/40 bg-temple-100/20 px-5 py-2.5 text-sm font-bold text-white backdrop-blur-md hover:bg-temple-100/30 transition-colors shadow-sm"
           >
             View Details
           </button>
@@ -2367,14 +2367,14 @@ const DevoteeDashboard = () => {
     return (
       <div className="space-y-6">
         {/* Four Glassy Tabs at the Top */}
-        <div className="flex gap-2 sm:gap-4 rounded-[24px] bg-white/40 border border-white/60 p-2 backdrop-blur-xl shadow-sm max-w-3xl mx-auto">
+        <div className="flex gap-2 sm:gap-4 rounded-[24px] bg-temple-100/40 border border-white/60 p-2 backdrop-blur-xl shadow-sm max-w-3xl mx-auto">
           <button
             type="button"
             onClick={() => setBookingTab("Pooja")}
             className={`flex-1 py-3 px-3 text-[14px] font-extrabold rounded-[20px] transition-all duration-300 ${
               bookingTab === "Pooja" || bookingTab === "MultiCart"
                 ? "bg-gradient-to-r from-[#d97706] to-[#f59e0b] text-white shadow-lg shadow-amber-600/30 scale-[1.02]"
-                : "bg-transparent text-[#78350f] hover:bg-white/50 hover:shadow-sm"
+                : "bg-transparent text-[#78350f] hover:bg-temple-100/50 hover:shadow-sm"
             }`}
           >
             🌸 Book Pooja
@@ -2385,7 +2385,7 @@ const DevoteeDashboard = () => {
             className={`flex-1 py-3 px-3 text-[14px] font-extrabold rounded-[20px] transition-all duration-300 ${
               bookingTab === "Prasadam"
                 ? "bg-gradient-to-r from-[#d97706] to-[#f59e0b] text-white shadow-lg shadow-amber-600/30 scale-[1.02]"
-                : "bg-transparent text-[#78350f] hover:bg-white/50 hover:shadow-sm"
+                : "bg-transparent text-[#78350f] hover:bg-temple-100/50 hover:shadow-sm"
             }`}
           >
             📦 Order Prasada
@@ -2396,7 +2396,7 @@ const DevoteeDashboard = () => {
             className={`flex-1 py-3 px-3 text-[14px] font-extrabold rounded-[20px] transition-all duration-300 ${
               bookingTab === "Room"
                 ? "bg-gradient-to-r from-[#d97706] to-[#f59e0b] text-white shadow-lg shadow-amber-600/30 scale-[1.02]"
-                : "bg-transparent text-[#78350f] hover:bg-white/50 hover:shadow-sm"
+                : "bg-transparent text-[#78350f] hover:bg-temple-100/50 hover:shadow-sm"
             }`}
           >
             🏨 Book Room
@@ -2419,7 +2419,7 @@ const DevoteeDashboard = () => {
             <div className="grid gap-8 lg:grid-cols-12">
               {/* LEFT SIDE: ITEM SELECTOR FORM */}
               <div className="lg:col-span-6 space-y-6">
-            <div className="rounded-3xl border border-amber-200/80 bg-white/90 p-6 sm:p-8 shadow-xl backdrop-blur-xl">
+            <div className="rounded-3xl border border-amber-200/80 bg-temple-100/90 p-6 sm:p-8 shadow-xl backdrop-blur-xl">
               {/* TOGGLE SELECTOR: POOJA vs PRASADAM */}
               <div className="flex gap-2 rounded-2xl bg-amber-100/60 p-1.5 border border-amber-200 mb-6">
                 <button
@@ -2467,7 +2467,7 @@ const DevoteeDashboard = () => {
                         setSelectedTempleMaterials([]);
                         setPrepAcknowledged(false);
                       }}
-                      className="w-full rounded-2xl border border-amber-200 bg-amber-50/50 px-4 py-3.5 text-base font-bold text-slate-900 outline-none focus:border-amber-500 focus:bg-white"
+                      className="w-full rounded-2xl border border-amber-200 bg-amber-50/50 px-4 py-3.5 text-base font-bold text-slate-900 outline-none focus:border-amber-500 focus:bg-temple-100"
                     >
                       {poojaTypes.map((service) => (
                         <option key={service.name} value={service.name}>
@@ -2528,7 +2528,7 @@ const DevoteeDashboard = () => {
                                 return (
                                   <div key={idx} className="flex items-center justify-between py-1.5 text-xs">
                                     <span>{rm.qty} {rm.unit} {item.name} {rm.mandatory && <span className="text-red-500">*</span>}</span>
-                                    <label className="flex items-center gap-2 cursor-pointer bg-white border border-green-200 hover:bg-green-50 px-2 py-1 rounded-lg transition-colors">
+                                    <label className="flex items-center gap-2 cursor-pointer bg-temple-100 border border-green-200 hover:bg-green-50 px-2 py-1 rounded-lg transition-colors">
                                       <input 
                                         type="checkbox"
                                         checked={selectedTempleMaterials.includes(item._id)}
@@ -2634,7 +2634,7 @@ const DevoteeDashboard = () => {
                           setBookingDatetime(val);
                         }}
                         min={minBookingDatetime}
-                        className="w-full rounded-2xl border border-amber-200 bg-amber-50/50 px-4 py-3.5 text-sm font-bold text-slate-900 outline-none focus:border-amber-500 focus:bg-white"
+                        className="w-full rounded-2xl border border-amber-200 bg-amber-50/50 px-4 py-3.5 text-sm font-bold text-slate-900 outline-none focus:border-amber-500 focus:bg-temple-100"
                       />
                     </div>
 
@@ -2718,7 +2718,7 @@ const DevoteeDashboard = () => {
                     <select
                       value={prasadamForm.itemName}
                       onChange={(e) => setPrasadamForm((prev) => ({ ...prev, itemName: e.target.value }))}
-                      className="w-full rounded-2xl border border-amber-200 bg-amber-50/50 px-4 py-3.5 text-base font-bold text-slate-900 outline-none focus:border-amber-500 focus:bg-white"
+                      className="w-full rounded-2xl border border-amber-200 bg-amber-50/50 px-4 py-3.5 text-base font-bold text-slate-900 outline-none focus:border-amber-500 focus:bg-temple-100"
                     >
                       {Object.keys(prasadamMenu).map((item) => (
                         <option key={item} value={item}>
@@ -2738,7 +2738,7 @@ const DevoteeDashboard = () => {
                         min="1"
                         value={prasadamForm.quantity}
                         onChange={(e) => setPrasadamForm((prev) => ({ ...prev, quantity: Math.max(1, Number(e.target.value)) }))}
-                        className="w-full rounded-2xl border border-amber-200 bg-amber-50/50 px-4 py-3.5 text-base font-bold text-slate-900 outline-none focus:border-amber-500 focus:bg-white"
+                        className="w-full rounded-2xl border border-amber-200 bg-amber-50/50 px-4 py-3.5 text-base font-bold text-slate-900 outline-none focus:border-amber-500 focus:bg-temple-100"
                       />
                     </div>
 
@@ -2791,7 +2791,7 @@ const DevoteeDashboard = () => {
               </div>
 
               {cartItems.length === 0 ? (
-                <div className="py-14 text-center border-2 border-dashed border-amber-200 rounded-3xl bg-white/60 p-6">
+                <div className="py-14 text-center border-2 border-dashed border-amber-200 rounded-3xl bg-temple-100/60 p-6">
                   <span className="text-4xl">🙏</span>
                   <p className="mt-3 text-base font-bold text-slate-800">No items selected yet.</p>
                   <p className="mt-1 text-xs font-semibold text-slate-500">
@@ -2805,7 +2805,7 @@ const DevoteeDashboard = () => {
                     {cartItems.map((item) => (
                       <div
                         key={item.id}
-                        className="flex items-center justify-between rounded-2xl bg-white p-4 border border-amber-200/80 shadow-xs transition hover:border-amber-400"
+                        className="flex items-center justify-between rounded-2xl bg-temple-100 p-4 border border-amber-200/80 shadow-xs transition hover:border-amber-400"
                       >
                         <div className="flex-1 pr-2">
                           <div className="flex items-center gap-2">
@@ -2863,7 +2863,7 @@ const DevoteeDashboard = () => {
                     <select
                       value={cartPaymentMethod}
                       onChange={(e) => setCartPaymentMethod(e.target.value)}
-                      className="w-full rounded-2xl border border-amber-200 bg-white px-4 py-3.5 text-sm font-bold text-slate-900 outline-none focus:border-amber-500"
+                      className="w-full rounded-2xl border border-amber-200 bg-temple-100 px-4 py-3.5 text-sm font-bold text-slate-900 outline-none focus:border-amber-500"
                     >
                       <option value="UPI">
                         💳 Razorpay Gateway (UPI, GPay, PhonePe, Cards, Net Banking)
@@ -2924,8 +2924,8 @@ const DevoteeDashboard = () => {
                             }}
                             className={`rounded-2xl border p-5 transition duration-300 backdrop-blur-md ${
                               isSelected
-                                ? "cursor-pointer border-[#ff9f2f] bg-white/60 shadow-md ring-2 ring-[#ff9f2f]"
-                                : "cursor-pointer border-white/40 bg-white/20 hover:bg-white/40"
+                                ? "cursor-pointer border-[#ff9f2f] bg-temple-100/60 shadow-md ring-2 ring-[#ff9f2f]"
+                                : "cursor-pointer border-white/40 bg-temple-100/20 hover:bg-temple-100/40"
                             }`}
                           >
                             <div className="flex items-center justify-between">
@@ -3098,7 +3098,7 @@ const DevoteeDashboard = () => {
                           (profileData.email && h.email === profileData.email)
                         )
                         .map((record) => (
-                          <tr key={record.id} className="border-b border-white/10 hover:bg-white/10 transition">
+                          <tr key={record.id} className="border-b border-white/10 hover:bg-temple-100/10 transition">
                             <td className="py-3 px-3 font-mono font-bold text-indigo-700">{record.id}</td>
                             <td className="py-3 px-3 font-bold">{record.roomNumber}</td>
                             <td className="py-3 px-3">{record.roomType}</td>
@@ -3261,7 +3261,7 @@ const DevoteeDashboard = () => {
             <div className="rounded-2xl bg-[#f4f7f3] px-4 py-3 text-sm font-semibold text-[#1b7f77]">
               Total Donations: {formatCurrency(totalDonations)}
             </div>
-            <div className="rounded-xl border border-[#ececec] bg-white px-3 py-1 text-sm">
+            <div className="rounded-xl border border-[#ececec] bg-temple-100 px-3 py-1 text-sm">
               <button
                 type="button"
                 onClick={() => setDonationView("All")}
@@ -3410,7 +3410,7 @@ const DevoteeDashboard = () => {
                 const displayed = showAllDonations ? filtered : filtered.slice(0, 5);
 
                 return displayed.map((item) => (
-                  <div key={`${item._id || Math.random()}`} className="rounded-[26px] border border-white/40 bg-white/55 p-4 shadow-sm backdrop-blur-sm">
+                  <div key={`${item._id || Math.random()}`} className="rounded-[26px] border border-white/40 bg-temple-100/55 p-4 shadow-sm backdrop-blur-sm">
                     <div className="flex flex-wrap items-center justify-between gap-4">
                       <div>
                         <p className="font-semibold text-[#1f1f1f]">{item.category || item.type || (item.eventTitle ? `Donation - ${item.eventTitle}` : "Donation")}</p>
@@ -3592,7 +3592,7 @@ const DevoteeDashboard = () => {
               type="button"
               onClick={() => setHistoryTab("Donations")}
               className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${
-                historyTab === "Donations" ? "bg-[#1b7f77] text-white" : "bg-transparent text-[#3058d6] hover:bg-white"
+                historyTab === "Donations" ? "bg-[#1b7f77] text-white" : "bg-transparent text-[#3058d6] hover:bg-temple-100"
               }`}
             >
               Donations
@@ -3601,7 +3601,7 @@ const DevoteeDashboard = () => {
               type="button"
               onClick={() => setHistoryTab("Prasadam")}
               className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${
-                historyTab === "Prasadam" ? "bg-[#1b7f77] text-white" : "bg-transparent text-[#3058d6] hover:bg-white"
+                historyTab === "Prasadam" ? "bg-[#1b7f77] text-white" : "bg-transparent text-[#3058d6] hover:bg-temple-100"
               }`}
             >
               Prasadam Orders
@@ -4010,7 +4010,7 @@ const DevoteeDashboard = () => {
                     className={`group relative flex items-start gap-4 rounded-2xl border p-5 transition-all duration-300 cursor-pointer ${
                       !item.read
                         ? "border-[#fecdd3] bg-[#fff0f3] shadow-[0_8px_20px_rgba(244,63,94,0.06)]"
-                        : "border-[#e5e7eb] bg-white hover:bg-[#fafafa]"
+                        : "border-[#e5e7eb] bg-temple-100 hover:bg-[#fafafa]"
                     }`}
                   >
                     <div className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl shadow-sm ${style.color}`}>
@@ -4204,7 +4204,7 @@ const DevoteeDashboard = () => {
                 </div>
                 <p className="mt-3 text-sm text-[#374151]">{request.message}</p>
                 {request.reply && (
-                  <div className="mt-4 rounded-[26px] border border-white/35 bg-white/70 p-3 text-sm text-[#1f2937] shadow-sm backdrop-blur-sm">
+                  <div className="mt-4 rounded-[26px] border border-white/35 bg-temple-100/70 p-3 text-sm text-[#1f2937] shadow-sm backdrop-blur-sm">
                     <p className="font-semibold">Admin Reply</p>
                     <p className="mt-2">{request.reply}</p>
                   </div>
@@ -4272,7 +4272,7 @@ const DevoteeDashboard = () => {
             <button
               type="button"
               onClick={handleLogout}
-              className="mt-1 w-full rounded-xl border border-white/40 bg-white/45 px-3 py-3 text-left text-[18px] font-semibold text-[#7f470a] hover:bg-white/80"
+              className="mt-1 w-full rounded-xl border border-white/40 bg-temple-100/45 px-3 py-3 text-left text-[18px] font-semibold text-[#7f470a] hover:bg-temple-100/80"
             >
               <span className="inline-flex items-center gap-3">
                 <AppIcon name="gear" className="h-[21px] w-[21px]" />
@@ -4283,7 +4283,7 @@ const DevoteeDashboard = () => {
         </aside>
 
         <main className="flex-1 px-4 py-4 sm:px-6 sm:py-6 lg:px-10">
-          <header className="rounded-2xl border border-white/60 bg-white/50 px-6 py-5 shadow-[0_12px_30px_rgba(80,40,10,0.06)] backdrop-blur-md">
+          <header className="rounded-2xl border border-white/60 bg-temple-100/50 px-6 py-5 shadow-[0_12px_30px_rgba(80,40,10,0.06)] backdrop-blur-md">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="flex min-w-[360px] flex-1 items-center gap-4">
                 <button type="button" className="hidden text-[#8d551f] lg:block">
@@ -4295,7 +4295,7 @@ const DevoteeDashboard = () => {
                   <input
                     type="text"
                     placeholder="Search here..."
-                    className="w-full rounded-xl border border-[#e8d8c2] bg-white/90 py-3.5 pl-12 pr-4 text-base text-[#3d3d3d] outline-none placeholder:text-[#9a9a9a]"
+                    className="w-full rounded-xl border border-[#e8d8c2] bg-temple-100/90 py-3.5 pl-12 pr-4 text-base text-[#3d3d3d] outline-none placeholder:text-[#9a9a9a]"
                   />
                   <svg viewBox="0 0 24 24" className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 fill-none stroke-[#8d551f] stroke-2">
                     <circle cx="11" cy="11" r="7"></circle>
@@ -4304,7 +4304,7 @@ const DevoteeDashboard = () => {
                 </div>
               </div>
               <div className="flex items-center gap-4">
-                <button type="button" onClick={() => setActivePage("Notifications")} className="relative mr-1 hidden rounded-xl bg-white/80 p-2.5 shadow-sm transition hover:scale-105 lg:block">
+                <button type="button" onClick={() => setActivePage("Notifications")} className="relative mr-1 hidden rounded-xl bg-temple-100/80 p-2.5 shadow-sm transition hover:scale-105 lg:block">
                   <AppIcon name="bell" className="h-7 w-7 text-[#302d2b]" />
                   {unreadNotificationsCount > 0 && (
                     <span className="absolute -right-1 -top-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#e4262c] text-xs font-extrabold text-white">
@@ -4312,7 +4312,7 @@ const DevoteeDashboard = () => {
                     </span>
                   )}
                 </button>
-                <div className="rounded-xl border border-[#ead6c0] bg-white/80 px-5 py-2.5 text-base font-bold text-[#7e4310]">
+                <div className="rounded-xl border border-[#ead6c0] bg-temple-100/80 px-5 py-2.5 text-base font-bold text-[#7e4310]">
                   {currentDateTime.toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "short", day: "numeric" })} {currentDateTime.toLocaleTimeString()}
                 </div>
                 <div className="flex items-center gap-3.5 rounded-full px-1">
@@ -4333,7 +4333,7 @@ const DevoteeDashboard = () => {
             </div>
           </header>
  
-          <div className="mt-6 rounded-3xl border border-white/70 bg-white/40 p-5 shadow-[0_14px_40px_rgba(80,40,10,0.05)] backdrop-blur-lg sm:p-7 lg:p-9">
+          <div className="mt-6 rounded-3xl border border-white/70 bg-temple-100/40 p-5 shadow-[0_14px_40px_rgba(80,40,10,0.05)] backdrop-blur-lg sm:p-7 lg:p-9">
             {renderContent()}
           </div>
         </main>
@@ -4342,11 +4342,11 @@ const DevoteeDashboard = () => {
       
       {/* Receipt Preview Modal */}
       {viewingReceiptData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 sm:p-6 backdrop-blur-sm print:bg-white print:p-0 print:block">
-          <div className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white shadow-2xl print:max-w-full print:max-h-full print:shadow-none print:overflow-visible scrollbar-hide">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 sm:p-6 backdrop-blur-sm print:bg-temple-100 print:p-0 print:block">
+          <div className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl bg-temple-100 shadow-2xl print:max-w-full print:max-h-full print:shadow-none print:overflow-visible scrollbar-hide">
             
             {/* Modal Actions - Hidden when printing */}
-            <div className="sticky top-0 z-10 flex justify-between items-center bg-white/90 backdrop-blur-md px-6 py-4 border-b print:hidden">
+            <div className="sticky top-0 z-10 flex justify-between items-center bg-temple-100/90 backdrop-blur-md px-6 py-4 border-b print:hidden">
               <h3 className="text-lg font-bold text-gray-900">Receipt Preview</h3>
               <div className="flex items-center gap-3">
                 <button
@@ -4373,7 +4373,7 @@ const DevoteeDashboard = () => {
             </div>
 
             {/* Receipt Component */}
-            <div id="receipt-preview-content" className="p-4 sm:p-8 bg-gray-50 flex justify-center print:bg-white print:p-0">
+            <div id="receipt-preview-content" className="p-4 sm:p-8 bg-gray-50 flex justify-center print:bg-temple-100 print:p-0">
               <BookingReceipt {...viewingReceiptData} />
             </div>
             

@@ -227,7 +227,7 @@ const PoojaManagement = () => {
         {stats.map((card) => {
           const Icon = card.icon;
           return (
-            <div key={card.title} className="rounded-2xl border border-[#ece8e1] bg-white p-5">
+            <div key={card.title} className="rounded-2xl border border-[#ece8e1] bg-temple-100 p-5">
               <div className="flex items-center gap-4">
                 <div className={`flex h-16 w-16 items-center justify-center rounded-2xl ${card.iconBg}`}><Icon className={card.iconText} size={30} /></div>
                 <div>
@@ -240,7 +240,7 @@ const PoojaManagement = () => {
         })}
       </div>
 
-      <div className="rounded-2xl border border-[#ece8e1] bg-white p-5">
+      <div className="rounded-2xl border border-[#ece8e1] bg-temple-100 p-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-[#f0ece6] pb-4 mb-4">
           <div>
             <h2 className="text-[30px] font-bold text-[#15141f]">Manage Pooja Types</h2>
@@ -291,7 +291,7 @@ const PoojaManagement = () => {
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
         <div className="xl:col-span-8 space-y-4">
-          <div className="overflow-hidden rounded-2xl border border-[#ece8e1] bg-white">
+          <div className="overflow-hidden rounded-2xl border border-[#ece8e1] bg-temple-100">
             <div className="flex flex-col gap-3 border-b border-[#f0ece6] px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-4">
                 <h2 className="text-[36px] font-bold text-[#15141f]">Pooja Bookings</h2>
@@ -331,7 +331,7 @@ const PoojaManagement = () => {
             </div>
           </div>
 
-          <div className="overflow-auto rounded-2xl border border-[#ece8e1] bg-white p-4">
+          <div className="overflow-auto rounded-2xl border border-[#ece8e1] bg-temple-100 p-4">
             <h2 className="mb-3 text-[32px] font-bold text-[#15141f]">Recent Receipts</h2>
             <table className="w-full min-w-[860px] text-[15px]">
               <thead className="text-[#2b3240]">
@@ -364,7 +364,7 @@ const PoojaManagement = () => {
           </div>
         </div>
 
-        <div className="xl:col-span-4 rounded-2xl border border-[#ece8e1] bg-white p-4">
+        <div className="xl:col-span-4 rounded-2xl border border-[#ece8e1] bg-temple-100 p-4">
           <h3 className="text-[30px] font-bold text-[#15141f]">Booking Overview</h3>
           <div className="mt-4 space-y-2 text-[15px] text-[#2f3645]">
             <div className="flex items-center justify-between"><span>Total Bookings</span><span>{statsData?.totalBookings || 0}</span></div>
@@ -408,7 +408,7 @@ const BookingDetailsModal = ({ booking, onClose }) => {
   
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-      <div className="w-full max-w-lg rounded-3xl border border-[#ece8e1] bg-white p-6 shadow-2xl relative">
+      <div className="w-full max-w-lg rounded-3xl border border-[#ece8e1] bg-temple-100 p-6 shadow-2xl relative">
         <button
           type="button"
           onClick={onClose}
@@ -461,7 +461,7 @@ const BookingDetailsModal = ({ booking, onClose }) => {
           <button
             type="button"
             onClick={onClose}
-            className="rounded-2xl border border-[#d1d5db] bg-white px-5 py-2.5 text-sm font-semibold text-[#374151] hover:bg-[#f9fafb]"
+            className="rounded-2xl border border-[#d1d5db] bg-temple-100 px-5 py-2.5 text-sm font-semibold text-[#374151] hover:bg-[#f9fafb]"
           >
             Close
           </button>

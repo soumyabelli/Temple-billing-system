@@ -16,7 +16,7 @@ const Attendance = () => {
       <SectionCard title="Attendance Dashboard" subtitle="Monitor daily attendance and punctuality for temple staff." className="bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-[#191c3b] via-[#3b2a6d] to-[#7d5dd8] text-white border-transparent shadow-2xl shadow-violet-600/20">
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-5">
           {attendanceTiles.map((tile) => (
-            <div key={tile.title} className={`rounded-[28px] border border-white/10 px-5 py-6 ${tile.accent} bg-white/10 shadow-xl shadow-slate-900/10`}>
+            <div key={tile.title} className={`rounded-[28px] border border-white/10 px-5 py-6 ${tile.accent} bg-temple-100/10 shadow-xl shadow-slate-900/10`}>
               <p className="text-sm uppercase tracking-[0.18em] text-slate-100/70">{tile.title}</p>
               <p className="mt-4 text-3xl font-semibold text-white">{tile.value}</p>
             </div>
@@ -47,7 +47,7 @@ const Attendance = () => {
           </SectionCard>
 
           <SectionCard title="Daily Attendance Table" subtitle="Quick status for today's roster." className="overflow-hidden">
-            <div className="overflow-x-auto rounded-[28px] border border-slate-200 bg-white shadow-sm">
+            <div className="overflow-x-auto rounded-[28px] border border-slate-200 bg-temple-100 shadow-sm">
               <table className="min-w-full text-left text-sm text-slate-600">
                 <thead className="bg-slate-100 text-slate-500">
                   <tr>
@@ -104,7 +104,7 @@ const Attendance = () => {
               </div>
               <div className="space-y-3">
                 {employees.slice(0, 4).map((emp) => (
-                  <div key={emp.id} className="flex items-center justify-between rounded-[22px] border border-slate-200 bg-white p-4">
+                  <div key={emp.id} className="flex items-center justify-between rounded-[22px] border border-slate-200 bg-temple-100 p-4">
                     <div>
                       <p className="font-semibold text-slate-900">{emp.name}</p>
                       <p className="text-sm text-slate-500">{emp.role}</p>
@@ -122,7 +122,7 @@ const Attendance = () => {
           <SectionCard title="Attendance Calendar" subtitle="Mark shifts and attendance events." className="overflow-hidden">
             <div className="grid gap-3 rounded-[28px] border border-slate-200 bg-slate-50 p-5 text-sm text-slate-600">
               {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
-                <div key={day} className="flex items-center justify-between rounded-2xl bg-white px-4 py-3 shadow-sm">
+                <div key={day} className="flex items-center justify-between rounded-2xl bg-temple-100 px-4 py-3 shadow-sm">
                   <span>{day}</span>
                   <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">21/22</span>
                 </div>

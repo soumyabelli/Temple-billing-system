@@ -159,7 +159,7 @@ const SidebarItem = ({ label, icon, active }) => (
   <button
     type="button"
     className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-base font-semibold transition ${
-      active ? "bg-[#d78722] text-white shadow-[0_6px_16px_rgba(202,122,29,0.3)]" : "text-[#211b13] hover:bg-white/70"
+      active ? "bg-[#d78722] text-white shadow-[0_6px_16px_rgba(202,122,29,0.3)]" : "text-[#211b13] hover:bg-temple-100/70"
     }`}
   >
     <AppIcon name={icon} className="h-[17px] w-[17px]" />
@@ -208,7 +208,7 @@ const DevoteeDashboard = () => {
             <button
               type="button"
               onClick={handleLogout}
-              className="mt-1 w-full rounded-xl px-3 py-3 text-left text-base font-semibold text-[#7f470a] hover:bg-white/80"
+              className="mt-1 w-full rounded-xl px-3 py-3 text-left text-base font-semibold text-[#7f470a] hover:bg-temple-100/80"
             >
               <span className="inline-flex items-center gap-3">
                 <AppIcon name="gear" className="h-[17px] w-[17px]" />
@@ -219,7 +219,7 @@ const DevoteeDashboard = () => {
         </aside>
 
         <main className="flex-1 px-6 py-6 lg:px-7">
-          <header className="rounded-2xl border border-[#ebebeb] bg-white px-5 py-4 shadow-sm">
+          <header className="rounded-2xl border border-[#ebebeb] bg-temple-100 px-5 py-4 shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="flex min-w-[360px] flex-1 items-center gap-4">
                 <button type="button" className="hidden text-[#8d551f] lg:block">
@@ -297,7 +297,7 @@ const DevoteeDashboard = () => {
           </section>
 
           <section className="mt-4 grid gap-4 xl:grid-cols-3">
-            <article className="rounded-2xl border border-[#ececec] bg-white p-5 shadow-sm">
+            <article className="rounded-2xl border border-[#ececec] bg-temple-100 p-5 shadow-sm">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-[2rem] font-bold">Upcoming Bookings</h2>
                 <button type="button" className="bg-transparent p-0 text-base font-semibold text-[#bc630f]">
@@ -322,7 +322,7 @@ const DevoteeDashboard = () => {
               </div>
             </article>
 
-            <article className="rounded-2xl border border-[#ececec] bg-white p-5 shadow-sm">
+            <article className="rounded-2xl border border-[#ececec] bg-temple-100 p-5 shadow-sm">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-[2rem] font-bold">Recent Donations</h2>
                 <button type="button" className="bg-transparent p-0 text-base font-semibold text-[#bc630f]">
@@ -347,7 +347,7 @@ const DevoteeDashboard = () => {
               </div>
             </article>
 
-            <article className="rounded-2xl border border-[#ececec] bg-white p-5 shadow-sm">
+            <article className="rounded-2xl border border-[#ececec] bg-temple-100 p-5 shadow-sm">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-[2rem] font-bold">Notifications</h2>
                 <button type="button" className="bg-transparent p-0 text-base font-semibold text-[#bc630f]">
@@ -376,7 +376,7 @@ const DevoteeDashboard = () => {
               </div>
               <button
                 type="button"
-                className="rounded-xl border border-white/60 bg-white/20 px-5 py-2 text-lg font-semibold text-white backdrop-blur-sm"
+                className="rounded-xl border border-white/60 bg-temple-100/20 px-5 py-2 text-lg font-semibold text-white backdrop-blur-sm"
               >
                 View Details
               </button>
@@ -384,7 +384,7 @@ const DevoteeDashboard = () => {
           </section>
 
           <section className="mt-4 grid gap-4 pb-8 xl:grid-cols-2">
-            <article className="overflow-hidden rounded-2xl border border-[#ececec] bg-white shadow-sm">
+            <article className="overflow-hidden rounded-2xl border border-[#ececec] bg-temple-100 shadow-sm">
               <h2 className="px-5 py-4 text-[2rem] font-bold">My Recent Bookings</h2>
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[650px]">
@@ -423,7 +423,7 @@ const DevoteeDashboard = () => {
               </div>
             </article>
 
-            <article className="overflow-hidden rounded-2xl border border-[#ececec] bg-white shadow-sm">
+            <article className="overflow-hidden rounded-2xl border border-[#ececec] bg-temple-100 shadow-sm">
               <h2 className="px-5 py-4 text-[2rem] font-bold">Donation History</h2>
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[650px]">

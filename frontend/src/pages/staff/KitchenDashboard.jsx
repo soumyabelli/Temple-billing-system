@@ -11,7 +11,7 @@ const KitchenDashboard = () => {
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 bg-temple-100 p-5 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-50 text-[#ff8b00]">
               <FaFire size={24} />
@@ -23,7 +23,7 @@ const KitchenDashboard = () => {
           </div>
         </div>
         
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 bg-temple-100 p-5 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
               <FaBoxes size={24} />
@@ -35,7 +35,7 @@ const KitchenDashboard = () => {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 bg-temple-100 p-5 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-50 text-green-600">
               <FaBookOpen size={24} />
@@ -48,7 +48,7 @@ const KitchenDashboard = () => {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col min-h-[300px]">
+      <div className="rounded-2xl border border-slate-200 bg-temple-100 p-6 shadow-sm flex flex-col min-h-[300px]">
         <h3 className="text-lg font-bold text-slate-800 mb-4">Log New Production</h3>
         <div className="flex-1 flex items-center justify-center text-slate-400 border-2 border-dashed border-slate-100 rounded-xl">
            [ Recipe Selection and Production Entry Form Here ]

@@ -96,7 +96,7 @@ const PaymentProcessing = () => {
           <button
             type="button"
             onClick={loadBills}
-            className="inline-flex items-center gap-2 rounded-full border border-[#f0c58f] bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:bg-[#fff8ef]"
+            className="inline-flex items-center gap-2 rounded-full border border-[#f0c58f] bg-temple-100 px-5 py-3 text-sm font-bold text-slate-900 transition hover:bg-[#fff8ef]"
           >
             <FaSyncAlt /> Refresh
           </button>
@@ -111,7 +111,7 @@ const PaymentProcessing = () => {
       }
     >
       <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-        <section className="rounded-[22px] border border-[#f0d3a2] bg-white/95 p-5 shadow-sm">
+        <section className="rounded-[22px] border border-[#f0d3a2] bg-temple-100/95 p-5 shadow-sm">
           <div className="flex items-center justify-between gap-3">
             <div>
               <h2 className="text-2xl font-extrabold text-slate-950">Payment channels</h2>
@@ -142,7 +142,7 @@ const PaymentProcessing = () => {
           </div>
         </section>
 
-        <section className="rounded-[22px] border border-[#f0d3a2] bg-white/95 p-5 shadow-sm">
+        <section className="rounded-[22px] border border-[#f0d3a2] bg-temple-100/95 p-5 shadow-sm">
           <div className="flex items-center justify-between gap-3">
             <div>
               <h2 className="text-2xl font-extrabold text-slate-950">Recent payments</h2>

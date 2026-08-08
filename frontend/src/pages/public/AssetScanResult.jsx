@@ -41,7 +41,7 @@ const AssetScanResult = () => {
   if (error || !data) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
+        <div className="bg-temple-100 rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
           <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
           </div>
@@ -71,7 +71,7 @@ const AssetScanResult = () => {
         </div>
 
         {/* Asset Info Card */}
-        <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden mb-8">
+        <div className="bg-temple-100 rounded-3xl shadow-sm border border-slate-200 overflow-hidden mb-8">
           <div className="bg-slate-50 border-b border-slate-200 px-6 py-4 flex justify-between items-center">
             <h2 className="text-lg font-bold text-slate-800">{asset.name}</h2>
             <span className={`px-3 py-1 text-sm font-semibold rounded-full ${
@@ -127,7 +127,7 @@ const AssetScanResult = () => {
             {maintenanceHistory.map((ticket, index) => (
               <div key={ticket._id} className="relative pl-6">
                 <div className={`absolute -left-[9px] top-1 w-4 h-4 rounded-full border-2 border-white ${ticket.status === 'Completed' || ticket.status === 'Closed' ? 'bg-emerald-500' : 'bg-[#ff8b00]'}`}></div>
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+                <div className="bg-temple-100 rounded-2xl shadow-sm border border-slate-200 p-5">
                   <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-3 gap-2">
                     <h4 className="font-bold text-slate-800 text-lg">Ticket #{ticket.ticketNumber}</h4>
                     <span className={`self-start px-2.5 py-1 text-xs font-semibold rounded-full ${
@@ -162,7 +162,7 @@ const AssetScanResult = () => {
             ))}
           </div>
         ) : (
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 text-center text-slate-500">
+          <div className="bg-temple-100 rounded-2xl shadow-sm border border-slate-200 p-8 text-center text-slate-500">
             <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3">
               <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
             </div>

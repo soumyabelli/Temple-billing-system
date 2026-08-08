@@ -238,7 +238,7 @@ const CashierDashboard = () => {
       >
         <div className="p-6">
           <div className="flex items-start gap-3">
-            <div className="mt-1 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 border border-white/15">
+            <div className="mt-1 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-temple-100/10 border border-white/15">
               <span className="text-2xl">🛕</span>
             </div>
             <div>
@@ -293,7 +293,7 @@ const CashierDashboard = () => {
         <div className="px-4 mt-3">
           <button
             onClick={logout}
-            className="w-full rounded-xl bg-white/10 border border-white/15 px-4 py-3 flex items-center gap-3 hover:bg-white/15 transition"
+            className="w-full rounded-xl bg-temple-100/10 border border-white/15 px-4 py-3 flex items-center gap-3 hover:bg-temple-100/15 transition"
           >
             <span>🚪</span>
             <span className="font-semibold">Logout</span>
@@ -307,7 +307,7 @@ const CashierDashboard = () => {
 
       <div className="lg:ml-72">
         {/* Header */}
-        <header className="sticky top-0 z-20 bg-white/90 backdrop-blur border-b border-orange-100">
+        <header className="sticky top-0 z-20 bg-temple-100/90 backdrop-blur border-b border-orange-100">
           <div className="flex items-center justify-between px-4 md:px-6 py-3">
             <div className="flex items-center gap-3">
               <button
@@ -328,7 +328,7 @@ const CashierDashboard = () => {
 
             <div className="hidden md:flex items-center">
               <input
-                className="w-[360px] max-w-[42vw] rounded-xl border border-orange-100 bg-white px-4 py-2 outline-none focus:ring-2 focus:ring-orange-200"
+                className="w-[360px] max-w-[42vw] rounded-xl border border-orange-100 bg-temple-100 px-4 py-2 outline-none focus:ring-2 focus:ring-orange-200"
                 placeholder="Search devotee, bill, receipt..."
               />
             </div>
@@ -373,7 +373,7 @@ const CashierDashboard = () => {
                 </div>
               </div>
               <div className="flex gap-2 items-center">
-                <div className="inline-flex items-center rounded-xl bg-white border border-orange-100 px-4 py-2">
+                <div className="inline-flex items-center rounded-xl bg-temple-100 border border-orange-100 px-4 py-2">
                   <span className="text-orange-600 mr-2">🧧</span>
                   <span className="font-semibold text-gray-800">Today Total</span>
                   <span className="ml-2 font-extrabold text-orange-700">{todayCollectionTotal}</span>
@@ -387,7 +387,7 @@ const CashierDashboard = () => {
             {loading ? (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="h-28 rounded-2xl bg-white border border-orange-100 shadow-sm animate-pulse" />
+                  <div key={i} className="h-28 rounded-2xl bg-temple-100 border border-orange-100 shadow-sm animate-pulse" />
                 ))}
               </div>
             ) : errorMsg ? (
@@ -422,7 +422,7 @@ const CashierDashboard = () => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.35 }}
-              className="lg:col-span-1 rounded-2xl bg-white border border-orange-100 shadow-sm p-4 md:p-5"
+              className="lg:col-span-1 rounded-2xl bg-temple-100 border border-orange-100 shadow-sm p-4 md:p-5"
             >
               <div className="flex items-start justify-between">
                 <div>
@@ -458,7 +458,7 @@ const CashierDashboard = () => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.35, delay: 0.04 }}
-              className="lg:col-span-2 rounded-2xl bg-white border border-orange-100 shadow-sm p-4 md:p-5"
+              className="lg:col-span-2 rounded-2xl bg-temple-100 border border-orange-100 shadow-sm p-4 md:p-5"
             >
               <div className="flex items-center justify-between">
                 <div>
@@ -512,7 +512,7 @@ const CashierDashboard = () => {
 
           {/* Row 2: Quick actions + Donut + Summary */}
           <div className="mt-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <section className="rounded-2xl bg-white border border-orange-100 shadow-sm p-4">
+            <section className="rounded-2xl bg-temple-100 border border-orange-100 shadow-sm p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-sm font-bold text-gray-900">Quick Actions</div>
@@ -544,7 +544,7 @@ const CashierDashboard = () => {
               </div>
             </section>
 
-            <section className="rounded-2xl bg-white border border-orange-100 shadow-sm p-4">
+            <section className="rounded-2xl bg-temple-100 border border-orange-100 shadow-sm p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-sm font-bold text-gray-900">Payment Methods</div>
@@ -587,7 +587,7 @@ const CashierDashboard = () => {
               </div>
             </section>
 
-            <section className="rounded-2xl bg-white border border-orange-100 shadow-sm p-4">
+            <section className="rounded-2xl bg-temple-100 border border-orange-100 shadow-sm p-4">
               <div className="text-sm font-bold text-gray-900">Collection Summary</div>
               <div className="text-xs text-gray-500 mt-1">Daily and monthly overview</div>
 
@@ -627,7 +627,7 @@ const SidebarItem = ({ icon, label, active, onClick }) => {
     <button
       onClick={onClick}
       className={`w-full text-left mt-1 rounded-xl px-4 py-3 flex items-center gap-3 transition border border-transparent ${
-        active ? "bg-white/15 border-white/20" : "hover:bg-white/10"
+        active ? "bg-temple-100/15 border-white/20" : "hover:bg-temple-100/10"
       }`}
     >
       <span className="text-lg">{icon}</span>
@@ -661,7 +661,7 @@ const KpiCard = ({ title, value, icon, accent }) => {
           <div className="text-xs font-bold text-gray-500">{title}</div>
           <div className="mt-2 text-xl md:text-2xl font-extrabold text-gray-900">{value}</div>
         </div>
-        <div className="h-11 w-11 rounded-2xl bg-white border border-orange-100 flex items-center justify-center">
+        <div className="h-11 w-11 rounded-2xl bg-temple-100 border border-orange-100 flex items-center justify-center">
           {icon}
         </div>
       </div>
@@ -695,7 +695,7 @@ const Widget = ({ icon, title, value, hint }) => {
   return (
     <motion.div
       whileHover={{ y: -4 }}
-      className="rounded-2xl bg-white border border-orange-100 shadow-sm p-4 transition"
+      className="rounded-2xl bg-temple-100 border border-orange-100 shadow-sm p-4 transition"
     >
       <div className="flex items-start justify-between gap-3">
         <div>

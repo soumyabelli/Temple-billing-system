@@ -295,7 +295,7 @@ const AccountLedgersView = () => {
             <button
               type="button"
               onClick={loadLedgers}
-              className="rounded-2xl border border-amber-300 bg-white px-5 py-3 text-sm font-bold text-amber-900 shadow-sm hover:bg-amber-50 transition"
+              className="rounded-2xl border border-amber-300 bg-temple-100 px-5 py-3 text-sm font-bold text-amber-900 shadow-sm hover:bg-amber-50 transition"
             >
               🔄 Refresh
             </button>
@@ -305,7 +305,7 @@ const AccountLedgersView = () => {
 
       {/* METRICS CARDS */}
       <div className="grid gap-5 md:grid-cols-3 mb-6">
-        <div className="rounded-3xl border border-emerald-100 bg-white p-6 shadow-sm flex items-center justify-between">
+        <div className="rounded-3xl border border-emerald-100 bg-temple-100 p-6 shadow-sm flex items-center justify-between">
           <div>
             <p className="text-xs font-extrabold uppercase tracking-wider text-emerald-700">Total Credits (Income)</p>
             <p className="mt-2 text-3xl font-black text-emerald-950">Rs {totalCredits.toLocaleString()}</p>
@@ -315,7 +315,7 @@ const AccountLedgersView = () => {
           </span>
         </div>
 
-        <div className="rounded-3xl border border-red-100 bg-white p-6 shadow-sm flex items-center justify-between">
+        <div className="rounded-3xl border border-red-100 bg-temple-100 p-6 shadow-sm flex items-center justify-between">
           <div>
             <p className="text-xs font-extrabold uppercase tracking-wider text-red-700">Total Debits (Expenses)</p>
             <p className="mt-2 text-3xl font-black text-red-950">Rs {totalDebits.toLocaleString()}</p>
@@ -326,7 +326,7 @@ const AccountLedgersView = () => {
           </span>
         </div>
 
-        <div className="rounded-3xl border border-amber-100 bg-white p-6 shadow-sm flex items-center justify-between">
+        <div className="rounded-3xl border border-amber-100 bg-temple-100 p-6 shadow-sm flex items-center justify-between">
           <div>
             <p className="text-xs font-extrabold uppercase tracking-wider text-amber-700">Net Ledger Balance</p>
             <p className={`mt-2 text-3xl font-black ${netBalance >= 0 ? "text-emerald-800" : "text-red-800"}`}>
@@ -340,7 +340,7 @@ const AccountLedgersView = () => {
       </div>
 
       {/* SEPARATE TABS VIEW FOR CREDITS AND DEBITS */}
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-3xl bg-white p-3 shadow-md border border-slate-200">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-3xl bg-temple-100 p-3 shadow-md border border-slate-200">
         <div className="flex gap-2">
           <button
             type="button"
@@ -396,7 +396,7 @@ const AccountLedgersView = () => {
       </div>
 
       {/* FILTER TOOLBAR */}
-      <div className="mb-6 rounded-3xl border border-white/80 bg-white p-6 shadow-md backdrop-blur-lg">
+      <div className="mb-6 rounded-3xl border border-white/80 bg-temple-100 p-6 shadow-md backdrop-blur-lg">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2 text-sm font-extrabold uppercase tracking-wider text-slate-700">
             <FaFilter className="text-amber-600" /> Advanced Filter Options
@@ -424,7 +424,7 @@ const AccountLedgersView = () => {
                 placeholder="Search purpose, ref..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-3 text-sm font-semibold text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-3 text-sm font-semibold text-slate-800 outline-none focus:border-amber-500 focus:bg-temple-100"
               />
               <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             </div>
@@ -438,7 +438,7 @@ const AccountLedgersView = () => {
               name="startDate"
               value={filters.startDate}
               onChange={handleFilterChange}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-amber-500 focus:bg-temple-100"
             />
           </div>
 
@@ -450,7 +450,7 @@ const AccountLedgersView = () => {
               name="endDate"
               value={filters.endDate}
               onChange={handleFilterChange}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-amber-500 focus:bg-temple-100"
             />
           </div>
 
@@ -461,7 +461,7 @@ const AccountLedgersView = () => {
               name="source"
               value={filters.source}
               onChange={handleFilterChange}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-amber-500 focus:bg-temple-100"
             >
               <option value="">All Sources</option>
               <option value="Manual Entry">Manual Entry (Debits)</option>
@@ -475,7 +475,7 @@ const AccountLedgersView = () => {
       </div>
 
       {/* GENERAL LEDGER TABLE SECTION */}
-      <section className="rounded-3xl border border-white/80 bg-white p-6 sm:p-8 shadow-xl backdrop-blur-xl">
+      <section className="rounded-3xl border border-white/80 bg-temple-100 p-6 sm:p-8 shadow-xl backdrop-blur-xl">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
           <div className="flex items-center gap-3">
             <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-700 font-bold">

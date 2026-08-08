@@ -11,7 +11,7 @@ const StoreDashboard = () => {
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 bg-temple-100 p-5 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
               <FaTruckLoading size={24} />
@@ -23,7 +23,7 @@ const StoreDashboard = () => {
           </div>
         </div>
         
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 bg-temple-100 p-5 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
               <FaClipboardCheck size={24} />
@@ -47,7 +47,7 @@ const StoreDashboard = () => {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 bg-temple-100 p-5 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-50 text-green-600">
               <FaBoxes size={24} />
@@ -61,14 +61,14 @@ const StoreDashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col min-h-[300px]">
+        <div className="rounded-2xl border border-slate-200 bg-temple-100 p-6 shadow-sm flex flex-col min-h-[300px]">
           <h3 className="text-lg font-bold text-slate-800 mb-4">Receive Goods (GRN Entry)</h3>
           <div className="flex-1 flex items-center justify-center text-slate-400 border-2 border-dashed border-slate-100 rounded-xl">
             [ GRN Scanning & Entry Form ]
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col min-h-[300px]">
+        <div className="rounded-2xl border border-slate-200 bg-temple-100 p-6 shadow-sm flex flex-col min-h-[300px]">
           <h3 className="text-lg font-bold text-slate-800 mb-4">Issue Materials</h3>
           <div className="flex-1 flex items-center justify-center text-slate-400 border-2 border-dashed border-slate-100 rounded-xl">
             [ Scan Barcode to Issue Items ]

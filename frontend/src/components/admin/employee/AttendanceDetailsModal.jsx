@@ -6,7 +6,7 @@ const AttendanceDetailsModal = ({ record, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">
-      <div className="w-full max-w-2xl rounded-3xl bg-white p-6 shadow-2xl relative">
+      <div className="w-full max-w-2xl rounded-3xl bg-temple-100 p-6 shadow-2xl relative">
         <button
           onClick={onClose}
           className="absolute top-6 right-6 flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700 transition"

@@ -111,7 +111,7 @@ const AddDonation = () => {
       title="Add Donation"
       subtitle="Create a premium temple donation entry with receipt previews, validation and transaction capture."
       actions={
-        <button className="rounded-2xl bg-white px-5 py-3 font-semibold text-slate-950 transition hover:bg-slate-200">
+        <button className="rounded-2xl bg-temple-100 px-5 py-3 font-semibold text-slate-950 transition hover:bg-slate-200">
           Generate Receipt
         </button>
       }
@@ -235,8 +235,8 @@ const AddDonation = () => {
           <div className="rounded-[28px] border border-white/10 bg-slate-950/10 p-5">
             <p className="text-sm text-slate-300">Support Material</p>
             <div className="mt-4 grid gap-3">
-              <button className="rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-left text-sm text-slate-200">Upload QR image</button>
-              <button className="rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-left text-sm text-slate-200">Upload payment screenshot</button>
+              <button className="rounded-2xl border border-white/15 bg-temple-100/5 px-4 py-3 text-left text-sm text-slate-200">Upload QR image</button>
+              <button className="rounded-2xl border border-white/15 bg-temple-100/5 px-4 py-3 text-left text-sm text-slate-200">Upload payment screenshot</button>
             </div>
           </div>
         </SectionCard>

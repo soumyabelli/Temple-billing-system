@@ -47,7 +47,7 @@ const AssignPriestModal = ({ booking, onClose, onAssigned }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
+      <div className="w-full max-w-md rounded-3xl bg-temple-100 p-6 shadow-2xl">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-slate-800">Assign Priest</h2>
           <button onClick={onClose} className="rounded-full p-2 text-slate-400 hover:bg-slate-100 transition">

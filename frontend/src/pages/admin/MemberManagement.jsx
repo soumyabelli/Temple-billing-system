@@ -85,14 +85,14 @@ const MemberManagement = () => {
           <button
             type="button"
             onClick={() => navigate("/admin")}
-            className="rounded-2xl bg-white/90 px-6 py-3 font-semibold text-orange-700 shadow-lg"
+            className="rounded-2xl bg-temple-100/90 px-6 py-3 font-semibold text-orange-700 shadow-lg"
           >
             Back to Dashboard
           </button>
         </div>
       </div>
 
-      <div className="rounded-3xl bg-white shadow-xl p-8 border border-[#ece8e1]">
+      <div className="rounded-3xl bg-temple-100 shadow-xl p-8 border border-[#ece8e1]">
         <h2 className="text-2xl font-semibold text-slate-900 mb-4">Add New Member</h2>
 
         {message && (
@@ -168,7 +168,7 @@ const MemberManagement = () => {
         </form>
       </div>
 
-      <div className="rounded-3xl bg-white shadow-xl p-8 border border-[#ece8e1]">
+      <div className="rounded-3xl bg-temple-100 shadow-xl p-8 border border-[#ece8e1]">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-5">
           <div>
             <h2 className="text-2xl font-semibold text-slate-900">Existing Members</h2>
@@ -198,7 +198,7 @@ const MemberManagement = () => {
                   <th className="px-4 py-3 text-left font-semibold">Created</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200 bg-white">
+              <tbody className="divide-y divide-slate-200 bg-temple-100">
                 {users.length > 0 ? (
                   users.map((user) => (
                     <tr key={user.id}>

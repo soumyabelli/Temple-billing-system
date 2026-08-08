@@ -52,25 +52,25 @@ const CompletedServices = () => {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="rounded-[24px] border border-slate-200 bg-temple-100 p-5 shadow-sm">
           <p className="text-sm font-medium text-slate-500">Completed Today</p>
           <p className="mt-2 text-3xl font-bold text-slate-900">{stats.completedToday || 0}</p>
         </div>
-        <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="rounded-[24px] border border-slate-200 bg-temple-100 p-5 shadow-sm">
           <p className="text-sm font-medium text-slate-500">This Week</p>
           <p className="mt-2 text-3xl font-bold text-slate-900">{stats.completedThisWeek || 0}</p>
         </div>
-        <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="rounded-[24px] border border-slate-200 bg-temple-100 p-5 shadow-sm">
           <p className="text-sm font-medium text-slate-500">This Month</p>
           <p className="mt-2 text-3xl font-bold text-slate-900">{stats.completedThisMonth || 0}</p>
         </div>
-        <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="rounded-[24px] border border-slate-200 bg-temple-100 p-5 shadow-sm">
           <p className="text-sm font-medium text-slate-500">Avg Completion Time</p>
           <p className="mt-2 text-3xl font-bold text-slate-900">{stats.avgDuration || "N/A"}</p>
         </div>
       </div>
 
-      <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="rounded-[24px] border border-slate-200 bg-temple-100 p-5 shadow-sm">
         <form onSubmit={handleSearch} className="flex flex-col gap-4 md:flex-row md:items-end">
           <div className="flex-1">
             <label className="mb-1 block text-sm font-medium text-slate-700">Search</label>
@@ -126,7 +126,7 @@ const CompletedServices = () => {
         </form>
       </div>
 
-      <div className="rounded-[24px] border border-slate-200 bg-white shadow-sm overflow-hidden">
+      <div className="rounded-[24px] border border-slate-200 bg-temple-100 shadow-sm overflow-hidden">
         {error && <div className="p-4 text-sm text-red-600 bg-red-50 border-b border-red-100">{error}</div>}
         
         {loading ? (

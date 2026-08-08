@@ -131,7 +131,7 @@ const AssignedPoojas = ({ darkMode }) => {
         className={`p-6 rounded-2xl border transition-colors ${
           darkMode
             ? "bg-[#1f2937] border-slate-700 text-slate-100"
-            : "bg-white border-[#ece8e1] text-[#1d1b19]"
+            : "bg-temple-100 border-[#ece8e1] text-[#1d1b19]"
         }`}
       >
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -192,7 +192,7 @@ const AssignedPoojas = ({ darkMode }) => {
       {/* Main Table Content */}
       <div
         className={`rounded-2xl border transition-colors overflow-hidden ${
-          darkMode ? "bg-[#1f2937] border-slate-700" : "bg-white border-[#ece8e1]"
+          darkMode ? "bg-[#1f2937] border-slate-700" : "bg-temple-100 border-[#ece8e1]"
         }`}
       >
         {loading ? (
@@ -354,7 +354,7 @@ const AssignedPoojas = ({ darkMode }) => {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn">
           <div
             className={`w-full max-w-md p-6 rounded-2xl border shadow-xl mx-4 transition-colors ${
-              darkMode ? "bg-slate-900 border-slate-700 text-slate-100" : "bg-white border-[#ece8e1] text-[#1d1b19]"
+              darkMode ? "bg-slate-900 border-slate-700 text-slate-100" : "bg-temple-100 border-[#ece8e1] text-[#1d1b19]"
             }`}
           >
             <div className="flex items-center gap-2.5 text-rose-500 mb-4">

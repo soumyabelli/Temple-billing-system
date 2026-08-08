@@ -142,7 +142,7 @@ const FaceRegistration = ({ employee, onComplete, onRegistrationComplete }) => {
 
   if (registrationSuccess) {
       return (
-          <div className="rounded-3xl border border-slate-200 bg-white p-5 flex flex-col items-center">
+          <div className="rounded-3xl border border-slate-200 bg-temple-100 p-5 flex flex-col items-center">
              <FiCheckCircle className="text-emerald-500 text-5xl mb-2" />
              <h3 className="text-lg font-bold text-emerald-800">Face Registered Successfully</h3>
              <p className="text-sm text-emerald-600 mb-4">5 angles captured and processed.</p>
@@ -159,7 +159,7 @@ const FaceRegistration = ({ employee, onComplete, onRegistrationComplete }) => {
   }
 
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-5">
+    <div className="rounded-3xl border border-slate-200 bg-temple-100 p-5">
       <h3 className="text-xl font-bold mb-4">Face Registration</h3>
       <div className="flex flex-col items-center">
         {message && <p className="mb-4 text-sm font-semibold text-slate-700">{message}</p>}
@@ -184,7 +184,7 @@ const FaceRegistration = ({ employee, onComplete, onRegistrationComplete }) => {
             <button onClick={captureAngle} disabled={isCapturing} className="flex items-center gap-2 rounded-full bg-green-600 px-6 py-3 text-white transition hover:bg-green-500 disabled:opacity-50">
               <FiCheckCircle /> {isCapturing ? "Capturing..." : "Capture Angle"}
             </button>
-            <button onClick={stopVideo} className="flex items-center gap-2 rounded-full border border-slate-300 bg-white px-6 py-3 text-slate-700 transition hover:bg-slate-50">
+            <button onClick={stopVideo} className="flex items-center gap-2 rounded-full border border-slate-300 bg-temple-100 px-6 py-3 text-slate-700 transition hover:bg-slate-50">
               <FiXCircle /> Cancel
             </button>
           </div>

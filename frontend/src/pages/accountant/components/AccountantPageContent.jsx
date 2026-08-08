@@ -468,7 +468,7 @@ const DashboardView = ({ user, currentDate, currentWeekday }) => {
         description={`Overview of temple financial activities.`}
         right={
           <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-1.5 text-xs text-slate-700 bg-white border border-slate-200 px-3 py-1.5 rounded-xl">
+            <div className="flex items-center gap-1.5 text-xs text-slate-700 bg-temple-100 border border-slate-200 px-3 py-1.5 rounded-xl">
               <span className="font-bold">From:</span>
               <input
                 type="date"
@@ -477,7 +477,7 @@ const DashboardView = ({ user, currentDate, currentWeekday }) => {
                 className="outline-none"
               />
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-slate-700 bg-white border border-slate-200 px-3 py-1.5 rounded-xl">
+            <div className="flex items-center gap-1.5 text-xs text-slate-700 bg-temple-100 border border-slate-200 px-3 py-1.5 rounded-xl">
               <span className="font-bold">To:</span>
               <input
                 type="date"
@@ -1619,7 +1619,7 @@ const ProfileView = ({ user }) => {
                   type="text"
                   value={editForm.name}
                   onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                  className="w-full mt-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-amber-500"
+                  className="w-full mt-1 rounded-xl border border-slate-200 bg-temple-100 px-3 py-2 text-sm outline-none focus:border-amber-500"
                   required
                 />
               </label>
@@ -1630,7 +1630,7 @@ const ProfileView = ({ user }) => {
                   type="email"
                   value={editForm.email}
                   onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                  className="w-full mt-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-amber-500"
+                  className="w-full mt-1 rounded-xl border border-slate-200 bg-temple-100 px-3 py-2 text-sm outline-none focus:border-amber-500"
                   required
                 />
               </label>
@@ -1641,7 +1641,7 @@ const ProfileView = ({ user }) => {
                   type="text"
                   value={editForm.phone}
                   onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
-                  className="w-full mt-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[#f28c18]"
+                  className="w-full mt-1 rounded-xl border border-slate-200 bg-temple-100 px-3 py-2 text-sm outline-none focus:border-[#f28c18]"
                 />
               </label>
 
@@ -1651,7 +1651,7 @@ const ProfileView = ({ user }) => {
                   type="date"
                   value={editForm.dob}
                   onChange={(e) => setEditForm({ ...editForm, dob: e.target.value })}
-                  className="w-full mt-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[#f28c18]"
+                  className="w-full mt-1 rounded-xl border border-slate-200 bg-temple-100 px-3 py-2 text-sm outline-none focus:border-[#f28c18]"
                 />
               </label>
 
@@ -1661,7 +1661,7 @@ const ProfileView = ({ user }) => {
                   type="text"
                   value={editForm.bloodGroup}
                   onChange={(e) => setEditForm({ ...editForm, bloodGroup: e.target.value })}
-                  className="w-full mt-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[#f28c18]"
+                  className="w-full mt-1 rounded-xl border border-slate-200 bg-temple-100 px-3 py-2 text-sm outline-none focus:border-[#f28c18]"
                   placeholder="e.g. O+"
                 />
               </label>
@@ -1672,7 +1672,7 @@ const ProfileView = ({ user }) => {
                   type="text"
                   value={editForm.emergencyContact}
                   onChange={(e) => setEditForm({ ...editForm, emergencyContact: e.target.value })}
-                  className="w-full mt-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[#f28c18]"
+                  className="w-full mt-1 rounded-xl border border-slate-200 bg-temple-100 px-3 py-2 text-sm outline-none focus:border-[#f28c18]"
                 />
               </label>
 
@@ -1681,7 +1681,7 @@ const ProfileView = ({ user }) => {
                 <textarea
                   value={editForm.address}
                   onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
-                  className="w-full mt-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[#f28c18]"
+                  className="w-full mt-1 rounded-xl border border-slate-200 bg-temple-100 px-3 py-2 text-sm outline-none focus:border-[#f28c18]"
                   rows="3"
                 />
               </label>
@@ -1710,7 +1710,7 @@ const ProfileView = ({ user }) => {
                   type="password"
                   value={passwordForm.currentPassword}
                   onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
-                  className="w-full mt-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[#f28c18]"
+                  className="w-full mt-1 rounded-xl border border-slate-200 bg-temple-100 px-3 py-2 text-sm outline-none focus:border-[#f28c18]"
                   required
                 />
               </label>
@@ -1721,7 +1721,7 @@ const ProfileView = ({ user }) => {
                   type="password"
                   value={passwordForm.newPassword}
                   onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
-                  className="w-full mt-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[#f28c18]"
+                  className="w-full mt-1 rounded-xl border border-slate-200 bg-temple-100 px-3 py-2 text-sm outline-none focus:border-[#f28c18]"
                   required
                 />
               </label>
@@ -1732,7 +1732,7 @@ const ProfileView = ({ user }) => {
                   type="password"
                   value={passwordForm.confirmPassword}
                   onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
-                  className="w-full mt-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[#f28c18]"
+                  className="w-full mt-1 rounded-xl border border-slate-200 bg-temple-100 px-3 py-2 text-sm outline-none focus:border-[#f28c18]"
                   required
                 />
               </label>

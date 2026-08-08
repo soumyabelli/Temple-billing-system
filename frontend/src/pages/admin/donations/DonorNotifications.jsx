@@ -25,7 +25,7 @@ const DonorNotifications = () => {
               <h3 className="font-semibold text-white">{item.subject}</h3>
               <p className="text-sm text-slate-400">{item.time}</p>
             </div>
-            <button className="rounded-full bg-white/10 px-4 py-2 text-sm text-white">View</button>
+            <button className="rounded-full bg-temple-100/10 px-4 py-2 text-sm text-white">View</button>
           </div>
         ))}
       </SectionCard>

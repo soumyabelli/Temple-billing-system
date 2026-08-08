@@ -39,7 +39,7 @@ const DonationSettings = () => {
         </button>
       }
     >
-      <SectionCard title="Donation Categories" subtitle="Create and manage donation types that appear in the Add Donation form." className="bg-white/95 text-slate-950">
+      <SectionCard title="Donation Categories" subtitle="Create and manage donation types that appear in the Add Donation form." className="bg-temple-100/95 text-slate-950">
         <div className="grid gap-4 md:grid-cols-[1.3fr_0.7fr]">
           <input
             value={newType}
@@ -70,7 +70,7 @@ const DonationSettings = () => {
           <button onClick={handleSaveSettings} className="rounded-3xl bg-emerald-500 px-5 py-3 font-semibold text-slate-950 transition hover:bg-emerald-400">
             Save Donation Types
           </button>
-          <button onClick={handleResetToDefaults} className="rounded-3xl border border-white/20 bg-white/10 px-5 py-3 text-white transition hover:bg-white/20">
+          <button onClick={handleResetToDefaults} className="rounded-3xl border border-white/20 bg-temple-100/10 px-5 py-3 text-white transition hover:bg-temple-100/20">
             Reset Defaults
           </button>
         </div>

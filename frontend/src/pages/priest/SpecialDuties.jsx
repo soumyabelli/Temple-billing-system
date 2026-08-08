@@ -69,13 +69,13 @@ const SpecialDuties = () => {
       {loading ? (
         <div className="p-10 text-center text-slate-500">Loading duties...</div>
       ) : duties.length === 0 ? (
-        <div className="rounded-[24px] border border-slate-200 bg-white p-10 text-center shadow-sm">
+        <div className="rounded-[24px] border border-slate-200 bg-temple-100 p-10 text-center shadow-sm">
           <p className="text-slate-500">No special duties assigned to you currently.</p>
         </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {duties.map((duty) => (
-            <div key={duty.id} className="flex flex-col overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm transition-all hover:shadow-md">
+            <div key={duty.id} className="flex flex-col overflow-hidden rounded-[24px] border border-slate-200 bg-temple-100 shadow-sm transition-all hover:shadow-md">
               <div className={`px-6 py-4 border-b border-slate-100 ${
                 duty.status === "Completed" ? "bg-emerald-50" :
                 duty.status === "Rejected" ? "bg-rose-50" :
@@ -124,7 +124,7 @@ const SpecialDuties = () => {
                     </button>
                     <button
                       onClick={() => setRejectModalId(duty.id)}
-                      className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-rose-200 bg-white px-4 py-2.5 text-sm font-semibold text-rose-600 transition hover:bg-rose-50"
+                      className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-rose-200 bg-temple-100 px-4 py-2.5 text-sm font-semibold text-rose-600 transition hover:bg-rose-50"
                     >
                       <FiX /> Reject
                     </button>
@@ -152,7 +152,7 @@ const SpecialDuties = () => {
       {/* Reject Modal */}
       {rejectModalId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-[32px] bg-white p-8 shadow-2xl">
+          <div className="w-full max-w-md rounded-[32px] bg-temple-100 p-8 shadow-2xl">
             <h3 className="text-xl font-bold text-slate-900">Reject Duty</h3>
             <p className="mt-2 text-sm text-slate-500">Please provide a reason for rejecting this special duty assignment.</p>
             <form onSubmit={handleReject} className="mt-6">
@@ -167,7 +167,7 @@ const SpecialDuties = () => {
                 <button
                   type="button"
                   onClick={() => setRejectModalId(null)}
-                  className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                  className="flex-1 rounded-xl border border-slate-200 bg-temple-100 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                 >
                   Cancel
                 </button>

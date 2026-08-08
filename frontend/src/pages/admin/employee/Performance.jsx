@@ -60,13 +60,13 @@ const Performance = () => {
               type="month"
               value={monthKey}
               onChange={(event) => setMonthKey(event.target.value)}
-              className="ml-3 rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-white outline-none"
+              className="ml-3 rounded-xl border border-white/20 bg-temple-100/10 px-3 py-2 text-white outline-none"
             />
           </label>
         </div>
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
           {performanceTiles.map((tile) => (
-            <div key={tile.title} className={`rounded-[28px] border border-white/10 px-5 py-6 ${tile.accent} bg-white/10 shadow-xl shadow-slate-900/10`}>
+            <div key={tile.title} className={`rounded-[28px] border border-white/10 px-5 py-6 ${tile.accent} bg-temple-100/10 shadow-xl shadow-slate-900/10`}>
               <p className="text-sm uppercase tracking-[0.16em] text-slate-100/70">{tile.title}</p>
               <p className="mt-4 text-3xl font-semibold text-white">{tile.value}</p>
             </div>

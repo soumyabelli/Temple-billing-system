@@ -61,7 +61,7 @@ const CashierSidebar = ({
         <div className="border-b border-[#efd2a3] px-4 py-4">
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
-              <div className="flex h-11 w-11 shrink-0 overflow-hidden items-center justify-center rounded-2xl border border-[#f2cf95] bg-white/80 text-[#8a4b00]">
+              <div className="flex h-11 w-11 shrink-0 overflow-hidden items-center justify-center rounded-2xl border border-[#f2cf95] bg-temple-100/80 text-[#8a4b00]">
                 {templeLogo ? <img src={templeLogo} alt="Logo" className="w-full h-full object-cover" /> : <MdTempleBuddhist size={24} />}
               </div>
               {!collapsed ? (
@@ -75,7 +75,7 @@ const CashierSidebar = ({
             <button
               type="button"
               onClick={() => setCollapsed((prev) => !prev)}
-              className="hidden h-9 w-9 items-center justify-center rounded-xl border border-[#efd2a3] bg-white/90 text-[#8d5500] transition hover:bg-white lg:flex"
+              className="hidden h-9 w-9 items-center justify-center rounded-xl border border-[#efd2a3] bg-temple-100/90 text-[#8d5500] transition hover:bg-temple-100 lg:flex"
               aria-label="Toggle sidebar"
             >
               <MdMenu size={18} />
@@ -114,16 +114,16 @@ const CashierSidebar = ({
                   ? "mt-4 border border-[#f2c9c9] bg-[#fff2f2] text-[#9c1d1d] hover:bg-[#ffe7e7]"
                   : active
                       ? "bg-[#f28c18] text-white shadow-[0_8px_18px_rgba(242,140,24,0.24)]"
-                      : "text-slate-950 hover:bg-white/90"
+                      : "text-slate-950 hover:bg-temple-100/90"
                   }`}
                 >
-                  {active ? <span className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-white" /> : null}
+                  {active ? <span className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-temple-100" /> : null}
                   {isLogout ? <FaSignOutAlt size={18} className="shrink-0" /> : <Icon size={18} className="shrink-0" />}
                   {!collapsed ? <span className="text-lg font-medium leading-tight">{item.title}</span> : null}
                   {showBadge ? (
                     <span
                       className={`ml-auto flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1 text-[10px] font-extrabold ${
-                        active ? "bg-white text-[#f28c18]" : "bg-[#f28c18] text-white"
+                        active ? "bg-temple-100 text-[#f28c18]" : "bg-[#f28c18] text-white"
                       }`}
                     >
                       {unreadCount > 9 ? "9+" : unreadCount}

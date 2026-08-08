@@ -38,7 +38,7 @@ const Register = () => {
 
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-lg bg-white/25 backdrop-blur-2xl border border-white/60 shadow-[0_20px_70px_rgba(130,50,0,0.18)] rounded-3xl p-8 md:p-10"
+        className="w-full max-w-lg bg-temple-100/25 backdrop-blur-2xl border border-white/60 shadow-[0_20px_70px_rgba(130,50,0,0.18)] rounded-3xl p-8 md:p-10"
       >
         <h1 className="text-3xl md:text-4xl font-extrabold text-amber-900 mb-2">Create Account</h1>
         <p className="text-amber-800/90 mb-7">Register and continue to your role dashboard.</p>
@@ -49,7 +49,7 @@ const Register = () => {
             name="name"
             placeholder="Full Name"
             value={formData.name}
-            className="w-full rounded-xl border border-white/70 bg-white/80 p-3.5 outline-none focus:ring-2 focus:ring-amber-400"
+            className="w-full rounded-xl border border-white/70 bg-temple-100/80 p-3.5 outline-none focus:ring-2 focus:ring-amber-400"
             onChange={handleChange}
             required
           />
@@ -59,7 +59,7 @@ const Register = () => {
             name="email"
             placeholder="Email Address"
             value={formData.email}
-            className="w-full rounded-xl border border-white/70 bg-white/80 p-3.5 outline-none focus:ring-2 focus:ring-amber-400"
+            className="w-full rounded-xl border border-white/70 bg-temple-100/80 p-3.5 outline-none focus:ring-2 focus:ring-amber-400"
             onChange={handleChange}
             required
           />
@@ -69,7 +69,7 @@ const Register = () => {
             name="password"
             placeholder="Password (minimum 6)"
             value={formData.password}
-            className="w-full rounded-xl border border-white/70 bg-white/80 p-3.5 outline-none focus:ring-2 focus:ring-amber-400"
+            className="w-full rounded-xl border border-white/70 bg-temple-100/80 p-3.5 outline-none focus:ring-2 focus:ring-amber-400"
             onChange={handleChange}
             minLength={6}
             required
@@ -79,7 +79,7 @@ const Register = () => {
             name="role"
             value={formData.role}
             onChange={handleChange}
-            className="w-full rounded-xl border border-white/70 bg-white/80 p-3.5 capitalize outline-none focus:ring-2 focus:ring-amber-400"
+            className="w-full rounded-xl border border-white/70 bg-temple-100/80 p-3.5 capitalize outline-none focus:ring-2 focus:ring-amber-400"
             required
           >
             {roles.map((role) => (

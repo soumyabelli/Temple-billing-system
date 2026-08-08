@@ -77,7 +77,7 @@ const SevaSchedule = ({ darkMode }) => {
         className={`p-6 rounded-2xl border transition-colors ${
           darkMode
             ? "bg-[#1f2937] border-slate-700 text-slate-100"
-            : "bg-white border-[#ece8e1] text-[#1d1b19]"
+            : "bg-temple-100 border-[#ece8e1] text-[#1d1b19]"
         }`}
       >
         <h2 className="text-2xl font-extrabold flex items-center gap-2">
@@ -115,7 +115,7 @@ const SevaSchedule = ({ darkMode }) => {
           {/* Seva Duties Timeline */}
           <div
             className={`lg:col-span-2 rounded-2xl p-6 border transition-colors ${
-              darkMode ? "bg-[#1f2937] border-slate-700 text-slate-100" : "bg-white border-[#ece8e1] text-[#1d1b19]"
+              darkMode ? "bg-[#1f2937] border-slate-700 text-slate-100" : "bg-temple-100 border-[#ece8e1] text-[#1d1b19]"
             }`}
           >
             <h3 className="font-extrabold text-lg mb-6 flex items-center gap-2">
@@ -167,7 +167,7 @@ const SevaSchedule = ({ darkMode }) => {
             {/* Special Instructions */}
             <div
               className={`rounded-2xl p-6 border transition-colors ${
-                darkMode ? "bg-[#1f2937] border-slate-700 text-slate-100" : "bg-white border-[#ece8e1] text-[#1d1b19]"
+                darkMode ? "bg-[#1f2937] border-slate-700 text-slate-100" : "bg-temple-100 border-[#ece8e1] text-[#1d1b19]"
               }`}
             >
               <h3 className="font-extrabold text-base mb-4 flex items-center gap-2">
@@ -187,7 +187,7 @@ const SevaSchedule = ({ darkMode }) => {
                     >
                       <div className="flex items-center justify-between">
                         <span className="font-extrabold text-sm">{inst.title}</span>
-                        <span className="text-[10px] font-extrabold tracking-wide uppercase px-2 py-0.5 rounded bg-white/70 dark:bg-black/20">
+                        <span className="text-[10px] font-extrabold tracking-wide uppercase px-2 py-0.5 rounded bg-temple-100/70 dark:bg-black/20">
                           {inst.priority}
                         </span>
                       </div>
@@ -204,7 +204,7 @@ const SevaSchedule = ({ darkMode }) => {
             {/* Material Checklist */}
             <div
               className={`rounded-2xl p-6 border transition-colors ${
-                darkMode ? "bg-[#1f2937] border-slate-700 text-slate-100" : "bg-white border-[#ece8e1] text-[#1d1b19]"
+                darkMode ? "bg-[#1f2937] border-slate-700 text-slate-100" : "bg-temple-100 border-[#ece8e1] text-[#1d1b19]"
               }`}
             >
               <h3 className="font-extrabold text-base mb-4 flex items-center gap-2">

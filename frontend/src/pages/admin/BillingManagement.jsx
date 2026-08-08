@@ -227,7 +227,7 @@ const BillingManagement = () => {
 
   return (
     <div className="mt-5 space-y-6">
-      <div className="rounded-2xl border border-[#ece8e1] bg-white p-8 shadow-sm">
+      <div className="rounded-2xl border border-[#ece8e1] bg-temple-100 p-8 shadow-sm">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
             <h1 className="text-[42px] font-bold text-[#111827]">Billing & Payments</h1>
@@ -245,7 +245,7 @@ const BillingManagement = () => {
                 type="date"
                 value={fromDate}
                 onChange={(e) => setFromDate(e.target.value)}
-                className="rounded-3xl border border-[#cbd5e1] bg-white px-4 py-2 text-sm text-[#0f172a] shadow-sm outline-none transition focus:border-[#2563eb]"
+                className="rounded-3xl border border-[#cbd5e1] bg-temple-100 px-4 py-2 text-sm text-[#0f172a] shadow-sm outline-none transition focus:border-[#2563eb]"
               />
             </div>
             <div className="flex items-center gap-2">
@@ -255,7 +255,7 @@ const BillingManagement = () => {
                 type="date"
                 value={toDate}
                 onChange={(e) => setToDate(e.target.value)}
-                className="rounded-3xl border border-[#cbd5e1] bg-white px-4 py-2 text-sm text-[#0f172a] shadow-sm outline-none transition focus:border-[#2563eb]"
+                className="rounded-3xl border border-[#cbd5e1] bg-temple-100 px-4 py-2 text-sm text-[#0f172a] shadow-sm outline-none transition focus:border-[#2563eb]"
               />
             </div>
           </div>
@@ -273,22 +273,22 @@ const BillingManagement = () => {
             <p className="mt-4 text-[2rem] font-bold text-[#0f172a]">{formatCurrency(totalRevenue)}</p>
             <p className="mt-2 text-sm text-[#475569]">Bookings, donations, and prasadam.</p>
           </div>
-          <div className="rounded-3xl border border-[#e5e7eb] bg-white p-6">
+          <div className="rounded-3xl border border-[#e5e7eb] bg-temple-100 p-6">
             <p className="text-sm uppercase tracking-[0.24em] text-[#475569]">Donation Income</p>
             <p className="mt-4 text-[2rem] font-bold text-[#0f172a]">{formatCurrency(donationRevenue)}</p>
             <p className="mt-2 text-sm text-[#475569]">Donations collected across all campaigns.</p>
           </div>
-          <div className="rounded-3xl border border-[#e5e7eb] bg-white p-6">
+          <div className="rounded-3xl border border-[#e5e7eb] bg-temple-100 p-6">
             <p className="text-sm uppercase tracking-[0.24em] text-[#475569]">Prasadam Sales</p>
             <p className="mt-4 text-[2rem] font-bold text-[#0f172a]">{formatCurrency(prasadamRevenue)}</p>
             <p className="mt-2 text-sm text-[#475569]">Total prasadam order payments.</p>
           </div>
-          <div className="rounded-3xl border border-[#e5e7eb] bg-white p-6">
+          <div className="rounded-3xl border border-[#e5e7eb] bg-temple-100 p-6">
             <p className="text-sm uppercase tracking-[0.24em] text-[#475569]">Total Pooja Booked</p>
             <p className="mt-4 text-[2rem] font-bold text-[#0f172a]">{bookings.length}</p>
             <p className="mt-2 text-sm text-[#475569]">Total number of poojas booked.</p>
           </div>
-          <div className="rounded-3xl border border-[#e5e7eb] bg-white p-6">
+          <div className="rounded-3xl border border-[#e5e7eb] bg-temple-100 p-6">
             <p className="text-sm uppercase tracking-[0.24em] text-[#475569]">Room Booked Revenue</p>
             <p className="mt-4 text-[2rem] font-bold text-[#0f172a]">{formatCurrency(0)}</p>
             <p className="mt-2 text-sm text-[#475569]">Total value of room bookings.</p>
@@ -296,7 +296,7 @@ const BillingManagement = () => {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-[#ece8e1] bg-white p-6 shadow-sm">
+      <div className="rounded-2xl border border-[#ece8e1] bg-temple-100 p-6 shadow-sm">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-2xl font-bold text-[#111827]">Report Period Summary</h2>
@@ -310,15 +310,15 @@ const BillingManagement = () => {
             <p className="text-sm uppercase tracking-[0.24em] text-[#475569]">Total revenue</p>
             <p className="mt-4 text-[1.9rem] font-bold text-[#0f172a]">{formatCurrency(reportRevenue)}</p>
           </div>
-          <div className="rounded-3xl border border-[#e5e7eb] bg-white p-5">
+          <div className="rounded-3xl border border-[#e5e7eb] bg-temple-100 p-5">
             <p className="text-sm uppercase tracking-[0.24em] text-[#475569]">Booking revenue</p>
             <p className="mt-4 text-[1.9rem] font-bold text-[#0f172a]">{formatCurrency(reportBookingRevenue)}</p>
           </div>
-          <div className="rounded-3xl border border-[#e5e7eb] bg-white p-5">
+          <div className="rounded-3xl border border-[#e5e7eb] bg-temple-100 p-5">
             <p className="text-sm uppercase tracking-[0.24em] text-[#475569]">Donation revenue</p>
             <p className="mt-4 text-[1.9rem] font-bold text-[#0f172a]">{formatCurrency(reportDonationRevenue)}</p>
           </div>
-          <div className="rounded-3xl border border-[#e5e7eb] bg-white p-5">
+          <div className="rounded-3xl border border-[#e5e7eb] bg-temple-100 p-5">
             <p className="text-sm uppercase tracking-[0.24em] text-[#475569]">Prasadam revenue</p>
             <p className="mt-4 text-[1.9rem] font-bold text-[#0f172a]">{formatCurrency(reportPrasadamRevenue)}</p>
           </div>
@@ -327,7 +327,7 @@ const BillingManagement = () => {
 
       <div className="grid gap-4 xl:grid-cols-[1.3fr_0.7fr]">
         <div className="space-y-4">
-          <div className="rounded-2xl border border-[#ece8e1] bg-white p-6 shadow-sm">
+          <div className="rounded-2xl border border-[#ece8e1] bg-temple-100 p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-2xl font-bold text-[#111827]">Recent Transactions</h2>
@@ -376,7 +376,7 @@ const BillingManagement = () => {
         </div>
 
         <div className="space-y-4">
-          <div className="rounded-2xl border border-[#ece8e1] bg-white p-6 shadow-sm">
+          <div className="rounded-2xl border border-[#ece8e1] bg-temple-100 p-6 shadow-sm">
             <h2 className="text-2xl font-bold text-[#111827]">Payment Methods</h2>
             <p className="mt-2 text-sm text-[#64748b]">Most used payment channels for current receipts.</p>
             <div className="mt-6 space-y-3">
@@ -391,7 +391,7 @@ const BillingManagement = () => {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-[#ece8e1] bg-white p-6 shadow-sm">
+          <div className="rounded-2xl border border-[#ece8e1] bg-temple-100 p-6 shadow-sm">
             <h2 className="text-2xl font-bold text-[#111827]">Billing Insights</h2>
             <div className="mt-5 space-y-4">
               <div className="rounded-3xl bg-[#f8fafc] p-4">

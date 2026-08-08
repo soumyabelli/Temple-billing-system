@@ -6,7 +6,7 @@ const sampleTransactions = [
 
 export default function TransactionsTable() {
 	return (
-		<section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+		<section className="rounded-3xl border border-slate-200 bg-temple-100 p-5 shadow-sm">
 			<div className="mb-4 flex items-center justify-between gap-3">
 				<div>
 					<h2 className="text-xl font-semibold text-slate-900">Recent transactions</h2>
@@ -23,7 +23,7 @@ export default function TransactionsTable() {
 							<th className="px-4 py-3 font-medium">Status</th>
 						</tr>
 					</thead>
-					<tbody className="divide-y divide-slate-100 bg-white">
+					<tbody className="divide-y divide-slate-100 bg-temple-100">
 						{sampleTransactions.map((transaction) => (
 							<tr key={transaction.receipt}>
 								<td className="px-4 py-3 font-medium text-slate-900">{transaction.receipt}</td>

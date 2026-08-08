@@ -65,7 +65,7 @@ const PriestNotifications = () => {
 
       {error && <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm font-medium text-rose-700">{error}</div>}
 
-      <div className="rounded-[24px] border border-slate-200 bg-white shadow-sm overflow-hidden">
+      <div className="rounded-[24px] border border-slate-200 bg-temple-100 shadow-sm overflow-hidden">
         {loading ? (
           <div className="p-10 text-center text-slate-500">Loading notifications...</div>
         ) : notifications.length === 0 ? (
@@ -75,7 +75,7 @@ const PriestNotifications = () => {
             {notifications.map((notification) => (
               <div 
                 key={notification.id} 
-                className={`flex items-start gap-4 p-5 transition-colors ${notification.read ? 'bg-white' : 'bg-amber-50/50'}`}
+                className={`flex items-start gap-4 p-5 transition-colors ${notification.read ? 'bg-temple-100' : 'bg-amber-50/50'}`}
               >
                 <div className={`mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${notification.read ? 'bg-slate-100 text-slate-400' : 'bg-amber-100 text-amber-600'}`}>
                   <FiBell />

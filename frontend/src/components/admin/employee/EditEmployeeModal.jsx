@@ -135,7 +135,7 @@ const EditEmployeeModal = ({ employee, onClose, onSave }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
-      <div className="flex h-full max-h-[90vh] w-full max-w-4xl flex-col rounded-3xl bg-white shadow-2xl">
+      <div className="flex h-full max-h-[90vh] w-full max-w-4xl flex-col rounded-3xl bg-temple-100 shadow-2xl">
         <div className="flex items-center justify-between border-b border-slate-100 p-6">
           <div>
             <h2 className="text-xl font-bold text-slate-900">Edit Employee</h2>

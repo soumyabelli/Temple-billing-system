@@ -101,14 +101,14 @@ const MyBookingsPage = () => {
           </div>
         </div>
         
-        <div className="flex bg-white px-4 py-2 rounded-lg border border-gray-200 shadow-sm text-sm">
+        <div className="flex bg-temple-100 px-4 py-2 rounded-lg border border-gray-200 shadow-sm text-sm">
           <span className="text-gray-500 mr-2">Total Records:</span>
           <span className="font-bold text-amber-600">{totalBookings}</span>
         </div>
       </div>
 
       {/* Filters and Search */}
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6 flex flex-col sm:flex-row gap-4 justify-between items-center">
+      <div className="bg-temple-100 p-4 rounded-xl shadow-sm border border-gray-200 mb-6 flex flex-col sm:flex-row gap-4 justify-between items-center">
         
         <div className="relative w-full sm:w-80">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -148,7 +148,7 @@ const MyBookingsPage = () => {
       </div>
 
       {/* Table Section */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      <div className="bg-temple-100 rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm text-gray-600">
             <thead className="bg-gray-50 border-b border-gray-200 text-gray-700 text-xs uppercase font-semibold">
@@ -244,7 +244,7 @@ const MyBookingsPage = () => {
               <button 
                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                className="p-2 border border-gray-300 rounded bg-white text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+                className="p-2 border border-gray-300 rounded bg-temple-100 text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
               >
                 <FaChevronLeft size={12} />
               </button>
@@ -252,7 +252,7 @@ const MyBookingsPage = () => {
               <button 
                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
-                className="p-2 border border-gray-300 rounded bg-white text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+                className="p-2 border border-gray-300 rounded bg-temple-100 text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
               >
                 <FaChevronRight size={12} />
               </button>

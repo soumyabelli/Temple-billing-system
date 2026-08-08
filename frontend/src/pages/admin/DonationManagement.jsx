@@ -93,7 +93,7 @@ const DonationManagement = () => {
           <div className="grid gap-3 sm:grid-cols-1">
             <button
               onClick={() => navigate("/admin/donations/reports")}
-              className="rounded-3xl bg-white px-6 py-3 font-semibold text-slate-950 transition hover:bg-slate-200"
+              className="rounded-3xl bg-temple-100 px-6 py-3 font-semibold text-slate-950 transition hover:bg-slate-200"
             >
               View Reports
             </button>
@@ -122,7 +122,7 @@ const DonationManagement = () => {
               >
                 Manage Donation Types
               </button>
-              <span className="inline-flex items-center rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
+              <span className="inline-flex items-center rounded-2xl border border-white/10 bg-temple-100/5 px-4 py-3 text-sm text-slate-200">
                 {categories.length} donation types available
               </span>
             </div>

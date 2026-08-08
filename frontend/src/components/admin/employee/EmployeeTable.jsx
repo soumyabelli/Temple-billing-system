@@ -15,7 +15,7 @@ const EmployeeTable = ({ employees, onView, onDelete, loading }) => {
     <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-slate-50/80 shadow-sm">
       <div className="flex flex-wrap items-center gap-3 border-b border-slate-200 bg-slate-100 p-4">
         <div className="text-sm font-semibold text-slate-700">Employee roster</div>
-        <span className="rounded-full bg-white px-3 py-1 text-xs text-slate-500">{loading ? "Loading..." : `${employees.length} records`}</span>
+        <span className="rounded-full bg-temple-100 px-3 py-1 text-xs text-slate-500">{loading ? "Loading..." : `${employees.length} records`}</span>
       </div>
       <div className="overflow-x-auto">
         <table className="min-w-full text-left text-sm">
@@ -50,7 +50,7 @@ const EmployeeTable = ({ employees, onView, onDelete, loading }) => {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.03 }}
-                  className="border-b border-slate-200 bg-white hover:bg-slate-50"
+                  className="border-b border-slate-200 bg-temple-100 hover:bg-slate-50"
                 >
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
@@ -80,7 +80,7 @@ const EmployeeTable = ({ employees, onView, onDelete, loading }) => {
                   <td className="px-5 py-4 text-slate-700">{joiningDate}</td>
                   <td className="px-5 py-4 text-slate-700">{salary}</td>
                   <td className="px-5 py-4 text-slate-700 space-x-2">
-                    <button onClick={() => onView?.(employee)} className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-2 text-slate-500 transition hover:border-slate-400 hover:text-slate-900">
+                    <button onClick={() => onView?.(employee)} className="inline-flex items-center rounded-full border border-slate-200 bg-temple-100 px-3 py-2 text-slate-500 transition hover:border-slate-400 hover:text-slate-900">
                       <FiEye size={16} />
                     </button>
                     <button onClick={() => onDelete?.(employee._id)} className="inline-flex items-center rounded-full border border-rose-200 bg-rose-50 px-3 py-2 text-rose-600 transition hover:bg-rose-100">

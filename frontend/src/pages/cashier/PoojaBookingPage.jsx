@@ -159,7 +159,7 @@ const PoojaBookingPage = () => {
         <div className="flex flex-col lg:flex-row gap-6">
           
           {/* LEFT PANEL - BOOKING FORM */}
-          <div className="w-full lg:w-[60%] bg-white rounded-[20px] shadow-sm p-8 pb-10">
+          <div className="w-full lg:w-[60%] bg-temple-100 rounded-[20px] shadow-sm p-8 pb-10">
             <form onSubmit={handleSubmit} className="space-y-6">
               
               {/* CUSTOMER NAME */}
@@ -312,7 +312,7 @@ const PoojaBookingPage = () => {
           </div>
 
           {/* RIGHT PANEL - POPULAR POOJAS */}
-          <div className="w-full lg:w-[40%] bg-white rounded-[20px] shadow-sm p-8">
+          <div className="w-full lg:w-[40%] bg-temple-100 rounded-[20px] shadow-sm p-8">
             <h2 className="text-[18px] font-bold text-[#3A1F1D] mb-2">Popular Pooja services</h2>
             <p className="text-[12px] text-gray-500 mb-6 leading-relaxed">
               Select a service to book and check your newest booking immediately in My Bookings.
@@ -326,7 +326,7 @@ const PoojaBookingPage = () => {
                   className={`cursor-pointer px-4 py-3 rounded-full border transition-all flex justify-between items-center text-[13px] font-medium ${
                     formData.service === pooja.name 
                       ? "border-[#D19C74] bg-[#FDF8F5] text-[#3A1F1D]" 
-                      : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+                      : "border-gray-200 bg-temple-100 text-gray-600 hover:border-gray-300"
                   }`}
                 >
                   <span>{pooja.name}</span>

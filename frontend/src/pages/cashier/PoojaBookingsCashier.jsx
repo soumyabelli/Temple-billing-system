@@ -412,7 +412,7 @@ const CashierPoojaBookings = () => {
                               return (
                                 <div key={idx} className="flex items-center justify-between py-1.5 text-xs text-amber-900">
                                   <span>{rm.qty} {rm.unit} {item.name} {rm.mandatory && <span className="text-red-500">*</span>}</span>
-                                  <label className="flex items-center gap-2 cursor-pointer bg-white border border-green-200 hover:bg-green-50 px-2 py-1 rounded-lg transition-colors">
+                                  <label className="flex items-center gap-2 cursor-pointer bg-temple-100 border border-green-200 hover:bg-green-50 px-2 py-1 rounded-lg transition-colors">
                                     <input 
                                       type="checkbox"
                                       checked={selectedTempleMaterials.includes(item._id)}

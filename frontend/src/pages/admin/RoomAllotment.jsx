@@ -340,7 +340,7 @@ const RoomAllotment = () => {
   return (
     <div className="mt-5 space-y-6">
       {/* HEADER & METRICS */}
-      <div className="rounded-2xl border border-[#ece8e1] bg-white p-8 shadow-sm">
+      <div className="rounded-2xl border border-[#ece8e1] bg-temple-100 p-8 shadow-sm">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
             <h1 className="text-[42px] font-bold text-[#111827]">Dharamshala Room Allotment</h1>
@@ -414,7 +414,7 @@ const RoomAllotment = () => {
 
       {/* TAB 1: ROOM GRID */}
       {activeTab === "grid" && (
-        <div className="rounded-2xl border border-[#ece8e1] bg-white p-6 shadow-sm">
+        <div className="rounded-2xl border border-[#ece8e1] bg-temple-100 p-6 shadow-sm">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <h2 className="text-2xl font-bold text-[#111827]">Active Room Grid Map</h2>
             <div className="flex flex-wrap gap-3">
@@ -550,7 +550,7 @@ const RoomAllotment = () => {
           <div className="grid gap-6 lg:grid-cols-3">
             {/* LEFT COLUMN: ROOM DETAILS */}
             <div className="lg:col-span-2 space-y-6">
-              <div className="rounded-2xl border border-[#ece8e1] bg-white p-8 shadow-sm">
+              <div className="rounded-2xl border border-[#ece8e1] bg-temple-100 p-8 shadow-sm">
                 <h3 className="text-lg font-bold text-[#111827] flex items-center gap-2 mb-6">
                   <span className="flex items-center justify-center w-8 h-8 rounded-full bg-[#f1f5f9] text-[#475569]"><MdMeetingRoom /></span>
                   Room Details
@@ -574,7 +574,7 @@ const RoomAllotment = () => {
                     <select
                       value={newRoomType}
                       onChange={(e) => setNewRoomType(e.target.value)}
-                      className="w-full rounded-lg border border-[#cbd5e1] px-3 py-2 text-sm bg-white outline-none focus:border-[#2563eb]"
+                      className="w-full rounded-lg border border-[#cbd5e1] px-3 py-2 text-sm bg-temple-100 outline-none focus:border-[#2563eb]"
                     >
                       <option value="Standard">Standard</option>
                       <option value="Deluxe">Deluxe</option>
@@ -588,7 +588,7 @@ const RoomAllotment = () => {
                     <select
                       value={newBlock}
                       onChange={(e) => setNewBlock(e.target.value)}
-                      className="w-full rounded-lg border border-[#cbd5e1] px-3 py-2 text-sm bg-white outline-none focus:border-[#2563eb]"
+                      className="w-full rounded-lg border border-[#cbd5e1] px-3 py-2 text-sm bg-temple-100 outline-none focus:border-[#2563eb]"
                     >
                       <option value="Block A">Block A</option>
                       <option value="Block B">Block B</option>
@@ -602,7 +602,7 @@ const RoomAllotment = () => {
                     <select
                       value={newFloor}
                       onChange={(e) => setNewFloor(e.target.value)}
-                      className="w-full rounded-lg border border-[#cbd5e1] px-3 py-2 text-sm bg-white outline-none focus:border-[#2563eb]"
+                      className="w-full rounded-lg border border-[#cbd5e1] px-3 py-2 text-sm bg-temple-100 outline-none focus:border-[#2563eb]"
                     >
                       <option value="Ground Floor">Ground Floor</option>
                       <option value="First Floor">First Floor</option>
@@ -677,7 +677,7 @@ const RoomAllotment = () => {
                       <select
                         value={newBedType}
                         onChange={(e) => setNewBedType(e.target.value)}
-                        className="w-full rounded-lg border border-[#cbd5e1] px-3 py-2 text-sm bg-white outline-none focus:border-[#2563eb]"
+                        className="w-full rounded-lg border border-[#cbd5e1] px-3 py-2 text-sm bg-temple-100 outline-none focus:border-[#2563eb]"
                       >
                         <option value="Single">Single</option>
                         <option value="Double">Double</option>
@@ -732,7 +732,7 @@ const RoomAllotment = () => {
               </div>
 
               {/* ADDITIONAL INFORMATION */}
-              <div className="rounded-2xl border border-[#ece8e1] bg-white p-8 shadow-sm">
+              <div className="rounded-2xl border border-[#ece8e1] bg-temple-100 p-8 shadow-sm">
                 <h3 className="text-lg font-bold text-[#111827] flex items-center gap-2 mb-6">
                   Additional Information
                 </h3>
@@ -765,7 +765,7 @@ const RoomAllotment = () => {
                     <select
                       value={newMealsIncluded}
                       onChange={(e) => setNewMealsIncluded(e.target.value)}
-                      className="w-full rounded-lg border border-[#cbd5e1] px-3 py-2 text-sm bg-white outline-none"
+                      className="w-full rounded-lg border border-[#cbd5e1] px-3 py-2 text-sm bg-temple-100 outline-none"
                     >
                       <option>No Meals</option>
                       <option>Breakfast Included</option>
@@ -795,7 +795,7 @@ const RoomAllotment = () => {
                       }`}
                     >
                       <span
-                        className={`pointer-events-none inline-block h-5 h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                        className={`pointer-events-none inline-block h-5 h-5 w-5 transform rounded-full bg-temple-100 shadow ring-0 transition duration-200 ease-in-out ${
                           newIsActive ? "translate-x-5" : "translate-x-0"
                         }`}
                       />
@@ -815,7 +815,7 @@ const RoomAllotment = () => {
                 <button
                   type="button"
                   onClick={() => setActiveTab("grid")}
-                  className="rounded-lg border border-slate-300 bg-white px-6 py-3 font-semibold text-slate-700 transition hover:bg-slate-50"
+                  className="rounded-lg border border-slate-300 bg-temple-100 px-6 py-3 font-semibold text-slate-700 transition hover:bg-slate-50"
                 >
                   Cancel
                 </button>
@@ -825,7 +825,7 @@ const RoomAllotment = () => {
             {/* RIGHT COLUMN: AMENITIES & SUMMARY */}
             <div className="space-y-6">
               {/* ROOM AMENITIES */}
-              <div className="rounded-2xl border border-[#ece8e1] bg-white p-6 shadow-sm">
+              <div className="rounded-2xl border border-[#ece8e1] bg-temple-100 p-6 shadow-sm">
                 <h3 className="text-lg font-bold text-[#111827] mb-4">Room Amenities</h3>
                 <div className="grid grid-cols-2 gap-3">
                   {AMENITY_LIST.map((amenity) => (
@@ -875,7 +875,7 @@ const RoomAllotment = () => {
 
       {/* TAB 3: ALLOTMENT HISTORY & BILLS */}
       {activeTab === "history" && (
-        <div className="rounded-2xl border border-[#ece8e1] bg-white p-6 shadow-sm">
+        <div className="rounded-2xl border border-[#ece8e1] bg-temple-100 p-6 shadow-sm">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
             <div>
               <h2 className="text-2xl font-bold text-[#111827]">Room Booking & Tariff History</h2>
@@ -958,7 +958,7 @@ const RoomAllotment = () => {
       {/* CHECK-IN ALLOTMENT DIALOG */}
       {showCheckinModal && selectedRoom && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+          <div className="w-full max-w-md rounded-2xl bg-temple-100 p-6 shadow-2xl">
             <div className="flex items-center justify-between border-b pb-3">
               <h3 className="text-xl font-bold text-slate-950">Room Check-In Allotment</h3>
               <button onClick={() => setShowCheckinModal(false)} className="text-slate-400 hover:text-slate-600">
@@ -1019,7 +1019,7 @@ const RoomAllotment = () => {
                 <select
                   value={payMode}
                   onChange={(e) => setPayMode(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-blue-600 bg-white"
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-blue-600 bg-temple-100"
                 >
                   <option>UPI</option>
                   <option>Cash</option>

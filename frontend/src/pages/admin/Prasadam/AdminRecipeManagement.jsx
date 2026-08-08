@@ -9,7 +9,7 @@ const AdminRecipeManagement = () => {
         <div className="mt-2 h-1 w-12 rounded-full bg-[#ff8b00]" />
       </div>
       
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm flex items-center justify-center min-h-[400px] text-slate-500">
+      <div className="rounded-2xl border border-slate-200 bg-temple-100 p-6 shadow-sm flex items-center justify-center min-h-[400px] text-slate-500">
         Recipe Management UI goes here.
       </div>
     </div>
