@@ -1,13 +1,13 @@
-import { useMemo } from "react";
+import React, { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const statusStyles = {
-  Collected: "bg-emerald-100 text-emerald-700",
-  "Not Collected": "bg-amber-100 text-amber-700",
-  Completed: "bg-emerald-100 text-emerald-700",
-  Pending: "bg-amber-100 text-amber-700",
-  Failed: "bg-rose-100 text-rose-700",
+  Collected: "bg-emerald-100 text-emerald-800 border-emerald-300",
+  "Not Collected": "bg-amber-100 text-amber-800 border-amber-300",
+  Completed: "bg-emerald-100 text-emerald-800 border-emerald-300",
+  Pending: "bg-amber-100 text-amber-800 border-amber-300",
+  Failed: "bg-rose-100 text-rose-800 border-rose-300",
 };
 
 const formatCurrency = (value) => {
@@ -46,51 +46,51 @@ const DonationTable = ({ donations = [], onRefresh }) => {
   );
 
   return (
-    <div className="rounded-[32px] border border-white/10 bg-slate-950/85 p-6 shadow-2xl shadow-slate-950/20 backdrop-blur-xl text-white">
+    <div className="rounded-[32px] border border-amber-200/60 bg-temple-100 p-6 shadow-md backdrop-blur-lg">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-semibold">Donation Activity Log</h2>
-          <p className="mt-2 text-slate-400">Live donation entries and verification status from the backend.</p>
+          <h2 className="text-2xl font-black text-slate-800">Donation Activity Log</h2>
+          <p className="mt-1 text-sm font-semibold text-slate-500">Live donation entries and verification status from the temple backend.</p>
         </div>
         <div className="flex gap-3">
           {donations.length > 8 && (
             <button
               onClick={() => navigate("/admin/donations/all")}
-              className="inline-flex items-center justify-center rounded-3xl bg-slate-800 border border-slate-700 px-5 py-3 font-semibold text-white transition hover:bg-slate-700"
+              className="inline-flex items-center justify-center rounded-2xl bg-white border border-slate-300 px-5 py-2.5 text-sm font-bold text-slate-700 transition hover:bg-slate-50 shadow-xs"
             >
               View All
             </button>
           )}
           <button
             onClick={() => navigate("/admin/donations/settings")}
-            className="inline-flex items-center justify-center rounded-3xl bg-amber-400 px-5 py-3 font-semibold text-slate-950 transition hover:bg-amber-300"
+            className="inline-flex items-center justify-center rounded-2xl bg-amber-600 px-5 py-2.5 text-sm font-extrabold text-white transition hover:bg-amber-700 shadow-md"
           >
             Manage Donation Types
           </button>
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full text-left text-sm text-slate-300">
-          <thead>
-            <tr className="border-b border-slate-700 text-slate-400">
-              <th className="py-4 px-3">Receipt ID</th>
-              <th className="py-4 px-3">Donor</th>
-              <th className="py-4 px-3">Category</th>
-              <th className="py-4 px-3">Amount</th>
-              <th className="py-4 px-3">Date</th>
-              <th className="py-4 px-3">Verified By</th>
+      <div className="overflow-x-auto rounded-2xl border border-amber-200/60 bg-white">
+        <table className="min-w-full text-left text-sm text-slate-700">
+          <thead className="bg-amber-50/70 border-b border-amber-200/80 text-amber-950 font-black">
+            <tr>
+              <th className="py-3.5 px-4">Receipt ID</th>
+              <th className="py-3.5 px-4">Donor</th>
+              <th className="py-3.5 px-4">Category</th>
+              <th className="py-3.5 px-4">Amount</th>
+              <th className="py-3.5 px-4">Date</th>
+              <th className="py-3.5 px-4">Verified By</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-amber-100">
             {rows.map((row) => (
-              <tr key={row.id} className="border-b border-slate-800 hover:bg-slate-900/60 transition">
-                <td className="py-4 px-3 font-medium text-white">{row.id}</td>
-                <td className="py-4 px-3">{row.donor}</td>
-                <td className="py-4 px-3">{row.category}</td>
-                <td className="py-4 px-3 text-amber-300 font-semibold">{row.amount}</td>
-                <td className="py-4 px-3">{row.date}</td>
-                <td className="py-4 px-3">{row.verifiedBy}</td>
+              <tr key={row.id} className="hover:bg-amber-50/40 transition">
+                <td className="py-3.5 px-4 font-bold text-slate-900">{row.id}</td>
+                <td className="py-3.5 px-4 font-semibold">{row.donor}</td>
+                <td className="py-3.5 px-4">{row.category}</td>
+                <td className="py-3.5 px-4 text-amber-700 font-extrabold">{row.amount}</td>
+                <td className="py-3.5 px-4 text-slate-500 font-medium">{row.date}</td>
+                <td className="py-3.5 px-4 text-slate-600 font-medium">{row.verifiedBy}</td>
               </tr>
             ))}
           </tbody>

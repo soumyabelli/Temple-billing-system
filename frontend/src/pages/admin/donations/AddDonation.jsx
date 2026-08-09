@@ -155,13 +155,13 @@ const AddDonation = () => {
                 <button
                   type="button"
                   onClick={loadDonationTypes}
-                  className="rounded-3xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-slate-100 transition hover:bg-slate-900"
+                  className="rounded-3xl border border-amber-300 bg-amber-50 px-4 py-3 text-amber-900 font-bold transition hover:bg-amber-100"
                 >
                   Refresh Types
                 </button>
               </div>
             </label>
-            <label className="block text-sm text-slate-700">
+            <label className="block text-sm text-slate-700 font-medium">
               Amount
               <input
                 value={amount}
@@ -173,7 +173,7 @@ const AddDonation = () => {
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
-            <label className="block text-sm text-slate-700">
+            <label className="block text-sm text-slate-700 font-medium">
               Payment Method
               <select
                 value={method}
@@ -187,7 +187,7 @@ const AddDonation = () => {
                 ))}
               </select>
             </label>
-            <label className="block text-sm text-slate-700">
+            <label className="block text-sm text-slate-700 font-medium">
               UPI Transaction ID
               <input
                 value={transactionId}
@@ -198,7 +198,7 @@ const AddDonation = () => {
             </label>
           </div>
 
-          <label className="block text-sm text-slate-700">
+          <label className="block text-sm text-slate-700 font-medium">
             Notes
             <textarea
               value={notes}
@@ -212,31 +212,31 @@ const AddDonation = () => {
           <button
             onClick={handleSubmit}
             disabled={isSaving}
-            className="rounded-3xl bg-amber-400 px-6 py-3 font-semibold text-slate-950 transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-3xl bg-amber-600 px-6 py-3 font-extrabold text-white transition hover:bg-amber-700 shadow-md disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isSaving ? "Saving..." : "Save Donation"}
           </button>
         </SectionCard>
 
         <SectionCard title="Live Preview" subtitle="This donation entry will generate a receipt and verification flow." className="space-y-5">
-          <div className="rounded-[28px] border border-white/10 bg-slate-950/10 p-5 text-slate-50">
+          <div className="rounded-[28px] border border-amber-200/60 bg-amber-50/60 p-5 text-slate-800 shadow-xs">
             <div className="flex items-center justify-between">
-              <span className="text-sm uppercase tracking-[0.3em] text-amber-200/80">Donation Receipt</span>
-              <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-slate-950">Draft</span>
+              <span className="text-xs uppercase tracking-[0.3em] font-extrabold text-amber-800">Donation Receipt</span>
+              <span className="rounded-full bg-amber-200 px-3 py-1 text-xs font-black text-amber-950 border border-amber-300">Draft</span>
             </div>
-            <div className="mt-6 space-y-3">
-              <p className="text-sm text-slate-400">Donor: {donorName || "Ramesh Kumar"}</p>
-              <p className="text-sm text-slate-400">Amount: {amount ? amount : "₹5,000"}</p>
-              <p className="text-sm text-slate-400">Type: {category}</p>
-              <p className="text-sm text-slate-400">Payment: {method}</p>
+            <div className="mt-5 space-y-2">
+              <p className="text-sm font-semibold text-slate-700">Donor: <span className="font-extrabold text-slate-900">{donorName || "Ramesh Kumar"}</span></p>
+              <p className="text-sm font-semibold text-slate-700">Amount: <span className="font-extrabold text-amber-700">{amount ? amount : "₹5,000"}</span></p>
+              <p className="text-sm font-semibold text-slate-700">Type: <span className="font-extrabold text-slate-900">{category}</span></p>
+              <p className="text-sm font-semibold text-slate-700">Payment: <span className="font-extrabold text-slate-900">{method}</span></p>
             </div>
           </div>
 
-          <div className="rounded-[28px] border border-white/10 bg-slate-950/10 p-5">
-            <p className="text-sm text-slate-300">Support Material</p>
-            <div className="mt-4 grid gap-3">
-              <button className="rounded-2xl border border-white/15 bg-temple-100/5 px-4 py-3 text-left text-sm text-slate-200">Upload QR image</button>
-              <button className="rounded-2xl border border-white/15 bg-temple-100/5 px-4 py-3 text-left text-sm text-slate-200">Upload payment screenshot</button>
+          <div className="rounded-[28px] border border-amber-200/60 bg-amber-50/40 p-5">
+            <p className="text-sm font-bold text-slate-800">Support Material</p>
+            <div className="mt-3 grid gap-3">
+              <button className="rounded-2xl border border-amber-300 bg-white px-4 py-2.5 text-left text-sm font-semibold text-slate-700 hover:bg-amber-50">Upload QR image</button>
+              <button className="rounded-2xl border border-amber-300 bg-white px-4 py-2.5 text-left text-sm font-semibold text-slate-700 hover:bg-amber-50">Upload payment screenshot</button>
             </div>
           </div>
         </SectionCard>

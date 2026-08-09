@@ -1,22 +1,29 @@
-﻿const RecentDonations = ({ donations = [] }) => {
+import React from "react";
+
+const RecentDonations = ({ donations = [] }) => {
   const recent = [...donations]
     .sort((a, b) => new Date(b.createdAt || b.date).getTime() - new Date(a.createdAt || a.date).getTime())
-    .slice(0, 3);
+    .slice(0, 4);
 
   return (
-    <div className="rounded-[32px] border border-white/10 bg-slate-950/85 p-6 shadow-2xl shadow-slate-950/20 backdrop-blur-xl text-white">
-      <h2 className="text-2xl font-semibold">Recent Donation Activity</h2>
-      <p className="mt-2 text-slate-400">Live donation inflows from the backend ledger.</p>
+    <div className="rounded-[32px] border border-amber-200/60 bg-temple-100 p-6 shadow-md backdrop-blur-lg">
+      <h2 className="text-2xl font-black text-slate-800">Recent Donation Activity</h2>
+      <p className="mt-1 text-sm font-semibold text-slate-500">Live donation inflows from the temple backend ledger.</p>
 
-      <div className="mt-6 space-y-4">
+      <div className="mt-5 space-y-3">
         {recent.map((donation, index) => (
-          <div key={`${donation._id || donation.id}-${index}`} className="rounded-3xl bg-slate-900/70 p-4">
-            <p className="text-lg font-semibold text-white">{donation.donorName || donation.donor || "Unknown donor"}</p>
-            <p className="text-sm text-slate-400">{donation.category || "General"} • {donation.amount ? `₹${donation.amount}` : "₹0"}</p>
-            <p className="text-sm text-slate-400">{new Date(donation.createdAt || donation.date).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</p>
+          <div key={`${donation._id || donation.id}-${index}`} className="rounded-2xl border border-amber-200/60 bg-white p-4 shadow-xs">
+            <div className="flex items-center justify-between">
+              <p className="text-base font-extrabold text-slate-900">{donation.donorName || donation.donor || "Devotee Donor"}</p>
+              <span className="text-base font-black text-amber-700">{donation.amount ? `₹${Number(donation.amount).toLocaleString("en-IN")}` : "₹0"}</span>
+            </div>
+            <div className="mt-1 flex items-center justify-between text-xs font-semibold text-slate-500">
+              <span className="rounded-md bg-amber-50 px-2 py-0.5 text-amber-800 border border-amber-200">{donation.category || "General"}</span>
+              <span>{new Date(donation.createdAt || donation.date).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
+            </div>
           </div>
         ))}
-        {recent.length === 0 && <p className="text-slate-400">No donations have been recorded yet.</p>}
+        {recent.length === 0 && <p className="text-slate-400 font-semibold">No recent donations recorded yet.</p>}
       </div>
     </div>
   );

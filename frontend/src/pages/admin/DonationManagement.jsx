@@ -78,22 +78,21 @@ const DonationManagement = () => {
   };
 
   return (
-    <div className="space-y-6 mt-5">
-      <div className="relative overflow-hidden rounded-[32px] border border-white/10 bg-gradient-to-r from-[#2f0f4f] via-[#5e2d97] to-[#c78918] p-8 text-white shadow-2xl shadow-violet-900/25">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.18),transparent_34%)]" />
+    <div className="space-y-6 mt-5 text-slate-800">
+      {/* TEMPLE HERO BANNER */}
+      <div className="relative overflow-hidden rounded-[32px] border border-amber-200/60 bg-gradient-to-r from-amber-500/15 via-orange-500/15 to-amber-600/15 p-8 text-[#4a2b0f] shadow-sm backdrop-blur-md">
         <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="max-w-2xl">
-            <p className="text-sm uppercase tracking-[0.32em] text-amber-200/80">Donation Command Center</p>
-            <h1 className="mt-3 text-4xl font-semibold tracking-tight">Admin Donation Overview</h1>
-            <p className="mt-4 text-slate-200/85 text-lg">
-              High-level donation intelligence for admins: Reports, Category Performance, Donor health,
-              verification workflows and donation-type governance.
+            <p className="text-xs uppercase tracking-[0.32em] font-extrabold text-[#7a4918]">Donation Command Center</p>
+            <h1 className="mt-2 text-3xl sm:text-4xl font-extrabold tracking-tight text-[#4a2b0f]">Admin Donation Overview</h1>
+            <p className="mt-2 text-[#7a4918] font-medium text-base">
+              High-level donation intelligence and financial tracking for Sri Shanti Mahadev Mandir: Category Performance, Donor Health, Verification Workflows and Governance.
             </p>
           </div>
           <div className="grid gap-3 sm:grid-cols-1">
             <button
               onClick={() => navigate("/admin/donations/reports")}
-              className="rounded-3xl bg-temple-100 px-6 py-3 font-semibold text-slate-950 transition hover:bg-slate-200"
+              className="rounded-2xl bg-amber-600 px-6 py-3 font-bold text-white shadow-md transition hover:bg-amber-700 hover:scale-105"
             >
               View Reports
             </button>
@@ -109,20 +108,20 @@ const DonationManagement = () => {
         <div className="grid gap-6">
           <DonationFilters categories={categories} onApplyFilters={handleApplyFilters} />
 
-          <div className="rounded-[32px] border border-white/10 bg-slate-950/80 p-6 shadow-2xl shadow-slate-950/20 backdrop-blur-xl text-white">
-            <p className="text-sm uppercase tracking-[0.28em] text-slate-400">Donation Types</p>
-            <h2 className="mt-3 text-2xl font-semibold">Manage donation categories</h2>
-            <p className="mt-3 text-slate-300">
+          <div className="rounded-[32px] border border-amber-200/60 bg-temple-100 p-6 shadow-md backdrop-blur-lg">
+            <p className="text-xs uppercase tracking-[0.28em] font-extrabold text-amber-700">Donation Types</p>
+            <h2 className="mt-2 text-2xl font-black text-slate-800">Manage Donation Categories</h2>
+            <p className="mt-2 text-slate-600 text-sm font-semibold">
               Admin-defined donation types are stored centrally and reflected across Add Donation, filters, reports and tables.
             </p>
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
               <button
                 onClick={() => navigate("/admin/donations/settings")}
-                className="rounded-2xl bg-amber-400 px-5 py-3 font-semibold text-slate-950 transition hover:bg-amber-300"
+                className="rounded-2xl bg-amber-600 px-5 py-3 font-extrabold text-white shadow-md transition hover:bg-amber-700 hover:scale-105"
               >
                 Manage Donation Types
               </button>
-              <span className="inline-flex items-center rounded-2xl border border-white/10 bg-temple-100/5 px-4 py-3 text-sm text-slate-200">
+              <span className="inline-flex items-center rounded-2xl border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm font-bold text-amber-900">
                 {categories.length} donation types available
               </span>
             </div>

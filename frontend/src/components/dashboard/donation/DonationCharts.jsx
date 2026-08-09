@@ -1,3 +1,4 @@
+import React from "react";
 import {
   AreaChart,
   Area,
@@ -12,7 +13,7 @@ import {
   Legend,
 } from "recharts";
 
-const COLORS = ["#7c3aed", "#f59e0b", "#ef4444", "#14b8a6", "#38bdf8", "#a855f7", "#22c55e"];
+const TEMPLE_COLORS = ["#d97706", "#059669", "#0284c7", "#7c3aed", "#ea580c", "#e11d48", "#475569"];
 
 const normalizeDate = (item) => {
   const dateValue = item.createdAt || item.date;
@@ -50,46 +51,46 @@ const DonationCharts = ({ donations = [] }) => {
 
   return (
     <div className="grid grid-cols-1 gap-6">
-      <div className="rounded-[32px] border border-white/10 bg-slate-950/85 p-6 shadow-2xl shadow-slate-950/20 backdrop-blur-xl text-white">
+      <div className="rounded-[32px] border border-amber-200/60 bg-temple-100 p-6 shadow-md backdrop-blur-lg">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-semibold">Monthly Donation Progress</h2>
-            <p className="mt-2 text-slate-400">Live donation collection trends from the backend dataset.</p>
+            <h2 className="text-2xl font-extrabold text-slate-800">Monthly Donation Progress</h2>
+            <p className="mt-1 text-sm font-semibold text-slate-500">Live donation collection trends from the temple database.</p>
           </div>
         </div>
         <div className="mt-6 h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={monthlyData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+            <AreaChart data={monthlyData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
               <defs>
                 <linearGradient id="colCollected" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="#fbbf24" stopOpacity={0.05} />
+                  <stop offset="5%" stopColor="#d97706" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.08} />
                 </linearGradient>
                 <linearGradient id="colTarget" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="#a78bfa" stopOpacity={0.05} />
+                  <stop offset="5%" stopColor="#059669" stopOpacity={0.6} />
+                  <stop offset="95%" stopColor="#10b981" stopOpacity={0.05} />
                 </linearGradient>
               </defs>
-              <CartesianGrid stroke="rgba(148,163,184,0.12)" vertical={false} />
-              <XAxis dataKey="month" stroke="#94a3b8" />
-              <YAxis stroke="#94a3b8" width={60} tickFormatter={(value) => {
+              <CartesianGrid stroke="#f1f5f9" vertical={false} />
+              <XAxis dataKey="month" stroke="#64748b" tick={{ fontSize: 12, fontWeight: 600 }} />
+              <YAxis stroke="#64748b" width={55} tick={{ fontSize: 12, fontWeight: 600 }} tickFormatter={(value) => {
                 if (value >= 1000000) return (value / 1000000).toFixed(1) + 'M';
                 if (value >= 1000) return (value / 1000).toFixed(1) + 'k';
                 return value;
               }} />
-              <Tooltip contentStyle={{ backgroundColor: "#0f172a", border: "1px solid #334155" }} />
-              <Area type="monotone" dataKey="collected" stroke="#f59e0b" fillOpacity={1} fill="url(#colCollected)" />
-              <Area type="monotone" dataKey="target" stroke="#7c3aed" fillOpacity={1} fill="url(#colTarget)" />
+              <Tooltip contentStyle={{ backgroundColor: "#ffffff", borderRadius: "14px", border: "1px solid #fcd34d", boxShadow: "0 4px 12px rgba(0,0,0,0.08)", color: "#1e293b", fontWeight: "700" }} />
+              <Area type="monotone" dataKey="collected" stroke="#d97706" strokeWidth={3} fillOpacity={1} fill="url(#colCollected)" name="Collected (₹)" />
+              <Area type="monotone" dataKey="target" stroke="#059669" strokeWidth={2} strokeDasharray="4 4" fillOpacity={1} fill="url(#colTarget)" name="Target (₹)" />
             </AreaChart>
           </ResponsiveContainer>
         </div>
       </div>
 
-      <div className="rounded-[32px] border border-white/10 bg-slate-950/85 p-6 shadow-2xl shadow-slate-950/20 backdrop-blur-xl text-white">
+      <div className="rounded-[32px] border border-amber-200/60 bg-temple-100 p-6 shadow-md backdrop-blur-lg">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-semibold">Category Share</h2>
-            <p className="mt-2 text-slate-400">Current donation category breakdown by amount.</p>
+            <h2 className="text-2xl font-extrabold text-slate-800">Category Share</h2>
+            <p className="mt-1 text-sm font-semibold text-slate-500">Current donation category breakdown by total amount.</p>
           </div>
         </div>
         <div className="mt-6 h-[300px]">
@@ -97,10 +98,11 @@ const DonationCharts = ({ donations = [] }) => {
             <PieChart>
               <Pie data={categoryData} dataKey="value" nameKey="name" innerRadius={68} outerRadius={108} paddingAngle={4}>
                 {categoryData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  <Cell key={`cell-${index}`} fill={TEMPLE_COLORS[index % TEMPLE_COLORS.length]} />
                 ))}
               </Pie>
-              <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ color: "#cbd5e1" }} />
+              <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ color: "#334155", fontWeight: "600", fontSize: "13px" }} />
+              <Tooltip contentStyle={{ backgroundColor: "#ffffff", borderRadius: "14px", border: "1px solid #fcd34d", boxShadow: "0 4px 12px rgba(0,0,0,0.08)", color: "#1e293b", fontWeight: "700" }} />
             </PieChart>
           </ResponsiveContainer>
         </div>

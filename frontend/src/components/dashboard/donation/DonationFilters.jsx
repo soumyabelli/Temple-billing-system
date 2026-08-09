@@ -1,16 +1,9 @@
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 
 const DonationFilters = ({ categories, onApplyFilters }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All Donation Types");
   const [selectedStatus, setSelectedStatus] = useState("All Statuses");
-
-  const statusOptions = [
-    "All Statuses",
-    "Completed",
-    "Pending",
-    "Failed",
-  ];
 
   const categoryOptions = useMemo(
     () => ["All Donation Types", ...(categories || [])],
@@ -26,21 +19,21 @@ const DonationFilters = ({ categories, onApplyFilters }) => {
   };
 
   return (
-    <div className="rounded-[32px] border border-white/10 bg-slate-950/85 p-6 shadow-2xl shadow-slate-950/20 backdrop-blur-xl text-white">
-      <h2 className="text-2xl font-semibold">Donation Filters</h2>
-      <p className="mt-2 text-slate-400">Slice live donation data by donor, type and status.</p>
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+    <div className="rounded-[32px] border border-amber-200/60 bg-temple-100 p-6 shadow-md backdrop-blur-lg">
+      <h2 className="text-2xl font-black text-slate-800">Donation Filters</h2>
+      <p className="mt-1 text-sm font-semibold text-slate-500">Filter live donation data by donor, type and status.</p>
+      <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <input
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           type="text"
-          placeholder="Search donor / receipt"
-          className="rounded-2xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-slate-100 outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20"
+          placeholder="Search donor / receipt / category..."
+          className="rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-800 font-semibold placeholder:text-slate-400 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 shadow-xs"
         />
         <select
           value={selectedCategory}
           onChange={(e) => setSelectedCategory(e.target.value)}
-          className="rounded-2xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-slate-100 outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20"
+          className="rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-800 font-semibold outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 shadow-xs"
         >
           {categoryOptions.map((option) => (
             <option key={option} value={option}>{option}</option>
@@ -48,7 +41,7 @@ const DonationFilters = ({ categories, onApplyFilters }) => {
         </select>
         <button
           onClick={handleApply}
-          className="rounded-2xl bg-gradient-to-r from-amber-500 to-orange-400 px-5 py-3 font-semibold text-slate-950 transition hover:opacity-95"
+          className="rounded-2xl bg-amber-600 px-5 py-3 font-extrabold text-white shadow-md transition hover:bg-amber-700 hover:scale-105"
         >
           Apply Filters
         </button>

@@ -1,4 +1,6 @@
-﻿const formatAmount = (value) => {
+import React from "react";
+
+const formatAmount = (value) => {
   const amount = Number(value);
   if (Number.isNaN(amount)) return value || "₹0";
   return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(amount);
@@ -15,26 +17,31 @@ const TopDonors = ({ donations = [] }) => {
   const topDonors = Object.entries(totals)
     .map(([name, amount]) => ({ name, amount }))
     .sort((a, b) => b.amount - a.amount)
-    .slice(0, 3);
+    .slice(0, 4);
 
   return (
-    <div className="rounded-[32px] border border-white/10 bg-slate-950/85 p-6 shadow-2xl shadow-slate-950/20 backdrop-blur-xl text-white">
-      <h2 className="text-2xl font-semibold">Top Donors</h2>
-      <p className="mt-2 text-slate-400">High-value donors based on the current donation dataset.</p>
+    <div className="rounded-[32px] border border-amber-200/60 bg-temple-100 p-6 shadow-md backdrop-blur-lg">
+      <h2 className="text-2xl font-black text-slate-800">Top Donors</h2>
+      <p className="mt-1 text-sm font-semibold text-slate-500">Highest total contributors to Sri Shanti Mahadev Mandir.</p>
 
-      <div className="mt-6 space-y-4">
+      <div className="mt-5 space-y-3">
         {topDonors.length > 0 ? (
           topDonors.map((donor, index) => (
-            <div key={donor.name} className="flex items-center justify-between rounded-3xl bg-slate-900/70 p-4">
-              <div>
-                <p className="text-lg font-semibold text-white">{donor.name}</p>
-                <p className="text-sm text-slate-400">Contributor rank #{index + 1}</p>
+            <div key={donor.name} className="flex items-center justify-between rounded-2xl border border-amber-200/60 bg-white p-4 shadow-xs">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-900 font-extrabold text-sm border border-amber-300">
+                  #{index + 1}
+                </div>
+                <div>
+                  <p className="text-base font-extrabold text-slate-900">{donor.name}</p>
+                  <p className="text-xs font-semibold text-amber-700">Top Supporter</p>
+                </div>
               </div>
-              <p className="text-lg font-semibold text-amber-300">{formatAmount(donor.amount)}</p>
+              <p className="text-base font-black text-amber-700">{formatAmount(donor.amount)}</p>
             </div>
           ))
         ) : (
-          <p className="text-slate-400">No donation data available yet.</p>
+          <p className="text-slate-400 font-semibold">No donation data available yet.</p>
         )}
       </div>
     </div>
