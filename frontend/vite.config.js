@@ -1,11 +1,15 @@
-import { defineConfig } from "vite";
+import { defineConfig, searchForWorkspaceRoot } from "vite";
 import react from "@vitejs/plugin-react";
 
-// Touch comment to trigger reload
 export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
+    fs: {
+      allow: [
+        searchForWorkspaceRoot(process.cwd())
+      ]
+    },
     proxy: {
       "/api": "http://localhost:5000"
     }
