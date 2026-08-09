@@ -1,8 +1,21 @@
+import React, { useEffect, useMemo, useState } from "react";
 import { jsPDF } from "jspdf";
-import { useEffect, useMemo, useState } from "react";
+import { 
+  FaRupeeSign, 
+  FaDonate, 
+  FaBoxes, 
+  FaBed, 
+  FaFilePdf, 
+  FaCalendarAlt, 
+  FaCreditCard, 
+  FaCheckCircle, 
+  FaChartLine,
+  FaExchangeAlt
+} from "react-icons/fa";
+import { MdTempleBuddhist, MdOutlinePayments } from "react-icons/md";
 import { getDevoteeBookings, getDevoteeDonations, getPrasadamOrders } from "../../services/devoteeService";
 
-const formatCurrency = (value) => `₹ ${Number(value || 0).toLocaleString()}`;
+const formatCurrency = (value) => `₹ ${Number(value || 0).toLocaleString("en-IN")}`;
 
 const BillingManagement = () => {
   const [bookings, setBookings] = useState([]);
@@ -112,7 +125,7 @@ const BillingManagement = () => {
       ...bookings.map((item) => ({
         id: item._id,
         category: "Pooja Booking",
-        description: item.service,
+        description: item.service || "Pooja Seva",
         amount: Number(item.amount || 0),
         paymentMethod: item.paymentMethod || "Offline",
         status: item.status || "Pending",
@@ -121,7 +134,7 @@ const BillingManagement = () => {
       ...donations.map((item) => ({
         id: item._id,
         category: item.category || "Donation",
-        description: item.notes || item.transactionId || "Donation received",
+        description: item.notes || item.transactionId || "Temple Contribution",
         amount: Number(item.amount || 0),
         paymentMethod: item.paymentMethod || "UPI",
         status: item.status || "Completed",
@@ -130,7 +143,7 @@ const BillingManagement = () => {
       ...prasadamOrders.map((item) => ({
         id: item._id,
         category: "Prasadam Order",
-        description: item.itemName || "Prasadam",
+        description: item.itemName || "Prasadam Items",
         amount: Number(item.amount || item.totalPrice || 0),
         paymentMethod: item.paymentMethod || "UPI",
         status: item.status || "Pending",
@@ -147,7 +160,7 @@ const BillingManagement = () => {
       ...filteredBookings.map((item) => ({
         id: item._id,
         category: "Pooja Booking",
-        description: item.service,
+        description: item.service || "Pooja Seva",
         amount: Number(item.amount || 0),
         paymentMethod: item.paymentMethod || "Offline",
         status: item.status || "Pending",
@@ -156,7 +169,7 @@ const BillingManagement = () => {
       ...filteredDonations.map((item) => ({
         id: item._id,
         category: item.category || "Donation",
-        description: item.notes || item.transactionId || "Donation received",
+        description: item.notes || item.transactionId || "Temple Contribution",
         amount: Number(item.amount || 0),
         paymentMethod: item.paymentMethod || "UPI",
         status: item.status || "Completed",
@@ -165,7 +178,7 @@ const BillingManagement = () => {
       ...filteredPrasadamOrders.map((item) => ({
         id: item._id,
         category: "Prasadam Order",
-        description: item.itemName || "Prasadam",
+        description: item.itemName || "Prasadam Items",
         amount: Number(item.amount || item.totalPrice || 0),
         paymentMethod: item.paymentMethod || "UPI",
         status: item.status || "Pending",
@@ -179,7 +192,7 @@ const BillingManagement = () => {
     const doc = new jsPDF();
     let y = 20;
     doc.setFontSize(16);
-    doc.text("Temple Billing Report", 20, y);
+    doc.text("Sri Shanti Mahadev Mandir - Billing & Financial Report", 20, y);
     doc.setFontSize(11);
     y += 10;
 
@@ -202,14 +215,14 @@ const BillingManagement = () => {
       `Report Period: ${fromDate} to ${toDate}`,
       `Generated: ${new Date().toLocaleString()}`,
       "",
-      "Summary",
-      `Total revenue: ${formatCurrency(reportRevenue)}`,
-      `Booking revenue: ${formatCurrency(reportBookingRevenue)}`,
-      `Donation revenue: ${formatCurrency(reportDonationRevenue)}`,
-      `Prasadam revenue: ${formatCurrency(reportPrasadamRevenue)}`,
-      `Transactions in range: ${reportTransactions.length}`,
+      "--- FINANCIAL SUMMARY ---",
+      `Total Revenue: ${formatCurrency(reportRevenue)}`,
+      `Pooja Booking Revenue: ${formatCurrency(reportBookingRevenue)}`,
+      `Donation Revenue: ${formatCurrency(reportDonationRevenue)}`,
+      `Prasadam Revenue: ${formatCurrency(reportPrasadamRevenue)}`,
+      `Total Transactions in Range: ${reportTransactions.length}`,
       "",
-      "Transactions",
+      "--- TRANSACTION DETAILS ---",
     ];
 
     if (reportTransactions.length === 0) {
@@ -222,189 +235,295 @@ const BillingManagement = () => {
       });
     }
 
-    downloadPdfFile(`billing-report-${fromDate}-to-${toDate}.pdf`, lines);
+    downloadPdfFile(`temple-billing-report-${fromDate}-to-${toDate}.pdf`, lines);
+  };
+
+  const handlePresetFilter = (days) => {
+    const today = new Date();
+    const endStr = today.toISOString().split("T")[0];
+    const start = new Date(today);
+    start.setDate(today.getDate() - days);
+    const startStr = start.toISOString().split("T")[0];
+    setFromDate(startStr);
+    setToDate(endStr);
   };
 
   return (
-    <div className="mt-5 space-y-6">
-      <div className="rounded-2xl border border-[#ece8e1] bg-temple-100 p-8 shadow-sm">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h1 className="text-[42px] font-bold text-[#111827]">Billing & Payments</h1>
-            <p className="mt-2 text-[#525252]">Complete payment dashboard for bookings, donations, and prasadam sales.</p>
+    <div className="mt-5 space-y-6 text-slate-800">
+      {/* HERO BANNER */}
+      <div className="relative overflow-hidden rounded-[32px] border border-amber-200/60 bg-gradient-to-r from-amber-500/15 via-orange-500/15 to-amber-600/15 p-8 shadow-md backdrop-blur-md">
+        <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+          <div className="max-w-2xl">
+            <div className="flex items-center gap-2 text-xs uppercase tracking-[0.32em] font-extrabold text-amber-800">
+              <MdOutlinePayments size={18} /> Financial Command Center
+            </div>
+            <h1 className="mt-2 text-3xl sm:text-4xl font-extrabold tracking-tight text-[#4a2b0f]">
+              Billing & Payments
+            </h1>
+            <p className="mt-2 text-[#7a4918] font-medium text-base">
+              Unified financial overview for Sri Shanti Mahadev Mandir: Pooja Bookings, Donations, Prasadam Sales, and Room Allocations.
+            </p>
           </div>
-          <div className="rounded-3xl bg-[#f8fafc] px-5 py-3 text-sm font-semibold text-[#0f766e]">Updated live from temple transactions</div>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2 rounded-2xl bg-amber-50 border border-amber-300 px-4 py-2.5 text-xs font-black text-amber-900 shadow-xs">
+              <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" /> Live Ledger Sync
+            </div>
+            <button
+              onClick={handleDownloadReport}
+              className="inline-flex items-center gap-2 rounded-2xl bg-amber-600 px-6 py-3 font-extrabold text-white shadow-md transition hover:bg-amber-700 hover:scale-105"
+            >
+              <FaFilePdf size={16} /> Download Report PDF
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* DATE RANGE FILTER BAR */}
+      <div className="rounded-[28px] border border-amber-200/60 bg-temple-100 p-6 shadow-sm flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex items-center gap-2">
+            <FaCalendarAlt className="text-amber-700" />
+            <label htmlFor="fromDate" className="text-xs font-extrabold uppercase tracking-wider text-slate-700">From</label>
+            <input
+              id="fromDate"
+              type="date"
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+              className="rounded-2xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-xs outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <label htmlFor="toDate" className="text-xs font-extrabold uppercase tracking-wider text-slate-700">To</label>
+            <input
+              id="toDate"
+              type="date"
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+              className="rounded-2xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-xs outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
+            />
+          </div>
         </div>
 
-        <div className="mt-6 flex flex-col gap-4 rounded-3xl border border-[#e5e7eb] bg-[#f8fafc] p-5 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="flex items-center gap-2">
-              <label htmlFor="fromDate" className="text-sm font-semibold text-[#334155]">From</label>
-              <input
-                id="fromDate"
-                type="date"
-                value={fromDate}
-                onChange={(e) => setFromDate(e.target.value)}
-                className="rounded-3xl border border-[#cbd5e1] bg-temple-100 px-4 py-2 text-sm text-[#0f172a] shadow-sm outline-none transition focus:border-[#2563eb]"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <label htmlFor="toDate" className="text-sm font-semibold text-[#334155]">To</label>
-              <input
-                id="toDate"
-                type="date"
-                value={toDate}
-                onChange={(e) => setToDate(e.target.value)}
-                className="rounded-3xl border border-[#cbd5e1] bg-temple-100 px-4 py-2 text-sm text-[#0f172a] shadow-sm outline-none transition focus:border-[#2563eb]"
-              />
-            </div>
-          </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs font-extrabold text-slate-500 mr-1 uppercase">Quick Presets:</span>
           <button
-            onClick={handleDownloadReport}
-            className="inline-flex items-center justify-center rounded-3xl bg-[#2563eb] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#1d4ed8]"
+            onClick={() => handlePresetFilter(0)}
+            className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-extrabold text-amber-900 hover:bg-amber-100 transition"
           >
-            Download Report PDF
+            Today
+          </button>
+          <button
+            onClick={() => handlePresetFilter(7)}
+            className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-extrabold text-amber-900 hover:bg-amber-100 transition"
+          >
+            Last 7 Days
+          </button>
+          <button
+            onClick={() => handlePresetFilter(30)}
+            className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-extrabold text-amber-900 hover:bg-amber-100 transition"
+          >
+            Last 30 Days
           </button>
         </div>
+      </div>
 
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          <div className="rounded-3xl border border-[#e5e7eb] bg-[#f8fafc] p-6">
-            <p className="text-sm uppercase tracking-[0.24em] text-[#475569]">Total Revenue</p>
-            <p className="mt-4 text-[2rem] font-bold text-[#0f172a]">{formatCurrency(totalRevenue)}</p>
-            <p className="mt-2 text-sm text-[#475569]">Bookings, donations, and prasadam.</p>
+      {/* TOP METRICS CARDS GRID */}
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        {/* TOTAL REVENUE CARD */}
+        <div className="rounded-[28px] border border-amber-200/60 bg-temple-100 p-6 shadow-md transition hover:-translate-y-1">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-black uppercase tracking-wider text-amber-800">Total Revenue</p>
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-md">
+              <FaRupeeSign size={20} />
+            </div>
           </div>
-          <div className="rounded-3xl border border-[#e5e7eb] bg-temple-100 p-6">
-            <p className="text-sm uppercase tracking-[0.24em] text-[#475569]">Donation Income</p>
-            <p className="mt-4 text-[2rem] font-bold text-[#0f172a]">{formatCurrency(donationRevenue)}</p>
-            <p className="mt-2 text-sm text-[#475569]">Donations collected across all campaigns.</p>
+          <p className="mt-4 text-3xl font-black text-slate-900">{formatCurrency(totalRevenue)}</p>
+          <p className="mt-2 text-xs font-semibold text-amber-700">Combined temple income</p>
+        </div>
+
+        {/* DONATION INCOME CARD */}
+        <div className="rounded-[28px] border border-amber-200/60 bg-temple-100 p-6 shadow-md transition hover:-translate-y-1">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-black uppercase tracking-wider text-emerald-800">Donations</p>
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-md">
+              <FaDonate size={20} />
+            </div>
           </div>
-          <div className="rounded-3xl border border-[#e5e7eb] bg-temple-100 p-6">
-            <p className="text-sm uppercase tracking-[0.24em] text-[#475569]">Prasadam Sales</p>
-            <p className="mt-4 text-[2rem] font-bold text-[#0f172a]">{formatCurrency(prasadamRevenue)}</p>
-            <p className="mt-2 text-sm text-[#475569]">Total prasadam order payments.</p>
+          <p className="mt-4 text-3xl font-black text-slate-900">{formatCurrency(donationRevenue)}</p>
+          <p className="mt-2 text-xs font-semibold text-emerald-700">{donations.length} entries recorded</p>
+        </div>
+
+        {/* PRASADAM SALES CARD */}
+        <div className="rounded-[28px] border border-amber-200/60 bg-temple-100 p-6 shadow-md transition hover:-translate-y-1">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-black uppercase tracking-wider text-orange-800">Prasadam Sales</p>
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-amber-600 text-white shadow-md">
+              <FaBoxes size={20} />
+            </div>
           </div>
-          <div className="rounded-3xl border border-[#e5e7eb] bg-temple-100 p-6">
-            <p className="text-sm uppercase tracking-[0.24em] text-[#475569]">Total Pooja Booked</p>
-            <p className="mt-4 text-[2rem] font-bold text-[#0f172a]">{bookings.length}</p>
-            <p className="mt-2 text-sm text-[#475569]">Total number of poojas booked.</p>
+          <p className="mt-4 text-3xl font-black text-slate-900">{formatCurrency(prasadamRevenue)}</p>
+          <p className="mt-2 text-xs font-semibold text-orange-700">{prasadamOrders.length} orders completed</p>
+        </div>
+
+        {/* POOJA BOOKINGS CARD */}
+        <div className="rounded-[28px] border border-amber-200/60 bg-temple-100 p-6 shadow-md transition hover:-translate-y-1">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-black uppercase tracking-wider text-purple-800">Pooja Bookings</p>
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 text-white shadow-md">
+              <MdTempleBuddhist size={22} />
+            </div>
           </div>
-          <div className="rounded-3xl border border-[#e5e7eb] bg-temple-100 p-6">
-            <p className="text-sm uppercase tracking-[0.24em] text-[#475569]">Room Booked Revenue</p>
-            <p className="mt-4 text-[2rem] font-bold text-[#0f172a]">{formatCurrency(0)}</p>
-            <p className="mt-2 text-sm text-[#475569]">Total value of room bookings.</p>
+          <p className="mt-4 text-3xl font-black text-slate-900">{formatCurrency(bookingRevenue)}</p>
+          <p className="mt-2 text-xs font-semibold text-purple-700">{bookings.length} sevas booked</p>
+        </div>
+
+        {/* ROOM BOOKINGS CARD */}
+        <div className="rounded-[28px] border border-amber-200/60 bg-temple-100 p-6 shadow-md transition hover:-translate-y-1">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-black uppercase tracking-wider text-teal-800">Room Bookings</p>
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-500 to-cyan-600 text-white shadow-md">
+              <FaBed size={20} />
+            </div>
           </div>
+          <p className="mt-4 text-3xl font-black text-slate-900">{formatCurrency(0)}</p>
+          <p className="mt-2 text-xs font-semibold text-teal-700">Room allotment revenue</p>
         </div>
       </div>
 
-      <div className="rounded-2xl border border-[#ece8e1] bg-temple-100 p-6 shadow-sm">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      {/* FILTERED PERIOD SUMMARY CARD */}
+      <div className="rounded-[32px] border border-amber-200/60 bg-temple-100 p-6 shadow-md">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-[#111827]">Report Period Summary</h2>
-            <p className="mt-2 text-sm text-[#64748b]">Metrics for the selected report period.</p>
+            <h2 className="text-2xl font-black text-slate-800">Selected Period Revenue Breakdown</h2>
+            <p className="mt-1 text-sm font-semibold text-slate-500">Filtered financial metrics from {fromDate} to {toDate}.</p>
           </div>
-          <span className="rounded-full bg-[#eff6ff] px-3 py-1 text-sm font-semibold text-[#2563eb]">{reportTransactions.length} transactions</span>
+          <span className="rounded-full bg-amber-100 border border-amber-300 px-4 py-1.5 text-xs font-extrabold text-amber-900">
+            {reportTransactions.length} Total Transactions
+          </span>
         </div>
 
-        <div className="mt-6 grid gap-4 sm:grid-cols-3">
-          <div className="rounded-3xl border border-[#e5e7eb] bg-[#f8fafc] p-5">
-            <p className="text-sm uppercase tracking-[0.24em] text-[#475569]">Total revenue</p>
-            <p className="mt-4 text-[1.9rem] font-bold text-[#0f172a]">{formatCurrency(reportRevenue)}</p>
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-2xl border border-amber-200/60 bg-white p-5 shadow-xs">
+            <p className="text-xs font-extrabold uppercase text-slate-500">Filtered Revenue</p>
+            <p className="mt-2 text-2xl font-black text-amber-700">{formatCurrency(reportRevenue)}</p>
           </div>
-          <div className="rounded-3xl border border-[#e5e7eb] bg-temple-100 p-5">
-            <p className="text-sm uppercase tracking-[0.24em] text-[#475569]">Booking revenue</p>
-            <p className="mt-4 text-[1.9rem] font-bold text-[#0f172a]">{formatCurrency(reportBookingRevenue)}</p>
+          <div className="rounded-2xl border border-amber-200/60 bg-white p-5 shadow-xs">
+            <p className="text-xs font-extrabold uppercase text-slate-500">Booking Revenue</p>
+            <p className="mt-2 text-2xl font-black text-purple-700">{formatCurrency(reportBookingRevenue)}</p>
           </div>
-          <div className="rounded-3xl border border-[#e5e7eb] bg-temple-100 p-5">
-            <p className="text-sm uppercase tracking-[0.24em] text-[#475569]">Donation revenue</p>
-            <p className="mt-4 text-[1.9rem] font-bold text-[#0f172a]">{formatCurrency(reportDonationRevenue)}</p>
+          <div className="rounded-2xl border border-amber-200/60 bg-white p-5 shadow-xs">
+            <p className="text-xs font-extrabold uppercase text-slate-500">Donation Revenue</p>
+            <p className="mt-2 text-2xl font-black text-emerald-700">{formatCurrency(reportDonationRevenue)}</p>
           </div>
-          <div className="rounded-3xl border border-[#e5e7eb] bg-temple-100 p-5">
-            <p className="text-sm uppercase tracking-[0.24em] text-[#475569]">Prasadam revenue</p>
-            <p className="mt-4 text-[1.9rem] font-bold text-[#0f172a]">{formatCurrency(reportPrasadamRevenue)}</p>
+          <div className="rounded-2xl border border-amber-200/60 bg-white p-5 shadow-xs">
+            <p className="text-xs font-extrabold uppercase text-slate-500">Prasadam Revenue</p>
+            <p className="mt-2 text-2xl font-black text-orange-700">{formatCurrency(reportPrasadamRevenue)}</p>
           </div>
         </div>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[1.3fr_0.7fr]">
-        <div className="space-y-4">
-          <div className="rounded-2xl border border-[#ece8e1] bg-temple-100 p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold text-[#111827]">Recent Transactions</h2>
-                <p className="mt-2 text-sm text-[#64748b]">All recent payment activity from bookings, donations and prasadam.</p>
-              </div>
-              <span className="rounded-full bg-[#eff6ff] px-3 py-1 text-sm font-semibold text-[#2563eb]">{recentTransactions.length} latest</span>
+      {/* TRANSACTIONS & PAYMENT METHODS GRID */}
+      <div className="grid gap-6 xl:grid-cols-[1.4fr_0.6fr]">
+        {/* RECENT TRANSACTIONS TABLE CARD */}
+        <div className="rounded-[32px] border border-amber-200/60 bg-temple-100 p-6 shadow-md">
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <h2 className="text-2xl font-black text-slate-800">Recent Transactions</h2>
+              <p className="mt-1 text-sm font-semibold text-slate-500">Real-time payment logs across all channels.</p>
             </div>
+            <span className="rounded-full bg-amber-100 border border-amber-300 px-3.5 py-1 text-xs font-extrabold text-amber-900">
+              {recentTransactions.length} Latest
+            </span>
+          </div>
 
-            <div className="mt-6 overflow-x-auto">
-              <table className="min-w-full text-left text-sm text-[#334155]">
-                <thead className="border-b border-[#e2e8f0] text-[#475569]">
-                  <tr>
-                    <th className="px-4 py-3">Type</th>
-                    <th className="px-4 py-3">Description</th>
-                    <th className="px-4 py-3">Amount</th>
-                    <th className="px-4 py-3">Payment</th>
-                    <th className="px-4 py-3">Status</th>
-                    <th className="px-4 py-3">Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {loading ? (
-                    <tr><td colSpan="6" className="px-4 py-6 text-center text-sm text-[#64748b]">Loading transactions…</td></tr>
-                  ) : recentTransactions.length === 0 ? (
-                    <tr><td colSpan="6" className="px-4 py-6 text-center text-sm text-[#64748b]">No recent transactions found.</td></tr>
-                  ) : (
-                    recentTransactions.map((item) => (
-                      <tr key={`${item.id}-${item.date}`} className="border-b border-[#f1f5f9] hover:bg-[#f8fafc]">
-                        <td className="px-4 py-4 font-semibold text-[#0f172a]">{item.category}</td>
-                        <td className="px-4 py-4 text-[#475569] max-w-[220px] truncate">{item.description}</td>
-                        <td className="px-4 py-4 font-semibold text-[#0f172a]">{formatCurrency(item.amount)}</td>
-                        <td className="px-4 py-4">{item.paymentMethod}</td>
-                        <td className="px-4 py-4">
-                          <span className={`rounded-full px-3 py-1 text-xs font-semibold ${item.status === "Completed" || item.status === "Confirmed" ? "bg-[#def7ec] text-[#166534]" : item.status === "Pending" ? "bg-[#fef3c7] text-[#92400e]" : "bg-[#fee2e2] text-[#b91c1c]"}`}>
-                            {item.status}
-                          </span>
-                        </td>
-                        <td className="px-4 py-4">{item.date ? new Date(item.date).toLocaleString() : "-"}</td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+          <div className="overflow-x-auto rounded-2xl border border-amber-200/60 bg-white">
+            <table className="min-w-full text-left text-sm text-slate-700">
+              <thead className="bg-amber-50/70 border-b border-amber-200/80 text-amber-950 font-black">
+                <tr>
+                  <th className="px-4 py-3.5">Category</th>
+                  <th className="px-4 py-3.5">Description</th>
+                  <th className="px-4 py-3.5">Amount</th>
+                  <th className="px-4 py-3.5">Payment</th>
+                  <th className="px-4 py-3.5">Status</th>
+                  <th className="px-4 py-3.5">Date</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-amber-100">
+                {loading ? (
+                  <tr><td colSpan="6" className="px-4 py-8 text-center text-sm font-semibold text-slate-500">Loading live transactions…</td></tr>
+                ) : recentTransactions.length === 0 ? (
+                  <tr><td colSpan="6" className="px-4 py-8 text-center text-sm font-semibold text-slate-500">No transactions recorded yet.</td></tr>
+                ) : (
+                  recentTransactions.map((item, idx) => (
+                    <tr key={`${item.id}-${idx}`} className="hover:bg-amber-50/40 transition">
+                      <td className="px-4 py-3.5 font-bold text-slate-900">{item.category}</td>
+                      <td className="px-4 py-3.5 text-slate-600 max-w-[200px] truncate font-medium">{item.description}</td>
+                      <td className="px-4 py-3.5 font-black text-amber-700">{formatCurrency(item.amount)}</td>
+                      <td className="px-4 py-3.5 font-semibold text-slate-700">{item.paymentMethod}</td>
+                      <td className="px-4 py-3.5">
+                        <span className={`rounded-lg px-2.5 py-1 text-xs font-black border ${
+                          item.status === "Completed" || item.status === "Confirmed" 
+                            ? "bg-emerald-100 text-emerald-800 border-emerald-300" 
+                            : item.status === "Pending" 
+                            ? "bg-amber-100 text-amber-800 border-amber-300" 
+                            : "bg-rose-100 text-rose-800 border-rose-300"
+                        }`}>
+                          {item.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3.5 text-xs text-slate-500 font-medium">{item.date ? new Date(item.date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "-"}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
 
-        <div className="space-y-4">
-          <div className="rounded-2xl border border-[#ece8e1] bg-temple-100 p-6 shadow-sm">
-            <h2 className="text-2xl font-bold text-[#111827]">Payment Methods</h2>
-            <p className="mt-2 text-sm text-[#64748b]">Most used payment channels for current receipts.</p>
-            <div className="mt-6 space-y-3">
+        {/* PAYMENT METHODS & INSIGHTS WIDGETS */}
+        <div className="space-y-6">
+          {/* PAYMENT METHODS CARD */}
+          <div className="rounded-[32px] border border-amber-200/60 bg-temple-100 p-6 shadow-md">
+            <div className="flex items-center gap-2 text-2xl font-black text-slate-800 mb-1">
+              <FaCreditCard className="text-amber-600" /> Payment Methods
+            </div>
+            <p className="text-xs font-semibold text-slate-500 mb-5">Channel distribution across transactions.</p>
+            
+            <div className="space-y-3">
               {paymentMethods.length > 0 ? paymentMethods.map((method) => (
-                <div key={method.method} className="flex items-center justify-between rounded-3xl border border-[#e2e8f0] bg-[#f8fafc] px-4 py-4">
-                  <span className="font-semibold text-[#0f172a]">{method.method}</span>
-                  <span className="rounded-full bg-[#e0f2fe] px-3 py-1 text-sm font-semibold text-[#0369a1]">{method.count}</span>
+                <div key={method.method} className="flex items-center justify-between rounded-2xl border border-amber-200/60 bg-white p-4 shadow-xs">
+                  <span className="font-extrabold text-slate-800">{method.method}</span>
+                  <span className="rounded-xl bg-amber-100 border border-amber-300 px-3 py-1 text-xs font-black text-amber-900">
+                    {method.count} Receipts
+                  </span>
                 </div>
               )) : (
-                <p className="text-sm text-[#64748b]">No payment methods tracked yet.</p>
+                <div className="p-4 rounded-xl bg-white border border-slate-200 text-center text-xs font-semibold text-slate-400">
+                  No payment methods tracked yet.
+                </div>
               )}
             </div>
           </div>
 
-          <div className="rounded-2xl border border-[#ece8e1] bg-temple-100 p-6 shadow-sm">
-            <h2 className="text-2xl font-bold text-[#111827]">Billing Insights</h2>
-            <div className="mt-5 space-y-4">
-              <div className="rounded-3xl bg-[#f8fafc] p-4">
-                <p className="text-sm text-[#475569]">Total bookings</p>
-                <p className="mt-2 text-3xl font-bold text-[#0f172a]">{bookings.length}</p>
+          {/* SYSTEM INSIGHTS CARD */}
+          <div className="rounded-[32px] border border-amber-200/60 bg-temple-100 p-6 shadow-md">
+            <div className="flex items-center gap-2 text-2xl font-black text-slate-800 mb-1">
+              <FaChartLine className="text-amber-600" /> Billing Insights
+            </div>
+            <p className="text-xs font-semibold text-slate-500 mb-5">Transaction counts by module.</p>
+            
+            <div className="space-y-3">
+              <div className="flex items-center justify-between rounded-2xl border border-amber-200/60 bg-white p-4 shadow-xs">
+                <span className="text-xs font-extrabold text-slate-700 uppercase">Pooja Seva Bookings</span>
+                <span className="text-lg font-black text-purple-700">{bookings.length}</span>
               </div>
-              <div className="rounded-3xl bg-[#f8fafc] p-4">
-                <p className="text-sm text-[#475569]">Total donations</p>
-                <p className="mt-2 text-3xl font-bold text-[#0f172a]">{donations.length}</p>
+              <div className="flex items-center justify-between rounded-2xl border border-amber-200/60 bg-white p-4 shadow-xs">
+                <span className="text-xs font-extrabold text-slate-700 uppercase">Devotee Donations</span>
+                <span className="text-lg font-black text-emerald-700">{donations.length}</span>
               </div>
-              <div className="rounded-3xl bg-[#f8fafc] p-4">
-                <p className="text-sm text-[#475569]">Prasadam orders</p>
-                <p className="mt-2 text-3xl font-bold text-[#0f172a]">{prasadamOrders.length}</p>
+              <div className="flex items-center justify-between rounded-2xl border border-amber-200/60 bg-white p-4 shadow-xs">
+                <span className="text-xs font-extrabold text-slate-700 uppercase">Prasadam Counter Orders</span>
+                <span className="text-lg font-black text-orange-700">{prasadamOrders.length}</span>
               </div>
             </div>
           </div>
