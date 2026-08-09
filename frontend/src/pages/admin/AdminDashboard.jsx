@@ -67,6 +67,7 @@ const AdminDashboard = () => {
   const [bookings, setBookings] = useState([]);
   const [donations, setDonations] = useState([]);
   const [inventoryItems, setInventoryItems] = useState([]);
+  const [inventoryRequests, setInventoryRequests] = useState([]);
   const [prasadamOrders, setPrasadamOrders] = useState([]);
   const [rooms, setRooms] = useState([]);
   const [allBookings, setAllBookings] = useState([]);
@@ -76,7 +77,7 @@ const AdminDashboard = () => {
   useEffect(() => {
     const load = async () => {
       try {
-        const [usersRes, bookingsRes, donationsRes, inventoryRes, prasadamRes, roomsRes, allBookingsRes] = await Promise.all([
+        const [usersRes, bookingsRes, donationsRes, inventoryRes, prasadamRes, roomsRes, allBookingsRes, requestsRes] = await Promise.all([
           getAdminUsers(token),
           getAdminBookings(),
           getAdminDonations(),
@@ -84,11 +85,13 @@ const AdminDashboard = () => {
           getAdminPrasadamOrders(),
           getAdminRooms().catch(() => []),
           getAdminAllBookings().catch(() => ({ bookings: [] })),
+          axios.get("http://localhost:5000/api/staff/inventory-requests", { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] })),
         ]);
         setUsers(usersRes.users || []);
         setBookings(bookingsRes.bookings || []);
         setDonations(donationsRes.donations || []);
         setInventoryItems(inventoryRes.data?.items || []);
+        setInventoryRequests(Array.isArray(requestsRes.data) ? requestsRes.data : (requestsRes.data?.requests || []));
         setPrasadamOrders(prasadamRes.orders || []);
         setRooms(Array.isArray(roomsRes) ? roomsRes : []);
         setAllBookings(allBookingsRes.bookings || []);
@@ -306,8 +309,11 @@ const AdminDashboard = () => {
                     <RecentBookings bookings={recentBookings} />
                   </div>
                   <div className={`rounded-2xl border p-6 ${darkMode ? "bg-[#1f2937] border-[#334155]" : "bg-temple-100 border-[#ece8e1]"}`}>
-                    <h3 className={`text-3xl font-bold mb-4 ${darkMode ? "text-slate-100" : "text-[#1d1b19]"}`}>Low Stock Alerts</h3>
-                    <LowStock items={inventoryItems.map(i => ({ name: i.name, stock: i.currentStock, status: i.currentStock <= i.minimumStock ? "Low" : "OK" }))} />
+                    <h3 className={`text-3xl font-bold mb-4 ${darkMode ? "text-slate-100" : "text-[#1d1b19]"}`}>Low Stock Alerts & Store Requests</h3>
+                    <LowStock
+                      items={inventoryItems.map(i => ({ name: i.name, stock: i.currentStock, currentStock: i.currentStock, minimumStock: i.minimumStock, status: i.currentStock <= i.minimumStock ? "Low" : "OK" }))}
+                      requests={inventoryRequests}
+                    />
                   </div>
                 </div>
               </>
