@@ -175,6 +175,7 @@ exports.applyLeave = async (req, res) => {
     // ── Date range validation (local timezone) ───────────────────────────────
     const todayStr   = getLocalTodayStr();
     const todayStart = parseISODate(todayStr); // midnight today in server local time
+    const now = new Date();
 
     if (fromParsed < todayStart) {
       return res.status(400).json({
@@ -183,10 +184,33 @@ exports.applyLeave = async (req, res) => {
       });
     }
 
+    // ── Same day 10:00 AM cutoff check ──────────────────────────────────────
+    if (fromDate === todayStr && now.getHours() >= 10) {
+      return res.status(400).json({
+        success: false,
+        message: "Same-day leave application is not allowed after 10:00 AM. Please select a future date.",
+      });
+    }
+
     if (toParsed < fromParsed) {
       return res.status(400).json({
         success: false,
         message: `To Date (${toDate}) cannot be before From Date (${fromDate}).`,
+      });
+    }
+
+    // ── Overlapping / Duplicate Leave Check ─────────────────────────────────
+    const overlappingLeave = await Leave.findOne({
+      staffId,
+      status: { $ne: "Rejected" },
+      fromDate: { $lte: toDate },
+      toDate: { $gte: fromDate },
+    });
+
+    if (overlappingLeave) {
+      return res.status(400).json({
+        success: false,
+        message: `You already have an active or pending leave request covering ${overlappingLeave.fromDate} to ${overlappingLeave.toDate}.`,
       });
     }
 

@@ -63,8 +63,27 @@ const LeaveRequest = ({ darkMode, onBack }) => {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const getMinAllowedFromDate = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    const todayStr = `${year}-${month}-${day}`;
+
+    if (now.getHours() >= 10) {
+      const tomorrow = new Date(now);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const tYear = tomorrow.getFullYear();
+      const tMonth = String(tomorrow.getMonth() + 1).padStart(2, "0");
+      const tDay = String(tomorrow.getDate()).padStart(2, "0");
+      return `${tYear}-${tMonth}-${tDay}`;
+    }
+    return todayStr;
+  };
+
   const validate = () => {
     const today = getLocalDateKey();
+    const now = new Date();
     const errs = {};
     if (!form.leaveType || !form.leaveType.trim()) {
       errs.leaveType = "Leave Type is required.";
@@ -78,7 +97,9 @@ const LeaveRequest = ({ darkMode, onBack }) => {
     if (!form.fromDate) {
       errs.fromDate = "From Date is required.";
     } else if (form.fromDate < today) {
-      errs.fromDate = `From Date cannot be before today (${today}).`;
+      errs.fromDate = `From Date cannot be in the past (${today}).`;
+    } else if (form.fromDate === today && now.getHours() >= 10) {
+      errs.fromDate = "Same-day leave request is closed after 10:00 AM. Please select tomorrow or a future date.";
     }
     if (!form.toDate) {
       errs.toDate = "To Date is required.";
@@ -124,6 +145,8 @@ const LeaveRequest = ({ darkMode, onBack }) => {
 
   const field = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
 
+  const minDateAllowed = getMinAllowedFromDate();
+
   return (
     <div className={`leave-container ${darkMode ? "dark" : ""}`} style={{ width: "100%", display: "block" }}>
         <section className="apply-leave-page">
@@ -150,6 +173,19 @@ const LeaveRequest = ({ darkMode, onBack }) => {
             </button>
           </div>
           <p>Submit your leave request to admin.</p>
+
+          <div style={{
+            padding: "12px 16px",
+            borderRadius: "10px",
+            backgroundColor: new Date().getHours() >= 10 ? "#fff3cd" : "#e0f2fe",
+            color: new Date().getHours() >= 10 ? "#856404" : "#0369a1",
+            border: new Date().getHours() >= 10 ? "1px solid #ffeeba" : "1px solid #bae6fd",
+            marginBottom: "18px",
+            fontSize: "13px",
+            fontWeight: "600"
+          }}>
+            ⏰ <strong>Notice:</strong> Same-day leave applications are only permitted before <strong>10:00 AM</strong>. {new Date().getHours() >= 10 ? "Same-day leave for today is closed. Please select tomorrow or a later date." : "Same-day application is currently open until 10:00 AM."}
+          </div>
 
           <form onSubmit={handleSubmit} className="leave-form">
             <div>
@@ -185,7 +221,7 @@ const LeaveRequest = ({ darkMode, onBack }) => {
                   id="fromDate"
                   type="date"
                   value={form.fromDate}
-                  min={todayStr}
+                  min={minDateAllowed}
                   disabled={isSubmitting}
                   onChange={(e) => {
                     field("fromDate", e.target.value);
@@ -202,7 +238,7 @@ const LeaveRequest = ({ darkMode, onBack }) => {
                   id="toDate"
                   type="date"
                   value={form.toDate}
-                  min={form.fromDate || todayStr}
+                  min={form.fromDate || minDateAllowed}
                   disabled={isSubmitting}
                   onChange={(e) => field("toDate", e.target.value)}
                 />

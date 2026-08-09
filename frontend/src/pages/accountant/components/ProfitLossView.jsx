@@ -20,7 +20,6 @@ import {
   FaMoneyBillWave,
   FaReceipt,
   FaPrescriptionBottle,
-  FaCalendarCheck,
   FaExclamationCircle,
 } from "react-icons/fa";
 import { MdTempleBuddhist } from "react-icons/md";
@@ -60,6 +59,9 @@ const ProfitLossView = ({ hideHeader = false }) => {
   const [toDate, setToDate] = useState("");
   const [selectedPreset, setSelectedPreset] = useState("all");
 
+  const [hoveredIncomeSource, setHoveredIncomeSource] = useState(null);
+  const [hoveredExpenseCategory, setHoveredExpenseCategory] = useState(null);
+
   const formatDateStr = (d) => {
     const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, "0");
@@ -74,7 +76,6 @@ const ProfitLossView = ({ hideHeader = false }) => {
       if (fromDate) params.startDate = fromDate;
       if (toDate) params.endDate = toDate;
 
-      // 1. Fetch backend transactions
       let backendTransactions = [];
       try {
         const txs = await getTransactions(params);
@@ -83,14 +84,12 @@ const ProfitLossView = ({ hideHeader = false }) => {
         console.warn("Backend transactions endpoint idle", err);
       }
 
-      // 2. Fetch manual entries from localStorage
       const savedManual = localStorage.getItem("templeManualEntries_v1");
       const manualEntries = savedManual ? JSON.parse(savedManual) : [];
 
       const savedExpenses = localStorage.getItem("templeManualExpenses_v1");
       const manualExpenses = savedExpenses ? JSON.parse(savedExpenses) : [];
 
-      // Format manual records
       const formattedManual = [
         ...manualEntries.map((m) => ({
           date: m.date ? new Date(m.date) : new Date(),
@@ -108,7 +107,6 @@ const ProfitLossView = ({ hideHeader = false }) => {
         })),
       ];
 
-      // Format backend records
       const formattedBackend = backendTransactions.map((t) => ({
         date: new Date(t.date || Date.now()),
         type: t.transactionType || (t.type === "Debit" ? "Debit" : "Credit"),
@@ -119,7 +117,6 @@ const ProfitLossView = ({ hideHeader = false }) => {
 
       const allLiveTransactions = [...formattedBackend, ...formattedManual];
 
-      // Strictly filter by Date Range
       let filtered = allLiveTransactions;
       if (fromDate) {
         const start = new Date(fromDate);
@@ -132,7 +129,6 @@ const ProfitLossView = ({ hideHeader = false }) => {
         filtered = filtered.filter((t) => new Date(t.date) <= end);
       }
 
-      // Aggregate filtered records
       let totalIncome = 0;
       let totalExpense = 0;
       const incomeBySource = {};
@@ -151,7 +147,6 @@ const ProfitLossView = ({ hideHeader = false }) => {
         }
       });
 
-      // If no date filters applied and local array is empty, fetch backend P&L endpoint
       if (!fromDate && !toDate && Object.keys(incomeBySource).length === 0 && Object.keys(expenseByCategory).length === 0) {
         try {
           const apiPL = await getProfitLoss();
@@ -309,7 +304,6 @@ const ProfitLossView = ({ hideHeader = false }) => {
     }
   };
 
-  // Chart data formatting
   const incomePieData = Object.entries(data.incomeBySource || {})
     .filter(([_, amt]) => amt > 0)
     .map(([name, value]) => ({ name, value }));
@@ -484,44 +478,89 @@ const ProfitLossView = ({ hideHeader = false }) => {
 
           {incomePieData.length > 0 ? (
             <div className="space-y-6">
-              {/* Donut Chart Visualization */}
-              <div className="h-48 w-full flex items-center justify-center bg-emerald-50/40 rounded-2xl p-2 border border-emerald-100">
+              {/* Interactive Donut Chart */}
+              <div className="relative h-56 w-full flex items-center justify-center bg-emerald-50/40 rounded-2xl p-2 border border-emerald-100">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
                       data={incomePieData}
                       cx="50%"
                       cy="50%"
-                      innerRadius={45}
-                      outerRadius={75}
+                      innerRadius={55}
+                      outerRadius={85}
                       paddingAngle={4}
+                      minAngle={8}
                       dataKey="value"
+                      onMouseEnter={(_, idx) => setHoveredIncomeSource(incomePieData[idx])}
+                      onMouseLeave={() => setHoveredIncomeSource(null)}
                     >
-                      {incomePieData.map((_, index) => (
-                        <Cell key={`cell-${index}`} fill={INCOME_COLORS[index % INCOME_COLORS.length]} />
+                      {incomePieData.map((entry, index) => (
+                        <Cell
+                          key={`income-cell-${index}`}
+                          fill={INCOME_COLORS[index % INCOME_COLORS.length]}
+                          stroke={hoveredIncomeSource?.name === entry.name ? "#047857" : "#ffffff"}
+                          strokeWidth={hoveredIncomeSource?.name === entry.name ? 3 : 1}
+                        />
                       ))}
                     </Pie>
                     <Tooltip
-                      formatter={(val) => [`Rs ${Number(val).toLocaleString("en-IN")}`, "Amount"]}
-                      contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
+                      formatter={(val, name) => [`Rs ${Number(val).toLocaleString("en-IN")}`, name]}
+                      contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}
                     />
                   </PieChart>
                 </ResponsiveContainer>
+
+                {/* Center Text Display */}
+                <div className="absolute flex flex-col items-center justify-center text-center pointer-events-none px-4">
+                  {hoveredIncomeSource ? (
+                    <>
+                      <span className="text-[10px] font-black uppercase text-emerald-700 tracking-wider">
+                        {hoveredIncomeSource.name}
+                      </span>
+                      <span className="text-sm font-black text-slate-900 mt-0.5">
+                        Rs {hoveredIncomeSource.value?.toLocaleString("en-IN")}
+                      </span>
+                      <span className="text-[10px] font-bold text-emerald-600">
+                        {data.totalIncome > 0 ? ((hoveredIncomeSource.value / data.totalIncome) * 100).toFixed(1) : 0}%
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider">Total Income</span>
+                      <span className="text-sm font-black text-emerald-950 mt-0.5">
+                        Rs {data.totalIncome?.toLocaleString("en-IN")}
+                      </span>
+                    </>
+                  )}
+                </div>
               </div>
 
-              {/* Attractive Income Cards Grid */}
+              {/* Color-Matched Income Cards Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 {Object.entries(data.incomeBySource || {})
                   .filter(([_, amt]) => amt > 0)
                   .map(([source, amt], idx) => {
                     const sharePct = data.totalIncome > 0 ? ((amt / data.totalIncome) * 100).toFixed(1) : 0;
+                    const color = INCOME_COLORS[idx % INCOME_COLORS.length];
+                    const isHovered = hoveredIncomeSource?.name === source;
+
                     return (
                       <div
                         key={source}
-                        className="flex items-center justify-between p-3.5 rounded-2xl bg-white border border-slate-200/70 shadow-sm hover:border-emerald-300 hover:shadow-md transition"
+                        onMouseEnter={() => setHoveredIncomeSource({ name: source, value: amt })}
+                        onMouseLeave={() => setHoveredIncomeSource(null)}
+                        className={`flex items-center justify-between p-3.5 rounded-2xl bg-white border cursor-pointer transition-all ${
+                          isHovered
+                            ? "border-emerald-500 shadow-md ring-2 ring-emerald-500/20 scale-[1.02]"
+                            : "border-slate-200/70 shadow-sm hover:border-emerald-300"
+                        }`}
                       >
                         <div className="flex items-center gap-3">
-                          <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                          <span
+                            className="w-3.5 h-3.5 rounded-full flex-shrink-0 shadow-sm"
+                            style={{ backgroundColor: color }}
+                          />
+                          <div className="p-2 rounded-xl bg-slate-50 border border-slate-100">
                             {getSourceIcon(source)}
                           </div>
                           <div>
@@ -529,8 +568,11 @@ const ProfitLossView = ({ hideHeader = false }) => {
                             <p className="text-sm font-black text-slate-900 mt-0.5">Rs {amt?.toLocaleString("en-IN")}</p>
                           </div>
                         </div>
-                        <span className="text-xs font-black px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200">
-                          {sharePct}%
+                        <span
+                          className="text-xs font-black px-2.5 py-1 rounded-lg border shadow-xs"
+                          style={{ backgroundColor: `${color}15`, color: color, borderColor: `${color}40` }}
+                        >
+                          {sharePct < 0.1 && amt > 0 ? "< 0.1%" : `${sharePct}%`}
                         </span>
                       </div>
                     );
@@ -558,44 +600,89 @@ const ProfitLossView = ({ hideHeader = false }) => {
 
           {expensePieData.length > 0 ? (
             <div className="space-y-6">
-              {/* Donut Chart Visualization */}
-              <div className="h-48 w-full flex items-center justify-center bg-red-50/40 rounded-2xl p-2 border border-red-100">
+              {/* Interactive Donut Chart */}
+              <div className="relative h-56 w-full flex items-center justify-center bg-red-50/40 rounded-2xl p-2 border border-red-100">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
                       data={expensePieData}
                       cx="50%"
                       cy="50%"
-                      innerRadius={45}
-                      outerRadius={75}
+                      innerRadius={55}
+                      outerRadius={85}
                       paddingAngle={4}
+                      minAngle={8}
                       dataKey="value"
+                      onMouseEnter={(_, idx) => setHoveredExpenseCategory(expensePieData[idx])}
+                      onMouseLeave={() => setHoveredExpenseCategory(null)}
                     >
-                      {expensePieData.map((_, index) => (
-                        <Cell key={`cell-${index}`} fill={EXPENSE_COLORS[index % EXPENSE_COLORS.length]} />
+                      {expensePieData.map((entry, index) => (
+                        <Cell
+                          key={`expense-cell-${index}`}
+                          fill={EXPENSE_COLORS[index % EXPENSE_COLORS.length]}
+                          stroke={hoveredExpenseCategory?.name === entry.name ? "#b91c1c" : "#ffffff"}
+                          strokeWidth={hoveredExpenseCategory?.name === entry.name ? 3 : 1}
+                        />
                       ))}
                     </Pie>
                     <Tooltip
-                      formatter={(val) => [`Rs ${Number(val).toLocaleString("en-IN")}`, "Amount"]}
-                      contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
+                      formatter={(val, name) => [`Rs ${Number(val).toLocaleString("en-IN")}`, name]}
+                      contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}
                     />
                   </PieChart>
                 </ResponsiveContainer>
+
+                {/* Center Text Display */}
+                <div className="absolute flex flex-col items-center justify-center text-center pointer-events-none px-4">
+                  {hoveredExpenseCategory ? (
+                    <>
+                      <span className="text-[10px] font-black uppercase text-red-700 tracking-wider">
+                        {hoveredExpenseCategory.name}
+                      </span>
+                      <span className="text-sm font-black text-slate-900 mt-0.5">
+                        Rs {hoveredExpenseCategory.value?.toLocaleString("en-IN")}
+                      </span>
+                      <span className="text-[10px] font-bold text-red-600">
+                        {data.totalExpense > 0 ? ((hoveredExpenseCategory.value / data.totalExpense) * 100).toFixed(1) : 0}%
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider">Total Expenses</span>
+                      <span className="text-sm font-black text-red-950 mt-0.5">
+                        Rs {data.totalExpense?.toLocaleString("en-IN")}
+                      </span>
+                    </>
+                  )}
+                </div>
               </div>
 
-              {/* Attractive Expense Cards Grid */}
+              {/* Color-Matched Expense Cards Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 {Object.entries(data.expenseByCategory || {})
                   .filter(([_, amt]) => amt > 0)
                   .map(([category, amt], idx) => {
                     const sharePct = data.totalExpense > 0 ? ((amt / data.totalExpense) * 100).toFixed(1) : 0;
+                    const color = EXPENSE_COLORS[idx % EXPENSE_COLORS.length];
+                    const isHovered = hoveredExpenseCategory?.name === category;
+
                     return (
                       <div
                         key={category}
-                        className="flex items-center justify-between p-3.5 rounded-2xl bg-white border border-slate-200/70 shadow-sm hover:border-red-300 hover:shadow-md transition"
+                        onMouseEnter={() => setHoveredExpenseCategory({ name: category, value: amt })}
+                        onMouseLeave={() => setHoveredExpenseCategory(null)}
+                        className={`flex items-center justify-between p-3.5 rounded-2xl bg-white border cursor-pointer transition-all ${
+                          isHovered
+                            ? "border-red-500 shadow-md ring-2 ring-red-500/20 scale-[1.02]"
+                            : "border-slate-200/70 shadow-sm hover:border-red-300"
+                        }`}
                       >
                         <div className="flex items-center gap-3">
-                          <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                          <span
+                            className="w-3.5 h-3.5 rounded-full flex-shrink-0 shadow-sm"
+                            style={{ backgroundColor: color }}
+                          />
+                          <div className="p-2 rounded-xl bg-slate-50 border border-slate-100">
                             {getCategoryIcon(category)}
                           </div>
                           <div>
@@ -603,8 +690,11 @@ const ProfitLossView = ({ hideHeader = false }) => {
                             <p className="text-sm font-black text-slate-900 mt-0.5">Rs {amt?.toLocaleString("en-IN")}</p>
                           </div>
                         </div>
-                        <span className="text-xs font-black px-2.5 py-1 rounded-lg bg-red-50 text-red-700 border border-red-200">
-                          {sharePct}%
+                        <span
+                          className="text-xs font-black px-2.5 py-1 rounded-lg border shadow-xs"
+                          style={{ backgroundColor: `${color}15`, color: color, borderColor: `${color}40` }}
+                        >
+                          {sharePct < 0.1 && amt > 0 ? "< 0.1%" : `${sharePct}%`}
                         </span>
                       </div>
                     );
