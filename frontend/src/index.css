@@ -17,7 +17,7 @@
 }
 
 html {
-  font-size: 18px;
+  font-size: 19.5px !important;
   scroll-behavior: smooth;
 }
 
@@ -26,6 +26,8 @@ body {
   font-family: 'Outfit', sans-serif;
   background-color: var(--bg-primary);
   color: var(--text-primary);
+  font-size: 1rem;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -84,7 +86,52 @@ h1, h2, h3, h4, h5, h6 {
   @apply bg-slate-400 dark:bg-slate-500;
 }
 
-/* Animations from previous CSS */
+/* GLOBAL ENHANCED FONT SIZES FOR THE ENTIRE PROJECT */
+.text-xs {
+  font-size: 0.85rem !important; /* ~16.5px */
+}
+
+.text-sm {
+  font-size: 0.95rem !important; /* ~18.5px */
+}
+
+.text-base {
+  font-size: 1.05rem !important; /* ~20.5px */
+}
+
+.text-lg {
+  font-size: 1.2rem !important; /* ~23.4px */
+}
+
+.text-xl {
+  font-size: 1.35rem !important; /* ~26.3px */
+}
+
+.text-2xl {
+  font-size: 1.65rem !important; /* ~32.1px */
+}
+
+.text-3xl {
+  font-size: 2.1rem !important; /* ~41px */
+}
+
+table, th, td {
+  font-size: 0.98rem;
+}
+
+th {
+  font-size: 0.95rem;
+}
+
+button, input, select, textarea {
+  font-size: 0.98rem;
+}
+
+label {
+  font-size: 0.95rem;
+}
+
+/* Animations */
 @keyframes bellSwing {
   0%, 50%, 100% { transform: rotate(0deg); }
   25% { transform: rotate(12deg); }
@@ -142,4 +189,4 @@ h1, h2, h3, h4, h5, h6 {
 
 .logout-btn {
   @apply flex-1 rounded-xl bg-gradient-to-r from-red-500 to-red-600 py-3 font-medium text-white shadow-lg shadow-red-500/25 transition hover:shadow-xl hover:shadow-red-500/40;
-}
+}
