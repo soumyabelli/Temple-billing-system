@@ -188,7 +188,26 @@ const AccountLedgersView = () => {
   // Display subset based on showAllRows: 5 rows or All
   const displayedTransactions = showAllRows ? filteredTransactions : filteredTransactions.slice(0, 5);
 
+  const isToday = (dateInput) => {
+    if (!dateInput) return false;
+    const d = new Date(dateInput);
+    const today = new Date();
+    return (
+      d.getDate() === today.getDate() &&
+      d.getMonth() === today.getMonth() &&
+      d.getFullYear() === today.getFullYear()
+    );
+  };
+
   // Metrics
+  const todayCredits = transactions
+    .filter((t) => t.transactionType === "Credit" && isToday(t.date))
+    .reduce((sum, t) => sum + Number(t.amount || 0), 0);
+
+  const todayDebits = transactions
+    .filter((t) => t.transactionType === "Debit" && isToday(t.date))
+    .reduce((sum, t) => sum + Number(t.amount || 0), 0);
+
   const totalCredits = filteredTransactions
     .filter((t) => t.transactionType === "Credit")
     .reduce((sum, t) => sum + Number(t.amount || 0), 0);
@@ -304,40 +323,110 @@ const AccountLedgersView = () => {
       </div>
 
       {/* METRICS CARDS */}
-      <div className="grid gap-5 md:grid-cols-3 mb-6">
-        <div className="rounded-3xl border border-emerald-100 bg-temple-100 p-6 shadow-sm flex items-center justify-between">
-          <div>
-            <p className="text-xs font-extrabold uppercase tracking-wider text-emerald-700">Total Credits (Income)</p>
-            <p className="mt-2 text-3xl font-black text-emerald-950">Rs {totalCredits.toLocaleString()}</p>
+      {activeTab === "Credit" && (
+        <div className="grid gap-5 md:grid-cols-2 mb-6">
+          <div className="rounded-3xl border border-emerald-100 bg-temple-100 p-6 shadow-sm flex items-center justify-between">
+            <div>
+              <p className="text-xs font-extrabold uppercase tracking-wider text-emerald-700">Today's Credits (Income)</p>
+              <p className="mt-2 text-3xl font-black text-emerald-950">Rs {todayCredits.toLocaleString()}</p>
+            </div>
+            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700 text-xl">
+              <FaArrowUp />
+            </span>
           </div>
-          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700 text-xl">
-            <FaArrowUp />
-          </span>
-        </div>
 
-        <div className="rounded-3xl border border-red-100 bg-temple-100 p-6 shadow-sm flex items-center justify-between">
-          <div>
-            <p className="text-xs font-extrabold uppercase tracking-wider text-red-700">Total Debits (Expenses)</p>
-            <p className="mt-2 text-3xl font-black text-red-950">Rs {totalDebits.toLocaleString()}</p>
-            <p className="mt-1 text-xs font-bold text-red-600">Reflects all manual expense vouchers</p>
+          <div className="rounded-3xl border border-emerald-200 bg-emerald-50 p-6 shadow-sm flex items-center justify-between">
+            <div>
+              <p className="text-xs font-extrabold uppercase tracking-wider text-emerald-800">Total Credits (Income)</p>
+              <p className="mt-2 text-3xl font-black text-emerald-950">Rs {totalCredits.toLocaleString()}</p>
+            </div>
+            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-200 text-emerald-800 text-xl">
+              <FaWallet />
+            </span>
           </div>
-          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-100 text-red-700 text-xl">
-            <FaArrowDown />
-          </span>
         </div>
+      )}
 
-        <div className="rounded-3xl border border-amber-100 bg-temple-100 p-6 shadow-sm flex items-center justify-between">
-          <div>
-            <p className="text-xs font-extrabold uppercase tracking-wider text-amber-700">Net Ledger Balance</p>
-            <p className={`mt-2 text-3xl font-black ${netBalance >= 0 ? "text-emerald-800" : "text-red-800"}`}>
-              Rs {netBalance.toLocaleString()}
-            </p>
+      {activeTab === "Debit" && (
+        <div className="grid gap-5 md:grid-cols-2 mb-6">
+          <div className="rounded-3xl border border-red-100 bg-temple-100 p-6 shadow-sm flex items-center justify-between">
+            <div>
+              <p className="text-xs font-extrabold uppercase tracking-wider text-red-700">Today's Debits (Expenses)</p>
+              <p className="mt-2 text-3xl font-black text-red-950">Rs {todayDebits.toLocaleString()}</p>
+            </div>
+            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-100 text-red-700 text-xl">
+              <FaArrowDown />
+            </span>
           </div>
-          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-amber-700 text-xl">
-            <FaWallet />
-          </span>
+
+          <div className="rounded-3xl border border-red-200 bg-red-50 p-6 shadow-sm flex items-center justify-between">
+            <div>
+              <p className="text-xs font-extrabold uppercase tracking-wider text-red-800">Total Debits (Expenses)</p>
+              <p className="mt-2 text-3xl font-black text-red-950">Rs {totalDebits.toLocaleString()}</p>
+              <p className="mt-1 text-xs font-bold text-red-600">Reflects all manual expense vouchers</p>
+            </div>
+            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-200 text-red-800 text-xl">
+              <FaWallet />
+            </span>
+          </div>
         </div>
-      </div>
+      )}
+
+      {activeTab === "All" && (
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 mb-6">
+          <div className="rounded-3xl border border-emerald-100 bg-temple-100 p-6 shadow-sm flex items-center justify-between">
+            <div>
+              <p className="text-xs font-extrabold uppercase tracking-wider text-emerald-700">Today's Credits</p>
+              <p className="mt-2 text-2xl font-black text-emerald-950">Rs {todayCredits.toLocaleString()}</p>
+            </div>
+            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700 text-lg">
+              <FaArrowUp />
+            </span>
+          </div>
+
+          <div className="rounded-3xl border border-red-100 bg-temple-100 p-6 shadow-sm flex items-center justify-between">
+            <div>
+              <p className="text-xs font-extrabold uppercase tracking-wider text-red-700">Today's Debits</p>
+              <p className="mt-2 text-2xl font-black text-red-950">Rs {todayDebits.toLocaleString()}</p>
+            </div>
+            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-red-100 text-red-700 text-lg">
+              <FaArrowDown />
+            </span>
+          </div>
+
+          <div className="rounded-3xl border border-emerald-100 bg-temple-100 p-6 shadow-sm flex items-center justify-between">
+            <div>
+              <p className="text-xs font-extrabold uppercase tracking-wider text-emerald-700">Total Credits (Income)</p>
+              <p className="mt-2 text-2xl font-black text-emerald-950">Rs {totalCredits.toLocaleString()}</p>
+            </div>
+            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700 text-lg">
+              <FaArrowUp />
+            </span>
+          </div>
+
+          <div className="rounded-3xl border border-red-100 bg-temple-100 p-6 shadow-sm flex items-center justify-between">
+            <div>
+              <p className="text-xs font-extrabold uppercase tracking-wider text-red-700">Total Debits (Expenses)</p>
+              <p className="mt-2 text-2xl font-black text-red-950">Rs {totalDebits.toLocaleString()}</p>
+            </div>
+            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-red-100 text-red-700 text-lg">
+              <FaArrowDown />
+            </span>
+          </div>
+
+          <div className="rounded-3xl border border-amber-100 bg-temple-100 p-6 shadow-sm flex items-center justify-between sm:col-span-2 lg:col-span-1">
+            <div>
+              <p className="text-xs font-extrabold uppercase tracking-wider text-amber-700">Net Ledger Balance</p>
+              <p className={`mt-2 text-2xl font-black ${netBalance >= 0 ? "text-emerald-800" : "text-red-800"}`}>
+                Rs {netBalance.toLocaleString()}
+              </p>
+            </div>
+            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-100 text-amber-700 text-lg">
+              <FaWallet />
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* SEPARATE TABS VIEW FOR CREDITS AND DEBITS */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-3xl bg-temple-100 p-3 shadow-md border border-slate-200">
