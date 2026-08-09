@@ -160,16 +160,16 @@ const Payroll = () => {
       <SectionCard
         title="Payroll Management"
         subtitle="Review salary payouts based on attendance, extra duty, and process employee payments."
-        className="bg-gradient-to-r from-[#241f4f] via-[#3d3491] to-[#7857d2] text-white border-transparent shadow-2xl shadow-violet-600/20"
+        className="bg-gradient-to-r from-amber-500/15 via-orange-500/15 to-amber-600/15 text-[#4a2b0f] border border-amber-200/60 shadow-md backdrop-blur-md"
       >
         <div className="mb-5 flex flex-wrap items-center gap-3">
-          <label className="text-sm text-white/80">
+          <label className="text-sm font-extrabold text-[#7a4918]">
             Payroll Month
             <input
               type="month"
               value={monthKey}
               onChange={(event) => setMonthKey(event.target.value)}
-              className="ml-3 rounded-xl border border-white/20 bg-temple-100/10 px-3 py-2 text-white outline-none"
+              className="ml-3 rounded-2xl border border-slate-300 bg-white px-4 py-2 text-slate-800 font-semibold shadow-xs outline-none focus:border-amber-500"
             />
           </label>
         </div>

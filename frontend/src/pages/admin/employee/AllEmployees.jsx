@@ -424,14 +424,14 @@ const AllEmployees = () => {
 
   return (
     <div className="space-y-8">
-      <div className="rounded-[32px] bg-gradient-to-r from-[#221b3d] via-[#3a2f63] to-[#6b4f9f] p-6 text-white shadow-2xl shadow-violet-500/20 backdrop-blur-xl">
+      <div className="rounded-[32px] border border-amber-200/60 bg-gradient-to-r from-amber-500/15 via-orange-500/15 to-amber-600/15 p-7 text-[#4a2b0f] shadow-md backdrop-blur-md">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-sm uppercase tracking-[0.28em] text-amber-300/80">Employee Management</p>
-            <h1 className="mt-3 text-4xl font-bold tracking-tight">All Employees</h1>
-            <p className="max-w-2xl text-slate-200/90 mt-2">Premium temple HR dashboard with smart employee search, role-based insights, and workflow action controls.</p>
+            <p className="text-xs uppercase tracking-[0.28em] font-extrabold text-[#7a4918]">Employee Management</p>
+            <h1 className="mt-2 text-3xl sm:text-4xl font-extrabold tracking-tight text-[#4a2b0f]">All Employees</h1>
+            <p className="max-w-2xl text-[#7a4918] font-medium text-base mt-2">Temple HR dashboard with staff search, role-based insights, and workflow action controls for Sri Shanti Mahadev Mandir.</p>
           </div>
-          <button onClick={() => navigate("/admin/employees/add")} className="inline-flex items-center gap-2 rounded-full bg-amber-400 px-5 py-3 font-semibold text-slate-950 shadow-xl shadow-amber-500/20 transition hover:-translate-y-0.5">
+          <button onClick={() => navigate("/admin/employees/add")} className="inline-flex items-center gap-2 rounded-2xl bg-amber-600 px-6 py-3 font-extrabold text-white shadow-md transition hover:bg-amber-700 hover:scale-105">
             <FiPlus /> Add Employee
           </button>
         </div>

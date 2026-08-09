@@ -131,14 +131,14 @@ const LeaveManagement = () => {
     <div className="space-y-8">
       <SectionCard
         title="Leave Management"
-        subtitle="Approve, review, and track employee leave requests."
-        className="bg-gradient-to-r from-[#251f4c] via-[#4c3692] to-[#7b61d0] text-white border-transparent shadow-2xl shadow-violet-600/20"
+        subtitle="Approve, review, and track employee leave requests for Sri Shanti Mahadev Mandir."
+        className="bg-gradient-to-r from-amber-500/15 via-orange-500/15 to-amber-600/15 text-[#4a2b0f] border border-amber-200/60 shadow-md backdrop-blur-md"
       >
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
           {leaveTiles.map((tile) => (
-            <div key={tile.title} className="rounded-[28px] border border-white/10 px-5 py-6 bg-temple-100/10 shadow-xl shadow-slate-900/10">
-              <p className="text-sm uppercase tracking-[0.16em] text-slate-100/70">{tile.title}</p>
-              <p className="mt-4 text-3xl font-semibold text-white">{tile.value}</p>
+            <div key={tile.title} className="rounded-[28px] border border-amber-200/60 bg-white p-5 shadow-xs">
+              <p className="text-xs font-black uppercase tracking-wider text-amber-800">{tile.title}</p>
+              <p className="mt-3 text-3xl font-black text-slate-900">{tile.value}</p>
             </div>
           ))}
         </div>

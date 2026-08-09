@@ -503,11 +503,11 @@ const ShiftManagement = () => {
       <SectionCard
         title="Temporary & Extra Duty Assignment"
         subtitle="Schedule temporary shifts and duties for festivals, emergencies, and extra work. Default duties are assigned in Employee Management."
-        className="bg-gradient-to-r from-[#1e1b4b] via-[#312e81] to-[#4f46e5] text-white border-transparent shadow-2xl shadow-violet-600/10"
+        className="bg-gradient-to-r from-amber-500/15 via-orange-500/15 to-amber-600/15 text-[#4a2b0f] border border-amber-200/60 shadow-md backdrop-blur-md"
         topRight={
           <button
             onClick={handleAssignClick}
-            className="flex items-center gap-2 rounded-2xl bg-amber-500 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-amber-500/20 transition hover:bg-amber-600 active:scale-95"
+            className="flex items-center gap-2 rounded-2xl bg-amber-600 px-6 py-3 text-sm font-extrabold text-white shadow-md transition hover:bg-amber-700 hover:scale-105 active:scale-95"
           >
             <FiPlus size={16} /> Assign Duty & Shift
           </button>

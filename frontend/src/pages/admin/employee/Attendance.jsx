@@ -1,24 +1,25 @@
+import React from "react";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, BarChart, Bar, CartesianGrid } from "recharts";
 import SectionCard from "../../../components/admin/employee/SectionCard";
-import { attendanceTrend, departmentStrength, employees, attendanceHeatmap } from "./employeeData";
+import { attendanceTrend, employees, attendanceHeatmap } from "./employeeData";
 
 const attendanceTiles = [
-  { title: "Present Today", value: 42, accent: "bg-emerald-100 text-emerald-700" },
-  { title: "Absent", value: 4, accent: "bg-rose-100 text-rose-700" },
-  { title: "Late Entries", value: 7, accent: "bg-amber-100 text-amber-700" },
-  { title: "Half Day", value: 3, accent: "bg-sky-100 text-sky-700" },
-  { title: "Overtime Staff", value: 5, accent: "bg-violet-100 text-violet-700" },
+  { title: "Present Today", value: 42, accent: "bg-emerald-50 border-emerald-300 text-emerald-900", badge: "bg-emerald-200 text-emerald-950" },
+  { title: "Absent", value: 4, accent: "bg-rose-50 border-rose-300 text-rose-900", badge: "bg-rose-200 text-rose-950" },
+  { title: "Late Entries", value: 7, accent: "bg-amber-50 border-amber-300 text-amber-900", badge: "bg-amber-200 text-amber-950" },
+  { title: "Half Day", value: 3, accent: "bg-sky-50 border-sky-300 text-sky-900", badge: "bg-sky-200 text-sky-950" },
+  { title: "Overtime Staff", value: 5, accent: "bg-purple-50 border-purple-300 text-purple-900", badge: "bg-purple-200 text-purple-950" },
 ];
 
 const Attendance = () => {
   return (
-    <div className="space-y-8">
-      <SectionCard title="Attendance Dashboard" subtitle="Monitor daily attendance and punctuality for temple staff." className="bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-[#191c3b] via-[#3b2a6d] to-[#7d5dd8] text-white border-transparent shadow-2xl shadow-violet-600/20">
+    <div className="space-y-8 text-slate-800">
+      <SectionCard title="Attendance Dashboard" subtitle="Monitor daily attendance and punctuality for Sri Shanti Mahadev Mandir staff." className="bg-gradient-to-r from-amber-500/15 via-orange-500/15 to-amber-600/15 text-[#4a2b0f] border border-amber-200/60 shadow-md backdrop-blur-md">
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-5">
           {attendanceTiles.map((tile) => (
-            <div key={tile.title} className={`rounded-[28px] border border-white/10 px-5 py-6 ${tile.accent} bg-temple-100/10 shadow-xl shadow-slate-900/10`}>
-              <p className="text-sm uppercase tracking-[0.18em] text-slate-100/70">{tile.title}</p>
-              <p className="mt-4 text-3xl font-semibold text-white">{tile.value}</p>
+            <div key={tile.title} className={`rounded-[28px] border p-5 ${tile.accent} shadow-sm backdrop-blur-md`}>
+              <p className="text-xs font-black uppercase tracking-wider">{tile.title}</p>
+              <p className="mt-3 text-3xl font-black">{tile.value}</p>
             </div>
           ))}
         </div>
@@ -26,30 +27,30 @@ const Attendance = () => {
 
       <div className="grid gap-5 xl:grid-cols-[1.7fr_0.9fr]">
         <div className="space-y-5">
-          <SectionCard title="Monthly Attendance Trend" subtitle="Attendance heatmap for the week." className="overflow-hidden">
+          <SectionCard title="Monthly Attendance Trend" subtitle="Attendance heatmap for the week." className="overflow-hidden bg-temple-100 border-amber-200/60">
             <div className="h-[320px]">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={attendanceTrend} margin={{ top: 20, right: 20, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="attendanceColor" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.9} />
-                      <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.15} />
+                      <stop offset="5%" stopColor="#d97706" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.1} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" opacity={0.4} />
-                  <XAxis dataKey="day" tickLine={false} axisLine={false} tick={{ fill: "#64748b" }} />
-                  <YAxis tickLine={false} axisLine={false} tick={{ fill: "#64748b" }} />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="value" stroke="#8b5cf6" strokeWidth={3} dot={{ r: 4, fill: "#8b5cf6" }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" opacity={0.6} />
+                  <XAxis dataKey="day" tickLine={false} axisLine={false} tick={{ fill: "#64748b", fontWeight: 600 }} />
+                  <YAxis tickLine={false} axisLine={false} tick={{ fill: "#64748b", fontWeight: 600 }} />
+                  <Tooltip contentStyle={{ backgroundColor: "#ffffff", borderRadius: "14px", border: "1px solid #fcd34d", boxShadow: "0 4px 12px rgba(0,0,0,0.08)", color: "#1e293b", fontWeight: "700" }} />
+                  <Line type="monotone" dataKey="value" stroke="#d97706" strokeWidth={3} dot={{ r: 5, fill: "#d97706" }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
           </SectionCard>
 
-          <SectionCard title="Daily Attendance Table" subtitle="Quick status for today's roster." className="overflow-hidden">
-            <div className="overflow-x-auto rounded-[28px] border border-slate-200 bg-temple-100 shadow-sm">
-              <table className="min-w-full text-left text-sm text-slate-600">
-                <thead className="bg-slate-100 text-slate-500">
+          <SectionCard title="Daily Attendance Table" subtitle="Quick status for today's roster." className="overflow-hidden bg-temple-100 border-amber-200/60">
+            <div className="overflow-x-auto rounded-[24px] border border-amber-200/60 bg-white shadow-xs">
+              <table className="min-w-full text-left text-sm text-slate-700">
+                <thead className="bg-amber-50/70 border-b border-amber-200/80 text-amber-950 font-black">
                   <tr>
                     <th className="px-5 py-4">Employee</th>
                     <th className="px-5 py-4">Department</th>
@@ -58,18 +59,18 @@ const Attendance = () => {
                     <th className="px-5 py-4">Check-in</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-amber-100">
                   {employees.slice(0, 6).map((emp) => (
-                    <tr key={emp.id} className="border-b border-slate-200 hover:bg-slate-50">
-                      <td className="px-5 py-4 font-semibold text-slate-900">{emp.name}</td>
-                      <td className="px-5 py-4">{emp.department}</td>
-                      <td className="px-5 py-4">{emp.shift}</td>
+                    <tr key={emp.id} className="hover:bg-amber-50/40 transition">
+                      <td className="px-5 py-4 font-bold text-slate-900">{emp.name}</td>
+                      <td className="px-5 py-4 font-medium">{emp.department}</td>
+                      <td className="px-5 py-4 font-medium">{emp.shift}</td>
                       <td className="px-5 py-4">
-                        <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${emp.status === "Active" ? "bg-emerald-100 text-emerald-700" : emp.status === "On Leave" ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-700"}`}>
+                        <span className={`inline-flex rounded-lg px-3 py-1 text-xs font-black border ${emp.status === "Active" ? "bg-emerald-100 text-emerald-800 border-emerald-300" : emp.status === "On Leave" ? "bg-amber-100 text-amber-800 border-amber-300" : "bg-slate-100 text-slate-700 border-slate-300"}`}>
                           {emp.status}
                         </span>
                       </td>
-                      <td className="px-5 py-4 text-slate-700">{emp.status === "Active" ? "09:12 AM" : "—"}</td>
+                      <td className="px-5 py-4 text-slate-700 font-semibold">{emp.status === "Active" ? "09:12 AM" : "—"}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -79,39 +80,39 @@ const Attendance = () => {
         </div>
 
         <div className="space-y-5">
-          <SectionCard title="Attendance Trends" subtitle="Compare performance by day." className="overflow-hidden">
+          <SectionCard title="Attendance Trends" subtitle="Compare performance by day." className="overflow-hidden bg-temple-100 border-amber-200/60">
             <ResponsiveContainer width="100%" height={260}>
               <BarChart data={attendanceHeatmap} margin={{ top: 20, right: 0, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" opacity={0.4} />
-                <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fill: "#64748b" }} />
-                <YAxis tickLine={false} axisLine={false} tick={{ fill: "#64748b" }} />
-                <Tooltip />
-                <Bar dataKey="value" fill="#8b5cf6" radius={[12, 12, 0, 0]} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" opacity={0.6} />
+                <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fill: "#64748b", fontWeight: 600 }} />
+                <YAxis tickLine={false} axisLine={false} tick={{ fill: "#64748b", fontWeight: 600 }} />
+                <Tooltip contentStyle={{ backgroundColor: "#ffffff", borderRadius: "14px", border: "1px solid #fcd34d", boxShadow: "0 4px 12px rgba(0,0,0,0.08)", color: "#1e293b", fontWeight: "700" }} />
+                <Bar dataKey="value" fill="#d97706" radius={[12, 12, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </SectionCard>
 
-          <SectionCard title="Weekly Punctuality" subtitle="Top punctual employees and score." className="overflow-hidden">
+          <SectionCard title="Weekly Punctuality" subtitle="Top punctual employees and score." className="overflow-hidden bg-temple-100 border-amber-200/60">
             <div className="space-y-4">
-              <div className="rounded-[28px] bg-slate-50 p-5">
+              <div className="rounded-[24px] bg-white border border-amber-200/60 p-5 shadow-xs">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-sm text-slate-500">Punctuality Score</p>
-                    <h3 className="mt-2 text-3xl font-semibold text-slate-900">94.7%</h3>
+                    <p className="text-xs font-black uppercase text-slate-500">Punctuality Score</p>
+                    <h3 className="mt-1 text-3xl font-black text-amber-700">94.7%</h3>
                   </div>
-                  <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-700">Stable</span>
+                  <span className="rounded-lg bg-emerald-100 border border-emerald-300 px-3 py-1 text-xs font-black text-emerald-800">Stable</span>
                 </div>
               </div>
               <div className="space-y-3">
                 {employees.slice(0, 4).map((emp) => (
-                  <div key={emp.id} className="flex items-center justify-between rounded-[22px] border border-slate-200 bg-temple-100 p-4">
+                  <div key={emp.id} className="flex items-center justify-between rounded-[20px] border border-amber-200/60 bg-white p-4 shadow-xs">
                     <div>
-                      <p className="font-semibold text-slate-900">{emp.name}</p>
-                      <p className="text-sm text-slate-500">{emp.role}</p>
+                      <p className="font-extrabold text-slate-900">{emp.name}</p>
+                      <p className="text-xs font-semibold text-slate-500">{emp.role}</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold text-slate-900">{Math.floor(90 + Math.random() * 9)}%</p>
-                      <p className="text-xs text-slate-500">On time</p>
+                      <p className="font-black text-amber-700">98%</p>
+                      <p className="text-xs font-semibold text-slate-500">On time</p>
                     </div>
                   </div>
                 ))}
@@ -119,12 +120,12 @@ const Attendance = () => {
             </div>
           </SectionCard>
 
-          <SectionCard title="Attendance Calendar" subtitle="Mark shifts and attendance events." className="overflow-hidden">
-            <div className="grid gap-3 rounded-[28px] border border-slate-200 bg-slate-50 p-5 text-sm text-slate-600">
+          <SectionCard title="Attendance Calendar" subtitle="Mark shifts and attendance events." className="overflow-hidden bg-temple-100 border-amber-200/60">
+            <div className="grid gap-3 rounded-[24px] border border-amber-200/60 bg-white p-5 text-sm text-slate-700">
               {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
-                <div key={day} className="flex items-center justify-between rounded-2xl bg-temple-100 px-4 py-3 shadow-sm">
-                  <span>{day}</span>
-                  <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">21/22</span>
+                <div key={day} className="flex items-center justify-between rounded-xl bg-amber-50/70 px-4 py-2.5 border border-amber-200/60">
+                  <span className="font-extrabold text-amber-950">{day}</span>
+                  <span className="rounded-lg bg-emerald-100 border border-emerald-300 px-3 py-0.5 text-xs font-black text-emerald-800">21/22</span>
                 </div>
               ))}
             </div>

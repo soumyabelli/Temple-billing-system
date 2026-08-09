@@ -387,19 +387,19 @@ const AddEmployee = () => {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="rounded-[32px] border border-white/15 bg-gradient-to-r from-[#2c1c4f] via-[#4c3a7d] to-[#8b67cf] p-6 text-white shadow-2xl shadow-violet-500/20 backdrop-blur-xl">
+      <div className="rounded-[32px] border border-amber-200/60 bg-gradient-to-r from-amber-500/15 via-orange-500/15 to-amber-600/15 p-7 text-[#4a2b0f] shadow-md backdrop-blur-md">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-sm uppercase tracking-[0.28em] text-amber-300/80">Employee Management</p>
-            <h1 className="mt-3 text-4xl font-bold tracking-tight">Add Employee</h1>
-            <p className="max-w-2xl text-slate-200/90 mt-2">
-              Onboard a new temple employee in three simple steps.
+            <p className="text-xs uppercase tracking-[0.28em] font-extrabold text-[#7a4918]">Employee Management</p>
+            <h1 className="mt-2 text-3xl sm:text-4xl font-extrabold tracking-tight text-[#4a2b0f]">Add Employee</h1>
+            <p className="max-w-2xl text-[#7a4918] font-medium text-base mt-2">
+              Onboard a new temple employee with complete personal, job, and payment details for Sri Shanti Mahadev Mandir.
             </p>
           </div>
           <button
             type="button"
             onClick={handleSaveDraft}
-            className="inline-flex items-center gap-2 rounded-full bg-amber-400 px-5 py-3 font-semibold text-slate-950 shadow-xl shadow-amber-500/20 transition hover:-translate-y-0.5"
+            className="inline-flex items-center gap-2 rounded-2xl bg-amber-600 px-6 py-3 font-extrabold text-white shadow-md transition hover:bg-amber-700 hover:scale-105"
           >
             <FiSave /> Save Draft
           </button>
@@ -1002,7 +1002,7 @@ const AddEmployee = () => {
                   <button
                     type="button"
                     onClick={handleNext}
-                    className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-slate-800"
+                    className="inline-flex items-center gap-2 rounded-2xl bg-amber-600 px-5 py-3 text-sm font-extrabold text-white shadow-md transition hover:bg-amber-700"
                   >
                     Continue <FiChevronRight />
                   </button>
@@ -1010,7 +1010,7 @@ const AddEmployee = () => {
                   <button
                     type="submit"
                     disabled={isSaving}
-                    className="rounded-full bg-amber-400 px-6 py-3 text-sm font-semibold text-slate-950 shadow-lg hover:bg-amber-500 transition disabled:opacity-60"
+                    className="rounded-2xl bg-amber-600 px-6 py-3 text-sm font-extrabold text-white shadow-md hover:bg-amber-700 transition disabled:opacity-60"
                   >
                     {isSaving ? "Saving…" : "Save Employee"}
                   </button>
@@ -1022,13 +1022,13 @@ const AddEmployee = () => {
 
         {/* Live Preview Card */}
         <SectionCard title="Live Preview" subtitle="Profile preview updates as you type." className="h-full">
-          <div className="space-y-5 rounded-[28px] border border-slate-200 bg-slate-50 p-6 shadow-inner shadow-slate-200/30">
+          <div className="space-y-5 rounded-[28px] border border-amber-200/60 bg-amber-50/50 p-6 shadow-inner">
             {/* Avatar */}
             <div className="flex items-center gap-4">
               {photoPreview ? (
                 <img src={photoPreview} alt="Preview" className="h-20 w-20 rounded-3xl object-cover border border-slate-200" />
               ) : (
-                <div className="h-20 w-20 rounded-3xl bg-gradient-to-br from-violet-400 to-purple-600 flex items-center justify-center text-white text-3xl font-bold">
+                <div className="h-20 w-20 rounded-3xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white text-3xl font-bold shadow-md">
                   {form.name ? form.name[0].toUpperCase() : "?"}
                 </div>
               )}

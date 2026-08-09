@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import SectionCard from "../../../components/admin/employee/SectionCard";
 import { getPerformanceDashboard } from "../../../services/payrollService";
 
@@ -39,66 +39,66 @@ const Performance = () => {
     const totalExtraDuty = leaderboard.reduce((sum, item) => sum + Number(item.extraDutyDays || 0), 0);
 
     return [
-      { title: "Top Performers", value: summary.topPerformers || 0, accent: "bg-violet-100 text-violet-700" },
-      { title: "Total Present Days", value: totalPresent, accent: "bg-emerald-100 text-emerald-700" },
-      { title: "Extra Duty Days", value: totalExtraDuty, accent: "bg-sky-100 text-sky-700" },
-      { title: "Attendance Score", value: `${summary.attendanceScore || 0}%`, accent: "bg-amber-100 text-amber-700" },
+      { title: "Top Performers", value: summary.topPerformers || 0, accent: "bg-[#fffbeb] border-amber-300 text-amber-900" },
+      { title: "Total Present Days", value: totalPresent, accent: "bg-emerald-50 border-emerald-300 text-emerald-900" },
+      { title: "Extra Duty Days", value: totalExtraDuty, accent: "bg-sky-50 border-sky-300 text-sky-900" },
+      { title: "Attendance Score", value: `${summary.attendanceScore || 0}%`, accent: "bg-orange-50 border-orange-300 text-orange-900" },
     ];
   }, [dashboard]);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 text-slate-800">
       <SectionCard
         title="Performance Analytics"
-        subtitle="Leaderboard based on present days and extra duty completed this month."
-        className="bg-gradient-to-r from-[#211d4f] via-[#473d92] to-[#8f6be0] text-white border-transparent shadow-2xl shadow-violet-600/20"
+        subtitle="Leaderboard based on present days and extra duty completed this month for Sri Shanti Mahadev Mandir."
+        className="bg-gradient-to-r from-amber-500/15 via-orange-500/15 to-amber-600/15 text-[#4a2b0f] border border-amber-200/60 shadow-md backdrop-blur-md"
       >
         <div className="mb-5 flex flex-wrap items-center gap-3">
-          <label className="text-sm text-white/80">
+          <label className="text-sm font-extrabold text-[#7a4918]">
             Review Month
             <input
               type="month"
               value={monthKey}
               onChange={(event) => setMonthKey(event.target.value)}
-              className="ml-3 rounded-xl border border-white/20 bg-temple-100/10 px-3 py-2 text-white outline-none"
+              className="ml-3 rounded-2xl border border-slate-300 bg-white px-4 py-2 text-slate-800 font-semibold shadow-xs outline-none focus:border-amber-500"
             />
           </label>
         </div>
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
           {performanceTiles.map((tile) => (
-            <div key={tile.title} className={`rounded-[28px] border border-white/10 px-5 py-6 ${tile.accent} bg-temple-100/10 shadow-xl shadow-slate-900/10`}>
-              <p className="text-sm uppercase tracking-[0.16em] text-slate-100/70">{tile.title}</p>
-              <p className="mt-4 text-3xl font-semibold text-white">{tile.value}</p>
+            <div key={tile.title} className={`rounded-[28px] border p-5 ${tile.accent} bg-white shadow-xs`}>
+              <p className="text-xs font-black uppercase tracking-wider">{tile.title}</p>
+              <p className="mt-3 text-3xl font-black">{tile.value}</p>
             </div>
           ))}
         </div>
       </SectionCard>
 
       {error ? (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">{error}</div>
       ) : null}
 
-      <SectionCard title="Performance Leaderboard" subtitle="Ranked by present days and extra duty for this month." className="overflow-hidden">
-        <div className="space-y-4">
+      <SectionCard title="Performance Leaderboard" subtitle="Ranked by present days and extra duty for this month." className="overflow-hidden bg-temple-100 border-amber-200/60">
+        <div className="space-y-3">
           {loading ? (
-            <p className="text-sm text-slate-500">Loading leaderboard…</p>
+            <p className="text-sm font-semibold text-slate-500">Loading leaderboard…</p>
           ) : (dashboard?.leaderboard || []).length === 0 ? (
-            <p className="text-sm text-slate-500">No attendance or extra duty records for this month yet.</p>
+            <p className="text-sm font-semibold text-slate-500">No attendance or extra duty records for this month yet.</p>
           ) : (
             dashboard.leaderboard.map((person) => (
-              <div key={`${person.rank}-${person.name}`} className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 shadow-sm">
+              <div key={`${person.rank}-${person.name}`} className="rounded-[22px] border border-amber-200/60 bg-white p-4 shadow-xs">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-4">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-violet-100 text-sm font-bold text-violet-700">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 border border-amber-300 text-sm font-black text-amber-900">
                       #{person.rank}
                     </span>
                     <div>
-                      <p className="font-semibold text-slate-900">{person.name}</p>
-                      <p className="text-sm text-slate-500">{person.department}</p>
-                      <p className="mt-1 text-sm text-slate-600">{person.metric}</p>
+                      <p className="font-extrabold text-slate-900">{person.name}</p>
+                      <p className="text-xs font-semibold text-slate-500">{person.department}</p>
+                      <p className="mt-1 text-xs font-semibold text-amber-800">{person.metric}</p>
                     </div>
                   </div>
-                  <span className="rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-700">
+                  <span className="rounded-lg bg-amber-100 border border-amber-300 px-3 py-1 text-xs font-black text-amber-900">
                     Score {person.score}
                   </span>
                 </div>
