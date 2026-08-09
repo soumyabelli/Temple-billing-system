@@ -369,8 +369,30 @@ const PriestInventory = () => {
                       onChange={(e) => { setForm(p => ({ ...p, reason: e.target.value })); setError(""); }}
                     />
                   </div>
-                  <button type="submit" disabled={submitting}>
-                    {submitting ? "Submitting..." : "Submit Request"}
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    style={{
+                      width: "100%",
+                      padding: "14px 20px",
+                      backgroundColor: submitting ? "#94a3b8" : "#d97706",
+                      color: "#ffffff",
+                      border: "none",
+                      borderRadius: "12px",
+                      fontSize: "15px",
+                      fontWeight: "800",
+                      letterSpacing: "0.5px",
+                      cursor: submitting ? "not-allowed" : "pointer",
+                      boxShadow: "0 4px 14px rgba(217, 119, 6, 0.4)",
+                      transition: "all 0.2s ease",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "8px",
+                      marginTop: "16px",
+                    }}
+                  >
+                    {submitting ? "Submitting Request..." : "🚀 Submit Inventory Request"}
                   </button>
                 </form>
               </div>

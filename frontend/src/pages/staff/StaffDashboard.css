@@ -954,6 +954,21 @@
 
 .inventory-form-card button {
   width: 100%;
+  padding: 14px 20px;
+  background-color: #d97706;
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(217, 119, 6, 0.4);
+  transition: all 0.2s ease;
+}
+
+.inventory-form-card button:hover {
+  background-color: #b45309;
+  transform: translateY(-1px);
 }
 
 .inventory-status-list {
