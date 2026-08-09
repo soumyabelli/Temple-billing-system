@@ -3,6 +3,7 @@ import { getProfitLoss, getTransactions } from "../../../services/accountService
 import { toast } from "react-toastify";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import {
   FaArrowUp,
   FaArrowDown,
@@ -10,10 +11,41 @@ import {
   FaDownload,
   FaSyncAlt,
   FaFilter,
-  FaChartPie,
+  FaDonate,
+  FaUtensils,
+  FaBed,
+  FaTools,
+  FaBoxes,
+  FaBuilding,
   FaMoneyBillWave,
   FaReceipt,
+  FaPrescriptionBottle,
+  FaCalendarCheck,
+  FaExclamationCircle,
 } from "react-icons/fa";
+import { MdTempleBuddhist } from "react-icons/md";
+
+const INCOME_COLORS = ["#10b981", "#06b6d4", "#8b5cf6", "#f59e0b", "#ec4899", "#3b82f6"];
+const EXPENSE_COLORS = ["#ef4444", "#f97316", "#a855f7", "#eab308", "#14b8a6", "#6366f1", "#84cc16"];
+
+const getSourceIcon = (source) => {
+  const s = source.toLowerCase();
+  if (s.includes("donat")) return <FaDonate className="text-emerald-600 text-lg" />;
+  if (s.includes("pooja") || s.includes("seva")) return <MdTempleBuddhist className="text-amber-600 text-xl" />;
+  if (s.includes("prasad")) return <FaUtensils className="text-orange-600 text-lg" />;
+  if (s.includes("room") || s.includes("stay")) return <FaBed className="text-blue-600 text-lg" />;
+  return <FaMoneyBillWave className="text-teal-600 text-lg" />;
+};
+
+const getCategoryIcon = (category) => {
+  const c = category.toLowerCase();
+  if (c.includes("repair")) return <FaTools className="text-rose-600 text-lg" />;
+  if (c.includes("purchase") || c.includes("inventory")) return <FaBoxes className="text-amber-600 text-lg" />;
+  if (c.includes("maint") || c.includes("temple")) return <FaBuilding className="text-indigo-600 text-lg" />;
+  if (c.includes("annadan") || c.includes("food")) return <FaUtensils className="text-orange-600 text-lg" />;
+  if (c.includes("suppl")) return <FaPrescriptionBottle className="text-purple-600 text-lg" />;
+  return <FaReceipt className="text-slate-600 text-lg" />;
+};
 
 const ProfitLossView = ({ hideHeader = false }) => {
   const [data, setData] = useState({
@@ -28,31 +60,33 @@ const ProfitLossView = ({ hideHeader = false }) => {
   const [toDate, setToDate] = useState("");
   const [selectedPreset, setSelectedPreset] = useState("all");
 
+  const formatDateStr = (d) => {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
   const loadPL = async () => {
     setLoading(true);
     try {
-      // 1. Fetch backend P&L data
-      let apiPL = null;
-      try {
-        apiPL = await getProfitLoss();
-      } catch (err) {
-        console.warn("Backend P&L endpoint idle, building from transactions", err);
-      }
+      let params = {};
+      if (fromDate) params.startDate = fromDate;
+      if (toDate) params.endDate = toDate;
 
-      // 2. Fetch backend live transactions
+      // 1. Fetch backend transactions
       let backendTransactions = [];
       try {
-        const txs = await getTransactions();
+        const txs = await getTransactions(params);
         if (Array.isArray(txs)) backendTransactions = txs;
       } catch (err) {
-        console.warn("Backend transactions idle", err);
+        console.warn("Backend transactions endpoint idle", err);
       }
 
-      // 3. Fetch manual entries from localStorage
+      // 2. Fetch manual entries from localStorage
       const savedManual = localStorage.getItem("templeManualEntries_v1");
       const manualEntries = savedManual ? JSON.parse(savedManual) : [];
 
-      // 4. Fetch manual expense vouchers from localStorage
       const savedExpenses = localStorage.getItem("templeManualExpenses_v1");
       const manualExpenses = savedExpenses ? JSON.parse(savedExpenses) : [];
 
@@ -85,7 +119,7 @@ const ProfitLossView = ({ hideHeader = false }) => {
 
       const allLiveTransactions = [...formattedBackend, ...formattedManual];
 
-      // Filter by Date Range if selected
+      // Strictly filter by Date Range
       let filtered = allLiveTransactions;
       if (fromDate) {
         const start = new Date(fromDate);
@@ -98,7 +132,7 @@ const ProfitLossView = ({ hideHeader = false }) => {
         filtered = filtered.filter((t) => new Date(t.date) <= end);
       }
 
-      // Aggregate Income & Expenses
+      // Aggregate filtered records
       let totalIncome = 0;
       let totalExpense = 0;
       const incomeBySource = {};
@@ -117,31 +151,23 @@ const ProfitLossView = ({ hideHeader = false }) => {
         }
       });
 
-      // Merge API baseline data if local transactions were incomplete
-      if (apiPL) {
-        if (apiPL.incomeBySource && Object.keys(incomeBySource).length === 0) {
-          Object.assign(incomeBySource, apiPL.incomeBySource);
-          totalIncome = Math.max(totalIncome, apiPL.totalIncome || 0);
-        } else if (apiPL.incomeBySource) {
-          // Fill missing sources from API if any
-          Object.entries(apiPL.incomeBySource).forEach(([src, amt]) => {
-            if (!incomeBySource[src]) {
-              incomeBySource[src] = amt;
-              totalIncome += amt;
-            }
-          });
-        }
-
-        if (apiPL.expenseByCategory && Object.keys(expenseByCategory).length === 0) {
-          Object.assign(expenseByCategory, apiPL.expenseByCategory);
-          totalExpense = Math.max(totalExpense, apiPL.totalExpense || 0);
-        } else if (apiPL.expenseByCategory) {
-          Object.entries(apiPL.expenseByCategory).forEach(([cat, amt]) => {
-            if (!expenseByCategory[cat]) {
-              expenseByCategory[cat] = amt;
-              totalExpense += amt;
-            }
-          });
+      // If no date filters applied and local array is empty, fetch backend P&L endpoint
+      if (!fromDate && !toDate && Object.keys(incomeBySource).length === 0 && Object.keys(expenseByCategory).length === 0) {
+        try {
+          const apiPL = await getProfitLoss();
+          if (apiPL) {
+            setData({
+              totalIncome: apiPL.totalIncome || 0,
+              totalExpense: apiPL.totalExpense || 0,
+              netProfit: apiPL.netProfit || 0,
+              incomeBySource: apiPL.incomeBySource || {},
+              expenseByCategory: apiPL.expenseByCategory || {},
+            });
+            setLoading(false);
+            return;
+          }
+        } catch (e) {
+          // ignore fallback
         }
       }
 
@@ -167,15 +193,16 @@ const ProfitLossView = ({ hideHeader = false }) => {
   const handlePresetChange = (preset) => {
     setSelectedPreset(preset);
     const now = new Date();
+
     if (preset === "today") {
-      const todayStr = now.toISOString().split("T")[0];
+      const todayStr = formatDateStr(now);
       setFromDate(todayStr);
       setToDate(todayStr);
     } else if (preset === "thisMonth") {
-      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
-      const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split("T")[0];
-      setFromDate(firstDay);
-      setToDate(lastDay);
+      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+      const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      setFromDate(formatDateStr(firstDay));
+      setToDate(formatDateStr(lastDay));
     } else if (preset === "fy2526") {
       setFromDate("2025-04-01");
       setToDate("2026-03-31");
@@ -188,11 +215,28 @@ const ProfitLossView = ({ hideHeader = false }) => {
     }
   };
 
+  const handleFromDateChange = (val) => {
+    setSelectedPreset("custom");
+    if (toDate && val > toDate) {
+      toast.warning("Adjusted To Date to match From Date");
+      setToDate(val);
+    }
+    setFromDate(val);
+  };
+
+  const handleToDateChange = (val) => {
+    setSelectedPreset("custom");
+    if (fromDate && val < fromDate) {
+      toast.warning("Adjusted From Date to match To Date");
+      setFromDate(val);
+    }
+    setToDate(val);
+  };
+
   const handleDownloadPDF = () => {
     try {
       const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
 
-      // Header Banner
       doc.setFont("helvetica", "bold");
       doc.setFontSize(18);
       doc.setTextColor(188, 108, 16);
@@ -207,7 +251,6 @@ const ProfitLossView = ({ hideHeader = false }) => {
       doc.text(`Generated on: ${new Date().toLocaleString("en-IN")}`, 14, 27);
       doc.text(`Period Filter: ${fromDate || "All Time"} to ${toDate || "Present"}`, 14, 32);
 
-      // Summary Card Box
       doc.setFillColor(250, 247, 242);
       doc.roundedRect(14, 36, 182, 20, 3, 3, "F");
 
@@ -222,7 +265,6 @@ const ProfitLossView = ({ hideHeader = false }) => {
       doc.setTextColor(180, 83, 9);
       doc.text(`Net Profit: Rs ${data.netProfit?.toLocaleString("en-IN")}`, 140, 48);
 
-      // Income Table
       const incomeRows = Object.entries(data.incomeBySource || {}).map(([src, amt]) => [
         src,
         `Rs ${amt?.toLocaleString("en-IN")}`,
@@ -238,7 +280,6 @@ const ProfitLossView = ({ hideHeader = false }) => {
         styles: { fontSize: 9, cellPadding: 3 },
       });
 
-      // Expense Table
       const expenseRows = Object.entries(data.expenseByCategory || {}).map(([cat, amt]) => [
         cat,
         `Rs ${amt?.toLocaleString("en-IN")}`,
@@ -268,11 +309,20 @@ const ProfitLossView = ({ hideHeader = false }) => {
     }
   };
 
+  // Chart data formatting
+  const incomePieData = Object.entries(data.incomeBySource || {})
+    .filter(([_, amt]) => amt > 0)
+    .map(([name, value]) => ({ name, value }));
+
+  const expensePieData = Object.entries(data.expenseByCategory || {})
+    .filter(([_, amt]) => amt > 0)
+    .map(([name, value]) => ({ name, value }));
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-12">
         <div className="flex items-center gap-3 text-amber-800 font-bold text-lg">
-          <FaSyncAlt className="animate-spin text-amber-600" /> Loading Live Profit & Loss Data...
+          <FaSyncAlt className="animate-spin text-amber-600" /> Calculating Period Metrics...
         </div>
       </div>
     );
@@ -288,7 +338,7 @@ const ProfitLossView = ({ hideHeader = false }) => {
                 Profit & Loss
               </h1>
               <p className="mt-1 text-base font-medium text-[#7a4918]">
-                Live financial overview of Income vs Expenses across all temple operations.
+                Live financial overview of Income vs Expenses with date filtering and interactive analytics.
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
@@ -332,7 +382,7 @@ const ProfitLossView = ({ hideHeader = false }) => {
                 onClick={() => handlePresetChange(preset.id)}
                 className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${
                   selectedPreset === preset.id
-                    ? "bg-amber-600 text-white shadow-sm"
+                    ? "bg-amber-600 text-white shadow-sm shadow-amber-600/30 scale-105"
                     : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                 }`}
               >
@@ -342,17 +392,14 @@ const ProfitLossView = ({ hideHeader = false }) => {
           </div>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className="block text-xs font-bold uppercase text-slate-500 mb-1">From Date</label>
             <input
               type="date"
               value={fromDate}
-              onChange={(e) => {
-                setSelectedPreset("custom");
-                setFromDate(e.target.value);
-              }}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 px-3 text-sm font-semibold text-slate-800 outline-none focus:border-amber-500"
+              onChange={(e) => handleFromDateChange(e.target.value)}
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 px-3 text-sm font-semibold text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
             />
           </div>
           <div>
@@ -360,19 +407,30 @@ const ProfitLossView = ({ hideHeader = false }) => {
             <input
               type="date"
               value={toDate}
-              onChange={(e) => {
-                setSelectedPreset("custom");
-                setToDate(e.target.value);
-              }}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 px-3 text-sm font-semibold text-slate-800 outline-none focus:border-amber-500"
+              onChange={(e) => handleToDateChange(e.target.value)}
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 px-3 text-sm font-semibold text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
             />
           </div>
         </div>
+
+        {(fromDate || toDate) && (
+          <div className="mt-3 flex items-center justify-between text-xs font-semibold text-amber-900 bg-amber-50 rounded-xl px-3.5 py-2 border border-amber-200">
+            <span>
+              Showing metrics for period: <strong className="text-amber-950">{fromDate || "Start"}</strong> to <strong className="text-amber-950">{toDate || "Today"}</strong>
+            </span>
+            <button
+              onClick={() => handlePresetChange("all")}
+              className="text-amber-700 underline font-bold hover:text-amber-900"
+            >
+              Clear Filter
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* TOP SUMMARY STAT CARDS */}
+      {/* SUMMARY CARDS */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <div className="bg-emerald-50/80 border border-emerald-200 p-6 rounded-3xl shadow-sm flex items-center justify-between">
+        <div className="bg-emerald-50/90 border border-emerald-200/80 p-6 rounded-3xl shadow-sm flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2 mb-2">
               <span className="p-2.5 bg-emerald-100 text-emerald-700 rounded-xl text-lg">
@@ -384,7 +442,7 @@ const ProfitLossView = ({ hideHeader = false }) => {
           </div>
         </div>
 
-        <div className="bg-red-50/80 border border-red-200 p-6 rounded-3xl shadow-sm flex items-center justify-between">
+        <div className="bg-red-50/90 border border-red-200/80 p-6 rounded-3xl shadow-sm flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2 mb-2">
               <span className="p-2.5 bg-red-100 text-red-700 rounded-xl text-lg">
@@ -396,13 +454,13 @@ const ProfitLossView = ({ hideHeader = false }) => {
           </div>
         </div>
 
-        <div className="bg-sky-50/80 border border-sky-200 p-6 rounded-3xl shadow-sm flex items-center justify-between">
+        <div className="bg-amber-50/90 border border-amber-200/80 p-6 rounded-3xl shadow-sm flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="p-2.5 bg-sky-100 text-sky-700 rounded-xl text-lg">
+              <span className="p-2.5 bg-amber-100 text-amber-800 rounded-xl text-lg">
                 <FaWallet />
               </span>
-              <h4 className="text-xs font-extrabold uppercase tracking-wider text-sky-800">Net Profit / Loss</h4>
+              <h4 className="text-xs font-extrabold uppercase tracking-wider text-amber-900">Net Profit / Loss</h4>
             </div>
             <p className={`text-3xl font-black ${data.netProfit >= 0 ? "text-emerald-900" : "text-red-900"}`}>
               Rs {data.netProfit?.toLocaleString("en-IN")}
@@ -411,84 +469,154 @@ const ProfitLossView = ({ hideHeader = false }) => {
         </div>
       </section>
 
-      {/* INCOME vs EXPENSE BREAKDOWN */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* INCOME BY SOURCE */}
-        <section className="bg-temple-100 border border-emerald-100 p-6 rounded-3xl shadow-sm">
-          <div className="flex items-center justify-between pb-4 border-b border-slate-200 mb-4">
+      {/* ATTRACTIVE ANALYTICS SECTION */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* INCOME BY SOURCE CARD GRID & DONUT CHART */}
+        <section className="bg-temple-100 border border-emerald-200/60 p-6 rounded-3xl shadow-md">
+          <div className="flex items-center justify-between pb-4 border-b border-slate-200/80 mb-5">
             <h3 className="text-lg font-extrabold text-slate-800 flex items-center gap-2">
               <FaMoneyBillWave className="text-emerald-600" /> Income by Source
             </h3>
             <span className="text-xs font-bold bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full">
-              {Object.keys(data.incomeBySource || {}).length} Sources
+              {incomePieData.length} Sources
             </span>
           </div>
 
-          <div className="space-y-5">
-            {Object.entries(data.incomeBySource || {}).map(([source, amt]) => {
-              const sharePct = data.totalIncome > 0 ? ((amt / data.totalIncome) * 100).toFixed(1) : 0;
-              return (
-                <div key={source} className="space-y-1.5">
-                  <div className="flex justify-between items-center text-sm font-semibold text-slate-700">
-                    <span className="font-bold text-slate-800">{source}</span>
-                    <div className="text-right">
-                      <span className="font-extrabold text-slate-900">Rs {amt?.toLocaleString("en-IN")}</span>
-                      <span className="text-xs text-emerald-700 ml-2 font-bold">({sharePct}%)</span>
-                    </div>
-                  </div>
-                  <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-                    <div
-                      className="bg-emerald-500 h-full rounded-full transition-all duration-500"
-                      style={{ width: `${Math.min(100, Math.max(5, sharePct))}%` }}
+          {incomePieData.length > 0 ? (
+            <div className="space-y-6">
+              {/* Donut Chart Visualization */}
+              <div className="h-48 w-full flex items-center justify-center bg-emerald-50/40 rounded-2xl p-2 border border-emerald-100">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={incomePieData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={45}
+                      outerRadius={75}
+                      paddingAngle={4}
+                      dataKey="value"
+                    >
+                      {incomePieData.map((_, index) => (
+                        <Cell key={`cell-${index}`} fill={INCOME_COLORS[index % INCOME_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      formatter={(val) => [`Rs ${Number(val).toLocaleString("en-IN")}`, "Amount"]}
+                      contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
                     />
-                  </div>
-                </div>
-              );
-            })}
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
 
-            {Object.keys(data.incomeBySource || {}).length === 0 && (
-              <p className="text-center py-6 text-sm font-semibold text-slate-400">No income recorded for this period.</p>
-            )}
-          </div>
+              {/* Attractive Income Cards Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                {Object.entries(data.incomeBySource || {})
+                  .filter(([_, amt]) => amt > 0)
+                  .map(([source, amt], idx) => {
+                    const sharePct = data.totalIncome > 0 ? ((amt / data.totalIncome) * 100).toFixed(1) : 0;
+                    return (
+                      <div
+                        key={source}
+                        className="flex items-center justify-between p-3.5 rounded-2xl bg-white border border-slate-200/70 shadow-sm hover:border-emerald-300 hover:shadow-md transition"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                            {getSourceIcon(source)}
+                          </div>
+                          <div>
+                            <p className="text-xs font-extrabold text-slate-800">{source}</p>
+                            <p className="text-sm font-black text-slate-900 mt-0.5">Rs {amt?.toLocaleString("en-IN")}</p>
+                          </div>
+                        </div>
+                        <span className="text-xs font-black px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          {sharePct}%
+                        </span>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-10 text-slate-400">
+              <FaExclamationCircle className="mx-auto text-3xl mb-2 text-slate-300" />
+              <p className="text-sm font-semibold">No income recorded for this period.</p>
+            </div>
+          )}
         </section>
 
-        {/* EXPENSES BY CATEGORY */}
-        <section className="bg-temple-100 border border-red-100 p-6 rounded-3xl shadow-sm">
-          <div className="flex items-center justify-between pb-4 border-b border-slate-200 mb-4">
+        {/* EXPENSES BY CATEGORY CARD GRID & DONUT CHART */}
+        <section className="bg-temple-100 border border-red-200/60 p-6 rounded-3xl shadow-md">
+          <div className="flex items-center justify-between pb-4 border-b border-slate-200/80 mb-5">
             <h3 className="text-lg font-extrabold text-slate-800 flex items-center gap-2">
               <FaReceipt className="text-red-600" /> Expenses by Category
             </h3>
             <span className="text-xs font-bold bg-red-100 text-red-800 px-3 py-1 rounded-full">
-              {Object.keys(data.expenseByCategory || {}).length} Categories
+              {expensePieData.length} Categories
             </span>
           </div>
 
-          <div className="space-y-5">
-            {Object.entries(data.expenseByCategory || {}).map(([cat, amt]) => {
-              const sharePct = data.totalExpense > 0 ? ((amt / data.totalExpense) * 100).toFixed(1) : 0;
-              return (
-                <div key={cat} className="space-y-1.5">
-                  <div className="flex justify-between items-center text-sm font-semibold text-slate-700">
-                    <span className="font-bold text-slate-800">{cat}</span>
-                    <div className="text-right">
-                      <span className="font-extrabold text-slate-900">Rs {amt?.toLocaleString("en-IN")}</span>
-                      <span className="text-xs text-red-700 ml-2 font-bold">({sharePct}%)</span>
-                    </div>
-                  </div>
-                  <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-                    <div
-                      className="bg-red-500 h-full rounded-full transition-all duration-500"
-                      style={{ width: `${Math.min(100, Math.max(5, sharePct))}%` }}
+          {expensePieData.length > 0 ? (
+            <div className="space-y-6">
+              {/* Donut Chart Visualization */}
+              <div className="h-48 w-full flex items-center justify-center bg-red-50/40 rounded-2xl p-2 border border-red-100">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={expensePieData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={45}
+                      outerRadius={75}
+                      paddingAngle={4}
+                      dataKey="value"
+                    >
+                      {expensePieData.map((_, index) => (
+                        <Cell key={`cell-${index}`} fill={EXPENSE_COLORS[index % EXPENSE_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      formatter={(val) => [`Rs ${Number(val).toLocaleString("en-IN")}`, "Amount"]}
+                      contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
                     />
-                  </div>
-                </div>
-              );
-            })}
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
 
-            {Object.keys(data.expenseByCategory || {}).length === 0 && (
-              <p className="text-center py-6 text-sm font-semibold text-slate-400">No expenses recorded for this period.</p>
-            )}
-          </div>
+              {/* Attractive Expense Cards Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                {Object.entries(data.expenseByCategory || {})
+                  .filter(([_, amt]) => amt > 0)
+                  .map(([category, amt], idx) => {
+                    const sharePct = data.totalExpense > 0 ? ((amt / data.totalExpense) * 100).toFixed(1) : 0;
+                    return (
+                      <div
+                        key={category}
+                        className="flex items-center justify-between p-3.5 rounded-2xl bg-white border border-slate-200/70 shadow-sm hover:border-red-300 hover:shadow-md transition"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                            {getCategoryIcon(category)}
+                          </div>
+                          <div>
+                            <p className="text-xs font-extrabold text-slate-800">{category}</p>
+                            <p className="text-sm font-black text-slate-900 mt-0.5">Rs {amt?.toLocaleString("en-IN")}</p>
+                          </div>
+                        </div>
+                        <span className="text-xs font-black px-2.5 py-1 rounded-lg bg-red-50 text-red-700 border border-red-200">
+                          {sharePct}%
+                        </span>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-10 text-slate-400">
+              <FaExclamationCircle className="mx-auto text-3xl mb-2 text-slate-300" />
+              <p className="text-sm font-semibold">No expenses recorded for this period.</p>
+            </div>
+          )}
         </section>
       </div>
     </div>
