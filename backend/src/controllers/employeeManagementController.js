@@ -588,18 +588,33 @@ exports.deleteEmployee = async (req, res) => {
     const requestedStatus = normalizeStatus(req.body?.status || req.query.status || "Inactive");
     const status = ["Inactive", "Resigned"].includes(requestedStatus) ? requestedStatus : "Inactive";
     const actorName = await getActorName(req);
-    employee.status = status;
-    employee.deletedAt = new Date();
-    employee.deletedBy = actorName;
-    employee.updatedBy = actorName;
-    await employee.save();
-    await User.findOneAndUpdate(
-      { $or: [{ _id: employee.userId }, { employeeId: employee.employeeId }, { email: employee.email }] },
-      { status, accountEnabled: false }
+
+    const updatedEmployee = await Employee.findByIdAndUpdate(
+      employee._id,
+      {
+        status,
+        deletedAt: new Date(),
+        deletedBy: actorName,
+        updatedBy: actorName,
+      },
+      { new: true }
     );
+
+    const userQuery = [];
+    if (employee.userId) userQuery.push({ _id: employee.userId });
+    if (employee.employeeId) userQuery.push({ employeeId: employee.employeeId });
+    if (employee.email) userQuery.push({ email: employee.email });
+
+    if (userQuery.length > 0) {
+      await User.findOneAndUpdate(
+        { $or: userQuery },
+        { status, accountEnabled: false }
+      );
+    }
+
     return res.json({
       message: `Employee marked as ${status}. Historical records were preserved.`,
-      employee: sanitizeEmployee(employee),
+      employee: sanitizeEmployee(updatedEmployee),
     });
   } catch (error) {
     return res.status(500).json({ message: error.message });

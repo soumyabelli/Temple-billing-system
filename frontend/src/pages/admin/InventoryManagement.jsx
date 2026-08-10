@@ -78,15 +78,16 @@ const InventoryManagement = () => {
     setLoading(true);
     try {
       const headers = { Authorization: `Bearer ${localStorage.getItem("token")}` };
+      const t = new Date().getTime();
       const [it, req, cons, sup, ast, rep, pset, met] = await Promise.all([
-        axios.get(`${API_BASE}/admin/inventory-items`, { headers }),
-        axios.get(`${API_BASE}/staff/inventory-requests`, { headers }),
-        axios.get(`${API_BASE}/admin/inventory/reports/consumption`, { headers }),
-        axios.get(`${API_BASE}/admin/inventory-suppliers`, { headers }),
-        axios.get(`${API_BASE}/admin/inventory-assets`, { headers }),
-        axios.get(`${API_BASE}/admin/inventory-repairs`, { headers }),
-        axios.get(`${API_BASE}/pooja-settings`, { headers }),
-        axios.get(`${API_BASE}/admin/inventory-metrics`, { headers }).catch(() => ({ data: { metrics: null } })),
+        axios.get(`${API_BASE}/admin/inventory-items?t=${t}`, { headers }),
+        axios.get(`${API_BASE}/staff/inventory-requests?t=${t}`, { headers }),
+        axios.get(`${API_BASE}/admin/inventory/reports/consumption?t=${t}`, { headers }),
+        axios.get(`${API_BASE}/admin/inventory-suppliers?t=${t}`, { headers }),
+        axios.get(`${API_BASE}/admin/inventory-assets?t=${t}`, { headers }),
+        axios.get(`${API_BASE}/admin/inventory-repairs?t=${t}`, { headers }),
+        axios.get(`${API_BASE}/pooja-settings?t=${t}`, { headers }),
+        axios.get(`${API_BASE}/admin/inventory-metrics?t=${t}`, { headers }).catch(() => ({ data: { metrics: null } })),
       ]);
       setItems(it.data?.items || []);
       setRequests(req.data?.requests || []);
@@ -115,13 +116,15 @@ const InventoryManagement = () => {
       name: form.get("name"),
       unit: form.get("unit"),
       category: form.get("category"),
-      availableStock: Number(form.get("availableStock")),
       minimumStock: Number(form.get("minimumStock")),
       reorderLevel: Number(form.get("reorderLevel") || form.get("minimumStock")),
       lastSupplier: form.get("lastSupplier"),
       lastPurchasePrice: Number(form.get("lastPurchasePrice") || 0),
       isActive: form.get("isActive") === "on",
     };
+    if (form.has("availableStock")) {
+      data.availableStock = Number(form.get("availableStock"));
+    }
     try {
       const headers = { Authorization: `Bearer ${localStorage.getItem("token")}` };
       if (editItem) {
@@ -133,6 +136,17 @@ const InventoryManagement = () => {
       fetchData();
     } catch (err) {
       alert(err.response?.data?.message || "Error saving item");
+    }
+  };
+
+  const handleDeleteItem = async (id) => {
+    if (!window.confirm("Are you sure you want to completely delete this item from the database? This action cannot be undone.")) return;
+    try {
+      const headers = { Authorization: `Bearer ${localStorage.getItem("token")}` };
+      await axios.delete(`${API_BASE}/admin/inventory-items/${id}`, { headers });
+      fetchData();
+    } catch (err) {
+      alert(err.response?.data?.message || "Error deleting item");
     }
   };
 
@@ -428,6 +442,7 @@ const InventoryManagement = () => {
                         <button onClick={() => { setSelectedItem(item); setShowRestockModal(true); }} className="text-emerald-600 text-xs font-bold bg-emerald-50 px-2 py-1 rounded">Restock</button>
                         <button onClick={() => { setSelectedItem(item); setShowAdjustModal(true); }} className="text-amber-600 text-xs font-bold bg-amber-50 px-2 py-1 rounded">Adjust</button>
                         <button onClick={() => { setEditItem(item); setShowItemModal(true); }} className="text-blue-600 text-xs font-bold bg-blue-50 px-2 py-1 rounded">Edit</button>
+                        <button onClick={() => handleDeleteItem(item._id)} className="text-red-600 text-xs font-bold bg-red-50 px-2 py-1 rounded">Delete</button>
                       </td>
                     </tr>
                   ))}
@@ -719,6 +734,10 @@ const InventoryManagement = () => {
               </select>
               <div className="flex gap-2">
                 <div className="flex-1">
+                  <label className="block text-xs font-bold text-slate-500 mb-1">Initial Stock (Qty)</label>
+                  <input name="availableStock" type="number" defaultValue={editItem?.availableStock || 0} placeholder="Initial Stock" required className="w-full border p-2 rounded" disabled={!!editItem} />
+                </div>
+                <div className="flex-1">
                   <label className="block text-xs font-bold text-slate-500 mb-1">Min Stock</label>
                   <input name="minimumStock" type="number" defaultValue={editItem?.minimumStock || 0} placeholder="Min Stock" required className="w-full border p-2 rounded" />
                 </div>
@@ -727,6 +746,8 @@ const InventoryManagement = () => {
                   <input name="reorderLevel" type="number" defaultValue={editItem?.reorderLevel || 0} placeholder="Reorder Level" className="w-full border p-2 rounded" />
                 </div>
               </div>
+              <input name="lastSupplier" defaultValue={editItem?.lastSupplier} placeholder="Supplier Name" className="w-full border p-2 rounded" />
+              <input name="lastPurchasePrice" type="number" step="0.01" defaultValue={editItem?.lastPurchasePrice} placeholder="Price of single" className="w-full border p-2 rounded" />
               {editItem && (
                 <div className="flex items-center gap-2 mt-2">
                   <input type="checkbox" name="isActive" id="isActive" defaultChecked={editItem.isActive !== false} />

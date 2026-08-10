@@ -13,7 +13,8 @@ import {
 const COLORS = ['#10b981', '#ef4444', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
 
 const FinancialReports = () => {
-  const { role } = useAuth();
+  const { user } = useAuth();
+  const role = user?.role;
   const [isExporting, setIsExporting] = useState(false);
   const [monthlyData, setMonthlyData] = useState([]);
   const [annualData, setAnnualData] = useState(null);

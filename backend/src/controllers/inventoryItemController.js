@@ -43,6 +43,10 @@ const getAllInventoryItems = async (req, res) => {
 };
 
 const createInventoryItem = async (req, res) => {
+  const mongoose = require("mongoose");
+  const { recordTransaction } = require("../services/accountingService");
+  const session = await mongoose.startSession();
+
   try {
     const { name, unit, availableStock, minimumStock, reorderLevel, category, description, expiryDate, lastSupplier, lastPurchasePrice } = req.body;
 
@@ -55,29 +59,91 @@ const createInventoryItem = async (req, res) => {
         message: `Unit must be one of: ${INVENTORY_UNITS.join(", ")}`,
       });
     }
-    if (availableStock !== undefined && availableStock !== null && Number(availableStock) < 0) {
+
+    const parsedAvailableStock = Number(availableStock) || 0;
+    if (parsedAvailableStock < 0) {
       return res.status(400).json({ success: false, message: "Available stock must be a non-negative number." });
     }
     if (minimumStock === undefined || minimumStock === null || Number(minimumStock) < 0) {
       return res.status(400).json({ success: false, message: "Minimum stock must be a non-negative number." });
     }
 
-    const item = await InventoryItem.create({
-      name: clean(name),
-      unit: clean(unit),
-      availableStock: 0, // Enforce 0 initial stock for new items to enforce accounting workflow
-      minimumStock: Number(minimumStock),
-      reorderLevel: Number(reorderLevel || minimumStock),
-      category: clean(category),
-      description: clean(description),
-      expiryDate: expiryDate ? new Date(expiryDate) : undefined,
-    });
+    let resultItem;
+    await session.withTransaction(async () => {
+      // Check for duplicate manually before creating to avoid 11000 crashing transaction ungracefully
+      const existing = await InventoryItem.findOne({ name: clean(name), category: clean(category) }).session(session);
+      if (existing) {
+        throw new Error("DuplicateItem");
+      }
 
-    return res.status(201).json({ success: true, item });
+      const item = await InventoryItem.create([{
+        name: clean(name),
+        unit: clean(unit),
+        availableStock: parsedAvailableStock,
+        minimumStock: Number(minimumStock),
+        reorderLevel: Number(reorderLevel || minimumStock),
+        category: clean(category),
+        description: clean(description),
+        expiryDate: expiryDate ? new Date(expiryDate) : undefined,
+        lastSupplier: clean(lastSupplier),
+        lastPurchasePrice: Number(lastPurchasePrice || 0),
+        purchasePrice: Number(lastPurchasePrice || 0),
+      }], { session });
+
+      resultItem = item[0];
+
+      if (parsedAvailableStock > 0) {
+        const totalCost = parsedAvailableStock * Number(lastPurchasePrice || 0);
+
+        const restockRecord = await RestockHistory.create([{
+          item: resultItem._id,
+          itemName: resultItem.name,
+          quantity: parsedAvailableStock,
+          unit: resultItem.unit,
+          supplier: clean(lastSupplier),
+          purchaseDate: new Date(),
+          cost: totalCost,
+          invoiceUrl: "", 
+          restockedBy: req.user ? req.user.name || req.user.id : "Admin",
+          gst: 0,
+          remarks: "Initial Stock"
+        }], { session });
+
+        await InventoryLog.create([{
+          item: resultItem._id,
+          action: "Restocked",
+          quantity: parsedAvailableStock,
+          oldStock: 0,
+          newStock: parsedAvailableStock,
+          user: req.user ? req.user.id : null,
+          description: `Initial stock added: ${parsedAvailableStock} ${resultItem.unit}`
+        }], { session });
+
+        if (totalCost > 0) {
+          await recordTransaction({
+            transactionType: "Debit",
+            source: "Inventory",
+            category: "Inventory Purchase",
+            amount: totalCost,
+            date: new Date(),
+            paymentMethod: "System",
+            status: "Completed",
+            description: `Initial Stock Purchase: ${parsedAvailableStock} ${resultItem.unit} of ${resultItem.name} from ${clean(lastSupplier) || 'supplier'}.`,
+            invoiceNumber: "",
+            referenceId: restockRecord[0]._id,
+            referenceModel: "RestockHistory",
+            recordedBy: req.user ? req.user.id : null,
+          });
+        }
+      }
+    });
+    session.endSession();
+    return res.status(201).json({ success: true, item: resultItem });
   } catch (error) {
-    if (error.code === 11000) {
-      const errorCategory = clean(category) || "Miscellaneous Items";
-      return res.status(409).json({ success: false, message: `${clean(name)} already exists in the '${errorCategory}' category. Please edit the existing item instead of creating a duplicate.` });
+    session.endSession();
+    if (error.message === "DuplicateItem" || error.code === 11000) {
+      const errorCategory = clean(req.body.category) || "Miscellaneous Items";
+      return res.status(409).json({ success: false, message: `${clean(req.body.name)} already exists in the '${errorCategory}' category. Please edit the existing item instead of creating a duplicate.` });
     }
     return res.status(500).json({ success: false, message: error.message });
   }
