@@ -1285,3 +1285,29 @@ Thank you for your donation!
 To: 8095146883
 Message: Donation received! Amount: ₹5000. Transaction ID: N/A. Thank you! -Temple
 
+[2026-08-11T07:09:54.479Z] EMAIL
+To: deepthiskulal@gmail.com
+Subject: Temple Billing Receipt
+Receipt MB-190728
+Total Amount: ₹12000
+Thank you!
+
+[2026-08-11T07:09:54.515Z] SMS
+To: 8618001961
+Message: Receipt MB-190728 generated for ₹12000. -Temple
+
+[2026-08-11T07:13:04.532Z] EMAIL
+To: deepthiskulal@gmail.com
+Subject: Pooja Booking Confirmation
+Pooja Booking Confirmation
+Service: Multiple Items
+Date & Time: 2026-08-11T14:00
+Amount: ₹4000
+
+Please bring the receipt at the time of visiting the temple to perform the pooja.
+Thank you!
+
+[2026-08-11T07:13:04.535Z] SMS
+To: 8618001961
+Message: Pooja booking confirmed! Service: Multiple Items on 2026-08-11T14:00. Amount: ₹4000. Please bring receipt at temple. -Temple
+

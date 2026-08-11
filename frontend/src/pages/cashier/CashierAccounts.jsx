@@ -6,12 +6,12 @@ import "react-toastify/dist/ReactToastify.css";
 
 const CashierAccounts = () => {
   const [activeTab, setActiveTab] = useState("daily-cash-book");
-  
+
   // States
   const [metrics, setMetrics] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [pendingPayments, setPendingPayments] = useState([]);
-  
+
   // Form state
   const [closingForm, setClosingForm] = useState({
     openingCash: "",
@@ -88,11 +88,10 @@ const CashierAccounts = () => {
                 </td>
                 <td className="px-6 py-4 font-bold">₹{t.amount?.toFixed(2)}</td>
                 <td className="px-6 py-4">
-                  <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                    t.status === "Completed" ? "bg-green-100 text-green-700" : 
-                    t.status === "Pending Approval" ? "bg-amber-100 text-amber-700" : 
-                    "bg-red-100 text-red-700"
-                  }`}>
+                  <span className={`px-2 py-1 text-xs font-semibold rounded-full ${t.status === "Completed" ? "bg-green-100 text-green-700" :
+                      t.status === "Pending Approval" ? "bg-amber-100 text-amber-700" :
+                        "bg-red-100 text-red-700"
+                    }`}>
                     {t.status}
                   </span>
                 </td>
@@ -112,17 +111,15 @@ const CashierAccounts = () => {
       <div className="flex gap-4 mb-6 border-b border-slate-200 pb-4 overflow-x-auto whitespace-nowrap">
         <button
           onClick={() => setActiveTab("daily-cash-book")}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-            activeTab === "daily-cash-book" ? "bg-amber-500 text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-          }`}
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === "daily-cash-book" ? "bg-amber-500 text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+            }`}
         >
           Daily Collection Summary
         </button>
         <button
           onClick={() => setActiveTab("cash-closing")}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-            activeTab === "cash-closing" ? "bg-amber-500 text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-          }`}
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === "cash-closing" ? "bg-amber-500 text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+            }`}
         >
           Shift Closing
         </button>
@@ -153,14 +150,14 @@ const CashierAccounts = () => {
                 )}
               </div>
             )}
-            
+
             {activeTab === "cash-closing" && (
               <div className="max-w-2xl mx-auto space-y-6">
                 <div>
                   <h3 className="text-xl font-bold text-slate-800 mb-2">Daily Cash Closing</h3>
                   <p className="text-slate-600 text-sm">Submit the final cash counts for the day to be verified by an Accountant.</p>
                 </div>
-                
+
                 <form onSubmit={handleClosingSubmit} className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
@@ -169,7 +166,7 @@ const CashierAccounts = () => {
                         type="number"
                         required
                         min="0"
-                        step="0.01"
+                        step="1"
                         value={closingForm.openingCash}
                         onChange={(e) => setClosingForm({ ...closingForm, openingCash: e.target.value })}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500"
@@ -182,7 +179,7 @@ const CashierAccounts = () => {
                         type="number"
                         required
                         min="0"
-                        step="0.01"
+                        step="1"
                         value={closingForm.cashCollected}
                         onChange={(e) => setClosingForm({ ...closingForm, cashCollected: e.target.value })}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500"
@@ -195,7 +192,7 @@ const CashierAccounts = () => {
                         type="number"
                         required
                         min="0"
-                        step="0.01"
+                        step="1"
                         value={closingForm.cashDeposited}
                         onChange={(e) => setClosingForm({ ...closingForm, cashDeposited: e.target.value })}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500"
@@ -208,7 +205,7 @@ const CashierAccounts = () => {
                         type="number"
                         required
                         min="0"
-                        step="0.01"
+                        step="1"
                         value={closingForm.closingCash}
                         onChange={(e) => setClosingForm({ ...closingForm, closingCash: e.target.value })}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500"
@@ -216,7 +213,7 @@ const CashierAccounts = () => {
                       />
                     </div>
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Notes / Discrepancy Reasons</label>
                     <textarea
