@@ -14,7 +14,8 @@
 }
 
 /* Dark mode support from Priest Dashboard */
-.leave-container.dark {
+.leave-container.dark,
+.leave-history-container.dark {
   background-color: transparent;
   color: #f1f5f9;
 }
@@ -177,7 +178,8 @@
   border: 1px solid #e9ecef;
 }
 
-.leave-container.dark .leave-card {
+.leave-container.dark .leave-card,
+.leave-history-container.dark .leave-card {
   background: #374151;
   border-color: #4b5563;
 }
@@ -200,9 +202,14 @@
   color: #ff7a00;
 }
 
-.leave-container.dark .leave-card.green { background: rgba(29, 156, 71, 0.1); border-color: transparent; }
-.leave-container.dark .leave-card.red { background: rgba(209, 55, 55, 0.1); border-color: transparent; }
-.leave-container.dark .leave-card.orange { background: rgba(255, 122, 0, 0.1); border-color: transparent; }
+.leave-container.dark .leave-card.green,
+.leave-history-container.dark .leave-card.green { background: rgba(29, 156, 71, 0.1); border-color: transparent; }
+
+.leave-container.dark .leave-card.red,
+.leave-history-container.dark .leave-card.red { background: rgba(209, 55, 55, 0.1); border-color: transparent; }
+
+.leave-container.dark .leave-card.orange,
+.leave-history-container.dark .leave-card.orange { background: rgba(255, 122, 0, 0.1); border-color: transparent; }
 
 .leave-table {
   width: 100%;
@@ -216,7 +223,9 @@
 }
 
 .leave-container.dark .leave-table th, 
-.leave-container.dark .leave-table td {
+.leave-container.dark .leave-table td,
+.leave-history-container.dark .leave-table th,
+.leave-history-container.dark .leave-table td {
   border-bottom-color: #4b5563;
 }
 
@@ -226,7 +235,8 @@
   background: #f6f2ea;
 }
 
-.leave-container.dark .leave-table th {
+.leave-container.dark .leave-table th,
+.leave-history-container.dark .leave-table th {
   background: #111827;
   color: #9ca3af;
 }

@@ -1581,3 +1581,13 @@
 }
 
 
+
+/* Dark Mode Overrides */
+.dark { --bg: #0f172a; --panel: #1f2937; --line: #374151; --text: #f1f5f9; --muted: #9ca3af; }
+.dark .profile-info-card, .dark .profile-photo-preview, .dark .table-card, .dark .profile-photo-upload, .dark .profile-settings-page, .dark .apply-leave-page, .dark .leave-request-page, .dark .notifications-page, .dark .profile-card, .dark .leave-summary-card, .dark .quick-actions-card { background: var(--panel); border-color: var(--line); }
+.dark .profile-settings-page { background: transparent; border-color: transparent; box-shadow: none; }
+.dark .profile-info-card span, .dark .profile-admin-details-head p, .dark .profile-photo-upload-content p, .dark .profile-section-intro { color: var(--muted); }
+.dark .profile-info-card strong { color: var(--text); }
+.dark .secondary-btn { background: var(--panel) !important; color: var(--text) !important; border-color: var(--line) !important; }
+.dark .notifications-empty, .dark .notification-card { background: var(--panel); border-color: var(--line); }
+.dark .view-action-btn { background: var(--panel); border-color: var(--line); color: var(--text); }

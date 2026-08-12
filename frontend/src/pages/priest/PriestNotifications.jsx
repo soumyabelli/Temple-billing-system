@@ -48,15 +48,15 @@ const PriestNotifications = () => {
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-4xl mx-auto">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
             <FiBell className="text-amber-500" /> Notifications
           </h1>
-          <p className="text-slate-500">Stay updated with temple announcements and duty changes.</p>
+          <p className="text-slate-500 dark:text-slate-400">Stay updated with temple announcements and duty changes.</p>
         </div>
         {unreadCount > 0 && (
           <button
             onClick={handleReadAll}
-            className="flex items-center gap-2 rounded-xl bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-200"
+            className="flex items-center gap-2 rounded-xl bg-slate-100 dark:bg-slate-800 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 transition hover:bg-slate-200 dark:hover:bg-slate-700"
           >
             <FiCheckCircle /> Mark all as read
           </button>
@@ -65,35 +65,35 @@ const PriestNotifications = () => {
 
       {error && <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm font-medium text-rose-700">{error}</div>}
 
-      <div className="rounded-[24px] border border-slate-200 bg-temple-100 shadow-sm overflow-hidden">
+      <div className="rounded-[24px] border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 shadow-sm overflow-hidden">
         {loading ? (
-          <div className="p-10 text-center text-slate-500">Loading notifications...</div>
+          <div className="p-10 text-center text-slate-500 dark:text-slate-400">Loading notifications...</div>
         ) : notifications.length === 0 ? (
-          <div className="p-10 text-center text-slate-500">You have no notifications.</div>
+          <div className="p-10 text-center text-slate-500 dark:text-slate-400">You have no notifications.</div>
         ) : (
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-slate-100 dark:divide-slate-700">
             {notifications.map((notification) => (
               <div 
                 key={notification.id} 
-                className={`flex items-start gap-4 p-5 transition-colors ${notification.read ? 'bg-temple-100' : 'bg-amber-50/50'}`}
+                className={`flex items-start gap-4 p-5 transition-colors ${notification.read ? 'bg-temple-100 dark:bg-slate-800' : 'bg-amber-50/50 dark:bg-slate-700/50'}`}
               >
-                <div className={`mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${notification.read ? 'bg-slate-100 text-slate-400' : 'bg-amber-100 text-amber-600'}`}>
+                <div className={`mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${notification.read ? 'bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500' : 'bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400'}`}>
                   <FiBell />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between gap-4">
-                    <h4 className={`text-base ${notification.read ? 'font-medium text-slate-700' : 'font-bold text-slate-900'}`}>
+                    <h4 className={`text-base ${notification.read ? 'font-medium text-slate-700 dark:text-slate-300' : 'font-bold text-slate-900 dark:text-slate-100'}`}>
                       {notification.title}
                     </h4>
-                    <span className="shrink-0 text-xs text-slate-500">
+                    <span className="shrink-0 text-xs text-slate-500 dark:text-slate-400">
                       {new Date(notification.date).toLocaleDateString()}
                     </span>
                   </div>
-                  <p className={`mt-1 text-sm ${notification.read ? 'text-slate-500' : 'text-slate-700'}`}>
+                  <p className={`mt-1 text-sm ${notification.read ? 'text-slate-500 dark:text-slate-400' : 'text-slate-700 dark:text-slate-300'}`}>
                     {notification.message}
                   </p>
                   <div className="mt-3 flex items-center justify-between">
-                    <span className="inline-block rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-600">
+                    <span className="inline-block rounded-full bg-slate-100 dark:bg-slate-700 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">
                       {notification.category}
                     </span>
                     {!notification.read && (
