@@ -84,7 +84,10 @@
 
 .leave-container.dark .leave-form input,
 .leave-container.dark .leave-form select,
-.leave-container.dark .leave-form textarea {
+.leave-container.dark .leave-form textarea,
+.dark .leave-form input,
+.dark .leave-form select,
+.dark .leave-form textarea {
   background: #374151;
   border-color: #4b5563;
   color: #f1f5f9;
@@ -92,7 +95,10 @@
 
 .leave-container.dark .leave-form input:focus,
 .leave-container.dark .leave-form select:focus,
-.leave-container.dark .leave-form textarea:focus {
+.leave-container.dark .leave-form textarea:focus,
+.dark .leave-form input:focus,
+.dark .leave-form select:focus,
+.dark .leave-form textarea:focus {
   border-color: #f97316;
 }
 

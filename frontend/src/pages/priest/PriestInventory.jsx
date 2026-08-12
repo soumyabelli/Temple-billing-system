@@ -491,7 +491,7 @@ const PriestInventory = () => {
 
             <div className="inventory-grid" style={{ gridTemplateColumns: "1fr", gap: "24px" }}>
               {pendingIssues.length === 0 ? (
-                <div className="empty-cell" style={{ background: "#fff", padding: "40px", borderRadius: "16px" }}>
+                <div className="empty-cell" style={{ background: "var(--panel)", padding: "40px", borderRadius: "16px" }}>
                   No pending issued items.
                 </div>
               ) : (
@@ -499,11 +499,11 @@ const PriestInventory = () => {
                   {pendingIssues.map(issue => {
                     const cForm = completionForm[issue._id] || { usedQuantity: "", returnedQuantity: "", remarks: "" };
                     return (
-                      <div key={issue._id} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "20px", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
+                      <div key={issue._id} style={{ background: "var(--panel)", border: "1px solid var(--line)", borderRadius: "16px", padding: "20px", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
                           <div>
-                            <h3 style={{ fontSize: "16px", fontWeight: 700, color: "#0f172a", margin: "0 0 4px" }}>{issue.itemName}</h3>
-                            <p style={{ fontSize: "12px", color: "#64748b", margin: 0 }}>Issued: {formatDateTime(issue.issueDate)}</p>
+                            <h3 style={{ fontSize: "16px", fontWeight: 700, color: "var(--text)", margin: "0 0 4px" }}>{issue.itemName}</h3>
+                            <p style={{ fontSize: "12px", color: "var(--muted)", margin: 0 }}>Issued: {formatDateTime(issue.issueDate)}</p>
                           </div>
                           <span style={{ background: "#eff6ff", color: "#1d4ed8", padding: "4px 10px", borderRadius: "20px", fontSize: "12px", fontWeight: 700 }}>
                             {issue.issuedQuantity} {issue.unit}
@@ -515,36 +515,36 @@ const PriestInventory = () => {
 
                           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "10px" }}>
                             <div>
-                              <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#475569", marginBottom: "4px" }}>Used Qty <span style={{ color: "#ef4444" }}>*</span></label>
+                              <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--muted)", marginBottom: "4px" }}>Used Qty <span style={{ color: "#ef4444" }}>*</span></label>
                               <input
                                 type="number"
                                 min="0"
                                 step="1"
                                 value={cForm.usedQuantity}
                                 onChange={(e) => updateCompletionForm(issue._id, "usedQuantity", e.target.value)}
-                                style={{ width: "100%", padding: "8px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "13px" }}
+                                style={{ width: "100%", padding: "8px", borderRadius: "8px", border: "1px solid var(--line)", fontSize: "13px", background: "var(--panel)", color: "var(--text)" }}
                               />
                             </div>
                             <div>
-                              <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#475569", marginBottom: "4px" }}>Returned Qty <span style={{ color: "#ef4444" }}>*</span></label>
+                              <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--muted)", marginBottom: "4px" }}>Returned Qty <span style={{ color: "#ef4444" }}>*</span></label>
                               <input
                                 type="number"
                                 min="0"
                                 step="1"
                                 value={cForm.returnedQuantity}
                                 onChange={(e) => updateCompletionForm(issue._id, "returnedQuantity", e.target.value)}
-                                style={{ width: "100%", padding: "8px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "13px" }}
+                                style={{ width: "100%", padding: "8px", borderRadius: "8px", border: "1px solid var(--line)", fontSize: "13px", background: "var(--panel)", color: "var(--text)" }}
                               />
                             </div>
                           </div>
                           <div>
-                            <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#475569", marginBottom: "4px" }}>Remarks (Optional)</label>
+                            <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--muted)", marginBottom: "4px" }}>Remarks (Optional)</label>
                             <input
                               type="text"
                               value={cForm.remarks}
                               onChange={(e) => updateCompletionForm(issue._id, "remarks", e.target.value)}
                               placeholder="e.g. Unused packs returned"
-                              style={{ width: "100%", padding: "8px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "13px" }}
+                              style={{ width: "100%", padding: "8px", borderRadius: "8px", border: "1px solid var(--line)", fontSize: "13px", background: "var(--panel)", color: "var(--text)" }}
                             />
                           </div>
                         </div>

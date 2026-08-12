@@ -44,7 +44,7 @@ const PriestLayout = ({ children, onLogoutClick }) => {
 
   return (
     <div
-      className={`${
+      className={`${darkMode ? "dark " : ""}${
         darkMode ? "bg-[#0f172a]" : "bg-[#f5f3ef]"
       } min-h-screen transition-colors duration-300`}
     >
@@ -70,6 +70,7 @@ const PriestLayout = ({ children, onLogoutClick }) => {
           darkMode={darkMode}
           toggleDarkMode={toggleDarkMode}
           onOpenMobileSidebar={() => setMobileOpen(true)}
+          onLogoutClick={handleSidebarLogoutClick}
         />
 
         <main className="mt-6">

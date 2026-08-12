@@ -20,7 +20,10 @@ import {
 import { FaCalendarCheck } from "react-icons/fa";
 import { MdTempleHindu } from "react-icons/md";
 import { TbChecklist, TbHourglassLow, TbProgressCheck } from "react-icons/tb";
+import { MdLightMode, MdDarkMode } from "react-icons/md";
+import { FaSignOutAlt } from "react-icons/fa";
 import { useAuth } from "../../context/AuthContext";
+import { useTheme } from "../../context/ThemeContext";
 import {
   changeEmployeePassword,
   getEmployeeProfile,
@@ -29,6 +32,7 @@ import {
 import Notifications from "./Notifications";
 import Attendance from "./Attendance";
 import StaffInventory from "./StaffInventory";
+import templeBg from "../../assets/temple-bg.jpg";
 import "./StaffDashboard.css";
 
 const API_BASE = "http://localhost:5000/api";
@@ -193,6 +197,7 @@ const StaffDashboard = () => {
   const storedUser = JSON.parse(localStorage.getItem("user") || "null");
   const staff = user || storedUser;
   const updateUserRef = useRef(updateUser);
+  const { darkMode, toggleDarkMode } = useTheme();
 
   const [activeSection, setActiveSection] = useState("dashboard");
   const [tasks, setTasks] = useState([]);
@@ -535,7 +540,16 @@ const StaffDashboard = () => {
 
   return (
     <div className="staff-dashboard-page">
-      <aside className="staff-sidebar">
+      <aside 
+        className="staff-sidebar border-none shadow-[0_0_0_1px_rgba(228,190,142,0.55),0_28px_60px_rgba(104,62,30,0.14)]"
+        style={{
+          backgroundImage: darkMode
+            ? `linear-gradient(180deg, rgba(30,41,59,0.95) 0%, rgba(15,23,42,0.98) 100%), url(${templeBg})`
+            : `linear-gradient(180deg, rgba(255, 247, 231, 0.93) 0%, rgba(255, 242, 216, 0.88) 42%, rgba(96, 59, 26, 0.76) 100%), url(${templeBg})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
         <div className="staff-brand">
           <div className="brand-icon">
             <MdTempleHindu />
@@ -621,6 +635,15 @@ const StaffDashboard = () => {
             <p>Manage daily temple activities and assigned services.</p>
           </div>
           <div className="header-right">
+            <button
+              type="button"
+              onClick={toggleDarkMode}
+              className="notif-button"
+              aria-label="Toggle Theme"
+              style={{ color: darkMode ? "#fbbf24" : "#d97706" }}
+            >
+              {darkMode ? <MdLightMode /> : <MdDarkMode />}
+            </button>
             <span className="header-date">
               <FiCalendar /> {formatHeaderDate()}
             </span>
@@ -632,6 +655,29 @@ const StaffDashboard = () => {
             >
               <FiBell />
               {notificationUnreadCount > 0 ? <span>{notificationUnreadCount}</span> : null}
+            </button>
+            <div 
+              className="avatar" 
+              style={{ width: '44px', height: '44px', fontSize: '18px', cursor: 'pointer', margin: '0 8px' }}
+              onClick={() => {
+                setActiveSection("profile");
+                fetchProfileData();
+              }}
+            >
+              {profileForm.photo ? (
+                <img src={profileForm.photo} alt={displayName} className="avatar-image" />
+              ) : (
+                displayName.charAt(0).toUpperCase()
+              )}
+            </div>
+            <button
+              type="button"
+              className="notif-button"
+              style={{ color: '#ef4444' }}
+              aria-label="Logout"
+              onClick={handleLogout}
+            >
+              <FaSignOutAlt />
             </button>
           </div>
         </header>

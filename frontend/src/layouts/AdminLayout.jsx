@@ -76,6 +76,7 @@ const AdminLayout = ({ children, onLogoutClick }) => {
           darkMode={darkMode}
           toggleDarkMode={toggleDarkMode}
           onOpenMobileSidebar={() => setMobileOpen(true)}
+          onLogoutClick={handleSidebarLogoutClick}
         />
 
         {typeof children === "function" ? children({ activeItem, darkMode }) : children}

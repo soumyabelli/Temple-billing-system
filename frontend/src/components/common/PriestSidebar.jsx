@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { priestSidebarItems } from "../../data/priestSidebarData";
 import { MdMenu, MdTempleBuddhist, MdKeyboardArrowDown } from "react-icons/md";
-import templeSidebarImg from "../../assets/temple-sidebar.png";
+import templeBg from "../../assets/temple-bg.jpg";
 
 const PriestSidebar = ({
   activeItem,
@@ -45,10 +45,13 @@ const PriestSidebar = ({
         className={`fixed top-0 left-0 bottom-0 z-40 border-r transition-all duration-300 ${
           collapsed ? "w-[84px]" : "w-[280px]"
         } ${mobileOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 ${
-          darkMode
-            ? "bg-[#1e293b] border-slate-700 text-slate-100"
-            : "bg-temple-100 border-[#ece8e1] text-[#372818]"
-        } flex flex-col`}
+          darkMode ? "border-[#293449]" : "border-none"
+        } flex flex-col bg-cover bg-center shadow-[0_0_0_1px_rgba(228,190,142,0.55),0_28px_60px_rgba(104,62,30,0.14)]`}
+        style={{
+          backgroundImage: darkMode
+            ? `linear-gradient(180deg, rgba(30,41,59,0.95) 0%, rgba(15,23,42,0.98) 100%), url(${templeBg})`
+            : `linear-gradient(180deg, rgba(255, 247, 231, 0.93) 0%, rgba(255, 242, 216, 0.88) 42%, rgba(96, 59, 26, 0.76) 100%), url(${templeBg})`,
+        }}
       >
         {/* Sidebar Header/Logo */}
         <div
@@ -140,40 +143,6 @@ const PriestSidebar = ({
           })}
         </div>
 
-        {/* Sidebar Bottom Temple Background & Copyright */}
-        <div
-          className={`relative overflow-hidden shrink-0 mt-auto transition-all duration-300 ${
-            collapsed ? "h-[80px]" : "h-[180px]"
-          } border-t ${darkMode ? "border-slate-700" : "border-[#ece8e1]"}`}
-        >
-          {/* Temple Image */}
-          <div
-            className="absolute inset-0 bg-cover bg-center transition-transform duration-700 hover:scale-105"
-            style={{
-              backgroundImage: `url(${templeSidebarImg})`,
-            }}
-          />
-          {/* Saffron Overlay on hover or active */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-transparent z-10" />
-
-          {/* Copyright content */}
-          {!collapsed && (
-            <div className="absolute bottom-0 inset-x-0 p-4 z-20 text-white select-none">
-              <p className="text-[11px] leading-relaxed font-medium text-slate-200">
-                © 2025 Sri Shanti Mahadev Mandir
-              </p>
-              <div className="flex items-center justify-between mt-1">
-                <p className="text-[10px] text-slate-300 font-normal">All rights reserved.</p>
-                <span className="text-sm font-semibold text-orange-400">🕉️</span>
-              </div>
-            </div>
-          )}
-          {collapsed && (
-            <div className="absolute inset-0 flex items-center justify-center z-20 text-white">
-              <span className="text-lg text-orange-400 animate-pulse">🕉️</span>
-            </div>
-          )}
-        </div>
       </aside>
     </>
   );

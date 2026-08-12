@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { sidebarItems as defaultSidebarItems } from "../../data/sidebarData";
 import { MdMenu, MdTempleBuddhist, MdKeyboardArrowDown } from "react-icons/md";
+import templeBg from "../../assets/temple-bg.jpg";
 
 const Sidebar = ({ items, activeItem, activePath, onSelect, onNavigate, collapsed, setCollapsed, mobileOpen, setMobileOpen, darkMode, onLogoutClick }) => {
   const itemsToUse = items || defaultSidebarItems;
@@ -38,9 +39,14 @@ const Sidebar = ({ items, activeItem, activePath, onSelect, onNavigate, collapse
       )}
 
       <aside
-        className={`fixed top-0 left-0 bottom-0 z-40 border-r transition-all duration-300 ${collapsed ? "w-[84px]" : "w-[320px]"} ${mobileOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 ${darkMode ? "bg-[#1b2231] border-[#293449]" : "bg-gradient-to-b from-[#f6e7cc] via-[#f2deba] to-[#edd8b0] border-[#e7d7ba]"} flex flex-col`}
+        className={`fixed top-0 left-0 bottom-0 z-40 border-r transition-all duration-300 ${collapsed ? "w-[84px]" : "w-[320px]"} ${mobileOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 flex flex-col bg-cover bg-center shadow-[0_0_0_1px_rgba(228,190,142,0.55),0_28px_60px_rgba(104,62,30,0.14)] ${darkMode ? "border-[#293449]" : "border-none"}`}
+        style={{
+          backgroundImage: darkMode
+            ? `linear-gradient(180deg, rgba(30,41,59,0.95) 0%, rgba(15,23,42,0.98) 100%), url(${templeBg})`
+            : `linear-gradient(180deg, rgba(255, 247, 231, 0.93) 0%, rgba(255, 242, 216, 0.88) 42%, rgba(96, 59, 26, 0.76) 100%), url(${templeBg})`,
+        }}
       >
-        <div className={`px-3 ${collapsed ? "pt-3 pb-2" : "pt-4 pb-3"} border-b ${darkMode ? "border-[#2e3749]" : "border-[#e5d5b8]/80"}`}>
+        <div className={`px-3 ${collapsed ? "pt-3 pb-2" : "pt-4 pb-3"} border-b ${darkMode ? "border-[#2e3749]" : "border-[rgba(142,84,34,0.15)]"}`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 min-w-0">
               <div className={`h-11 w-11 rounded-lg flex items-center justify-center shrink-0 overflow-hidden ${darkMode ? "bg-temple-100/10 text-amber-300" : "bg-temple-100/65 text-[#5f3a1f]"}`}>

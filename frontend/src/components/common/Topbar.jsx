@@ -4,9 +4,10 @@ import { useNavigate } from "react-router-dom";
 import { FaBell } from "react-icons/fa";
 import { FiSearch } from "react-icons/fi";
 import { MdKeyboardArrowDown, MdLightMode, MdDarkMode, MdMenu } from "react-icons/md";
+import { FaSignOutAlt } from "react-icons/fa";
 import { useAuth } from "../../context/AuthContext";
 
-const Topbar = ({ darkMode, toggleDarkMode, onOpenMobileSidebar }) => {
+const Topbar = ({ darkMode, toggleDarkMode, onOpenMobileSidebar, onLogoutClick }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [notificationCount, setNotificationCount] = useState(0);
@@ -93,7 +94,7 @@ const Topbar = ({ darkMode, toggleDarkMode, onOpenMobileSidebar }) => {
 
         <div 
           className="hidden sm:flex items-center gap-3 cursor-pointer"
-          onClick={() => navigate("/admin/settings")}
+          onClick={() => navigate("/admin/profile")}
         >
           <div className="h-10 w-10 overflow-hidden rounded-full border border-white/30 bg-temple-100/70">
             {avatarSrc ? (
@@ -110,6 +111,20 @@ const Topbar = ({ darkMode, toggleDarkMode, onOpenMobileSidebar }) => {
           </div>
           <MdKeyboardArrowDown className={darkMode ? "text-slate-400" : "text-gray-400"} />
         </div>
+        
+        {/* Logout Button */}
+        <button
+          type="button"
+          onClick={onLogoutClick}
+          className={`h-10 w-10 rounded-xl border flex items-center justify-center transition-colors ${
+            darkMode
+              ? "border-white/10 bg-[#1f2937]/70 text-rose-400 hover:bg-slate-800"
+              : "border-[#ece8e1] bg-temple-100/70 text-rose-500 hover:bg-rose-50"
+          }`}
+          aria-label="Logout"
+        >
+          <FaSignOutAlt size={16} />
+        </button>
       </div>
     </div>
   );

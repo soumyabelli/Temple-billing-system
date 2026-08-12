@@ -253,10 +253,10 @@ const PriestDashboard = () => {
             {announcements.map((item) => {
               const bgClass =
                 item.type === "festival"
-                  ? "bg-amber-50/70 border-amber-100 text-amber-900 dark:bg-amber-950/20 dark:border-amber-900/30"
+                  ? "bg-amber-50/70 border-amber-100 text-amber-900 dark:bg-amber-950/20 dark:border-amber-900/30 dark:text-amber-400"
                   : item.type === "event"
-                    ? "bg-blue-50/70 border-blue-100 text-blue-900 dark:bg-blue-950/20 dark:border-blue-900/30"
-                    : "bg-emerald-50/70 border-emerald-100 text-emerald-900 dark:bg-emerald-950/20 dark:border-emerald-900/30";
+                    ? "bg-blue-50/70 border-blue-100 text-blue-900 dark:bg-blue-950/20 dark:border-blue-900/30 dark:text-blue-400"
+                    : "bg-emerald-50/70 border-emerald-100 text-emerald-900 dark:bg-emerald-950/20 dark:border-emerald-900/30 dark:text-emerald-400";
 
               return (
                 <div key={item.id} className={`p-4 rounded-xl border ${bgClass}`}>

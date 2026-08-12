@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { MdTempleBuddhist, MdMenu } from "react-icons/md";
 import { FaSignOutAlt } from "react-icons/fa";
-import templeSidebarImg from "../../assets/temple-sidebar.png";
+import templeBg from "../../assets/temple-bg.jpg";
 import { cashierSidebarItems } from "../../data/cashierSidebarData";
 
 const CashierSidebar = ({
@@ -15,6 +15,7 @@ const CashierSidebar = ({
   setMobileOpen,
   onLogoutClick,
   unreadCount = 0,
+  darkMode,
 }) => {
   const [templeLogo, setTempleLogo] = useState(() => localStorage.getItem("templeLogo"));
   const [templeName, setTempleName] = useState(() => localStorage.getItem("templeName") || "Sri Shanti Mahadev Mandir");
@@ -54,11 +55,16 @@ const CashierSidebar = ({
       ) : null}
 
       <aside
-        className={`fixed left-0 top-0 bottom-0 z-40 flex flex-col border-r border-[#f0d7b2] bg-[#fff7eb] text-slate-950 shadow-[4px_0_25px_rgba(170,120,40,0.12)] transition-all duration-300 ${
+        className={`fixed left-0 top-0 bottom-0 z-40 flex flex-col shadow-[4px_0_25px_rgba(170,120,40,0.12)] transition-all duration-300 ${
           collapsed ? "w-[92px]" : "w-[320px]"
-        } ${mobileOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`}
+        } ${mobileOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 bg-cover bg-center shadow-[0_0_0_1px_rgba(228,190,142,0.55),0_28px_60px_rgba(104,62,30,0.14)] ${darkMode ? "border-[#293449] border-r" : "border-none"}`}
+        style={{
+          backgroundImage: darkMode
+            ? `linear-gradient(180deg, rgba(30,41,59,0.95) 0%, rgba(15,23,42,0.98) 100%), url(${templeBg})`
+            : `linear-gradient(180deg, rgba(255, 247, 231, 0.93) 0%, rgba(255, 242, 216, 0.88) 42%, rgba(96, 59, 26, 0.76) 100%), url(${templeBg})`,
+        }}
       >
-        <div className="border-b border-[#efd2a3] px-4 py-4">
+        <div className={`border-b px-4 py-4 ${darkMode ? "border-[#2e3749]" : "border-[rgba(142,84,34,0.15)]"}`}>
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
               <div className="flex h-11 w-11 shrink-0 overflow-hidden items-center justify-center rounded-2xl border border-[#f2cf95] bg-temple-100/80 text-[#8a4b00]">
@@ -66,8 +72,8 @@ const CashierSidebar = ({
               </div>
               {!collapsed ? (
                 <div className="min-w-0">
-                  <p className="text-[18px] font-extrabold leading-tight text-slate-950">{templeName}</p>
-                  <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#8d5500]">Cashier Console</p>
+                  <p className={`text-[18px] font-extrabold leading-tight ${darkMode ? "text-slate-100" : "text-slate-950"}`}>{templeName}</p>
+                  <p className={`mt-1 text-[11px] font-semibold uppercase tracking-[0.2em] ${darkMode ? "text-amber-400" : "text-[#8d5500]"}`}>Cashier Console</p>
                 </div>
               ) : null}
             </div>
@@ -114,7 +120,7 @@ const CashierSidebar = ({
                   ? "mt-4 border border-[#f2c9c9] bg-[#fff2f2] text-[#9c1d1d] hover:bg-[#ffe7e7]"
                   : active
                       ? "bg-[#f28c18] text-white shadow-[0_8px_18px_rgba(242,140,24,0.24)]"
-                      : "text-slate-950 hover:bg-temple-100/90"
+                      : darkMode ? "text-slate-200 hover:bg-slate-800" : "text-[#372818] hover:bg-temple-100/60"
                   }`}
                 >
                   {active ? <span className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-temple-100" /> : null}

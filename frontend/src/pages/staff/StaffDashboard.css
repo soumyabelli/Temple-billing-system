@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap");
+﻿@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap");
 
 .staff-dashboard-page {
   --bg: #f6f2ea;
@@ -18,9 +18,27 @@
   --violet: #6c4dd8;
   min-height: 100vh;
   display: flex;
-  background: radial-gradient(circle at top right, #fff9ee 0, var(--bg) 48%);
+  background: var(--bg);
   color: var(--text);
   font-family: "Manrope", sans-serif;
+}
+
+.dark .staff-dashboard-page {
+  --bg: #0f172a;
+  --panel: #1e293b;
+  --line: #334155;
+  --text: #f8fafc;
+  --muted: #94a3b8;
+  --orange: #ea580c;
+  --orange-soft: #7c2d12;
+  --green-soft: #14532d;
+  --green: #22c55e;
+  --blue-soft: #1e3a8a;
+  --blue: #3b82f6;
+  --red-soft: #7f1d1d;
+  --red: #ef4444;
+  --violet-soft: #4c1d95;
+  --violet: #8b5cf6;
 }
 
 .staff-sidebar {
@@ -374,9 +392,9 @@
 }
 
 .notification-tab {
-  border: 1px solid #e8ded0;
-  background: #fff;
-  color: #574f44;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--text);
   border-radius: 999px;
   padding: 10px 14px;
   display: inline-flex;
@@ -455,12 +473,12 @@
 }
 
 .status-control select {
-  border: 1px solid #d8d2c8;
+  border: 1px solid var(--line);
   border-radius: 9px;
   padding: 7px 8px;
-  background: #fff;
+  background: var(--panel);
   font-weight: 700;
-  color: #363636;
+  color: var(--text);
 }
 
 .status-chip {
@@ -588,10 +606,11 @@
 .duties-filters input,
 .duties-filters select {
   width: 100%;
-  border: 1px solid #d8d2c8;
+  border: 1px solid var(--line);
   border-radius: 10px;
   padding: 11px 12px;
-  background: #fff;
+  background: var(--panel);
+  color: var(--text);
   font: inherit;
 }
 
@@ -866,9 +885,10 @@
 }
 
 .quick-actions button {
-  border: 1px solid #e7ddd0;
+  border: 1px solid var(--line);
   border-radius: 12px;
-  background: #fff;
+  background: var(--panel);
+  color: var(--text);
   padding: 16px 10px;
   display: grid;
   place-items: center;
@@ -945,10 +965,11 @@
 .inventory-form-card select,
 .inventory-form-card textarea {
   width: 100%;
-  border: 1px solid #d8d2c8;
+  border: 1px solid var(--line);
   border-radius: 10px;
   padding: 11px 12px;
-  background: #fff;
+  background: var(--panel);
+  color: var(--text);
   font: inherit;
 }
 
@@ -981,10 +1002,10 @@
   justify-content: space-between;
   align-items: center;
   gap: 14px;
-  border: 1px solid #ece3d8;
+  border: 1px solid var(--line);
   border-radius: 14px;
   padding: 14px;
-  background: #fff;
+  background: var(--panel);
 }
 
 .inventory-status-item h3 {
@@ -996,6 +1017,22 @@
   margin: 0;
   color: #6b7280;
   font-size: 16px;
+}
+
+.inventory-history-filters {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.inventory-history-filters input,
+.inventory-history-filters select {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 12px;
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
 }
 
 .inventory-history-grid {
@@ -1081,27 +1118,31 @@
 }
 
 .leave-form input {
-  border: 1px solid #ddd3c6;
+  border: 1px solid var(--line);
   border-radius: 10px;
   padding: 11px 12px;
   font: inherit;
+  background: var(--panel);
+  color: var(--text);
 }
 
 .leave-form select {
-  border: 1px solid #ddd3c6;
+  border: 1px solid var(--line);
   border-radius: 10px;
   padding: 11px 12px;
   font: inherit;
-  background: #fff;
+  background: var(--panel);
+  color: var(--text);
 }
 
 .leave-form textarea {
-  border: 1px solid #ddd3c6;
+  border: 1px solid var(--line);
   border-radius: 10px;
   padding: 11px 12px;
   font: inherit;
   resize: vertical;
-  background: #fff;
+  background: var(--panel);
+  color: var(--text);
 }
 
 .profile-settings-page .leave-head {
@@ -1538,3 +1579,5 @@
     justify-content: center;
   }
 }
+
+
