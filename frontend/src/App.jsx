@@ -678,14 +678,7 @@ function App() {
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/priest/assigned-poojas"
-        element={
-          <ProtectedRoute allowedRoles={["priest"]}>
-            <PriestDashboard />
-          </ProtectedRoute>
-        }
-      />
+
       <Route
         path="/priest/seva-schedule"
         element={

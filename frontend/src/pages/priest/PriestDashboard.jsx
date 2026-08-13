@@ -41,7 +41,6 @@ import Attendance from "../staff/Attendance";
 import LeaveHistory from "../staff/LeaveHistory";
 import LeaveRequest from "../staff/LeaveRequest";
 import DutyTransferRequests from "./DutyTransferRequests";
-import AssignedPoojas from "./AssignedPoojas";
 import SevaSchedule from "./SevaSchedule";
 import CompletedServices from "./CompletedServices";
 import SpecialDuties from "./SpecialDuties";
@@ -170,7 +169,7 @@ const PriestDashboard = () => {
               <span className={darkMode ? "text-slate-400" : "text-slate-500"}>Live stats</span>
               <button
                 onClick={() => {
-                  if (card.label.includes("Assigned") || card.label.includes("Today's")) navigate("/priest/assigned-poojas");
+                  if (card.label.includes("Assigned") || card.label.includes("Today's")) navigate("/priest/my-duties");
                   else if (card.label.includes("Upcoming")) navigate("/priest/seva-schedule");
                   else if (card.label.includes("Completed")) navigate("/priest/completed-services");
                 }}
@@ -193,7 +192,7 @@ const PriestDashboard = () => {
               <FaClock className="text-orange-500" /> Today's Schedule
             </h3>
             <button
-              onClick={() => navigate("/priest/assigned-poojas")}
+              onClick={() => navigate("/priest/my-duties")}
               className="text-orange-500 text-xs font-bold hover:underline"
             >
               View Full Schedule →
@@ -1101,8 +1100,6 @@ const PriestDashboard = () => {
             return <PriestNotifications darkMode={darkMode} />;
           case "Profile":
             return <PriestProfile darkMode={darkMode} />;
-          case "Assigned Poojas":
-            return <AssignedPoojas darkMode={darkMode} />;
           case "Seva Schedule":
             return <SevaSchedule darkMode={darkMode} />;
           case "Completed Services":
