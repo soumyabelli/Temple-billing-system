@@ -89,8 +89,8 @@ const CashierAccounts = () => {
                 <td className="px-6 py-4 font-bold">₹{t.amount?.toFixed(2)}</td>
                 <td className="px-6 py-4">
                   <span className={`px-2 py-1 text-xs font-semibold rounded-full ${t.status === "Completed" ? "bg-green-100 text-green-700" :
-                      t.status === "Pending Approval" ? "bg-amber-100 text-amber-700" :
-                        "bg-red-100 text-red-700"
+                    t.status === "Pending Approval" ? "bg-amber-100 text-amber-700" :
+                      "bg-red-100 text-red-700"
                     }`}>
                     {t.status}
                   </span>

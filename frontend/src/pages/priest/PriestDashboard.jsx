@@ -41,6 +41,11 @@ import Attendance from "../staff/Attendance";
 import LeaveHistory from "../staff/LeaveHistory";
 import LeaveRequest from "../staff/LeaveRequest";
 import DutyTransferRequests from "./DutyTransferRequests";
+import AssignedPoojas from "./AssignedPoojas";
+import SevaSchedule from "./SevaSchedule";
+import CompletedServices from "./CompletedServices";
+import SpecialDuties from "./SpecialDuties";
+import FestivalDuties from "./FestivalDuties";
 import priestAvatar from "../../assets/logo.png";
 
 const API_BASE = "http://localhost:5000/api";
@@ -1096,6 +1101,16 @@ const PriestDashboard = () => {
             return <PriestNotifications darkMode={darkMode} />;
           case "Profile":
             return <PriestProfile darkMode={darkMode} />;
+          case "Assigned Poojas":
+            return <AssignedPoojas darkMode={darkMode} />;
+          case "Seva Schedule":
+            return <SevaSchedule darkMode={darkMode} />;
+          case "Completed Services":
+            return <CompletedServices darkMode={darkMode} />;
+          case "Special Duties":
+            return <SpecialDuties darkMode={darkMode} />;
+          case "Festival Duties":
+            return <FestivalDuties darkMode={darkMode} />;
           default:
             return <DashboardView darkMode={darkMode} />;
         }

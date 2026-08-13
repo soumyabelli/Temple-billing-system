@@ -11,7 +11,16 @@ const findActiveItem = (path) => {
   const matched = priestSidebarItems.find(
     (item) => item.path === path || item.subItems?.some((sub) => sub.path === path)
   );
-  return matched ? matched.title : "Dashboard";
+  if (matched) return matched.title;
+
+  // Hidden routes
+  if (path === "/priest/assigned-poojas") return "Assigned Poojas";
+  if (path === "/priest/seva-schedule") return "Seva Schedule";
+  if (path === "/priest/completed-services") return "Completed Services";
+  if (path === "/priest/special-duties") return "Special Duties";
+  if (path === "/priest/festival-duties") return "Festival Duties";
+
+  return "Dashboard";
 };
 
 const PriestLayout = ({ children, onLogoutClick }) => {
