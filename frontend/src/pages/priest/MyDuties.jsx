@@ -263,7 +263,7 @@ const MyDuties = ({ darkMode }) => {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10">
       {/* Toast Notification */}
       {notification.show && (
-        <div className={`fixed top-6 right-6 z-50 px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-right-8 fade-in duration-300 backdrop-blur-xl border ${
+        <div className={`fixed top-6 right-6 z-[9999] px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-right-8 fade-in duration-300 backdrop-blur-xl border ${
           notification.type === 'error' ? 'bg-rose-500/90 border-rose-400 text-white' :
           notification.type === 'warning' ? 'bg-amber-500/90 border-amber-400 text-white' :
           'bg-emerald-500/90 border-emerald-400 text-white'

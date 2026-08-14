@@ -4,11 +4,11 @@ const transferRequestSchema = new mongoose.Schema(
   {
     referenceType: {
       type: String,
-      enum: ["Booking", "Task"],
+      enum: ["Booking", "Task", "DefaultDuty"],
       required: true,
     },
     referenceId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: String,
       required: true,
     },
     originalPriest: {

@@ -35,6 +35,14 @@ exports.getAllTransferRequests = async (req, res) => {
             date = task.dateKey || new Date(task.createdAt).toLocaleDateString();
             time = task.time || task.startTime || "N/A";
           }
+        } else if (req.referenceType === "DefaultDuty") {
+          const Employee = require("../models/Employee");
+          const employee = await Employee.findById(req.referenceId);
+          if (employee) {
+            dutyName = employee.currentDuty?.dutyName || employee.defaultDuty || "Daily Duties";
+            date = new Date().toLocaleDateString();
+            time = employee.currentDuty?.reportingTime || employee.defaultShift || "06:00 AM";
+          }
         }
 
         return {
@@ -97,21 +105,38 @@ exports.resolveTransferRequest = async (req, res) => {
           assignedPriest: newPriestId,
           priestName: newPriest ? newPriest.name : "",
         });
-      } else {
+      } else if (request.referenceType === "Task") {
         await Task.findByIdAndUpdate(request.referenceId, {
           status: "Assigned",
           staffId: newPriestId,
           staffName: newPriest ? newPriest.name : "",
           staffEmail: newPriest ? newPriest.email : "",
         });
+      } else if (request.referenceType === "DefaultDuty") {
+        // For DefaultDuty, we create a one-off Task for the new priest.
+        const Employee = require("../models/Employee");
+        const origEmp = await Employee.findById(request.referenceId);
+        if (origEmp) {
+          const dutyName = origEmp.currentDuty?.dutyName || origEmp.defaultDuty || "Daily Duties";
+          await Task.create({
+            title: dutyName,
+            category: "Priest Duty",
+            staffId: newPriestId,
+            staffName: newPriest ? newPriest.name : "",
+            staffEmail: newPriest ? newPriest.email : "",
+            dateKey: new Date().toISOString(),
+            status: "Assigned"
+          });
+        }
       }
     } else {
       originalPriestMsg = "Your transfer request was rejected. The duty remains assigned to you.";
       if (request.referenceType === "Booking") {
         await Booking.findByIdAndUpdate(request.referenceId, { status: "Assigned" });
-      } else {
+      } else if (request.referenceType === "Task") {
         await Task.findByIdAndUpdate(request.referenceId, { status: "Assigned" });
       }
+      // No status update needed for DefaultDuty on rejection.
     }
 
     // Notify Original Priest

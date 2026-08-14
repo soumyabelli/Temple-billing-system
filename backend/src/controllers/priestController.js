@@ -1156,6 +1156,13 @@ exports.getMyDuties = async (req, res) => {
     // 1. Fetch Bookings assigned to Priest
     const bookings = await Booking.find({ assignedPriest: priestId });
     
+    // Check pending TransferRequests for the employee
+    const pendingTransfers = await TransferRequest.find({
+      originalPriest: priestId,
+      status: "Pending"
+    });
+    const pendingTransferIds = pendingTransfers.map(tr => tr.referenceId.toString());
+
     const unifiedDuties = [];
 
     // Add Priest's Default/Assigned Duty
@@ -1163,8 +1170,8 @@ exports.getMyDuties = async (req, res) => {
       const dutyName = employee.currentDuty?.dutyName || employee.defaultDuty;
       if (dutyName) {
         unifiedDuties.push({
-          id: employee._id.toString() + "_duty",
-          referenceType: "Task", // Use Task so it works with start/complete logic if needed
+          id: employee._id.toString(),
+          referenceType: "DefaultDuty", // Use DefaultDuty to identify it
           poojaName: dutyName,
           devotee: "N/A",
           date: formatDateTime(new Date()),
@@ -1173,7 +1180,7 @@ exports.getMyDuties = async (req, res) => {
           area: employee.dutyLocation || employee.currentDuty?.dutyLocation || "Main Temple",
           priority: "High",
           assignedBy: "Admin",
-          status: "Assigned",
+          status: pendingTransferIds.includes(employee._id.toString()) ? "Transfer Requested" : "Assigned",
         });
       }
     }
@@ -1292,6 +1299,12 @@ exports.requestTransfer = async (req, res) => {
         return res.status(400).json({ message: "Can only transfer duties that are in 'Assigned' state." });
       }
       dateStr = task.dateKey;
+    } else if (referenceType === "DefaultDuty") {
+      const employee = await Employee.findById(referenceId);
+      if (!employee) {
+        return res.status(400).json({ message: "Invalid duty reference." });
+      }
+      dateStr = new Date().toISOString();
     } else {
       return res.status(400).json({ message: "Invalid reference type" });
     }
@@ -1322,9 +1335,10 @@ exports.requestTransfer = async (req, res) => {
 
     if (referenceType === "Booking") {
       await Booking.findByIdAndUpdate(referenceId, { status: "Transfer Requested" });
-    } else {
+    } else if (referenceType === "Task") {
       await Task.findByIdAndUpdate(referenceId, { status: "Transfer Requested" });
     }
+    // For DefaultDuty, we don't update status in any separate model right now.
 
     await Notification.create({
       title: "Pooja Transfer Request",
