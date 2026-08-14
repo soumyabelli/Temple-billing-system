@@ -30,7 +30,7 @@ const API_BASE = "http://localhost:5000/api";
 
 const MyDuties = ({ darkMode }) => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState("poojas"); // "poojas", "schedule", "transfers"
+  const [activeTab, setActiveTab] = useState("schedule"); // "schedule", "poojas"
   
   // --- STATE FOR MY DUTIES (SCHEDULE & TRANSFERS) ---
   const [duties, setDuties] = useState([]);
@@ -304,9 +304,8 @@ const MyDuties = ({ darkMode }) => {
         {/* Tabs */}
         <div className="relative z-10 flex flex-wrap gap-3 mt-8">
           {[
-            { id: "poojas", label: "Assigned Poojas", icon: <FaCalendarAlt /> },
             { id: "schedule", label: "Daily Duties", icon: <FaCalendarDay /> },
-            { id: "transfers", label: `Transfer Requests ${incomingTransfers.length > 0 ? `(${incomingTransfers.length})` : ''}`, icon: <FaExchangeAlt /> }
+            { id: "poojas", label: "Assigned Poojas", icon: <FaCalendarAlt /> }
           ].map((tab) => (
             <button
               key={tab.id}
