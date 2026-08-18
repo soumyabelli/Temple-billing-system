@@ -1359,10 +1359,31 @@ exports.requestTransfer = async (req, res) => {
 
 exports.getPriestsList = async (req, res) => {
   try {
+    const activeEmployees = await Employee.find({
+      role: { $regex: /^priest$/i },
+      status: { $in: ["Active", "On Leave"] },
+      deletedAt: null
+    }).select("email employeeId userId");
+
+    const emails = activeEmployees.map(emp => emp.email).filter(Boolean);
+    const employeeIds = activeEmployees.map(emp => emp.employeeId).filter(Boolean);
+    const userIds = activeEmployees.map(emp => emp.userId).filter(Boolean);
+
+    if (emails.length === 0 && employeeIds.length === 0 && userIds.length === 0) {
+      return res.status(200).json([]);
+    }
+
     const priests = await User.find({ 
+      $or: [
+        { email: { $in: emails } },
+        { employeeId: { $in: employeeIds } },
+        { _id: { $in: userIds } }
+      ],
       role: { $regex: /^priest$/i }, 
-      status: { $in: ["Active", "On Leave"] } 
+      status: { $in: ["Active", "On Leave"] },
+      accountEnabled: { $ne: false }
     }).select("name email _id");
+
     return res.status(200).json(priests);
   } catch (error) {
     console.error("Error fetching priests list:", error);
