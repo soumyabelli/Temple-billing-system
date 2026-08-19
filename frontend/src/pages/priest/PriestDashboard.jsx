@@ -170,7 +170,7 @@ const PriestDashboard = () => {
               <button
                 onClick={() => {
                   if (card.label.includes("Assigned") || card.label.includes("Today's")) navigate("/priest/my-duties");
-                  else if (card.label.includes("Upcoming")) navigate("/priest/seva-schedule");
+                  else if (card.label.includes("Upcoming")) navigate("/priest/my-duties");
                   else if (card.label.includes("Completed")) navigate("/priest/completed-services");
                 }}
                 className="text-orange-500 font-bold hover:underline"
