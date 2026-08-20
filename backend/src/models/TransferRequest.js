@@ -31,6 +31,9 @@ const transferRequestSchema = new mongoose.Schema(
       trim: true,
       default: "",
     },
+    targetDate: {
+      type: Date,
+    },
     status: {
       type: String,
       enum: ["Pending", "Approved", "Rejected"],

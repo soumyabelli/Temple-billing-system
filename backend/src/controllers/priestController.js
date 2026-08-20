@@ -412,6 +412,7 @@ exports.getAssignedPoojas = async (req, res) => {
       pooja: b.service,
       devotee: b.devoteeName,
       mobile: b.devoteePhone || b.contactNumber || "N/A",
+      email: b.devoteeEmail || "N/A",
       status: b.status,
       startedAt: b.startedAt,
       completedAt: b.completedAt,
@@ -1155,11 +1156,33 @@ exports.getMyDuties = async (req, res) => {
 
     // 1. Fetch Bookings assigned to Priest
     const bookings = await Booking.find({ assignedPriest: priestId });
+
+    // 2. Fetch Tasks assigned to Priest
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const tasks = await Task.find({
+      $or: [{ staffId: priestId }, { staffEmail: user?.email }],
+      status: { $in: ["Pending", "Assigned", "Accepted", "In Progress", "Transfer Requested"] }
+    });
     
     // Check pending TransferRequests for the employee
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
+
     const pendingTransfers = await TransferRequest.find({
       originalPriest: priestId,
-      status: "Pending"
+      status: "Pending",
+      $or: [
+        { referenceType: { $ne: "DefaultDuty" } },
+        { 
+          referenceType: "DefaultDuty",
+          $or: [
+            { targetDate: { $gte: todayStart, $lte: todayEnd } },
+            { targetDate: null, createdAt: { $gte: todayStart, $lte: todayEnd } }
+          ]
+        }
+      ]
     });
     const pendingTransferIds = pendingTransfers.map(tr => tr.referenceId.toString());
 
@@ -1198,6 +1221,29 @@ exports.getMyDuties = async (req, res) => {
         priority: "High", // Default for booked poojas
         assignedBy: "Admin",
         status: b.status,
+      });
+    });
+
+    tasks.forEach(t => {
+      let rawDate = new Date();
+      if (t.dateKey) {
+        rawDate = new Date(t.dateKey);
+      } else if (t.dueDate) {
+        rawDate = new Date(t.dueDate);
+      }
+      
+      unifiedDuties.push({
+        id: t._id,
+        referenceType: "Task",
+        poojaName: t.dutyName || t.duty || t.title,
+        devotee: "N/A",
+        date: formatDateTime(rawDate),
+        rawDate: rawDate,
+        time: t.time || t.startTime || "N/A",
+        area: t.area || t.dutyArea || "Main Temple",
+        priority: t.priority || "Medium",
+        assignedBy: t.assignedBy || "Admin",
+        status: t.status,
       });
     });
 
@@ -1304,7 +1350,8 @@ exports.requestTransfer = async (req, res) => {
       if (!employee) {
         return res.status(400).json({ message: "Invalid duty reference." });
       }
-      dateStr = new Date().toISOString();
+      // Use the provided date from frontend or default to today
+      dateStr = req.body.dateStr || new Date().toISOString();
     } else {
       return res.status(400).json({ message: "Invalid reference type" });
     }
@@ -1322,6 +1369,20 @@ exports.requestTransfer = async (req, res) => {
       if (leaveCheck) {
         conflictWarning = "Warning: The requested priest is on approved leave for this date.";
       }
+
+      // Check 5 hour rule for DefaultDuty, Booking, Task
+      const dutyDate = new Date(dateStr);
+      if (!isNaN(dutyDate.getTime())) {
+        let actualDutyTime = dutyDate;
+        
+        // If DefaultDuty and the time is passed from frontend, or we just rely on dateStr
+        // Actually for DefaultDuty, dateStr from frontend is e.g. "2026-08-25T09:00:00.000Z" (which has the correct time parsed)
+        
+        const fiveHoursBefore = new Date(actualDutyTime.getTime() - (5 * 60 * 60 * 1000));
+        if (new Date() > fiveHoursBefore) {
+          return res.status(400).json({ message: "Duty transfers must be requested at least 5 hours before the scheduled time." });
+        }
+      }
     }
 
     const transferRequest = await TransferRequest.create({
@@ -1331,6 +1392,7 @@ exports.requestTransfer = async (req, res) => {
       requestedPriest: requestedPriestId,
       reason,
       remarks,
+      targetDate: dateStr ? new Date(dateStr) : undefined
     });
 
     if (referenceType === "Booking") {
@@ -1346,6 +1408,35 @@ exports.requestTransfer = async (req, res) => {
       audienceRole: "admin",
       category: "transfer",
     });
+
+    await Notification.create({
+      title: "Duty Transfer Request",
+      message: `You have a new duty transfer request. Reason: ${reason}`,
+      audienceId: requestedPriestId,
+      category: "transfer",
+    });
+
+    const reqPriestUser = await User.findById(requestedPriestId);
+    if (reqPriestUser && reqPriestUser.email) {
+      const { sendEmail } = require("../utils/communicationService");
+      await sendEmail({
+        to: reqPriestUser.email,
+        subject: "Duty Transfer Request",
+        text: `You have received a new duty transfer request.\n\nDate & Time: ${dateStr ? new Date(dateStr).toLocaleString() : "N/A"}\nReason: ${reason}\nRemarks: ${remarks || "None"}\n\nPlease check your dashboard to approve or reject.`,
+        html: `
+          <div style="font-family: sans-serif;">
+            <h2>Duty Transfer Request</h2>
+            <p>You have received a new duty transfer request.</p>
+            <ul>
+              <li><strong>Date & Time:</strong> ${dateStr ? new Date(dateStr).toLocaleString() : "N/A"}</li>
+              <li><strong>Reason:</strong> ${reason}</li>
+              <li><strong>Remarks:</strong> ${remarks || "None"}</li>
+            </ul>
+            <p>Please check your dashboard to approve or reject.</p>
+          </div>
+        `
+      });
+    }
 
     return res.status(200).json({ 
       message: "Transfer request submitted successfully to Admin.", 
@@ -1509,6 +1600,77 @@ exports.respondToTransfer = async (req, res) => {
   } catch (error) {
     console.error("Error responding to transfer:", error);
     return res.status(500).json({ message: "Failed to respond to transfer" });
+  }
+};
+
+exports.getAvailablePriestsForTransfer = async (req, res) => {
+  try {
+    const { date, time } = req.query; // e.g. date=2025-05-15, time=07:30 AM
+    const priestId = req.user.id;
+
+    if (!date || !time) {
+      return res.status(400).json({ message: "Date and time are required." });
+    }
+
+    const dutyDateStr = `${date.split("T")[0]} ${time}`;
+    const dutyDate = new Date(dutyDateStr);
+    
+    // If invalid date, fallback to returning all active priests
+    let busyPriestIds = [priestId];
+    
+    if (!isNaN(dutyDate.getTime())) {
+      const startOfDuty = new Date(dutyDate.getTime() - (2 * 60 * 60 * 1000));
+      const endOfDuty = new Date(dutyDate.getTime() + (2 * 60 * 60 * 1000));
+
+      const busyBookings = await Booking.find({
+        status: { $in: ["Booked", "Confirmed", "Assigned", "In Progress", "Upcoming"] }
+      });
+      
+      const busyBookingPriests = busyBookings.filter(b => {
+        const bDate = new Date(b.datetime);
+        return bDate >= startOfDuty && bDate <= endOfDuty;
+      }).map(b => b.assignedPriest?.toString()).filter(Boolean);
+
+      const busyTasks = await Task.find({
+        dateKey: { $regex: new RegExp(date.split("T")[0], "i") },
+        status: { $in: ["Pending", "Assigned", "Accepted", "In Progress"] }
+      });
+      
+      const busyTaskPriests = busyTasks.filter(t => {
+        return t.time === time || t.startTime === time || (t.time && t.time.includes(time.split(" ")[0]));
+      }).map(t => t.staffId).filter(Boolean);
+
+      busyPriestIds = [...new Set([...busyBookingPriests, ...busyTaskPriests, priestId])];
+    }
+
+    const activeEmployees = await Employee.find({
+      role: { $regex: /^priest$/i },
+      status: { $in: ["Active"] },
+      deletedAt: null
+    }).select("email employeeId userId");
+
+    const emails = activeEmployees.map(emp => emp.email).filter(Boolean);
+    const userIds = activeEmployees.map(emp => emp.userId).filter(Boolean);
+
+    if (emails.length === 0 && userIds.length === 0) {
+      return res.status(200).json([]);
+    }
+
+    const availablePriests = await User.find({
+      $or: [
+        { email: { $in: emails } },
+        { _id: { $in: userIds } }
+      ],
+      role: { $regex: /^priest$/i },
+      status: "Active",
+      accountEnabled: { $ne: false },
+      _id: { $nin: busyPriestIds }
+    }).select("name email _id");
+
+    return res.status(200).json(availablePriests);
+  } catch (error) {
+    console.error("Error fetching available priests:", error);
+    return res.status(500).json({ message: "Failed to fetch available priests" });
   }
 };
 

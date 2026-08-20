@@ -35,6 +35,7 @@ const {
   getIncomingTransfers,
   getMyTransfers,
   respondToTransfer,
+  getAvailablePriestsForTransfer,
 } = require("../controllers/priestController");
 const {
   getInventoryCatalog,
@@ -67,6 +68,7 @@ router.post("/my-duties/transfer", requestTransfer);
 router.get("/my-duties/incoming-transfers", getIncomingTransfers);
 router.get("/my-duties/transfers", getMyTransfers);
 router.post("/my-duties/transfer/:id/respond", respondToTransfer);
+router.get("/my-duties/available-priests", getAvailablePriestsForTransfer);
 router.get("/priests-list", getPriestsList);
 
 // Module 1 Endpoints

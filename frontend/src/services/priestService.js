@@ -383,3 +383,16 @@ export const updateSettings = async (settingsData) => {
     throw error;
   }
 };
+
+export const getAvailablePriests = async (date, time) => {
+  try {
+    const response = await axios.get(`${API_BASE}/priest/my-duties/available-priests`, {
+      params: { date, time },
+      headers: getAuthHeaders()
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching available priests:", error);
+    throw error;
+  }
+};

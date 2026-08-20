@@ -17,6 +17,7 @@ import {
   FaInfoCircle,
   FaPhoneAlt,
   FaCalendarAlt,
+  FaEnvelope,
 } from "react-icons/fa";
 import { useAuth } from "../../context/AuthContext";
 import {
@@ -24,6 +25,7 @@ import {
   startPooja,
   completePooja,
   putPoojaPending,
+  getAvailablePriests,
 } from "../../services/priestService";
 
 const API_BASE = "http://localhost:5000/api";
@@ -150,11 +152,39 @@ const MyDuties = ({ darkMode }) => {
     if (!transferForm.requestedPriestId || !transferForm.reason) {
       return showNotification("Please fill all required fields.", "error");
     }
+    // Check 5 hours on frontend for good UX
+    let dutyDateStr = selectedDuty.rawDate;
+    if (selectedDuty.referenceType === "DefaultDuty" && transferForm.targetDate) {
+      // Parse time to check 5-hour rule accurately
+      const timeStr = selectedDuty.time || "09:00 AM";
+      const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+      let hours = 9, minutes = 0;
+      if (match) {
+        hours = parseInt(match[1], 10);
+        minutes = parseInt(match[2], 10);
+        if (match[3].toUpperCase() === 'PM' && hours < 12) hours += 12;
+        if (match[3].toUpperCase() === 'AM' && hours === 12) hours = 0;
+      }
+      
+      const d = new Date(transferForm.targetDate);
+      d.setHours(hours, minutes, 0, 0);
+      dutyDateStr = d.toISOString();
+    }
+    
+    const dutyDate = new Date(dutyDateStr);
+    if (!isNaN(dutyDate.getTime())) {
+      const fiveHoursBefore = new Date(dutyDate.getTime() - (5 * 60 * 60 * 1000));
+      if (new Date() > fiveHoursBefore) {
+        return showNotification("Transfers must be requested at least 5 hours in advance.", "error");
+      }
+    }
+
     try {
       setIsSubmitting(true);
       const res = await axios.post(`${API_BASE}/priest/my-duties/transfer`, {
         referenceType: selectedDuty.referenceType,
         referenceId: selectedDuty.id,
+        dateStr: dutyDateStr,
         ...transferForm
       }, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -173,10 +203,34 @@ const MyDuties = ({ darkMode }) => {
     }
   };
 
-  const openTransferModal = (duty) => {
+  const fetchAvailablePriestsForDate = async (dateStr, timeStr) => {
+    try {
+      const available = await getAvailablePriests(dateStr, timeStr);
+      setPriests(available);
+    } catch (error) {
+      console.error("Failed to load available priests", error);
+      showNotification("Could not load available priests", "warning");
+    }
+  };
+
+  const openTransferModal = async (duty) => {
     setSelectedDuty(duty);
-    setTransferForm({ requestedPriestId: "", reason: "", remarks: "" });
+    const defaultDate = duty.rawDate ? new Date(duty.rawDate).toISOString().split("T")[0] : new Date().toISOString().split("T")[0];
+    setTransferForm({ requestedPriestId: "", reason: "", remarks: "", targetDate: defaultDate });
     setShowTransferModal(true);
+    
+    fetchAvailablePriestsForDate(defaultDate, duty.time || "06:00 AM");
+  };
+
+  const isTransferable = (duty) => {
+    if (duty.referenceType === "DefaultDuty") return true; // Can transfer for any future date
+    if (!duty.rawDate) return true;
+    
+    let dutyDate = new Date(duty.rawDate);
+    if (isNaN(dutyDate.getTime())) return true;
+    
+    const fiveHoursBefore = new Date(dutyDate.getTime() - (5 * 60 * 60 * 1000));
+    return new Date() < fiveHoursBefore;
   };
 
   // --- HANDLERS FOR POOJAS ---
@@ -440,6 +494,11 @@ const MyDuties = ({ darkMode }) => {
                           <div className="inline-flex items-center gap-1 text-xs font-semibold mt-1 opacity-70">
                             <FaPhoneAlt size={10} /> {pooja.mobile}
                           </div>
+                          {pooja.email && pooja.email !== "N/A" && (
+                            <div className="flex items-center gap-1 text-xs font-semibold mt-0.5 opacity-70">
+                              <FaEnvelope size={10} className="shrink-0" /> <span className="truncate max-w-[130px]" title={pooja.email}>{pooja.email}</span>
+                            </div>
+                          )}
                         </td>
                         <td className="py-4 px-4">
                           <div className="flex flex-col gap-1 items-start">
@@ -540,12 +599,18 @@ const MyDuties = ({ darkMode }) => {
                       <td className="px-4 py-4 text-center">
                         <div className="flex items-center justify-center gap-2">
                           {duty.status !== "Transfer Requested" && duty.status !== "Transferred" ? (
-                            <button
-                              onClick={() => openTransferModal(duty)}
-                              className="px-3 py-1.5 border border-orange-500/50 text-orange-600 dark:text-orange-400 bg-orange-500/5 text-[11px] font-bold rounded-lg hover:bg-orange-500/10 transition-all active:scale-95"
-                            >
-                              Transfer
-                            </button>
+                            isTransferable(duty) ? (
+                              <button
+                                onClick={() => openTransferModal(duty)}
+                                className="px-3 py-1.5 border border-orange-500/50 text-orange-600 dark:text-orange-400 bg-orange-500/5 text-[11px] font-bold rounded-lg hover:bg-orange-500/10 transition-all active:scale-95"
+                              >
+                                Transfer
+                              </button>
+                            ) : (
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-100 dark:bg-slate-800/50 px-2 py-1 rounded-lg" title="Transfers must be requested at least 5 hours in advance">
+                                Not Transferable
+                              </span>
+                            )
                           ) : (
                             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-100 dark:bg-slate-800/50 px-2 py-1 rounded-lg">
                               Transfer Pending
@@ -644,6 +709,22 @@ const MyDuties = ({ darkMode }) => {
             </div>
             
             <form onSubmit={submitTransfer} className="space-y-5 relative z-10">
+              {selectedDuty?.referenceType === "DefaultDuty" && (
+                <div>
+                  <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${darkMode ? "text-slate-400" : "text-slate-500"}`}>Transfer Date *</label>
+                  <input
+                    type="date"
+                    required
+                    value={transferForm.targetDate || ""}
+                    onChange={(e) => {
+                      setTransferForm({ ...transferForm, targetDate: e.target.value });
+                      fetchAvailablePriestsForDate(e.target.value, selectedDuty.time || "06:00 AM");
+                    }}
+                    min={new Date().toISOString().split("T")[0]}
+                    className={`w-full p-3.5 rounded-2xl border text-sm outline-none ${inputClass}`}
+                  />
+                </div>
+              )}
               <div>
                 <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${darkMode ? "text-slate-400" : "text-slate-500"}`}>Select Priest *</label>
                 <select
