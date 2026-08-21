@@ -42,6 +42,7 @@ import LeaveHistory from "../../staff/LeaveHistory";
 import LeaveRequest from "../../staff/LeaveRequest";
 import StaffInventory from "../../staff/StaffInventory";
 import AccountantInventory from "../AccountantInventory";
+import EmployeeProfileView from "../../../components/shared/EmployeeProfileView";
 import ManualEntriesView from "./ManualEntriesView";
 import ProfitLossView from "./ProfitLossView";
 import AccountLedgersView from "./AccountLedgersView";
@@ -1568,222 +1569,24 @@ const ProfileView = ({ user }) => {
 
   return (
     <div className="accountant-view">
-      <ViewHero
-        eyebrow="Profile"
-        title="Accountant Profile"
-        description="Manage your profile information and security settings."
-        right={
-          !isEditing && !isChangingPassword ? (
-            <button
-              type="button"
-              onClick={() => setIsEditing(true)}
-              className="accountant-primaryButton"
-            >
-              <FaEdit /> Edit Profile
-            </button>
-          ) : null
-        }
-      />
-
-      <div className="accountant-profileLayout">
-        <section className="accountant-profileCard">
-          <div className="accountant-profileAvatar">
-            {profile?.photo ? (
-              <img src={profile.photo} alt={profile.name} className="h-full w-full rounded-full object-cover" />
-            ) : (
-              <FaUser />
-            )}
-          </div>
-          <h3>{profile?.name || user?.name}</h3>
-          <p className="text-slate-500 font-bold uppercase tracking-wider text-xs">
-            {profile?.role || "Accountant"}
-          </p>
-
-          {message && (
-            <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-semibold text-emerald-800">
-              {message}
-            </div>
-          )}
-          {error && (
-            <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-800">
-              {error}
-            </div>
-          )}
-
-          {isEditing ? (
-            <form onSubmit={handleProfileSubmit} className="mt-6 space-y-4 text-left">
-              <label className="block">
-                <span className="text-xs font-bold text-slate-700">Full Name</span>
-                <input
-                  type="text"
-                  value={editForm.name}
-                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                  className="w-full mt-1 rounded-xl border border-slate-200 bg-temple-100 px-3 py-2 text-sm outline-none focus:border-amber-500"
-                  required
-                />
-              </label>
-
-              <label className="block">
-                <span className="text-xs font-bold text-slate-700">Email Address</span>
-                <input
-                  type="email"
-                  value={editForm.email}
-                  onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                  className="w-full mt-1 rounded-xl border border-slate-200 bg-temple-100 px-3 py-2 text-sm outline-none focus:border-amber-500"
-                  required
-                />
-              </label>
-
-              <label className="block">
-                <span className="text-xs font-bold text-slate-700">Phone Number</span>
-                <input
-                  type="text"
-                  value={editForm.phone}
-                  onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
-                  className="w-full mt-1 rounded-xl border border-slate-200 bg-temple-100 px-3 py-2 text-sm outline-none focus:border-[#f28c18]"
-                />
-              </label>
-
-              <label className="block">
-                <span className="text-xs font-bold text-slate-700">Date of Birth</span>
-                <input
-                  type="date"
-                  value={editForm.dob}
-                  onChange={(e) => setEditForm({ ...editForm, dob: e.target.value })}
-                  className="w-full mt-1 rounded-xl border border-slate-200 bg-temple-100 px-3 py-2 text-sm outline-none focus:border-[#f28c18]"
-                />
-              </label>
-
-              <label className="block">
-                <span className="text-xs font-bold text-slate-700">Blood Group</span>
-                <input
-                  type="text"
-                  value={editForm.bloodGroup}
-                  onChange={(e) => setEditForm({ ...editForm, bloodGroup: e.target.value })}
-                  className="w-full mt-1 rounded-xl border border-slate-200 bg-temple-100 px-3 py-2 text-sm outline-none focus:border-[#f28c18]"
-                  placeholder="e.g. O+"
-                />
-              </label>
-
-              <label className="block">
-                <span className="text-xs font-bold text-slate-700">Emergency Contact</span>
-                <input
-                  type="text"
-                  value={editForm.emergencyContact}
-                  onChange={(e) => setEditForm({ ...editForm, emergencyContact: e.target.value })}
-                  className="w-full mt-1 rounded-xl border border-slate-200 bg-temple-100 px-3 py-2 text-sm outline-none focus:border-[#f28c18]"
-                />
-              </label>
-
-              <label className="block">
-                <span className="text-xs font-bold text-slate-700">Address</span>
-                <textarea
-                  value={editForm.address}
-                  onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
-                  className="w-full mt-1 rounded-xl border border-slate-200 bg-temple-100 px-3 py-2 text-sm outline-none focus:border-[#f28c18]"
-                  rows="3"
-                />
-              </label>
-
-              <div className="flex gap-2 pt-2">
-                <button
-                  type="submit"
-                  className="flex-1 rounded-xl bg-amber-600 py-2 text-sm font-bold text-white transition hover:bg-amber-700"
-                >
-                  Save Changes
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsEditing(false)}
-                  className="flex-1 rounded-xl bg-slate-100 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-200"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          ) : isChangingPassword ? (
-            <form onSubmit={handlePasswordSubmit} className="mt-6 space-y-4 text-left">
-              <label className="block">
-                <span className="text-xs font-bold text-slate-700">Current Password</span>
-                <input
-                  type="password"
-                  value={passwordForm.currentPassword}
-                  onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
-                  className="w-full mt-1 rounded-xl border border-slate-200 bg-temple-100 px-3 py-2 text-sm outline-none focus:border-[#f28c18]"
-                  required
-                />
-              </label>
-
-              <label className="block">
-                <span className="text-xs font-bold text-slate-700">New Password</span>
-                <input
-                  type="password"
-                  value={passwordForm.newPassword}
-                  onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
-                  className="w-full mt-1 rounded-xl border border-slate-200 bg-temple-100 px-3 py-2 text-sm outline-none focus:border-[#f28c18]"
-                  required
-                />
-              </label>
-
-              <label className="block">
-                <span className="text-xs font-bold text-slate-700">Confirm New Password</span>
-                <input
-                  type="password"
-                  value={passwordForm.confirmPassword}
-                  onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
-                  className="w-full mt-1 rounded-xl border border-slate-200 bg-temple-100 px-3 py-2 text-sm outline-none focus:border-[#f28c18]"
-                  required
-                />
-              </label>
-
-              <div className="flex gap-2 pt-2">
-                <button
-                  type="submit"
-                  className="flex-1 rounded-xl bg-amber-600 py-2 text-sm font-bold text-white transition hover:bg-amber-700"
-                >
-                  Change Password
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsChangingPassword(false)}
-                  className="flex-1 rounded-xl bg-slate-100 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-200"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          ) : (
-            <div className="accountant-profileDetails">
-              <ProfileField label="Name" value={profile?.name || user?.name} />
-              <ProfileField label="Email" value={profile?.email || user?.email} />
-              <ProfileField label="Phone" value={profile?.phone || "-"} />
-              <ProfileField label="Blood Group" value={profile?.bloodGroup || "-"} />
-              <ProfileField label="Date of Birth" value={profile?.dob ? new Date(profile.dob).toLocaleDateString("en-IN") : "-"} />
-              <ProfileField label="Emergency Contact" value={profile?.emergencyContact || "-"} />
-              <ProfileField label="Address" value={profile?.address || "-"} />
-              <ProfileField label="Role" value={titleCase(profile?.role || user?.role)} />
-            </div>
-          )}
-        </section>
-
-        {!isEditing && !isChangingPassword && (
-          <section className="accountant-profileActions">
-            <button
-              type="button"
-              onClick={() => setIsEditing(true)}
-              className="accountant-profileAction"
-            >
-              <FaEdit /> Edit Profile
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsChangingPassword(true)}
-              className="accountant-profileAction"
-            >
-              <FaLock /> Change Password
-            </button>
-          </section>
-        )}
+      <div className="mx-auto max-w-7xl">
+        <EmployeeProfileView
+          profile={profile}
+          user={user}
+          profileForm={editForm}
+          passwordForm={passwordForm}
+          errors={{}}
+          message={message || error}
+          messageType={message ? "success" : error ? "error" : "info"}
+          loading={loading}
+          savingProfile={false}
+          savingPassword={false}
+          onFieldChange={(field, value) => setEditForm(prev => ({ ...prev, [field]: value }))}
+          onPasswordChange={(field, value) => setPasswordForm(prev => ({ ...prev, [field]: value }))}
+          onSaveProfile={handleProfileSubmit}
+          onChangePassword={handlePasswordSubmit}
+          adminManagedDetails={[]}
+        />
       </div>
     </div>
   );

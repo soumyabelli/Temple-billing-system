@@ -1017,212 +1017,24 @@ const StaffDashboard = () => {
         ) : null}
 
         {!loading && activeSection === "profile" ? (
-          <section className="profile-settings-page">
-            <div className="leave-head">
-              <div>
-                <h2>Profile Settings</h2>
-                <p className="profile-section-intro">
-                  Update your personal details here. Employment details below stay synced with admin changes.
-                </p>
-              </div>
-              <button type="button" onClick={fetchProfileData} disabled={profileLoading}>
-                {profileLoading ? "Refreshing..." : "Refresh"}
-              </button>
-            </div>
-
-            <div className="profile-settings-grid">
-              <div className="table-card">
-                <h3 className="section-title">My Personal Details</h3>
-                <p className="section-subtitle">You can update your own contact details, photo, and login email here.</p>
-                <form onSubmit={handleProfileSave} className="leave-form">
-                  <div className="date-grid">
-                    <div>
-                      <label htmlFor="profile-name">Full Name</label>
-                      <input
-                        id="profile-name"
-                        type="text"
-                        value={profileForm.name}
-                        onChange={(e) => handleProfileInputChange("name", e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="profile-email">Email</label>
-                      <input
-                        id="profile-email"
-                        type="email"
-                        value={profileForm.email}
-                        onChange={(e) => handleProfileInputChange("email", e.target.value)}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="profile-photo-upload">
-                    <div className="profile-photo-preview">
-                      {profileForm.photo ? (
-                        <img src={profileForm.photo} alt={profileForm.name || "Profile preview"} />
-                      ) : (
-                        <span>{(profileForm.name || staff?.name || "S").charAt(0).toUpperCase()}</span>
-                      )}
-                    </div>
-                    <div className="profile-photo-upload-content">
-                      <label htmlFor="profile-photo">Profile Picture</label>
-                      <input
-                        id="profile-photo"
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => handleProfilePhotoChange(e.target.files?.[0])}
-                      />
-                      <p>Optional. Upload a JPG or PNG so admin can see your photo in employee details.</p>
-                    </div>
-                  </div>
-
-                  <div className="date-grid">
-                    <div>
-                      <label htmlFor="profile-blood">Blood Group</label>
-                      <select
-                        id="profile-blood"
-                        value={profileForm.bloodGroup}
-                        onChange={(e) => handleProfileInputChange("bloodGroup", e.target.value)}
-                      >
-                        {BLOOD_GROUPS.map((bloodGroup) => (
-                          <option key={bloodGroup} value={bloodGroup}>
-                            {bloodGroup}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label htmlFor="profile-dob">Date of Birth</label>
-                      <input
-                        id="profile-dob"
-                        type="date"
-                        value={profileForm.dob}
-                        onChange={(e) => handleProfileInputChange("dob", e.target.value)}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="date-grid">
-                    <div>
-                      <label htmlFor="profile-phone">Phone</label>
-                      <input
-                        id="profile-phone"
-                        type="text"
-                        value={profileForm.phone}
-                        onChange={(e) => handleProfileInputChange("phone", e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="profile-emergency">Emergency Contact</label>
-                      <input
-                        id="profile-emergency"
-                        type="text"
-                        value={profileForm.emergencyContact}
-                        onChange={(e) => handleProfileInputChange("emergencyContact", e.target.value)}
-                      />
-                    </div>
-                  </div>
-
-                  <label htmlFor="profile-address">Address</label>
-                  <textarea
-                    id="profile-address"
-                    rows="3"
-                    value={profileForm.address}
-                    onChange={(e) => handleProfileInputChange("address", e.target.value)}
-                  />
-
-                  <div className="date-grid">
-                    <div>
-                      <label htmlFor="profile-bankName">Bank Name</label>
-                      <input
-                        id="profile-bankName"
-                        type="text"
-                        value={profileForm.bankName}
-                        onChange={(e) => handleProfileInputChange("bankName", e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="profile-accountNumber">Account Number</label>
-                      <input
-                        id="profile-accountNumber"
-                        type="text"
-                        value={profileForm.accountNumber}
-                        onChange={(e) => handleProfileInputChange("accountNumber", e.target.value)}
-                      />
-                    </div>
-                  </div>
-
-                  {profileMessage ? <p className="profile-note">{profileMessage}</p> : null}
-
-                  <div className="form-actions">
-                    <button type="submit" disabled={profileSaving}>
-                      <FiSave />
-                      {profileSaving ? "Saving..." : "Save Profile"}
-                    </button>
-                    <button type="button" className="secondary-btn" onClick={() => setActiveSection("dashboard")}>
-                      Back to Dashboard
-                    </button>
-                  </div>
-                </form>
-
-                <div className="profile-admin-details">
-                  <div className="profile-admin-details-head">
-                    <div>
-                      <h4>Admin Managed Details</h4>
-                      <p>These values are read-only here and stay in sync with the employee record.</p>
-                    </div>
-                  </div>
-
-                  <div className="profile-info-grid">
-                    {getStaffProfileDetails(profileForm).map((item) => (
-                      <div key={item.label} className="profile-info-card">
-                        <span>{item.label}</span>
-                        <strong>{item.value}</strong>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="table-card">
-                <h3 className="section-title">Change Password</h3>
-                <p className="section-subtitle">Use your current password to create a new secure password.</p>
-                <form onSubmit={handlePasswordSave} className="leave-form">
-                  <label htmlFor="current-password">Current Password</label>
-                  <input
-                    id="current-password"
-                    type="password"
-                    value={passwordForm.currentPassword}
-                    onChange={(e) => setPasswordForm((prev) => ({ ...prev, currentPassword: e.target.value }))}
-                  />
-
-                  <label htmlFor="new-password">New Password</label>
-                  <input
-                    id="new-password"
-                    type="password"
-                    value={passwordForm.newPassword}
-                    onChange={(e) => setPasswordForm((prev) => ({ ...prev, newPassword: e.target.value }))}
-                  />
-
-                  <label htmlFor="confirm-password">Confirm Password</label>
-                  <input
-                    id="confirm-password"
-                    type="password"
-                    value={passwordForm.confirmPassword}
-                    onChange={(e) => setPasswordForm((prev) => ({ ...prev, confirmPassword: e.target.value }))}
-                  />
-
-                  {passwordMessage ? <p className="profile-note">{passwordMessage}</p> : null}
-
-                  <div className="form-actions">
-                    <button type="submit" disabled={passwordSaving}>
-                      <FiLock />
-                      {passwordSaving ? "Updating..." : "Update Password"}
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
+          <section className="profile-settings-page" style={{ padding: "0" }}>
+            <EmployeeProfileView
+              profile={staff}
+              user={user}
+              profileForm={profileForm}
+              passwordForm={passwordForm}
+              errors={{}}
+              message={profileMessage || passwordMessage}
+              messageType={profileMessage === "Profile updated successfully" || passwordMessage === "Password changed successfully" ? "success" : profileMessage || passwordMessage ? "error" : "info"}
+              loading={profileLoading}
+              savingProfile={profileSaving}
+              savingPassword={passwordSaving}
+              onFieldChange={handleProfileInputChange}
+              onPasswordChange={(field, value) => setPasswordForm((prev) => ({ ...prev, [field]: value }))}
+              onSaveProfile={handleProfileSave}
+              onChangePassword={handlePasswordSave}
+              adminManagedDetails={getStaffProfileDetails(profileForm)}
+            />
           </section>
         ) : null}
 
