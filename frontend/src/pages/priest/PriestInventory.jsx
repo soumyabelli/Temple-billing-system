@@ -232,38 +232,7 @@ const PriestInventory = () => {
             <p>Request items and track usage of your issued items.</p>
           </div>
           <div className="inventory-actions">
-            <button
-              type="button"
-              className={activeTab === "requests" ? "active" : ""}
-              onClick={() => setActiveTab("requests")}
-              style={{
-                background: activeTab === "requests" ? "#2563eb" : "#f1f5f9",
-                color: activeTab === "requests" ? "#fff" : "#475569",
-                border: "none",
-                padding: "8px 16px",
-                borderRadius: "30px",
-                fontWeight: 600,
-                cursor: "pointer"
-              }}
-            >
-              My Requests
-            </button>
-            <button
-              type="button"
-              className={activeTab === "issued" ? "active" : ""}
-              onClick={() => setActiveTab("issued")}
-              style={{
-                background: activeTab === "issued" ? "#2563eb" : "#f1f5f9",
-                color: activeTab === "issued" ? "#fff" : "#475569",
-                border: "none",
-                padding: "8px 16px",
-                borderRadius: "30px",
-                fontWeight: 600,
-                cursor: "pointer"
-              }}
-            >
-              My Issued Items ({pendingIssues.length})
-            </button>
+            {/* Tabs removed as per user request */}
           </div>
         </div>
 
@@ -408,19 +377,30 @@ const PriestInventory = () => {
                   ) : catalog.length === 0 ? (
                     <div className="empty-cell">No inventory data available</div>
                   ) : (
-                    catalog.map((item) => (
-                      <div key={item.name} className="inventory-status-item">
-                        <div>
-                          <h3>{item.name}</h3>
-                          <p style={{ fontSize: "12px", color: "#64748b", margin: "2px 0 0" }}>
-                            Stock: <strong>{item.stock} {item.unit}</strong> | Min: {item.minimumStock} {item.unit}
-                          </p>
+                    (() => {
+                      const lowStockItems = catalog
+                        .filter(item => item.status === "Low Stock" || item.stock <= item.minimumStock)
+                        .sort((a, b) => a.stock - b.stock)
+                        .slice(0, 5);
+                      
+                      if (lowStockItems.length === 0) {
+                        return <div className="empty-cell">No low stock items.</div>;
+                      }
+
+                      return lowStockItems.map((item) => (
+                        <div key={item.name} className="inventory-status-item">
+                          <div>
+                            <h3>{item.name}</h3>
+                            <p style={{ fontSize: "12px", color: "#64748b", margin: "2px 0 0" }}>
+                              Stock: <strong style={{ color: "#ef4444" }}>{item.stock} {item.unit}</strong> | Min: {item.minimumStock} {item.unit}
+                            </p>
+                          </div>
+                          <span className="status-chip rejected">
+                            🔴 Low Stock
+                          </span>
                         </div>
-                        <span className={item.status === "Available" ? "status-chip approved" : "status-chip rejected"}>
-                          {item.status === "Low Stock" ? "🔴 Low Stock" : "🟢 Available"}
-                        </span>
-                      </div>
-                    ))
+                      ));
+                    })()
                   )}
                 </div>
               </div>

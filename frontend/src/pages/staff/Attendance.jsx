@@ -324,15 +324,16 @@ const createAttendanceReportPdf = ({
   const rowHeight = 8;
 
   const drawTableHeader = (startY) => {
-    pdf.setFillColor(255, 240, 223);
-    pdf.setDrawColor(241, 206, 156);
     let cursorX = tableX;
     tableHeaders.forEach((header, index) => {
+      pdf.setFillColor(255, 240, 223);
+      pdf.setDrawColor(241, 206, 156);
       pdf.rect(cursorX, startY, tableWidths[index], headerHeight, "FD");
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(8.5);
       pdf.setTextColor(110, 69, 7);
-      pdf.text(header, cursorX + 2, startY + 5.5);
+      const headerLines = pdf.splitTextToSize(String(header), tableWidths[index] - 4);
+      pdf.text(headerLines.slice(0, 2), cursorX + 2, startY + 5.5);
       cursorX += tableWidths[index];
     });
     return startY + headerHeight;
