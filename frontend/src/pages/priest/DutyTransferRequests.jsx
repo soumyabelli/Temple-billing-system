@@ -8,6 +8,14 @@ const DutyTransferRequests = ({ darkMode }) => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
+  
+  // Tab state
+  const [activeTab, setActiveTab] = useState("incoming"); // "incoming" or "outgoing"
+
+  // Reject Modal state
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [rejectRequestId, setRejectRequestId] = useState(null);
+  const [rejectReason, setRejectReason] = useState("");
 
   useEffect(() => {
     fetchRequests();
@@ -27,22 +35,31 @@ const DutyTransferRequests = ({ darkMode }) => {
     }
   };
 
-  const handleRespond = async (id, status) => {
+  const handleRespond = async (id, status, reason = "") => {
     try {
       setActionLoading(id);
       await axios.post(
         `${API_BASE}/priest/my-duties/transfer/${id}/respond`,
-        { status },
+        { status, rejectReason: reason },
         { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
       );
       
-      alert(`Request ${status} successfully.`);
+      alert(`Request ${status.toLowerCase()} successfully.`);
       fetchRequests();
     } catch (error) {
       alert(error.response?.data?.message || "Failed to respond to request.");
     } finally {
       setActionLoading(null);
+      setRejectModalOpen(false);
+      setRejectRequestId(null);
+      setRejectReason("");
     }
+  };
+
+  const openRejectModal = (id) => {
+    setRejectRequestId(id);
+    setRejectReason("");
+    setRejectModalOpen(true);
   };
 
   const getStatusBadge = (status) => {
@@ -53,6 +70,8 @@ const DutyTransferRequests = ({ darkMode }) => {
       default: return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300";
     }
   };
+
+  const filteredRequests = requests.filter(req => req.type.toLowerCase() === activeTab);
 
   return (
     <div className="space-y-6 fade-in">
@@ -65,13 +84,36 @@ const DutyTransferRequests = ({ darkMode }) => {
         </p>
       </div>
 
+      {/* Tabs */}
+      <div className="flex border-b border-slate-200 dark:border-slate-700">
+        <button
+          className={`flex-1 py-3 text-sm font-bold border-b-2 transition-colors ${
+            activeTab === "incoming"
+              ? "border-orange-500 text-orange-600 dark:text-orange-400"
+              : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+          }`}
+          onClick={() => setActiveTab("incoming")}
+        >
+          Requested By Others
+        </button>
+        <button
+          className={`flex-1 py-3 text-sm font-bold border-b-2 transition-colors ${
+            activeTab === "outgoing"
+              ? "border-orange-500 text-orange-600 dark:text-orange-400"
+              : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+          }`}
+          onClick={() => setActiveTab("outgoing")}
+        >
+          Requested By Me
+        </button>
+      </div>
+
       <div className={`rounded-2xl border overflow-hidden transition-colors ${darkMode ? "bg-[#1f2937] border-slate-700" : "bg-temple-100 border-[#ece8e1]"}`}>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead>
               <tr className={`border-b ${darkMode ? "bg-slate-800/50 border-slate-700 text-slate-300" : "bg-[#fdfaf5] border-[#ece8e1] text-slate-600"}`}>
                 <th className="p-4 font-bold">Duty Details</th>
-                <th className="p-4 font-bold">Type</th>
                 <th className="p-4 font-bold">Other Priest</th>
                 <th className="p-4 font-bold">Reason</th>
                 <th className="p-4 font-bold">Status</th>
@@ -81,18 +123,18 @@ const DutyTransferRequests = ({ darkMode }) => {
             <tbody className={`divide-y ${darkMode ? "divide-slate-700 text-slate-300" : "divide-slate-100 text-slate-700"}`}>
               {loading ? (
                 <tr>
-                  <td colSpan="6" className="text-center p-8">
+                  <td colSpan="5" className="text-center p-8">
                     <FaSpinner className="animate-spin text-orange-500 mx-auto text-2xl" />
                   </td>
                 </tr>
-              ) : requests.length === 0 ? (
+              ) : filteredRequests.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="text-center p-8 text-slate-500">
-                    No transfer requests found.
+                  <td colSpan="5" className="text-center p-8 text-slate-500">
+                    No transfer requests found in this tab.
                   </td>
                 </tr>
               ) : (
-                requests.map((req) => (
+                filteredRequests.map((req) => (
                   <tr key={req.id} className={`hover:bg-orange-50/30 transition-colors ${darkMode ? "hover:bg-slate-800/50" : ""}`}>
                     <td className="p-4">
                       <div className={`font-bold text-sm ${darkMode ? "text-slate-200" : "text-slate-800"}`}>{req.dutyName}</div>
@@ -100,17 +142,16 @@ const DutyTransferRequests = ({ darkMode }) => {
                       <div className="text-xs text-orange-500 mt-0.5">({req.referenceType})</div>
                     </td>
                     <td className="p-4">
-                      <span className={`px-2 py-1 rounded-md text-xs font-bold ${req.type === "Outgoing" ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" : "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"}`}>
-                        {req.type}
-                      </span>
-                    </td>
-                    <td className="p-4">
                       <div className="font-semibold">{req.type === "Outgoing" ? req.requestedPriest?.name : req.originalPriest?.name}</div>
-                      <div className="text-xs opacity-75">{req.type === "Outgoing" ? "Requested to" : "Requested by"}</div>
                     </td>
                     <td className="p-4">
                       <div className="text-sm">{req.reason}</div>
                       {req.remarks && <div className="text-xs opacity-70 mt-1 italic">"{req.remarks}"</div>}
+                      {req.status === "Rejected" && req.rejectReason && (
+                        <div className="mt-2 text-xs p-2 rounded bg-rose-50 text-rose-700 border border-rose-100 dark:bg-rose-900/20 dark:border-rose-800/30 dark:text-rose-400">
+                          <span className="font-bold">Rejection Reason:</span> {req.rejectReason}
+                        </div>
+                      )}
                     </td>
                     <td className="p-4">
                       <span className={`px-2 py-1 rounded text-xs font-bold ${getStatusBadge(req.status)}`}>
@@ -129,7 +170,7 @@ const DutyTransferRequests = ({ darkMode }) => {
                             {actionLoading === req.id ? <FaSpinner className="animate-spin" /> : <FaCheck />}
                           </button>
                           <button
-                            onClick={() => handleRespond(req.id, "Rejected")}
+                            onClick={() => openRejectModal(req.id)}
                             disabled={actionLoading === req.id}
                             className="p-2 bg-rose-100 text-rose-700 hover:bg-rose-200 dark:bg-rose-900/30 dark:text-rose-400 dark:hover:bg-rose-800/40 rounded transition-colors disabled:opacity-50"
                             title="Reject Transfer"
@@ -150,6 +191,48 @@ const DutyTransferRequests = ({ darkMode }) => {
           </table>
         </div>
       </div>
+
+      {/* Reject Modal */}
+      {rejectModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className={`w-full max-w-md rounded-2xl p-6 shadow-xl ${darkMode ? "bg-slate-800 text-slate-100" : "bg-white text-slate-800"}`}>
+            <h3 className="text-lg font-bold mb-2 flex items-center gap-2 text-rose-500">
+              <FaTimes /> Reject Transfer
+            </h3>
+            <p className={`text-sm mb-4 ${darkMode ? "text-slate-300" : "text-slate-600"}`}>
+              Please provide a reason for rejecting this duty transfer request. This will be visible to the requesting priest.
+            </p>
+            <textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="Enter rejection reason..."
+              className={`w-full p-3 rounded-xl border outline-none min-h-[100px] mb-4 text-sm ${
+                darkMode
+                  ? "bg-slate-700 border-slate-600 focus:border-rose-500 text-white placeholder-slate-400"
+                  : "bg-slate-50 border-slate-200 focus:border-rose-500 text-slate-900"
+              }`}
+              autoFocus
+            />
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setRejectModalOpen(false)}
+                className={`px-4 py-2 rounded-xl text-sm font-bold transition-colors ${
+                  darkMode ? "bg-slate-700 hover:bg-slate-600" : "bg-slate-100 hover:bg-slate-200"
+                }`}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleRespond(rejectRequestId, "Rejected", rejectReason)}
+                disabled={!rejectReason.trim()}
+                className="px-4 py-2 rounded-xl text-sm font-bold bg-rose-500 text-white hover:bg-rose-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Confirm Reject
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1564,13 +1564,21 @@ exports.respondToTransfer = async (req, res) => {
   try {
     const priestId = req.user.id;
     const { id } = req.params;
-    const { status } = req.body; // "Approved" or "Rejected"
+    const { status, rejectReason } = req.body; // "Approved" or "Rejected"
 
-    const transfer = await TransferRequest.findById(id);
+    const transfer = await TransferRequest.findById(id).populate("originalPriest", "name").populate("requestedPriest", "name");
     if (!transfer) return res.status(404).json({ message: "Transfer request not found" });
-    if (transfer.requestedPriest.toString() !== priestId) return res.status(403).json({ message: "Not authorized" });
+    if (transfer.requestedPriest._id.toString() !== priestId) return res.status(403).json({ message: "Not authorized" });
+
+    if (status === "Rejected" && !rejectReason) {
+      return res.status(400).json({ message: "Rejection reason is required." });
+    }
 
     transfer.status = status;
+    if (status === "Rejected") {
+      transfer.rejectReason = rejectReason;
+    }
+    
     await transfer.save();
 
     const Booking = require("../models/Booking");
@@ -1595,6 +1603,22 @@ exports.respondToTransfer = async (req, res) => {
         await Task.findByIdAndUpdate(transfer.referenceId, { status: "Assigned" });
       }
     }
+
+    // Generate notifications
+    await Notification.create({
+      title: `Duty Transfer ${status}`,
+      message: `Your duty transfer request to ${transfer.requestedPriest.name} was ${status.toLowerCase()}.${status === "Rejected" ? ` Reason: ${rejectReason}` : ""}`,
+      audienceId: transfer.originalPriest._id.toString(),
+      audienceRole: "priest",
+      category: "Duty"
+    });
+
+    await Notification.create({
+      title: `Duty Transfer ${status}`,
+      message: `Priest ${transfer.requestedPriest.name} has ${status.toLowerCase()} the duty transfer from ${transfer.originalPriest.name}.${status === "Rejected" ? ` Reason: ${rejectReason}` : ""}`,
+      audienceRole: "admin",
+      category: "Duty"
+    });
 
     return res.status(200).json({ message: `Transfer request ${status.toLowerCase()} successfully.` });
   } catch (error) {

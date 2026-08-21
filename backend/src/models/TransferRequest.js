@@ -31,6 +31,11 @@ const transferRequestSchema = new mongoose.Schema(
       trim: true,
       default: "",
     },
+    rejectReason: {
+      type: String,
+      trim: true,
+      default: "",
+    },
     targetDate: {
       type: Date,
     },
