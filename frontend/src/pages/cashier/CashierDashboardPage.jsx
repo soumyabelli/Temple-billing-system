@@ -535,13 +535,13 @@ const CashierDashboardPage = () => {
       }
     >
       <div className="grid gap-6 xl:grid-cols-[1.35fr_0.65fr]">
-        <section className="rounded-[22px] border border-[#f0d3a2] bg-temple-100/90 p-5 shadow-sm">
-          <div className="flex items-center justify-between gap-3">
+        <section className="group relative overflow-hidden rounded-[28px] border border-amber-200/80 bg-white/80 backdrop-blur-2xl p-6 shadow-xl shadow-amber-950/5 transition-all duration-300 hover:shadow-2xl hover:shadow-amber-500/10">
+          <div className="flex items-center justify-between gap-3 mb-4">
             <div>
-              <h2 className="text-xl font-extrabold text-slate-950">Seven day collection trend</h2>
-              <p className="mt-1 text-sm font-medium text-slate-600">Bills recorded across pooja, donation and prasadam counters.</p>
+              <h2 className="text-xl font-black font-serif text-slate-900">Seven day collection trend</h2>
+              <p className="mt-1 text-xs font-semibold text-slate-500">Bills recorded across pooja, donation and prasadam counters.</p>
             </div>
-            <span className="rounded-full border border-[#f4ddb4] bg-[#fff8ef] px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-[#8a5200]">
+            <span className="rounded-full border border-amber-300/60 bg-amber-100/80 px-3 py-1 text-xs font-extrabold uppercase tracking-widest text-amber-900 shadow-xs">
               Live ledger
             </span>
           </div>
@@ -550,47 +550,50 @@ const CashierDashboardPage = () => {
               <AreaChart data={dailySeries} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                 <defs>
                   <linearGradient id="cashierLine" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#f28c18" stopOpacity={0.45} />
-                    <stop offset="95%" stopColor="#f28c18" stopOpacity={0.03} />
+                    <stop offset="5%" stopColor="#d97706" stopOpacity={0.45} />
+                    <stop offset="95%" stopColor="#ea580c" stopOpacity={0.02} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f2e4cf" />
-                <XAxis dataKey="day" tickLine={false} axisLine={false} tick={{ fill: "#64748b", fontSize: 11 }} />
-                <YAxis tickLine={false} axisLine={false} tick={{ fill: "#64748b", fontSize: 11 }} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#fde68a" opacity={0.5} />
+                <XAxis dataKey="day" tickLine={false} axisLine={false} tick={{ fill: "#475569", fontSize: 11, fontWeight: 700 }} />
+                <YAxis tickLine={false} axisLine={false} tick={{ fill: "#475569", fontSize: 11, fontWeight: 700 }} />
                 <Tooltip
-                  contentStyle={{ background: "#0f172a", borderRadius: 12, border: "none", color: "#fff" }}
-                  labelStyle={{ color: "#cbd5e1" }}
+                  contentStyle={{ background: "#0f172a", borderRadius: 16, border: "1px solid rgba(245, 158, 11, 0.3)", color: "#fff", boxShadow: "0 10px 25px rgba(0,0,0,0.2)" }}
+                  labelStyle={{ color: "#fde68a", fontWeight: "bold" }}
                 />
-                <Area type="monotone" dataKey="amount" stroke="#f28c18" strokeWidth={3} fill="url(#cashierLine)" />
+                <Area type="monotone" dataKey="amount" stroke="#d97706" strokeWidth={3.5} fill="url(#cashierLine)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </section>
 
-        <section className="rounded-[22px] border border-[#f0d3a2] bg-temple-100/90 p-5 shadow-sm">
-          <div className="flex items-center justify-between gap-3">
+        <section className="group relative overflow-hidden rounded-[28px] border border-amber-200/80 bg-white/80 backdrop-blur-2xl p-6 shadow-xl shadow-amber-950/5 transition-all duration-300 hover:shadow-2xl hover:shadow-amber-500/10">
+          <div className="flex items-center justify-between gap-3 mb-4">
             <div>
-              <h2 className="text-xl font-extrabold text-slate-950">Payment methods</h2>
-              <p className="mt-1 text-sm font-medium text-slate-600">Where today's collections are coming from.</p>
+              <h2 className="text-xl font-black font-serif text-slate-900">Payment methods</h2>
+              <p className="mt-1 text-xs font-semibold text-slate-500">Where today's collections are coming from.</p>
             </div>
           </div>
-          <div className="relative mt-4 h-[220px]">
+          <div className="relative mt-2 h-[220px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={paymentSeries} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={58} outerRadius={88} paddingAngle={2}>
+                <Pie data={paymentSeries} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={58} outerRadius={88} paddingAngle={3}>
                   {paymentSeries.map((entry) => (
-                    <Cell key={entry.name} fill={entry.color} />
+                    <Cell key={entry.name} fill={entry.color} stroke="#fff" strokeWidth={2} />
                   ))}
                 </Pie>
                 <Tooltip />
               </PieChart>
             </ResponsiveContainer>
           </div>
-          <div className="grid gap-2 sm:grid-cols-2">
+          <div className="grid gap-2 sm:grid-cols-2 mt-3">
             {paymentSeries.map((item) => (
-              <div key={item.name} className="flex items-center justify-between rounded-2xl border border-[#f2e2c7] bg-[#fff8ef] px-3 py-2 text-sm">
-                <span className="font-semibold text-slate-800">{item.name}</span>
-                <span className="font-bold text-slate-950">{formatCurrency(item.value)}</span>
+              <div key={item.name} className="flex items-center justify-between rounded-2xl border border-amber-100/80 bg-amber-50/50 px-3.5 py-2 text-xs transition-all hover:bg-amber-100/60">
+                <span className="font-bold text-slate-800 flex items-center gap-2">
+                  <span className="h-2.5 w-2.5 rounded-full shadow-xs" style={{ backgroundColor: item.color }} />
+                  {item.name}
+                </span>
+                <span className="font-black text-slate-900">{formatCurrency(item.value)}</span>
               </div>
             ))}
           </div>
@@ -598,45 +601,45 @@ const CashierDashboardPage = () => {
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <section className="rounded-[22px] border border-[#f0d3a2] bg-temple-100/90 p-5 shadow-sm">
-          <div className="flex items-center justify-between gap-3">
+        <section className="group relative overflow-hidden rounded-[28px] border border-amber-200/80 bg-white/80 backdrop-blur-2xl p-6 shadow-xl shadow-amber-950/5">
+          <div className="flex items-center justify-between gap-3 mb-4">
             <div>
-              <h2 className="text-xl font-extrabold text-slate-950">Recent cashier activity</h2>
-              <p className="mt-1 text-sm font-medium text-slate-600">Latest bill records written by the counter.</p>
+              <h2 className="text-xl font-black font-serif text-slate-900">Recent cashier activity</h2>
+              <p className="mt-1 text-xs font-semibold text-slate-500">Latest bill records written by the counter.</p>
             </div>
-            <span className="rounded-full bg-[#fff1d6] px-3 py-1 text-xs font-bold text-[#8a5200]">
+            <span className="rounded-full bg-amber-100/80 border border-amber-200/60 px-3 py-1 text-xs font-bold text-amber-900">
               {loading ? "Loading..." : `${recentActivity.length} shown`}
             </span>
           </div>
 
           <div className="mt-5 overflow-x-auto">
             <table className="w-full min-w-[860px] text-left text-sm">
-              <thead className="bg-[#fff7eb] text-slate-600">
+              <thead className="bg-amber-50/70 text-xs font-bold uppercase tracking-wider text-slate-600">
                 <tr>
-                  <th className="px-4 py-3 font-bold">Receipt</th>
-                  <th className="px-4 py-3 font-bold">Devotee</th>
-                  <th className="px-4 py-3 font-bold">Type</th>
-                  <th className="px-4 py-3 font-bold">Service</th>
-                  <th className="px-4 py-3 font-bold">Amount</th>
-                  <th className="px-4 py-3 font-bold">Method</th>
-                  <th className="px-4 py-3 font-bold">Date</th>
+                  <th className="px-4 py-3.5">Receipt</th>
+                  <th className="px-4 py-3.5">Devotee</th>
+                  <th className="px-4 py-3.5">Type</th>
+                  <th className="px-4 py-3.5">Service</th>
+                  <th className="px-4 py-3.5">Amount</th>
+                  <th className="px-4 py-3.5">Method</th>
+                  <th className="px-4 py-3.5">Date</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-amber-100/60">
                 {recentActivity.map((row) => (
-                  <tr key={row.id} className="border-b border-[#f2e7d7]">
-                    <td className="px-4 py-3 font-bold text-slate-950">{row.id}</td>
-                    <td className="px-4 py-3 font-semibold text-slate-800">{row.name}</td>
-                    <td className="px-4 py-3">{row.type}</td>
-                    <td className="px-4 py-3">{row.service}</td>
-                    <td className="px-4 py-3 font-bold text-slate-950">{formatCurrency(row.amount)}</td>
-                    <td className="px-4 py-3">{row.paymentMode}</td>
-                    <td className="px-4 py-3 text-slate-600">{row.date}</td>
+                  <tr key={row.id} className="transition-colors hover:bg-amber-50/50">
+                    <td className="px-4 py-3.5 font-bold text-slate-900">{row.id}</td>
+                    <td className="px-4 py-3.5 font-semibold text-slate-800">{row.name}</td>
+                    <td className="px-4 py-3.5 text-slate-700">{row.type}</td>
+                    <td className="px-4 py-3.5 text-slate-700">{row.service}</td>
+                    <td className="px-4 py-3.5 font-black text-amber-900">{formatCurrency(row.amount)}</td>
+                    <td className="px-4 py-3.5 font-medium text-slate-800">{row.paymentMode}</td>
+                    <td className="px-4 py-3.5 text-xs text-slate-500">{row.date}</td>
                   </tr>
                 ))}
                 {!recentActivity.length ? (
                   <tr>
-                    <td colSpan="7" className="px-4 py-8 text-center text-slate-500">
+                    <td colSpan="7" className="px-4 py-8 text-center text-slate-500 font-medium">
                       No bill records found yet.
                     </td>
                   </tr>
@@ -647,9 +650,9 @@ const CashierDashboardPage = () => {
         </section>
 
         <aside className="space-y-6">
-          <section className="rounded-[22px] border border-[#f0d3a2] bg-temple-100/90 p-5 shadow-sm">
-            <h2 className="text-xl font-extrabold text-slate-950">Quick actions</h2>
-            <div className="mt-4 grid grid-cols-2 gap-3">
+          <section className="group relative overflow-hidden rounded-[28px] border border-amber-200/80 bg-white/80 backdrop-blur-2xl p-6 shadow-xl shadow-amber-950/5">
+            <h2 className="text-xl font-black font-serif text-slate-900 mb-4">Quick actions</h2>
+            <div className="grid grid-cols-2 gap-3">
               {[
                 { label: "Billing", path: "/cashier/billing" },
                 { label: "Pooja", path: "/cashier/pooja-bookings" },
@@ -662,7 +665,7 @@ const CashierDashboardPage = () => {
                   key={item.label}
                   type="button"
                   onClick={() => navigate(item.path)}
-                  className="rounded-2xl border border-[#f2e2c7] bg-[#fff8ef] px-3 py-4 text-sm font-bold text-slate-900 transition hover:bg-temple-100"
+                  className="rounded-2xl border border-amber-200/70 bg-amber-50/40 px-3 py-3.5 text-xs font-bold text-slate-900 transition-all duration-200 hover:bg-gradient-to-r hover:from-amber-500 hover:to-orange-600 hover:text-white hover:shadow-lg hover:shadow-amber-500/25 hover:-translate-y-0.5"
                 >
                   {item.label}
                 </button>

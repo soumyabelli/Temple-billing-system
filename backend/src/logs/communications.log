@@ -1311,3 +1311,36 @@ Thank you!
 To: 8618001961
 Message: Pooja booking confirmed! Service: Multiple Items on 2026-08-11T14:00. Amount: ₹4000. Please bring receipt at temple. -Temple
 
+[2026-08-23T06:23:41.847Z] EMAIL
+To: reena@gmail.com
+Subject: Pooja Booking Confirmation
+Pooja Booking Confirmation
+Service: Combined Order: Satyanarayana Pooja (x1)
+Date & Time: 2026-08-23T07:23:04.001Z
+Amount: ₹2180
+
+Please bring the receipt at the time of visiting the temple to perform the pooja.
+Thank you!
+
+[2026-08-23T06:23:41.866Z] SMS
+To: 9945650664
+Message: Pooja booking confirmed! Service: Combined Order: Satyanarayana Pooja (x1) on 2026-08-23T07:23:04.001Z. Amount: ₹2180. Please bring receipt at temple. -Temple
+
+[2026-08-23T06:23:42.662Z] EMAIL
+To: reena@gmail.com
+Subject: Booking Confirmed
+Your Combined Order: Satyanarayana Pooja (x1) booking has been confirmed successfully.
+
+[2026-08-23T06:25:34.642Z] EMAIL
+To: reena@gmail.com
+Subject: Donation Receipt
+Donation Receipt
+Amount: ₹5098
+Category: Sponsorship
+Transaction ID: pay_TT6xnJoN8ctwBi
+Thank you for your donation!
+
+[2026-08-23T06:25:34.647Z] SMS
+To: 9945650664
+Message: Donation received! Amount: ₹5098. Transaction ID: pay_TT6xnJoN8ctwBi. Thank you! -Temple
+
