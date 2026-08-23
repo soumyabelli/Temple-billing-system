@@ -5,34 +5,38 @@ const DashboardCard = ({
   trend,
   trendUp = true,
   trendLabel = "from yesterday",
-  accent = "bg-temple-100 text-temple-600 dark:bg-temple-500/20 dark:text-temple-400",
+  accent = "bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-500/25",
   hideTrend = false,
 }) => {
-  const trendTextColor = trendUp ? "text-emerald-600 dark:text-emerald-400" : "text-rose-500 dark:text-rose-400";
+  const trendTextColor = trendUp ? "text-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50" : "text-rose-700 bg-rose-50 dark:bg-rose-950/60 dark:text-rose-400 border border-rose-200 dark:border-rose-800/50";
   const trendPrefix = trendUp ? "↑" : "↓";
 
   return (
-    <div className="relative overflow-hidden bg-temple-100/60 dark:bg-[#1e293b]/70 backdrop-blur-xl rounded-2xl p-5 border border-white/40 dark:border-white/5 shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group">
-      {/* Subtle background gradient on hover */}
-      <div className="absolute inset-0 bg-gradient-to-br from-temple-500/0 to-temple-500/0 group-hover:from-temple-500/5 group-hover:to-transparent transition-colors duration-500 pointer-events-none" />
+    <div className="group relative overflow-hidden rounded-[24px] border border-amber-200/60 dark:border-slate-800/80 bg-white/80 dark:bg-slate-900/80 p-6 backdrop-blur-xl shadow-lg shadow-amber-950/5 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-amber-600/15 hover:border-amber-400/80">
+      {/* Decorative ambient corner glow */}
+      <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-gradient-to-br from-amber-400/15 to-orange-500/0 blur-2xl transition-opacity duration-500 group-hover:opacity-100 opacity-50" />
       
       <div className="relative flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          <div className={`h-12 w-12 rounded-xl flex items-center justify-center text-xl shadow-inner transition-transform duration-300 group-hover:scale-110 ${accent}`}>
+          <div className={`flex h-13 w-13 items-center justify-center rounded-2xl text-2xl transition-transform duration-300 group-hover:scale-110 ${accent}`}>
             {icon}
           </div>
           {!hideTrend && trend != null && trend !== "" && (
-            <div className={`px-2.5 py-1 rounded-full text-xs font-bold bg-temple-100 dark:bg-[#0f172a] shadow-sm ${trendTextColor}`}>
-              {trendPrefix} {trend}
+            <div className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold shadow-xs ${trendTextColor}`}>
+              <span>{trendPrefix}</span>
+              <span>{trend}</span>
             </div>
           )}
         </div>
 
         <div>
-          <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">{title}</h3>
-          <h1 className="text-[32px] md:text-[38px] leading-tight font-bold text-slate-800 dark:text-slate-100 tracking-tight">{amount}</h1>
+          <h3 className="text-xs font-bold uppercase tracking-wider text-amber-900/60 dark:text-slate-400 mb-1">{title}</h3>
+          <h1 className="text-[28px] md:text-[34px] font-black leading-tight text-slate-900 dark:text-slate-100 tracking-tight">{amount}</h1>
         </div>
       </div>
+
+      {/* Bottom accent line */}
+      <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-400 to-orange-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
     </div>
   );
 };

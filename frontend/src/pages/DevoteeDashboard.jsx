@@ -158,12 +158,14 @@ const IconCircle = ({ className, icon }) => (
 const SidebarItem = ({ label, icon, active }) => (
   <button
     type="button"
-    className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-base font-semibold transition ${
-      active ? "bg-[#d78722] text-white shadow-[0_6px_16px_rgba(202,122,29,0.3)]" : "text-[#211b13] hover:bg-temple-100/70"
+    className={`flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-left text-sm font-semibold transition-all duration-300 ${
+      active
+        ? "bg-gradient-to-r from-[#d97706] to-[#ea580c] text-white shadow-md shadow-amber-600/30 scale-[1.02]"
+        : "text-[#2d2214] hover:bg-amber-100/60 hover:text-[#b45309]"
     }`}
   >
-    <AppIcon name={icon} className="h-[17px] w-[17px]" />
-    <span className="text-base leading-none">{label}</span>
+    <AppIcon name={icon} className="h-4 w-4" />
+    <span className="leading-none">{label}</span>
   </button>
 );
 
@@ -219,11 +221,11 @@ const DevoteeDashboard = () => {
         </aside>
 
         <main className="flex-1 px-6 py-6 lg:px-7">
-          <header className="rounded-2xl border border-[#ebebeb] bg-temple-100 px-5 py-4 shadow-sm">
+          <header className="rounded-2xl border border-amber-200/60 bg-white/70 backdrop-blur-xl px-5 py-4 shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="flex min-w-[360px] flex-1 items-center gap-4">
-                <button type="button" className="hidden text-[#8d551f] lg:block">
-                  <svg viewBox="0 0 24 24" className="h-8 w-8 fill-current">
+                <button type="button" className="hidden text-[#d97706] hover:text-[#b45309] transition lg:block">
+                  <svg viewBox="0 0 24 24" className="h-7 w-7 fill-current">
                     <path d="M3 6h18v2H3zM3 11h18v2H3zM3 16h18v2H3z"></path>
                   </svg>
                 </button>
@@ -231,9 +233,9 @@ const DevoteeDashboard = () => {
                   <input
                     type="text"
                     placeholder="Search here..."
-                    className="w-full rounded-xl border border-[#ebebeb] bg-[#fdfdfd] py-3 pl-12 pr-4 text-sm text-[#4d4d4d] outline-none placeholder:text-[#9a9a9a]"
+                    className="w-full rounded-xl border border-amber-200/60 bg-white/80 py-2.5 pl-11 pr-4 text-sm text-slate-800 outline-none placeholder:text-slate-400 focus:border-[#d97706] focus:ring-2 focus:ring-[#d97706]/20 transition-all"
                   />
-                  <svg viewBox="0 0 24 24" className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 fill-none stroke-[#8d551f] stroke-2">
+                  <svg viewBox="0 0 24 24" className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 fill-none stroke-[#d97706] stroke-2">
                     <circle cx="11" cy="11" r="7"></circle>
                     <path d="m20 20-3.5-3.5"></path>
                   </svg>
@@ -241,12 +243,12 @@ const DevoteeDashboard = () => {
               </div>
               <div className="flex items-center gap-4">
                 <div className="relative mr-1 hidden lg:block">
-                  <AppIcon name="bell" className="h-7 w-7 text-[#302d2b]" />
-                  <span className="absolute -right-1 -top-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-[#e4262c] text-[10px] font-bold text-white">
+                  <AppIcon name="bell" className="h-6 w-6 text-slate-700 hover:text-[#d97706] transition cursor-pointer" />
+                  <span className="absolute -right-1 -top-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white shadow-sm">
                     3
                   </span>
                 </div>
-                <div className="rounded-xl border border-[#ead6c0] px-4 py-2 text-sm font-bold text-[#7e4310]">14 May 2025, Wednesday</div>
+                <div className="rounded-xl border border-amber-200/80 bg-amber-50/60 px-4 py-2 text-xs font-bold text-[#b45309]">14 May 2025, Wednesday</div>
                 <div className="flex items-center gap-3 rounded-full px-1">
                   <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#e2ccb2] text-sm font-bold text-[#5d3310]">
                     {devoteeName
@@ -274,18 +276,19 @@ const DevoteeDashboard = () => {
             {stats.map((item) => (
               <article
                 key={item.title}
-                className="group relative overflow-hidden rounded-2xl border border-gray-100 bg-gradient-to-b from-gray-50/50 via-white to-white p-5 transition-all duration-300 hover:-translate-y-1 hover:border-amber-300 hover:shadow-lg hover:shadow-amber-500/10"
+                className="group relative overflow-hidden rounded-[24px] border border-amber-200/70 bg-white/80 p-6 backdrop-blur-xl shadow-lg shadow-amber-950/5 transition-all duration-300 hover:-translate-y-1.5 hover:border-amber-400/80 hover:shadow-2xl hover:shadow-amber-600/15"
               >
+                <div className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full bg-gradient-to-br from-amber-400/20 to-orange-500/0 blur-xl transition-opacity duration-300 group-hover:opacity-100 opacity-60" />
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="text-sm font-semibold tracking-wide text-gray-500 uppercase">{item.title}</p>
-                    <p className="mt-2 text-3xl font-black tracking-tight text-gray-900">{item.value}</p>
+                    <p className="text-xs font-bold tracking-wider text-amber-900/60 uppercase">{item.title}</p>
+                    <p className="mt-2 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">{item.value}</p>
                   </div>
-                  <IconCircle className={`${item.tone} shadow-xs`} icon={item.icon} />
+                  <IconCircle className={`${item.tone} shadow-xs border border-amber-100`} icon={item.icon} />
                 </div>
 
-                <div className="mt-5 flex items-center justify-between border-t border-gray-100/80 pt-3">
-                  <button type="button" className="group/btn inline-flex items-center gap-1.5 text-xs font-bold text-[#bc630f] hover:text-[#8e4909] transition-colors">
+                <div className="mt-5 flex items-center justify-between border-t border-amber-100/80 pt-3">
+                  <button type="button" className="group/btn inline-flex items-center gap-1.5 text-xs font-bold text-[#b45309] hover:text-[#78350f] transition-colors">
                     <span>{item.action}</span>
                     <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current stroke-2 transition-transform duration-200 group-hover/btn:translate-x-1">
                       <path d="M5 12h14M12 5l7 7-7 7" />

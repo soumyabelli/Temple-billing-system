@@ -243,11 +243,11 @@ const canCancelPrasadamOrder = (status) => {
 };
 
 const glassCard =
-  "rounded-[32px] border border-white/60 bg-temple-100/50 p-6 sm:p-8 shadow-[0_25px_60px_rgba(0,0,0,0.07)] backdrop-blur-xl";
+  "rounded-[28px] border border-amber-200/50 bg-white/70 p-6 sm:p-8 shadow-[0_15px_35px_rgba(184,94,0,0.06)] backdrop-blur-xl hover:shadow-[0_20px_40px_rgba(184,94,0,0.12)] transition-all duration-300";
 const glassSection =
-  "rounded-[32px] border border-white/50 bg-temple-100/35 p-6 sm:p-8 shadow-[0_18px_45px_rgba(0,0,0,0.05)] backdrop-blur-xl";
+  "rounded-[28px] border border-amber-100/60 bg-white/60 p-6 sm:p-8 shadow-[0_12px_30px_rgba(184,94,0,0.04)] backdrop-blur-xl";
 const glassInput =
-  "w-full rounded-[24px] border border-white/80 bg-temple-100/90 px-5 py-4 text-lg font-semibold text-[#2d2214] outline-none shadow-md shadow-[#d9c8a1]/30 backdrop-blur-md focus:border-[#d97706] focus:ring-4 focus:ring-[#d97706]/15";
+  "w-full rounded-[18px] border border-amber-200/70 bg-white/80 px-5 py-3.5 text-base font-semibold text-[#1f1914] outline-none shadow-sm backdrop-blur-md focus:border-[#d97706] focus:ring-4 focus:ring-[#d97706]/15 transition-all";
 const glassButton =
   "rounded-[24px] bg-gradient-to-r from-[#b46a13] via-[#f29f41] to-[#ffbc6e] px-7 py-4 text-base font-bold text-white shadow-[0_16px_35px_rgba(184,122,57,0.25)] transition hover:scale-[1.02] hover:shadow-[0_20px_42px_rgba(184,122,57,0.3)]";
 const glassButtonSoft =

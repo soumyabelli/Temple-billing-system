@@ -4,27 +4,30 @@
 
 @layer base {
   :root {
-    --bg-primary: #f8fafc;
-    --text-primary: #0f172a;
-    --border-color: #e2e8f0;
+    --bg-primary: #FAF6F0;
+    --text-primary: #1F1914;
+    --border-color: #EADECF;
+    --temple-gold: #D97706;
+    --temple-saffron: #EA580C;
+    --temple-[#B85E00]: #B85E00;
   }
   
   .dark {
-    --bg-primary: #0f172a;
-    --text-primary: #f8fafc;
+    --bg-primary: #0F172A;
+    --text-primary: #F8FAFC;
     --border-color: #334155;
     color-scheme: dark;
   }
 }
 
 html {
-  font-size: 19.5px !important;
+  font-size: 17px !important;
   scroll-behavior: smooth;
 }
 
 body {
   margin: 0;
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
   background-color: var(--bg-primary);
   color: var(--text-primary);
   font-size: 1rem;
@@ -34,26 +37,43 @@ body {
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Playfair Display', serif;
+  font-family: 'Playfair Display', Georgia, serif;
 }
 
 .container {
-  max-width: 1200px;
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 1rem;
+  padding: 1.25rem;
 }
 
-/* Glassmorphism Utilities */
+/* Glassmorphism & Modern Card Styling */
 .glass {
-  @apply bg-white/70 backdrop-blur-md border border-white/40 shadow-lg dark:bg-[#1e293b]/50 dark:border-white/10;
+  @apply bg-white/75 backdrop-blur-xl border border-amber-100/60 shadow-xl shadow-amber-900/5 dark:bg-slate-900/70 dark:border-slate-800/80;
 }
 
 .glass-panel {
-  @apply bg-white/50 backdrop-blur-xl border border-white/30 dark:bg-[#1b2231]/80 dark:border-[#2e3749];
+  @apply bg-white/80 backdrop-blur-2xl border border-amber-200/50 shadow-2xl shadow-amber-900/10 dark:bg-slate-900/85 dark:border-slate-800;
 }
 
 .glass-card {
-  @apply bg-white/60 backdrop-blur-lg border border-white/50 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-1 dark:bg-[#1e293b]/70 dark:border-[#334155];
+  @apply bg-white/70 backdrop-blur-md border border-amber-100/70 shadow-sm transition-all duration-300 hover:shadow-xl hover:shadow-amber-900/10 hover:-translate-y-1 dark:bg-slate-800/70 dark:border-slate-700/60;
+}
+
+.temple-card-glow {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(254, 243, 199, 0.4) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  box-shadow: 0 10px 30px -10px rgba(217, 119, 6, 0.12);
+}
+
+.temple-gradient-btn {
+  background: linear-gradient(135deg, #d97706 0%, #ea580c 100%);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.temple-gradient-btn:hover {
+  background: linear-gradient(135deg, #b45309 0%, #c2410c 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px -5px rgba(234, 88, 12, 0.4);
 }
 
 /* Base Components */
