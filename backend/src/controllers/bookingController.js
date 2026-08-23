@@ -344,13 +344,18 @@ const assignPriest = async (req, res) => {
 
     await booking.save();
     
-    const { createStaffNotification } = require("../services/notificationService");
+    const User = require("../models/User");
+    const priest = await User.findById(priestId);
+    
+    const { createStaffNotification } = require("../utils/notificationService");
     await createStaffNotification({
       title: "Pooja Assigned",
       message: `You have been assigned to perform ${booking.service} on ${new Date(booking.datetime).toLocaleString()}`,
+      audienceId: priestId,
+      audienceEmail: priest?.email,
       audienceRole: "priest",
       category: "duty",
-    }).catch(() => {});
+    }).catch((err) => { console.error("Failed to notify priest:", err); });
 
     res.status(200).json({ message: "Priest assigned successfully", booking });
   } catch (error) {

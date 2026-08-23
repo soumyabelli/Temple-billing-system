@@ -48,17 +48,16 @@ const LeaveHistory = ({ darkMode, onApply }) => {
     fetchLeaves();
   }, [staff]);
 
-  const approved = leaves.filter(
-    (l) => l.status === "Approved"
-  ).length;
-
-  const rejected = leaves.filter(
-    (l) => l.status === "Rejected"
-  ).length;
+  const approvedDays = leaves
+    .filter((l) => l.status === "Approved")
+    .reduce((acc, l) => acc + getDays(l.fromDate, l.toDate), 0);
 
   const pending = leaves.filter(
     (l) => l.status === "Pending"
   ).length;
+
+  const totalQuota = 14;
+  const remainingLeaves = totalQuota - approvedDays;
 
   return (
 
@@ -91,23 +90,23 @@ const LeaveHistory = ({ darkMode, onApply }) => {
       <div className="leave-cards">
 
         <div className="leave-card">
-          <h2>{leaves.length}</h2>
-          <p>Total Applied</p>
+          <h2>{totalQuota}</h2>
+          <p>Total Quota (12+2)</p>
         </div>
 
         <div className="leave-card green">
-          <h2>{approved}</h2>
-          <p>Approved</p>
-        </div>
-
-        <div className="leave-card red">
-          <h2>{rejected}</h2>
-          <p>Rejected</p>
+          <h2>{approvedDays}</h2>
+          <p>Used Leaves (Days)</p>
         </div>
 
         <div className="leave-card orange">
+          <h2>{remainingLeaves}</h2>
+          <p>Remaining Balance</p>
+        </div>
+
+        <div className="leave-card red">
           <h2>{pending}</h2>
-          <p>Pending</p>
+          <p>Pending Requests</p>
         </div>
 
       </div>

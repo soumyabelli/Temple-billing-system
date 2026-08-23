@@ -371,17 +371,18 @@ const StaffDashboard = () => {
   }, [selectedSupportTask]);
 
   const leaveSummary = useMemo(() => {
-    return leaves.reduce(
-      (acc, leave) => {
-        acc.total += 1;
-        if (leave.status === "Approved") acc.approved += 1;
-        if (leave.status === "Rejected") acc.rejected += 1;
-        if (leave.status === "Pending") acc.pending += 1;
-        return acc;
-      },
-      { total: 0, approved: 0, rejected: 0, pending: 0 }
-    );
-  }, [leaves]);
+    const approvedDays = leaves
+      .filter((l) => l.status === "Approved")
+      .reduce((acc, l) => acc + leaveDaysCount(l.fromDate, l.toDate, profileForm?.weeklyOff), 0);
+    const pendingCount = leaves.filter((l) => l.status === "Pending").length;
+    const totalQuota = 14;
+    return {
+      totalQuota,
+      used: approvedDays,
+      remaining: totalQuota - approvedDays,
+      pending: pendingCount
+    };
+  }, [leaves, profileForm?.weeklyOff]);
 
   const latestLeaveDecision = useMemo(() => {
     return leaves.find((leave) => leave.status === "Approved" || leave.status === "Rejected");
@@ -798,9 +799,9 @@ const StaffDashboard = () => {
                   </button>
                 </div>
                 <div className="mini-stats">
-                  <span>Total: {leaveSummary.total}</span>
-                  <span>Approved: {leaveSummary.approved}</span>
-                  <span>Rejected: {leaveSummary.rejected}</span>
+                  <span>Total Quota: {leaveSummary.totalQuota}</span>
+                  <span>Used: {leaveSummary.used}</span>
+                  <span>Remaining: {leaveSummary.remaining}</span>
                   <span>Pending: {leaveSummary.pending}</span>
                 </div>
                 <p className="latest-leave">
@@ -952,20 +953,20 @@ const StaffDashboard = () => {
 
             <div className="leave-stat-grid">
               <article>
-                <h3>{leaveSummary.total}</h3>
-                <p>Total Applied</p>
+                <h3>{leaveSummary.totalQuota}</h3>
+                <p>Total Quota (12+2)</p>
               </article>
               <article className="approved-box">
-                <h3>{leaveSummary.approved}</h3>
-                <p>Approved</p>
-              </article>
-              <article className="rejected-box">
-                <h3>{leaveSummary.rejected}</h3>
-                <p>Rejected</p>
+                <h3>{leaveSummary.used}</h3>
+                <p>Used Leaves (Days)</p>
               </article>
               <article className="pending-box">
+                <h3>{leaveSummary.remaining}</h3>
+                <p>Remaining Balance</p>
+              </article>
+              <article className="rejected-box">
                 <h3>{leaveSummary.pending}</h3>
-                <p>Pending</p>
+                <p>Pending Requests</p>
               </article>
             </div>
 

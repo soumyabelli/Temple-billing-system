@@ -4,6 +4,7 @@ const User = require("../models/User");
 
 const { isDbConnected } = require("../config/db");
 const fileNotificationStore = require("../store/fileNotificationStore");
+const { sendEmail } = require("./communicationService");
 
 const normalizeEmail = (email) => String(email || "").trim().toLowerCase();
 
@@ -26,6 +27,26 @@ const createNotification = async ({
     category: category ? String(category).trim() : undefined,
     read: false,
   };
+
+  // If an email is provided, send an email alert
+  if (data.audienceEmail) {
+    const emailHtml = `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+        <h2 style="color: #d4a574;">${data.title}</h2>
+        <div style="background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
+          <p>${data.message}</p>
+        </div>
+        <p>Best regards,<br>Temple Management</p>
+      </div>
+    `;
+    // We send it asynchronously so we don't block the notification creation
+    sendEmail({
+      to: data.audienceEmail,
+      subject: data.title,
+      html: emailHtml,
+      text: data.message,
+    }).catch(err => console.error("Failed to send notification email:", err));
+  }
 
   if (isDbConnected()) {
     return Notification.create(data);
