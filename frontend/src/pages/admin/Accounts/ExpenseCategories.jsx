@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { getExpenseCategories, createExpenseCategory, getDashboardMetrics } from "../../../services/accountService";
 import { toast } from "react-toastify";
-import { FiTrendingUp, FiTrendingDown, FiDollarSign, FiClock, FiAlertCircle } from "react-icons/fi";
+import { FaRupeeSign } from "react-icons/fa";
+import { FiTrendingUp, FiTrendingDown, FiClock, FiAlertCircle } from "react-icons/fi";
 
 const ExpenseCategories = () => {
   const [categories, setCategories] = useState([]);
@@ -94,7 +95,7 @@ const ExpenseCategories = () => {
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-slate-600 dark:text-white/80 font-medium">Today's Profit</h3>
             <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400">
-              <FiDollarSign className="text-xl" />
+              <FaRupeeSign className="text-lg" />
             </div>
           </div>
           <p className="text-3xl font-bold text-slate-800 dark:text-white">{formatCurrency(metrics.todayProfit)}</p>

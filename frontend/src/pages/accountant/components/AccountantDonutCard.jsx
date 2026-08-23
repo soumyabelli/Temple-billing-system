@@ -29,7 +29,7 @@ const AccountantDonutCard = ({
     <section className="group relative overflow-hidden rounded-[28px] border border-amber-200/80 bg-gradient-to-br from-white/95 via-amber-50/40 to-white/90 p-7 backdrop-blur-2xl shadow-xl shadow-amber-950/5 transition-all duration-300 hover:-translate-y-1.5 hover:border-amber-400 hover:shadow-2xl hover:shadow-amber-500/20">
       {/* Decorative vibrant corner glow */}
       <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-gradient-to-br from-amber-400/25 via-orange-400/15 to-transparent blur-3xl transition-opacity duration-500 group-hover:opacity-100 opacity-60" />
-      
+
       <div className="flex items-center justify-between mb-6 border-b border-amber-100/80 pb-4">
         <div>
           <span className="inline-block rounded-full bg-amber-100/80 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-amber-800 border border-amber-200/50">

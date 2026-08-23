@@ -447,9 +447,10 @@ const DashboardView = ({ user, currentDate, currentWeekday }) => {
     { title: "Today's Expense", value: `Rs ${dashMetrics.todayExpense?.toLocaleString("en-IN") || '0'}`, icon: FaFileInvoice },
     { title: "Cash In Hand", value: `Rs ${dashMetrics.cashInHand?.toLocaleString("en-IN") || '0'}`, icon: FaWallet },
     { title: "Total Revenue", value: `Rs ${metrics.globalTotalRevenue.toLocaleString("en-IN")}`, icon: FaWallet },
-    { title: "Total Donations", value: `Rs ${metrics.globalTotalDonations.toLocaleString("en-IN")}`, icon: FaDonate },
     { title: "Pooja Revenue", value: `Rs ${metrics.globalPoojaRevenue.toLocaleString("en-IN")}`, icon: MdTempleBuddhist },
+    { title: "Total Donations", value: `Rs ${metrics.globalTotalDonations.toLocaleString("en-IN")}`, icon: FaDonate },
     { title: "Prasadam Revenue", value: `Rs ${metrics.globalPrasadamRevenue.toLocaleString("en-IN")}`, icon: MdOutlineVolunteerActivism },
+    { title: "Room Booked Revenue", value: `Rs ${metrics.roomBookingTotal.toLocaleString("en-IN")}`, icon: FaBed },
   ];
 
   if (loading) {

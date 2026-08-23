@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { FiSearch, FiFilter, FiChevronLeft, FiChevronRight, FiTrendingUp, FiTrendingDown, FiDollarSign, FiAlertCircle } from "react-icons/fi";
+import { FaRupeeSign } from "react-icons/fa";
+import { FiSearch, FiFilter, FiChevronLeft, FiChevronRight, FiTrendingUp, FiTrendingDown, FiAlertCircle } from "react-icons/fi";
 import { toast } from "react-toastify";
 import axios from "axios";
 import { getDashboardMetrics } from "../../../services/accountService";
@@ -178,7 +179,7 @@ const AuditLogs = () => {
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-slate-500 text-sm font-medium">Today's Profit</h3>
               <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-500">
-                <FiDollarSign className="text-sm" />
+                <FaRupeeSign className="text-xs" />
               </div>
             </div>
             <p className="text-2xl font-bold text-slate-800">{formatCurrency(metrics.todayProfit)}</p>
@@ -188,7 +189,7 @@ const AuditLogs = () => {
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-slate-500 text-sm font-medium">Cash In Hand</h3>
               <div className="w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center text-purple-500">
-                <FiDollarSign className="text-sm" />
+                <FaRupeeSign className="text-xs" />
               </div>
             </div>
             <p className="text-2xl font-bold text-slate-800">{formatCurrency(metrics.cashInHand)}</p>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { FiDollarSign, FiList, FiClock, FiCheckSquare } from "react-icons/fi";
+import { FaRupeeSign } from "react-icons/fa";
+import { FiList, FiClock, FiCheckSquare } from "react-icons/fi";
 import { getDashboardMetrics, submitCashClosing, getTransactions } from "../../services/accountService";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -140,7 +141,7 @@ const CashierAccounts = () => {
                     <div className="bg-green-50 border border-green-200 p-6 rounded-2xl">
                       <div className="flex items-center gap-3 mb-2">
                         <div className="p-3 bg-green-100 text-green-600 rounded-lg">
-                          <FiDollarSign className="w-6 h-6" />
+                          <FaRupeeSign className="w-5 h-5" />
                         </div>
                         <h4 className="text-slate-600 font-medium">Total System Collection</h4>
                       </div>
