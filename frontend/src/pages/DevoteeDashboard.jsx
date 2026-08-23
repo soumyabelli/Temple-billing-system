@@ -299,116 +299,118 @@ const DevoteeDashboard = () => {
             ))}
           </section>
 
-          <section className="mt-4 grid gap-4 xl:grid-cols-3">
-            <article className="rounded-2xl border border-[#ececec] bg-temple-100 p-5 shadow-sm">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-[2rem] font-bold">Upcoming Bookings</h2>
-                <button type="button" className="bg-transparent p-0 text-base font-semibold text-[#bc630f]">
+          <section className="mt-6 grid gap-6 xl:grid-cols-3">
+            <article className="group relative overflow-hidden rounded-[28px] border border-amber-200/70 bg-white/75 p-6 backdrop-blur-xl shadow-xl shadow-amber-950/5 transition-all duration-300 hover:shadow-2xl hover:shadow-amber-600/15 hover:border-amber-400/80">
+              <div className="mb-5 flex items-center justify-between">
+                <h2 className="text-xl font-bold font-serif text-slate-900">Upcoming Bookings</h2>
+                <button type="button" className="text-xs font-bold uppercase tracking-wider text-[#b45309] hover:text-[#78350f] transition-colors">
                   View All
                 </button>
               </div>
-              <div className="space-y-3">
+              <div className="space-y-3.5">
                 {bookings.map((item) => (
-                  <div key={item.name} className="rounded-xl border border-[#efefef] p-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="text-[1.45rem] font-bold">{item.name}</p>
-                      <span className="rounded-full bg-[#def5e5] px-3 py-1 text-sm font-semibold text-[#16853f]">{item.status}</span>
-                    </div>
-                    <p className="mt-1 text-[1.15rem] text-[#4f4f4f]">{item.datetime}</p>
-                  </div>
-                ))}
-              </div>
-              <div className="pt-4 text-right">
-                <button type="button" className="bg-transparent p-0 text-base font-semibold text-[#3058d6]">
-                  View All Bookings
-                </button>
-              </div>
-            </article>
-
-            <article className="rounded-2xl border border-[#ececec] bg-temple-100 p-5 shadow-sm">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-[2rem] font-bold">Recent Donations</h2>
-                <button type="button" className="bg-transparent p-0 text-base font-semibold text-[#bc630f]">
-                  View All
-                </button>
-              </div>
-              <div className="space-y-3">
-                {recentDonations.map((item) => (
-                  <div key={item.title} className="flex items-center justify-between rounded-xl border border-[#efefef] p-4">
+                  <div key={item.name} className="flex items-center justify-between rounded-2xl border border-amber-100/80 bg-white/90 p-4 shadow-xs transition-all duration-200 hover:bg-amber-50/50 hover:border-amber-300">
                     <div>
-                      <p className="text-[1.45rem] font-bold">{item.title}</p>
-                      <p className="text-[1.15rem] text-[#4f4f4f]">{item.date}</p>
+                      <p className="text-base font-bold text-slate-900">{item.name}</p>
+                      <p className="text-xs font-medium text-slate-500 mt-0.5">{item.datetime}</p>
                     </div>
-                    <p className="text-[1.45rem] font-bold">{item.amount}</p>
+                    <span className="rounded-full bg-emerald-100/80 border border-emerald-200/70 px-3 py-1 text-xs font-bold text-emerald-800">{item.status}</span>
                   </div>
                 ))}
               </div>
-              <div className="pt-4 text-right">
-                <button type="button" className="bg-transparent p-0 text-base font-semibold text-[#3058d6]">
-                  View All Donations
+              <div className="mt-5 text-right border-t border-amber-100/60 pt-3">
+                <button type="button" className="text-xs font-bold text-amber-700 hover:text-amber-900 transition-colors">
+                  View All Bookings &rarr;
                 </button>
               </div>
             </article>
 
-            <article className="rounded-2xl border border-[#ececec] bg-temple-100 p-5 shadow-sm">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-[2rem] font-bold">Notifications</h2>
-                <button type="button" className="bg-transparent p-0 text-base font-semibold text-[#bc630f]">
+            <article className="group relative overflow-hidden rounded-[28px] border border-amber-200/70 bg-white/75 p-6 backdrop-blur-xl shadow-xl shadow-amber-950/5 transition-all duration-300 hover:shadow-2xl hover:shadow-amber-600/15 hover:border-amber-400/80">
+              <div className="mb-5 flex items-center justify-between">
+                <h2 className="text-xl font-bold font-serif text-slate-900">Recent Donations</h2>
+                <button type="button" className="text-xs font-bold uppercase tracking-wider text-[#b45309] hover:text-[#78350f] transition-colors">
                   View All
                 </button>
               </div>
-              <div className="space-y-3">
+              <div className="space-y-3.5">
+                {recentDonations.map((item) => (
+                  <div key={item.title} className="flex items-center justify-between rounded-2xl border border-amber-100/80 bg-white/90 p-4 shadow-xs transition-all duration-200 hover:bg-amber-50/50 hover:border-amber-300">
+                    <div>
+                      <p className="text-base font-bold text-slate-900">{item.title}</p>
+                      <p className="text-xs font-medium text-slate-500 mt-0.5">{item.date}</p>
+                    </div>
+                    <p className="text-base font-black text-amber-900">{item.amount}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-5 text-right border-t border-amber-100/60 pt-3">
+                <button type="button" className="text-xs font-bold text-amber-700 hover:text-amber-900 transition-colors">
+                  View All Donations &rarr;
+                </button>
+              </div>
+            </article>
+
+            <article className="group relative overflow-hidden rounded-[28px] border border-amber-200/70 bg-white/75 p-6 backdrop-blur-xl shadow-xl shadow-amber-950/5 transition-all duration-300 hover:shadow-2xl hover:shadow-amber-600/15 hover:border-amber-400/80">
+              <div className="mb-5 flex items-center justify-between">
+                <h2 className="text-xl font-bold font-serif text-slate-900">Notifications</h2>
+                <button type="button" className="text-xs font-bold uppercase tracking-wider text-[#b45309] hover:text-[#78350f] transition-colors">
+                  View All
+                </button>
+              </div>
+              <div className="space-y-3.5">
                 {alerts.map((item) => (
-                  <div key={item.title} className="rounded-xl border border-[#efefef] p-4">
-                    <p className="text-[1.45rem] font-bold">{item.title}</p>
-                    <p className="text-[1.15rem] text-[#4f4f4f]">{item.date}</p>
+                  <div key={item.title} className="rounded-2xl border border-amber-100/80 bg-white/90 p-4 shadow-xs transition-all duration-200 hover:bg-amber-50/50 hover:border-amber-300">
+                    <p className="text-sm font-bold text-slate-900">{item.title}</p>
+                    <p className="text-xs font-medium text-slate-400 mt-1">{item.date}</p>
                   </div>
                 ))}
               </div>
             </article>
           </section>
 
-          <section className="relative mt-4 overflow-hidden rounded-2xl">
-            <img src={templeImage} alt="Festival banner" className="h-36 w-full object-cover sm:h-40" />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#261009]/85 via-[#51220d]/55 to-transparent"></div>
-            <div className="absolute inset-0 flex items-center justify-between px-7 text-white">
+          <section className="relative mt-6 overflow-hidden rounded-[28px] border border-amber-300/60 shadow-xl shadow-amber-900/10">
+            <img src={templeImage} alt="Festival banner" className="h-44 w-full object-cover sm:h-48 transition-transform duration-700 hover:scale-105" />
+            <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-amber-950/70 to-transparent backdrop-blur-[2px]"></div>
+            <div className="absolute inset-0 flex items-center justify-between px-8 text-white">
               <div>
-                <p className="text-sm uppercase tracking-wide text-[#ffd56e]">Upcoming Festival</p>
-                <h3 className="text-[2.35rem] font-extrabold leading-tight">Brahmotsavam 2025</h3>
-                <p className="text-[1.35rem]">20 May 2025 - 28 May 2025</p>
+                <span className="inline-block rounded-full bg-amber-500/30 px-3 py-1 text-xs font-bold uppercase tracking-widest text-amber-300 border border-amber-400/30">Upcoming Festival</span>
+                <h3 className="mt-2 text-2xl font-black font-serif leading-tight sm:text-3xl text-amber-50 drop-shadow-md">Brahmotsavam 2025</h3>
+                <p className="mt-1 text-sm font-medium text-amber-200/90">20 May 2025 - 28 May 2025</p>
               </div>
               <button
                 type="button"
-                className="rounded-xl border border-white/60 bg-temple-100/20 px-5 py-2 text-lg font-semibold text-white backdrop-blur-sm"
+                className="rounded-2xl border border-amber-300/50 bg-white/20 px-6 py-3 text-sm font-bold text-white backdrop-blur-md transition-all duration-300 hover:bg-white hover:text-amber-900 hover:scale-105 shadow-lg"
               >
                 View Details
               </button>
             </div>
           </section>
 
-          <section className="mt-4 grid gap-4 pb-8 xl:grid-cols-2">
-            <article className="overflow-hidden rounded-2xl border border-[#ececec] bg-temple-100 shadow-sm">
-              <h2 className="px-5 py-4 text-[2rem] font-bold">My Recent Bookings</h2>
+          <section className="mt-6 grid gap-6 pb-8 xl:grid-cols-2">
+            <article className="overflow-hidden rounded-[28px] border border-amber-200/70 bg-white/75 backdrop-blur-xl shadow-xl shadow-amber-950/5">
+              <div className="flex items-center justify-between px-7 py-5 border-b border-amber-100/80">
+                <h2 className="text-xl font-bold font-serif text-slate-900">My Recent Bookings</h2>
+              </div>
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[650px]">
-                  <thead className="bg-[#fafafa] text-left text-sm text-[#575757]">
+                <table className="w-full min-w-[600px] text-left">
+                  <thead className="bg-amber-50/70 text-xs uppercase font-bold text-slate-600">
                     <tr>
-                      <th className="px-5 py-3">Pooja / Service</th>
-                      <th className="px-5 py-3">Date & Time</th>
-                      <th className="px-5 py-3">Amount</th>
-                      <th className="px-5 py-3">Status</th>
+                      <th className="px-6 py-3.5">Pooja / Service</th>
+                      <th className="px-6 py-3.5">Date & Time</th>
+                      <th className="px-6 py-3.5">Amount</th>
+                      <th className="px-6 py-3.5">Status</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="divide-y divide-amber-100/60">
                     {bookingTable.map((row) => (
-                      <tr key={`${row.service}-${row.date}`} className="border-t border-[#f0f0f0]">
-                        <td className="px-5 py-3 text-[1.45rem] font-bold">{row.service}</td>
-                        <td className="px-5 py-3 text-[1.15rem] text-[#3f3f3f]">{row.date}</td>
-                        <td className="px-5 py-3 text-[1.45rem] font-bold">{row.amount}</td>
-                        <td className="px-5 py-3">
+                      <tr key={`${row.service}-${row.date}`} className="transition-colors hover:bg-amber-50/50">
+                        <td className="px-6 py-4 text-sm font-bold text-slate-900">{row.service}</td>
+                        <td className="px-6 py-4 text-xs font-medium text-slate-600">{row.date}</td>
+                        <td className="px-6 py-4 text-sm font-black text-amber-900">{row.amount}</td>
+                        <td className="px-6 py-4">
                           <span
-                            className={`rounded-full px-3 py-1 text-sm font-semibold ${
-                              row.status === "Confirmed" ? "bg-[#def5e5] text-[#16853f]" : "bg-[#faefcf] text-[#ce7a0f]"
+                            className={`inline-block rounded-full px-3 py-1 text-xs font-bold border ${
+                              row.status === "Confirmed" ? "bg-emerald-100/80 text-emerald-800 border-emerald-200" : "bg-amber-100/80 text-amber-800 border-amber-200"
                             }`}
                           >
                             {row.status}
@@ -419,39 +421,43 @@ const DevoteeDashboard = () => {
                   </tbody>
                 </table>
               </div>
-              <div className="px-5 py-4 text-right">
-                <button type="button" className="rounded-xl bg-[#1b7f77] px-5 py-2 text-base font-semibold text-white">
+              <div className="px-7 py-4 text-right border-t border-amber-100/60">
+                <button type="button" className="temple-gradient-btn rounded-xl px-5 py-2.5 text-xs font-bold text-white shadow-md">
                   View All Bookings
                 </button>
               </div>
             </article>
 
-            <article className="overflow-hidden rounded-2xl border border-[#ececec] bg-temple-100 shadow-sm">
-              <h2 className="px-5 py-4 text-[2rem] font-bold">Donation History</h2>
+            <article className="overflow-hidden rounded-[28px] border border-amber-200/70 bg-white/75 backdrop-blur-xl shadow-xl shadow-amber-950/5">
+              <div className="flex items-center justify-between px-7 py-5 border-b border-amber-100/80">
+                <h2 className="text-xl font-bold font-serif text-slate-900">Donation History</h2>
+              </div>
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[650px]">
-                  <thead className="bg-[#fafafa] text-left text-sm text-[#575757]">
+                <table className="w-full min-w-[600px] text-left">
+                  <thead className="bg-amber-50/70 text-xs uppercase font-bold text-slate-600">
                     <tr>
-                      <th className="px-5 py-3">Type</th>
-                      <th className="px-5 py-3">Date</th>
-                      <th className="px-5 py-3">Amount</th>
-                      <th className="px-5 py-3">Receipt</th>
+                      <th className="px-6 py-3.5">Type</th>
+                      <th className="px-6 py-3.5">Date</th>
+                      <th className="px-6 py-3.5">Amount</th>
+                      <th className="px-6 py-3.5">Receipt</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="divide-y divide-amber-100/60">
                     {donationTable.map((row) => (
-                      <tr key={`${row.type}-${row.date}`} className="border-t border-[#f0f0f0]">
-                        <td className="px-5 py-3 text-[1.45rem] font-bold">{row.type}</td>
-                        <td className="px-5 py-3 text-[1.15rem] text-[#3f3f3f]">{row.date}</td>
-                        <td className="px-5 py-3 text-[1.45rem] font-bold">{row.amount}</td>
-                        <td className="px-5 py-3 text-[1.15rem] text-[#af6317]">Download</td>
+                      <tr key={`${row.type}-${row.date}`} className="transition-colors hover:bg-amber-50/50">
+                        <td className="px-6 py-4 text-sm font-bold text-slate-900">{row.type}</td>
+                        <td className="px-6 py-4 text-xs font-medium text-slate-600">{row.date}</td>
+                        <td className="px-6 py-4 text-sm font-black text-amber-900">{row.amount}</td>
+                        <td className="px-6 py-4">
+                          <span className="cursor-pointer text-xs font-bold text-amber-700 hover:text-amber-900 underline">Download</span>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-              <div className="px-5 py-4 text-right">
-                <button type="button" className="rounded-xl bg-[#1b7f77] px-5 py-2 text-base font-semibold text-white">
+              <div className="px-7 py-4 text-right border-t border-amber-100/60">
+                <button type="button" className="temple-gradient-btn rounded-xl px-5 py-2.5 text-xs font-bold text-white shadow-md">
                   View All Donations
                 </button>
               </div>
