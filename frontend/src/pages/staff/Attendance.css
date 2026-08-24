@@ -775,3 +775,65 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Dark Mode Overrides for Attendance White Cards - HARDCODED */
+.dark .attendance-action-item {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+.dark .attendance-action-item .attendance-action-copy strong {
+  color: #f8fafc !important;
+}
+.dark .attendance-action-item .attendance-action-copy span {
+  color: #94a3b8 !important;
+}
+.dark .attendance-overview-item {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+.dark .attendance-overview-item span {
+  color: #94a3b8 !important;
+}
+.dark .attendance-overview-item strong {
+  color: #f8fafc !important;
+}
+.dark .attendance-user-chip,
+.dark .attendance-stat-card,
+.dark .attendance-today-item,
+.dark .attendance-card,
+.dark .attendance-overview-card {
+  background: var(--panel) !important;
+  border-color: var(--line) !important;
+  color: var(--text) !important;
+}
+.dark .attendance-control {
+  background: var(--panel) !important;
+  border-color: var(--line) !important;
+  color: var(--text) !important;
+}
+.dark .attendance-table-wrap,
+.dark .attendance-day,
+.dark .attendance-modal__content {
+  background: var(--panel) !important;
+  border-color: var(--line) !important;
+}
+.dark .attendance-day__number {
+  color: var(--text) !important;
+}
+.dark .attendance-table th {
+  background: var(--panel) !important;
+  color: var(--muted) !important;
+  border-color: var(--line) !important;
+}
+.dark .attendance-table td {
+  color: var(--text) !important;
+  border-color: var(--line) !important;
+}
+.dark .attendance-row:hover td {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+.dark .attendance-stat-copy h2 { color: var(--text) !important; }
+.dark .attendance-stat-copy strong { color: var(--text) !important; }
+.dark .attendance-stat-copy p { color: var(--muted) !important; }
+.dark .card-heading h2 { color: var(--text) !important; }
