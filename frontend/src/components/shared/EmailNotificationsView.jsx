@@ -64,7 +64,7 @@ const EmailNotificationsView = ({
           {onRefresh && (
             <button
               onClick={onRefresh}
-              className="flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 transition hover:bg-slate-50 dark:hover:bg-slate-800"
+              className="flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-[var(--panel,#fff)] dark:bg-slate-900 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 transition hover:bg-slate-50 dark:hover:bg-slate-800"
             >
               Refresh
             </button>
@@ -82,7 +82,7 @@ const EmailNotificationsView = ({
 
       {error && <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm font-medium text-rose-700">{error}</div>}
 
-      <div className="rounded-[24px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm overflow-hidden flex flex-col">
+      <div className="rounded-[24px] border border-slate-200 dark:border-slate-700 bg-[var(--panel,#fff)] dark:bg-slate-900 shadow-sm overflow-hidden flex flex-col">
         {/* Toolbar */}
         <div className="border-b border-slate-100 dark:border-slate-800 p-2 flex items-center gap-2 bg-slate-50/50 dark:bg-slate-800/20">
           <button
@@ -136,7 +136,7 @@ const EmailNotificationsView = ({
                 <div 
                   key={id}
                   onClick={(e) => !isRead && handleRead(id, e)} 
-                  className={`relative flex items-start gap-4 p-5 transition-colors border-l-4 ${!isRead ? "cursor-pointer border-amber-500 bg-white dark:bg-slate-800/80 shadow-sm z-10" : "border-transparent bg-slate-50/30 dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800"}`}
+                  className={`relative flex items-start gap-4 p-5 transition-colors border-l-4 ${!isRead ? "cursor-pointer border-amber-500 bg-[var(--panel,#fff)] dark:bg-slate-800/80 shadow-sm z-10" : "border-transparent bg-slate-50/30 dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800"}`}
                 >
                   <div className={`mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${isRead ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500' : 'bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400'}`}>
                     <FiBell />
