@@ -456,7 +456,7 @@ const DashboardView = ({ user, currentDate, currentWeekday }) => {
   if (loading) {
     return (
       <div className="accountant-view flex items-center justify-center py-20">
-        <p className="text-slate-500 font-semibold">Loading ledger transactions...</p>
+        <p className="text-slate-500 dark:text-slate-400 font-semibold">Loading ledger transactions...</p>
       </div>
     );
   }
@@ -469,7 +469,7 @@ const DashboardView = ({ user, currentDate, currentWeekday }) => {
         description={`Overview of temple financial activities.`}
         right={
           <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-1.5 text-xs text-slate-700 bg-temple-100 border border-slate-200 px-3 py-1.5 rounded-xl">
+            <div className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300 bg-temple-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-1.5 rounded-xl">
               <span className="font-bold">From:</span>
               <input
                 type="date"
@@ -478,7 +478,7 @@ const DashboardView = ({ user, currentDate, currentWeekday }) => {
                 className="outline-none"
               />
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-slate-700 bg-temple-100 border border-slate-200 px-3 py-1.5 rounded-xl">
+            <div className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300 bg-temple-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-1.5 rounded-xl">
               <span className="font-bold">To:</span>
               <input
                 type="date"
@@ -528,11 +528,11 @@ const DashboardView = ({ user, currentDate, currentWeekday }) => {
                   filteredBills.slice(0, 10).map((bill, index) => (
                     <tr key={bill._id || index}>
                       <td>{new Date(bill.billDate || bill.createdAt).toLocaleDateString("en-IN")}</td>
-                      <td className="font-bold text-slate-900">{bill.referenceNo || `TXN-${String(index + 1).padStart(4, "0")}`}</td>
-                      <td className="font-semibold text-slate-800">{bill.devoteeName}</td>
+                      <td className="font-bold text-slate-900 dark:text-slate-100">{bill.referenceNo || `TXN-${String(index + 1).padStart(4, "0")}`}</td>
+                      <td className="font-semibold text-slate-800 dark:text-slate-200">{bill.devoteeName}</td>
                       <td>{bill.billType}</td>
                       <td>{bill.sevaType}</td>
-                      <td className="font-bold text-slate-900">Rs {Number(bill.amount || 0).toLocaleString("en-IN")}</td>
+                      <td className="font-bold text-slate-900 dark:text-slate-100">Rs {Number(bill.amount || 0).toLocaleString("en-IN")}</td>
                       <td>{bill.paymentMode}</td>
                       <td>
                         <StatusBadge value="Paid" />
@@ -541,7 +541,7 @@ const DashboardView = ({ user, currentDate, currentWeekday }) => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="8" className="accountant-emptyState text-center py-8 text-slate-500">
+                    <td colSpan="8" className="accountant-emptyState text-center py-8 text-slate-500 dark:text-slate-400">
                       No ledger transactions found in the selected range.
                     </td>
                   </tr>
@@ -619,7 +619,7 @@ const DonationsView = ({ bills, loading }) => {
   ];
 
   if (loading) {
-    return <div className="p-8 text-center text-slate-500">Loading donations ledger...</div>;
+    return <div className="p-8 text-center text-slate-500 dark:text-slate-400">Loading donations ledger...</div>;
   }
 
   return (
@@ -661,9 +661,9 @@ const DonationsView = ({ bills, loading }) => {
             rows={donationBills}
             renderRow={(row, idx) => (
               <tr key={row._id || idx}>
-                <td className="font-bold text-slate-900">{row.referenceNo || `TXN-${String(idx + 1).padStart(4, "0")}`}</td>
-                <td className="font-semibold text-slate-800">{row.devoteeName}</td>
-                <td className="font-bold text-slate-900">Rs {Number(row.amount || 0).toLocaleString("en-IN")}</td>
+                <td className="font-bold text-slate-900 dark:text-slate-100">{row.referenceNo || `TXN-${String(idx + 1).padStart(4, "0")}`}</td>
+                <td className="font-semibold text-slate-800 dark:text-slate-200">{row.devoteeName}</td>
+                <td className="font-bold text-slate-900 dark:text-slate-100">Rs {Number(row.amount || 0).toLocaleString("en-IN")}</td>
                 <td>{row.paymentMode}</td>
                 <td>{new Date(row.billDate || row.createdAt).toLocaleDateString("en-IN")}</td>
                 <td>
@@ -709,7 +709,7 @@ const BillingView = ({ bills, loading }) => {
   ];
 
   if (loading) {
-    return <div className="p-8 text-center text-slate-500">Loading bills directory...</div>;
+    return <div className="p-8 text-center text-slate-500 dark:text-slate-400">Loading bills directory...</div>;
   }
 
   const handleDownloadReport = () => {
@@ -796,10 +796,10 @@ const BillingView = ({ bills, loading }) => {
           rows={filtered}
           renderRow={(row, idx) => (
             <tr key={row._id || idx}>
-              <td className="font-bold text-slate-900">{row.referenceNo || `TXN-${String(idx + 1).padStart(4, "0")}`}</td>
-              <td className="font-semibold text-slate-800">{row.devoteeName}</td>
+              <td className="font-bold text-slate-900 dark:text-slate-100">{row.referenceNo || `TXN-${String(idx + 1).padStart(4, "0")}`}</td>
+              <td className="font-semibold text-slate-800 dark:text-slate-200">{row.devoteeName}</td>
               <td>{row.sevaType}</td>
-              <td className="font-bold text-slate-900">Rs {Number(row.amount || 0).toLocaleString("en-IN")}</td>
+              <td className="font-bold text-slate-900 dark:text-slate-100">Rs {Number(row.amount || 0).toLocaleString("en-IN")}</td>
               <td>
                 <StatusBadge value="Paid" />
               </td>
@@ -843,7 +843,7 @@ const PaymentsView = ({ bills, loading }) => {
   }, [filtered]);
 
   if (loading) {
-    return <div className="p-8 text-center text-slate-500">Loading payments...</div>;
+    return <div className="p-8 text-center text-slate-500 dark:text-slate-400">Loading payments...</div>;
   }
 
   return (
@@ -887,9 +887,9 @@ const PaymentsView = ({ bills, loading }) => {
             rows={filtered}
             renderRow={(row, idx) => (
               <tr key={row._id || idx}>
-                <td className="font-bold text-slate-900">{row.referenceNo || `TXN-${String(idx + 1).padStart(4, "0")}`}</td>
-                <td className="font-semibold text-slate-800">{row.devoteeName}</td>
-                <td className="font-bold text-slate-900">Rs {Number(row.amount || 0).toLocaleString("en-IN")}</td>
+                <td className="font-bold text-slate-900 dark:text-slate-100">{row.referenceNo || `TXN-${String(idx + 1).padStart(4, "0")}`}</td>
+                <td className="font-semibold text-slate-800 dark:text-slate-200">{row.devoteeName}</td>
+                <td className="font-bold text-slate-900 dark:text-slate-100">Rs {Number(row.amount || 0).toLocaleString("en-IN")}</td>
                 <td>{row.paymentMode}</td>
                 <td>
                   <StatusBadge value={row.status || "Paid"} />
@@ -1002,7 +1002,7 @@ const ReceiptsView = ({ bills, roomBookings = [], loading }) => {
   };
 
   if (loading) {
-    return <div className="p-8 text-center text-slate-500">Loading receipts...</div>;
+    return <div className="p-8 text-center text-slate-500 dark:text-slate-400">Loading receipts...</div>;
   }
 
   return (
@@ -1066,13 +1066,13 @@ const ReceiptsView = ({ bills, roomBookings = [], loading }) => {
               emptyText="No room bookings found."
               renderRow={(row, idx) => (
                 <tr key={row._id || idx}>
-                  <td className="font-bold text-slate-900">
+                  <td className="font-bold text-slate-900 dark:text-slate-100">
                     {row._id ? `RM-${String(row._id).slice(-6).toUpperCase()}` : `RM-${String(idx + 1).padStart(4, "0")}`}
                   </td>
-                  <td className="font-semibold text-slate-800">{row.devoteeName || row.devoteePhone || "-"}</td>
+                  <td className="font-semibold text-slate-800 dark:text-slate-200">{row.devoteeName || row.devoteePhone || "-"}</td>
                   <td>{String(row.service || "").replace("Room Allotment: ", "") || "-"}</td>
                   <td>{row.days || "-"}</td>
-                  <td className="font-bold text-slate-900">Rs {Number(row.amount || 0).toLocaleString("en-IN")}</td>
+                  <td className="font-bold text-slate-900 dark:text-slate-100">Rs {Number(row.amount || 0).toLocaleString("en-IN")}</td>
                   <td>{row.paymentMethod || row.payMode || "-"}</td>
                   <td>
                     {row.datetime
@@ -1097,10 +1097,10 @@ const ReceiptsView = ({ bills, roomBookings = [], loading }) => {
             rows={filtered}
             renderRow={(row, idx) => (
               <tr key={row._id || idx}>
-                <td className="font-bold text-slate-900">{row.referenceNo || `TXN-${String(idx + 1).padStart(4, "0")}`}</td>
+                <td className="font-bold text-slate-900 dark:text-slate-100">{row.referenceNo || `TXN-${String(idx + 1).padStart(4, "0")}`}</td>
                 <td>{row.billType}</td>
-                <td className="font-semibold text-slate-800">{row.devoteeName}</td>
-                <td className="font-bold text-slate-900">Rs {Number(row.amount || 0).toLocaleString("en-IN")}</td>
+                <td className="font-semibold text-slate-800 dark:text-slate-200">{row.devoteeName}</td>
+                <td className="font-bold text-slate-900 dark:text-slate-100">Rs {Number(row.amount || 0).toLocaleString("en-IN")}</td>
                 <td>{new Date(row.billDate || row.createdAt).toLocaleDateString("en-IN")}</td>
               </tr>
             )}
@@ -1136,7 +1136,7 @@ const PoojaRevenueView = ({ bills, loading }) => {
   }, [poojaBills]);
 
   if (loading) {
-    return <div className="p-8 text-center text-slate-500">Loading pooja ledger...</div>;
+    return <div className="p-8 text-center text-slate-500 dark:text-slate-400">Loading pooja ledger...</div>;
   }
 
   return (
@@ -1164,10 +1164,10 @@ const PoojaRevenueView = ({ bills, loading }) => {
             rows={poojaBills}
             renderRow={(row, idx) => (
               <tr key={row._id || idx}>
-                <td className="font-bold text-slate-900">{row.referenceNo || `TXN-${String(idx + 1).padStart(4, "0")}`}</td>
-                <td className="font-semibold text-slate-800">{row.devoteeName}</td>
+                <td className="font-bold text-slate-900 dark:text-slate-100">{row.referenceNo || `TXN-${String(idx + 1).padStart(4, "0")}`}</td>
+                <td className="font-semibold text-slate-800 dark:text-slate-200">{row.devoteeName}</td>
                 <td>{row.sevaType}</td>
-                <td className="font-bold text-slate-900">Rs {Number(row.amount || 0).toLocaleString("en-IN")}</td>
+                <td className="font-bold text-slate-900 dark:text-slate-100">Rs {Number(row.amount || 0).toLocaleString("en-IN")}</td>
                 <td>{new Date(row.billDate || row.createdAt).toLocaleDateString("en-IN")}</td>
               </tr>
             )}
@@ -1213,7 +1213,7 @@ const PrasadamSalesView = ({ bills, loading }) => {
   }, [prasadamBills]);
 
   if (loading) {
-    return <div className="p-8 text-center text-slate-500">Loading prasadam sales...</div>;
+    return <div className="p-8 text-center text-slate-500 dark:text-slate-400">Loading prasadam sales...</div>;
   }
 
   return (
@@ -1241,10 +1241,10 @@ const PrasadamSalesView = ({ bills, loading }) => {
             rows={prasadamBills}
             renderRow={(row, idx) => (
               <tr key={row._id || idx}>
-                <td className="font-bold text-slate-900">{row.referenceNo || `TXN-${String(idx + 1).padStart(4, "0")}`}</td>
-                <td className="font-semibold text-slate-800">{row.devoteeName}</td>
+                <td className="font-bold text-slate-900 dark:text-slate-100">{row.referenceNo || `TXN-${String(idx + 1).padStart(4, "0")}`}</td>
+                <td className="font-semibold text-slate-800 dark:text-slate-200">{row.devoteeName}</td>
                 <td>{row.sevaType}</td>
-                <td className="font-bold text-slate-900">Rs {Number(row.amount || 0).toLocaleString("en-IN")}</td>
+                <td className="font-bold text-slate-900 dark:text-slate-100">Rs {Number(row.amount || 0).toLocaleString("en-IN")}</td>
                 <td>{new Date(row.billDate || row.createdAt).toLocaleDateString("en-IN")}</td>
               </tr>
             )}
@@ -1563,7 +1563,7 @@ const ProfileView = ({ user }) => {
   if (loading) {
     return (
       <div className="accountant-view flex items-center justify-center py-20">
-        <p className="text-slate-500 font-semibold">Loading profile...</p>
+        <p className="text-slate-500 dark:text-slate-400 font-semibold">Loading profile...</p>
       </div>
     );
   }
@@ -1593,7 +1593,7 @@ const ProfileView = ({ user }) => {
   );
 };
 
-const AccountantPageContent = ({ activeItem, setActiveItem, user, currentDate, currentWeekday }) => {
+const AccountantPageContent = ({ activeItem, setActiveItem, user, currentDate, currentWeekday, darkMode }) => {
   const [bills, setBills] = useState([]);
   const [roomBookings, setRoomBookings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1648,29 +1648,29 @@ const AccountantPageContent = ({ activeItem, setActiveItem, user, currentDate, c
     case "Attendance":
       return (
         <div style={{ padding: "2rem" }}>
-          <Attendance />
+          <Attendance darkMode={darkMode} />
         </div>
       );
     case "Apply Leave":
       return (
         <div style={{ padding: "2rem" }}>
-          <LeaveRequest onBack={() => setActiveItem("Leave Requests")} />
+          <LeaveRequest onBack={() => setActiveItem("Leave Requests")} darkMode={darkMode} />
         </div>
       );
     case "Leave Requests":
       return (
         <div style={{ padding: "2rem" }}>
-          <LeaveHistory onApply={() => setActiveItem("Apply Leave")} />
+          <LeaveHistory onApply={() => setActiveItem("Apply Leave")} darkMode={darkMode} />
         </div>
       );
     case "Inventory Requests":
       return (
         <div style={{ padding: "2rem" }}>
-          <StaffInventory />
+          <StaffInventory darkMode={darkMode} />
         </div>
       );
     case "Profile":
-      return <ProfileView user={user} />;
+      return <ProfileView user={user} darkMode={darkMode} />;
     case "Dashboard":
     default:
       return <DashboardView user={user} currentDate={currentDate} currentWeekday={currentWeekday} bills={bills} loading={loading} />;
