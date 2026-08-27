@@ -585,15 +585,7 @@ const DashboardView = ({ user, currentDate, currentWeekday }) => {
         </article>
       </section>
 
-      <section className="accountant-banner">
-        <div className="accountant-banner__icon" aria-hidden="true">
-          <MdTempleBuddhist />
-        </div>
-        <div>
-          <p className="accountant-banner__copy">May this temple prosper and all devotees be blessed.</p>
-          <p className="accountant-banner__blessing">Om Namo Venkateshaya</p>
-        </div>
-      </section>
+
     </div>
   );
 };

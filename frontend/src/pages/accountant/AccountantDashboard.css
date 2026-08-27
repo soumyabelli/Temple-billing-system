@@ -65,7 +65,7 @@
   display: inline-block;
   margin-top: 6px;
   color: #a05c21;
-  font-size: 15px;
+  font-size: 18px;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -289,7 +289,7 @@
 
 .accountant-user__meta span {
   color: #8b6d5f;
-  font-size: 15px;
+  font-size: 18px;
 }
 
 .accountant-user__caret {
