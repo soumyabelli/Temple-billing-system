@@ -176,9 +176,9 @@ const AllDonations = () => {
 
       <SectionCard title="Donation Records" subtitle="Receipt ID, donor, payment method and verification status.">
         <div className="overflow-x-auto">
-          <table className="min-w-full text-left text-sm text-slate-700">
+          <table className="min-w-full text-left text-sm text-slate-700 dark:text-slate-300">
             <thead>
-              <tr className="border-b border-slate-200 text-slate-900">
+              <tr className="border-b border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100">
                 <th className="py-4 px-3">Receipt ID</th>
                 <th className="py-4 px-3">Donor</th>
                 <th className="py-4 px-3">Donation Type</th>
@@ -193,20 +193,20 @@ const AllDonations = () => {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="9" className="py-8 px-3 text-center text-slate-500">
+                  <td colSpan="9" className="py-8 px-3 text-center text-slate-500 dark:text-slate-400">
                     Loading donations...
                   </td>
                 </tr>
               ) : filteredDonations.length === 0 ? (
                 <tr>
-                  <td colSpan="9" className="py-8 px-3 text-center text-slate-500">
+                  <td colSpan="9" className="py-8 px-3 text-center text-slate-500 dark:text-slate-400">
                     No donations found.
                   </td>
                 </tr>
               ) : (
                 filteredDonations.map((item) => (
-                  <tr key={item._id} className="border-b border-slate-200 hover:bg-slate-50 transition">
-                    <td className="py-4 px-3 font-medium text-slate-900">DN-{item._id?.slice(-6).toUpperCase()}</td>
+                  <tr key={item._id} className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:bg-slate-800/50 transition">
+                    <td className="py-4 px-3 font-medium text-slate-900 dark:text-slate-100">DN-{item._id?.slice(-6).toUpperCase()}</td>
                     <td className="py-4 px-3">{item.donorName}</td>
                     <td className="py-4 px-3">{item.category}</td>
                     <td className="py-4 px-3 text-amber-600 font-semibold">₹{item.amount?.toLocaleString()}</td>

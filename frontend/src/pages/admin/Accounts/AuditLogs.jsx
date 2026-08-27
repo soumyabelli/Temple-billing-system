@@ -149,60 +149,60 @@ const AuditLogs = () => {
   const uniqueModules = ["All Modules", "Authentication", "Accounts", "Inventory", "Prasadam", "Donations", "Employees", "Rooms", "Pooja", "Settings", "Devotees"];
 
   return (
-    <div className="p-4 md:p-8 bg-[#faf9f7] min-h-screen font-sans">
+    <div className="p-4 md:p-8 bg-[#faf9f7] dark:bg-slate-700/50 min-h-screen font-sans">
       
       {/* Accounts Dashboard Section */}
       <div className="mb-10">
         <h2 className="text-2xl font-bold text-[#1d1b19] mb-6">Accounts Dashboard</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
-          <div className="bg-temple-100 p-6 rounded-2xl shadow-sm border border-slate-100">
+          <div className="bg-temple-100 dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-slate-500 text-sm font-medium">Today's Income</h3>
+              <h3 className="text-slate-500 dark:text-slate-400 text-sm font-medium">Today's Income</h3>
               <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-500">
                 <FiTrendingUp className="text-sm" />
               </div>
             </div>
-            <p className="text-2xl font-bold text-slate-800">{formatCurrency(metrics.todayIncome)}</p>
+            <p className="text-2xl font-bold text-slate-800 dark:text-slate-200">{formatCurrency(metrics.todayIncome)}</p>
           </div>
 
-          <div className="bg-temple-100 p-6 rounded-2xl shadow-sm border border-slate-100">
+          <div className="bg-temple-100 dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-slate-500 text-sm font-medium">Today's Expense</h3>
+              <h3 className="text-slate-500 dark:text-slate-400 text-sm font-medium">Today's Expense</h3>
               <div className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center text-red-500">
                 <FiTrendingDown className="text-sm" />
               </div>
             </div>
-            <p className="text-2xl font-bold text-slate-800">{formatCurrency(metrics.todayExpense)}</p>
+            <p className="text-2xl font-bold text-slate-800 dark:text-slate-200">{formatCurrency(metrics.todayExpense)}</p>
           </div>
 
-          <div className="bg-temple-100 p-6 rounded-2xl shadow-sm border border-slate-100">
+          <div className="bg-temple-100 dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-slate-500 text-sm font-medium">Today's Profit</h3>
+              <h3 className="text-slate-500 dark:text-slate-400 text-sm font-medium">Today's Profit</h3>
               <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-500">
                 <FaRupeeSign className="text-xs" />
               </div>
             </div>
-            <p className="text-2xl font-bold text-slate-800">{formatCurrency(metrics.todayProfit)}</p>
+            <p className="text-2xl font-bold text-slate-800 dark:text-slate-200">{formatCurrency(metrics.todayProfit)}</p>
           </div>
 
-          <div className="bg-temple-100 p-6 rounded-2xl shadow-sm border border-slate-100">
+          <div className="bg-temple-100 dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-slate-500 text-sm font-medium">Cash In Hand</h3>
+              <h3 className="text-slate-500 dark:text-slate-400 text-sm font-medium">Cash In Hand</h3>
               <div className="w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center text-purple-500">
                 <FaRupeeSign className="text-xs" />
               </div>
             </div>
-            <p className="text-2xl font-bold text-slate-800">{formatCurrency(metrics.cashInHand)}</p>
+            <p className="text-2xl font-bold text-slate-800 dark:text-slate-200">{formatCurrency(metrics.cashInHand)}</p>
           </div>
 
-          <div className="bg-temple-100 p-6 rounded-2xl shadow-sm border border-slate-100">
+          <div className="bg-temple-100 dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-slate-500 text-sm font-medium">Pending Approvals</h3>
+              <h3 className="text-slate-500 dark:text-slate-400 text-sm font-medium">Pending Approvals</h3>
               <div className="w-8 h-8 rounded-full bg-orange-50 flex items-center justify-center text-orange-500">
                 <FiAlertCircle className="text-sm" />
               </div>
             </div>
-            <p className="text-2xl font-bold text-slate-800">{metrics.pendingPayments}</p>
+            <p className="text-2xl font-bold text-slate-800 dark:text-slate-200">{metrics.pendingPayments}</p>
           </div>
         </div>
       </div>
@@ -216,7 +216,7 @@ const AuditLogs = () => {
 
       {/* Controls */}
       <div className="flex flex-wrap items-center gap-4 mb-6 relative">
-        <div className="flex items-center bg-temple-100 border border-slate-200 rounded-lg px-3 py-2 flex-grow max-w-md">
+        <div className="flex items-center bg-temple-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 flex-grow max-w-md">
           <FiSearch className="text-slate-400 mr-2" />
           <input
             type="text"
@@ -230,38 +230,38 @@ const AuditLogs = () => {
         <div className="relative ml-auto">
           <button 
             onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center gap-2 bg-temple-100 border border-slate-200 text-slate-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-50"
+            className="flex items-center gap-2 bg-temple-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-50 dark:bg-slate-800/50"
           >
             <FiFilter /> Filters {(filterUser !== "All Users" || filterAction !== "All Actions" || filterModule !== "All Modules") && "(Active)"}
           </button>
 
           {showFilters && (
-            <div className="absolute right-0 top-full mt-2 w-72 bg-temple-100 rounded-xl shadow-lg border border-slate-200 p-4 z-50">
-              <h4 className="text-sm font-semibold text-slate-800 mb-4">Filter Logs</h4>
+            <div className="absolute right-0 top-full mt-2 w-72 bg-temple-100 dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 p-4 z-50">
+              <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-4">Filter Logs</h4>
               
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs text-slate-500 mb-1">Start Date</label>
+                  <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Start Date</label>
                   <input 
                     type="date" 
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-600 outline-none" 
+                    className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-600 dark:text-slate-400 outline-none" 
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-slate-500 mb-1">End Date</label>
+                  <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">End Date</label>
                   <input 
                     type="date" 
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-600 outline-none" 
+                    className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-600 dark:text-slate-400 outline-none" 
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-slate-500 mb-1">User</label>
+                  <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">User</label>
                   <select 
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-600 outline-none"
+                    className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-600 dark:text-slate-400 outline-none"
                     value={filterUser}
                     onChange={(e) => setFilterUser(e.target.value)}
                   >
@@ -269,9 +269,9 @@ const AuditLogs = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs text-slate-500 mb-1">Action</label>
+                  <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Action</label>
                   <select 
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-600 outline-none"
+                    className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-600 dark:text-slate-400 outline-none"
                     value={filterAction}
                     onChange={(e) => setFilterAction(e.target.value)}
                   >
@@ -279,9 +279,9 @@ const AuditLogs = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs text-slate-500 mb-1">Module</label>
+                  <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Module</label>
                   <select 
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-600 outline-none"
+                    className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-600 dark:text-slate-400 outline-none"
                     value={filterModule}
                     onChange={(e) => setFilterModule(e.target.value)}
                   >
@@ -302,7 +302,7 @@ const AuditLogs = () => {
                     setCurrentPage(1);
                     fetchLogs();
                   }}
-                  className="flex-1 px-3 py-2 border border-slate-200 text-slate-600 rounded-lg text-sm hover:bg-slate-50"
+                  className="flex-1 px-3 py-2 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 rounded-lg text-sm hover:bg-slate-50 dark:bg-slate-800/50"
                 >
                   Clear
                 </button>
@@ -319,10 +319,10 @@ const AuditLogs = () => {
       </div>
 
       {/* Table */}
-      <div className="bg-temple-100 rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="bg-temple-100 dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-slate-600">
-            <thead className="bg-slate-50 text-xs uppercase font-medium text-slate-500">
+          <table className="w-full text-left text-sm text-slate-600 dark:text-slate-400">
+            <thead className="bg-slate-50 dark:bg-slate-800/50 text-xs uppercase font-medium text-slate-500 dark:text-slate-400">
               <tr>
                 <th className="px-6 py-4">Date & Time</th>
                 <th className="px-6 py-4">User</th>
@@ -343,14 +343,14 @@ const AuditLogs = () => {
                 </tr>
               ) : (
                 paginatedLogs.map((log) => (
-                  <tr key={log._id} className="hover:bg-slate-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-slate-700">
+                  <tr key={log._id} className="hover:bg-slate-50 dark:bg-slate-800/50">
+                    <td className="px-6 py-4 whitespace-nowrap text-slate-700 dark:text-slate-300">
                       {new Date(log.date).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase()}
                     </td>
-                    <td className="px-6 py-4 font-medium text-slate-800">{log.user?.name || "System"}</td>
-                    <td className="px-6 py-4 text-slate-700">{log.action}</td>
+                    <td className="px-6 py-4 font-medium text-slate-800 dark:text-slate-200">{log.user?.name || "System"}</td>
+                    <td className="px-6 py-4 text-slate-700 dark:text-slate-300">{log.action}</td>
                     <td className="px-6 py-4">{log.module}</td>
-                    <td className="px-6 py-4 text-slate-500 max-w-md truncate" title={log.details}>{log.details}</td>
+                    <td className="px-6 py-4 text-slate-500 dark:text-slate-400 max-w-md truncate" title={log.details}>{log.details}</td>
                     <td className="px-6 py-4 font-mono text-xs text-slate-400">{log.ipAddress}</td>
                   </tr>
                 ))
@@ -360,15 +360,15 @@ const AuditLogs = () => {
         </div>
         
         {/* Pagination */}
-        <div className="px-6 py-4 border-t border-slate-200 flex items-center justify-between">
-          <p className="text-sm text-slate-500">
+        <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
             Showing {Math.min((currentPage - 1) * itemsPerPage + 1, filteredLogs.length)} to {Math.min(currentPage * itemsPerPage, filteredLogs.length)} of {filteredLogs.length} entries
           </p>
           <div className="flex gap-1">
             <button 
               disabled={currentPage === 1}
               onClick={() => setCurrentPage(p => p - 1)}
-              className="p-1 rounded-md border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-50"
+              className="p-1 rounded-md border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-800/50 disabled:opacity-50"
             >
               <FiChevronLeft size={18} />
             </button>
@@ -382,7 +382,7 @@ const AuditLogs = () => {
                     ? "bg-[#ff8b00] text-white border border-[#ff8b00]" 
                     : page === '...'
                     ? "text-slate-400 cursor-default"
-                    : "border border-slate-200 text-slate-600 hover:bg-slate-50"
+                    : "border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-800/50"
                 }`}
               >
                 {page}
@@ -391,7 +391,7 @@ const AuditLogs = () => {
             <button 
               disabled={currentPage === totalPages || totalPages === 0}
               onClick={() => setCurrentPage(p => p + 1)}
-              className="p-1 rounded-md border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-50"
+              className="p-1 rounded-md border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-800/50 disabled:opacity-50"
             >
               <FiChevronRight size={18} />
             </button>

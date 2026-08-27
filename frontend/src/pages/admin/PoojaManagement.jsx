@@ -22,15 +22,15 @@ import PoojaTypeSetupModal from "./components/PoojaTypeSetupModal";
 const formatCurrency = (value) => `Rs ${Number(value || 0).toLocaleString()}`;
 
 const statusTheme = {
-  Confirmed: "bg-[#e8f6e9] text-[#187a3b]",
-  Pending: "bg-[#fff1df] text-[#ea580c]",
-  Booked: "bg-[#fff1df] text-[#ea580c]",
-  Approved: "bg-[#e0f2fe] text-[#0369a1]",
-  Assigned: "bg-[#ede9fe] text-[#6d28d9]",
-  "In Progress": "bg-[#fef3c7] text-[#92400e]",
-  Completed: "bg-[#e9efff] text-[#2454c9]",
-  Rejected: "bg-[#fde8e8] text-[#a12525]",
-  Cancelled: "bg-[#fde8e8] text-[#a12525]",
+  Confirmed: "bg-[#e8f6e9] dark:bg-green-900/40 text-[#187a3b] dark:text-green-400",
+  Pending: "bg-[#fff1df] dark:bg-orange-900/40 text-[#ea580c] dark:text-orange-400",
+  Booked: "bg-[#fff1df] dark:bg-orange-900/40 text-[#ea580c] dark:text-orange-400",
+  Approved: "bg-[#e0f2fe] dark:bg-sky-900/40 text-[#0369a1] dark:text-sky-400",
+  Assigned: "bg-[#ede9fe] dark:bg-violet-900/40 text-[#6d28d9] dark:text-violet-400",
+  "In Progress": "bg-[#fef3c7] dark:bg-amber-900/40 text-[#92400e] dark:text-amber-400",
+  Completed: "bg-[#e9efff] dark:bg-blue-900/40 text-[#2454c9] dark:text-blue-400",
+  Rejected: "bg-[#fde8e8] dark:bg-red-900/40 text-[#a12525] dark:text-red-400",
+  Cancelled: "bg-[#fde8e8] dark:bg-red-900/40 text-[#a12525] dark:text-red-400",
 };
 
 const PoojaManagement = () => {
@@ -213,11 +213,11 @@ const PoojaManagement = () => {
     <div className="mt-5 space-y-4">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <h1 className="text-[42px] leading-tight font-bold text-[#15141f]">Pooja Booking Management</h1>
-          <p className="mt-1 text-[20px] text-[#5d6674]">Live pooja schedules, bookings, receipts and seva operations.</p>
+          <h1 className="text-[42px] leading-tight font-bold text-[#15141f] dark:text-slate-100">Pooja Booking Management</h1>
+          <p className="mt-1 text-[20px] text-[#5d6674] dark:text-slate-400">Live pooja schedules, bookings, receipts and seva operations.</p>
         </div>
 
-        <div className="inline-flex h-12 items-center gap-2 rounded-xl border border-[#f0e1d2] bg-[#fff7ee] px-4 text-[20px] font-semibold text-[#a64b0f]">
+        <div className="inline-flex h-12 items-center gap-2 rounded-xl border border-[#f0e1d2] dark:border-slate-600 bg-[#fff7ee] dark:bg-slate-800 px-4 text-[20px] font-semibold text-[#a64b0f] dark:text-orange-300">
           <MdCalendarMonth size={22} />
           {new Date().toLocaleDateString(undefined, { weekday: "long", day: "2-digit", month: "short", year: "numeric" })}
         </div>
@@ -227,12 +227,12 @@ const PoojaManagement = () => {
         {stats.map((card) => {
           const Icon = card.icon;
           return (
-            <div key={card.title} className="rounded-2xl border border-[#ece8e1] bg-temple-100 p-5">
+            <div key={card.title} className="rounded-2xl border border-[#ece8e1] dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-5">
               <div className="flex items-center gap-4">
                 <div className={`flex h-16 w-16 items-center justify-center rounded-2xl ${card.iconBg}`}><Icon className={card.iconText} size={30} /></div>
                 <div>
-                  <p className="text-[20px] font-medium text-[#323946]">{card.title}</p>
-                  <p className="text-[38px] leading-none font-bold text-[#111827]">{card.value}</p>
+                  <p className="text-[20px] font-medium text-[#323946] dark:text-slate-300">{card.title}</p>
+                  <p className="text-[38px] leading-none font-bold text-[#111827] dark:text-white">{card.value}</p>
                 </div>
               </div>
             </div>
@@ -240,11 +240,11 @@ const PoojaManagement = () => {
         })}
       </div>
 
-      <div className="rounded-2xl border border-[#ece8e1] bg-temple-100 p-5">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-[#f0ece6] pb-4 mb-4">
+      <div className="rounded-2xl border border-[#ece8e1] dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-5">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-[#f0ece6] dark:border-slate-700 pb-4 mb-4">
           <div>
-            <h2 className="text-[30px] font-bold text-[#15141f]">Manage Pooja Types</h2>
-            <p className="mt-1 text-sm text-[#5d6674]">Add, edit or remove pooja services and their booking prices.</p>
+            <h2 className="text-[30px] font-bold text-[#15141f] dark:text-slate-100">Manage Pooja Types</h2>
+            <p className="mt-1 text-sm text-[#5d6674] dark:text-slate-400">Add, edit or remove pooja services and their booking prices.</p>
           </div>
           <button
             type="button"
@@ -259,8 +259,8 @@ const PoojaManagement = () => {
         </div>
 
         <div className="mt-6 overflow-x-auto">
-          <table className="w-full text-left text-sm text-[#3f3f3f]">
-            <thead className="bg-[#fafafa] text-[#575757]">
+          <table className="w-full text-left text-sm text-[#3f3f3f] dark:text-slate-300">
+            <thead className="bg-[#fafafa] dark:bg-slate-900/50 text-[#575757] dark:text-slate-400">
               <tr>
                 <th className="px-4 py-3 font-semibold">Pooja Type</th>
                 <th className="px-4 py-3 font-semibold">Price</th>
@@ -270,18 +270,18 @@ const PoojaManagement = () => {
             <tbody>
               {poojaTypes.length > 0 ? (
                 poojaTypes.map((type) => (
-                  <tr key={type.name} className="border-t border-[#f0ece6]">
+                  <tr key={type.name} className="border-t border-[#f0ece6] dark:border-slate-700">
                     <td className="px-4 py-3 font-medium">{type.name}</td>
                     <td className="px-4 py-3">{`₹ ${type.price.toLocaleString()}`}</td>
                     <td className="px-4 py-3 space-x-2">
-                      <button type="button" onClick={() => handleEditType(type)} className="rounded-lg bg-[#f8fafc] px-3 py-2 text-sm font-semibold text-[#1f2937] hover:bg-[#f1f5f9]">Edit</button>
-                      <button type="button" onClick={() => handleDeleteType(type._id)} className="rounded-lg bg-[#fef2f2] px-3 py-2 text-sm font-semibold text-[#b91c1c] hover:bg-[#fee2e2]">Delete</button>
+                      <button type="button" onClick={() => handleEditType(type)} className="rounded-lg bg-[#f8fafc] dark:bg-slate-700 px-3 py-2 text-sm font-semibold text-[#1f2937] dark:text-slate-200 hover:bg-[#f1f5f9] dark:hover:bg-slate-600">Edit</button>
+                      <button type="button" onClick={() => handleDeleteType(type._id)} className="rounded-lg bg-[#fef2f2] dark:bg-rose-900/30 px-3 py-2 text-sm font-semibold text-[#b91c1c] dark:text-rose-400 hover:bg-[#fee2e2] dark:hover:bg-rose-800/50">Delete</button>
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="3" className="px-4 py-6 text-center text-[#5d5d5d]">No pooja types available.</td>
+                  <td colSpan="3" className="px-4 py-6 text-center text-[#5d5d5d] dark:text-slate-400">No pooja types available.</td>
                 </tr>
               )}
             </tbody>
@@ -291,21 +291,21 @@ const PoojaManagement = () => {
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
         <div className="xl:col-span-8 space-y-4">
-          <div className="overflow-hidden rounded-2xl border border-[#ece8e1] bg-temple-100">
-            <div className="flex flex-col gap-3 border-b border-[#f0ece6] px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="overflow-hidden rounded-2xl border border-[#ece8e1] dark:border-slate-700 bg-temple-100 dark:bg-slate-800">
+            <div className="flex flex-col gap-3 border-b border-[#f0ece6] dark:border-slate-700 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-4">
-                <h2 className="text-[36px] font-bold text-[#15141f]">Pooja Bookings</h2>
-                <Link to="/admin/pooja/all-bookings" className="rounded-xl bg-[#15141f] px-4 py-2 text-sm font-semibold text-white hover:bg-black">View All Bookings</Link>
+                <h2 className="text-[36px] font-bold text-[#15141f] dark:text-slate-100">Pooja Bookings</h2>
+                <Link to="/admin/pooja/all-bookings" className="rounded-xl bg-[#15141f] dark:bg-slate-600 px-4 py-2 text-sm font-semibold text-white hover:bg-black dark:hover:bg-slate-50 dark:bg-slate-800/500">View All Bookings</Link>
               </div>
-              <div className="flex h-11 items-center gap-2 rounded-xl border border-[#ece8e1] bg-[#faf9f7] px-3 text-[#858b96]">
+              <div className="flex h-11 items-center gap-2 rounded-xl border border-[#ece8e1] dark:border-slate-700 bg-[#faf9f7] dark:bg-slate-700/50 px-3 text-[#858b96] dark:text-slate-400">
                 <MdOutlineSearch size={20} />
-                <input value={query} onChange={(e) => setQuery(e.target.value)} className="w-[220px] bg-transparent text-[16px] text-[#242938] outline-none placeholder:text-[#9ca3af]" placeholder="Search booking..." />
+                <input value={query} onChange={(e) => setQuery(e.target.value)} className="w-[220px] bg-transparent text-[16px] text-[#242938] dark:text-slate-100 outline-none placeholder:text-[#9ca3af]" placeholder="Search booking..." />
               </div>
             </div>
 
             <div className="overflow-auto">
               <table className="w-full min-w-[920px] text-[15px]">
-                <thead className="bg-[#faf9f7] text-[#2b3240]">
+                <thead className="bg-[#faf9f7] dark:bg-slate-700/50 text-[#2b3240] dark:text-slate-200">
                   <tr>
                     <th className="px-4 py-3 text-left font-semibold">Booking ID</th>
                     <th className="px-4 py-3 text-left font-semibold">Devotee</th>
@@ -317,7 +317,7 @@ const PoojaManagement = () => {
                 </thead>
                 <tbody>
                   {filteredBookings.map((row) => (
-                    <tr key={row.id} className="border-t border-[#f0ece6] text-[#2f3645]">
+                    <tr key={row.id} className="border-t border-[#f0ece6] dark:border-slate-700 text-[#2f3645] dark:text-slate-300">
                       <td className="px-4 py-3">{row.id}</td>
                       <td className="px-4 py-3 font-medium">{row.devotee}</td>
                       <td className="px-4 py-3">{row.pooja}</td>
@@ -331,11 +331,11 @@ const PoojaManagement = () => {
             </div>
           </div>
 
-          <div className="overflow-auto rounded-2xl border border-[#ece8e1] bg-temple-100 p-4">
-            <h2 className="mb-3 text-[32px] font-bold text-[#15141f]">Recent Receipts</h2>
+          <div className="overflow-auto rounded-2xl border border-[#ece8e1] dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-4">
+            <h2 className="mb-3 text-[32px] font-bold text-[#15141f] dark:text-slate-100">Recent Receipts</h2>
             <table className="w-full min-w-[860px] text-[15px]">
-              <thead className="text-[#2b3240]">
-                <tr className="border-b border-[#f0ece6]">
+              <thead className="text-[#2b3240] dark:text-slate-200">
+                <tr className="border-b border-[#f0ece6] dark:border-slate-700">
                   <th className="py-2 text-left font-semibold">Receipt ID</th>
                   <th className="py-2 text-left font-semibold">Booking ID</th>
                   <th className="py-2 text-left font-semibold">Devotee</th>
@@ -347,7 +347,7 @@ const PoojaManagement = () => {
               </thead>
               <tbody>
                 {receipts.map((row) => (
-                  <tr key={row.receiptId} className="border-b border-[#f0ece6] text-[#2f3645]">
+                  <tr key={row.receiptId} className="border-b border-[#f0ece6] dark:border-slate-700 text-[#2f3645] dark:text-slate-300">
                     <td className="py-2">{row.receiptId}</td>
                     <td className="py-2">{row.bookingId}</td>
                     <td className="py-2">{row.devotee}</td>
@@ -364,15 +364,15 @@ const PoojaManagement = () => {
           </div>
         </div>
 
-        <div className="xl:col-span-4 rounded-2xl border border-[#ece8e1] bg-temple-100 p-4">
-          <h3 className="text-[30px] font-bold text-[#15141f]">Booking Overview</h3>
-          <div className="mt-4 space-y-2 text-[15px] text-[#2f3645]">
+        <div className="xl:col-span-4 rounded-2xl border border-[#ece8e1] dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-4">
+          <h3 className="text-[30px] font-bold text-[#15141f] dark:text-slate-100">Booking Overview</h3>
+          <div className="mt-4 space-y-2 text-[15px] text-[#2f3645] dark:text-slate-300">
             <div className="flex items-center justify-between"><span>Total Bookings</span><span>{statsData?.totalBookings || 0}</span></div>
             <div className="flex items-center justify-between"><span>Confirmed</span><span>{statsData?.confirmed || 0}</span></div>
             <div className="flex items-center justify-between"><span>Pending</span><span>{statsData?.pending || 0}</span></div>
             <div className="flex items-center justify-between"><span>Completed</span><span>{statsData?.completed || 0}</span></div>
             <div className="flex items-center justify-between"><span>Cancelled</span><span>{statsData?.cancelled || 0}</span></div>
-            <div className="border-t border-[#f0ece6] pt-2"><p className="text-[14px] text-[#6b7280]">Total Revenue</p><p className="text-[34px] leading-none font-bold text-[#f97316]">{formatCurrency(revenue)}</p></div>
+            <div className="border-t border-[#f0ece6] dark:border-slate-700 pt-2"><p className="text-[14px] text-[#6b7280] dark:text-slate-400">Total Revenue</p><p className="text-[34px] leading-none font-bold text-[#f97316]">{formatCurrency(revenue)}</p></div>
           </div>
         </div>
       </div>
@@ -408,49 +408,49 @@ const BookingDetailsModal = ({ booking, onClose }) => {
   
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-      <div className="w-full max-w-lg rounded-3xl border border-[#ece8e1] bg-temple-100 p-6 shadow-2xl relative">
+      <div className="w-full max-w-lg rounded-3xl border border-[#ece8e1] dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-6 shadow-2xl relative">
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 text-[#858b96] hover:text-[#15141f] text-2xl font-bold"
+          className="absolute top-4 right-4 text-[#858b96] dark:text-slate-400 hover:text-[#15141f] dark:text-slate-100 text-2xl font-bold"
         >
           &times;
         </button>
-        <h3 className="text-2xl font-bold text-[#15141f] mb-4">Booking Details</h3>
+        <h3 className="text-2xl font-bold text-[#15141f] dark:text-slate-100 mb-4">Booking Details</h3>
         
-        <div className="space-y-3 text-[15px] text-[#2f3645]">
-          <div className="flex justify-between border-b border-[#f0ece6] pb-2">
-            <span className="font-semibold text-gray-500">Booking ID:</span>
+        <div className="space-y-3 text-[15px] text-[#2f3645] dark:text-slate-300">
+          <div className="flex justify-between border-b border-[#f0ece6] dark:border-slate-700 pb-2">
+            <span className="font-semibold text-gray-500 dark:text-slate-400">Booking ID:</span>
             <span>BK{String(booking._id).slice(-6).toUpperCase()}</span>
           </div>
-          <div className="flex justify-between border-b border-[#f0ece6] pb-2">
-            <span className="font-semibold text-gray-500">Devotee Name:</span>
+          <div className="flex justify-between border-b border-[#f0ece6] dark:border-slate-700 pb-2">
+            <span className="font-semibold text-gray-500 dark:text-slate-400">Devotee Name:</span>
             <span>{booking.devoteeName || booking.customerName}</span>
           </div>
-          <div className="flex justify-between border-b border-[#f0ece6] pb-2">
-            <span className="font-semibold text-gray-500">Pooja Service:</span>
+          <div className="flex justify-between border-b border-[#f0ece6] dark:border-slate-700 pb-2">
+            <span className="font-semibold text-gray-500 dark:text-slate-400">Pooja Service:</span>
             <span>{booking.service}</span>
           </div>
-          <div className="flex justify-between border-b border-[#f0ece6] pb-2">
-            <span className="font-semibold text-gray-500">Pooja Date:</span>
+          <div className="flex justify-between border-b border-[#f0ece6] dark:border-slate-700 pb-2">
+            <span className="font-semibold text-gray-500 dark:text-slate-400">Pooja Date:</span>
             <span>{dateStr}</span>
           </div>
-          <div className="flex justify-between border-b border-[#f0ece6] pb-2">
-            <span className="font-semibold text-gray-500">Time Slot:</span>
+          <div className="flex justify-between border-b border-[#f0ece6] dark:border-slate-700 pb-2">
+            <span className="font-semibold text-gray-500 dark:text-slate-400">Time Slot:</span>
             <span>{slotStr}</span>
           </div>
-          <div className="flex justify-between border-b border-[#f0ece6] pb-2">
-            <span className="font-semibold text-gray-500">Amount:</span>
+          <div className="flex justify-between border-b border-[#f0ece6] dark:border-slate-700 pb-2">
+            <span className="font-semibold text-gray-500 dark:text-slate-400">Amount:</span>
             <span className="font-bold text-[#f97316]">Rs {Number(booking.amount || 0).toLocaleString()}</span>
           </div>
           {booking.paymentMethod && (
-            <div className="flex justify-between border-b border-[#f0ece6] pb-2">
-              <span className="font-semibold text-gray-500">Payment Method:</span>
+            <div className="flex justify-between border-b border-[#f0ece6] dark:border-slate-700 pb-2">
+              <span className="font-semibold text-gray-500 dark:text-slate-400">Payment Method:</span>
               <span>{booking.paymentMethod}</span>
             </div>
           )}
-          <div className="flex justify-between border-b border-[#f0ece6] pb-2">
-            <span className="font-semibold text-gray-500">Status:</span>
+          <div className="flex justify-between border-b border-[#f0ece6] dark:border-slate-700 pb-2">
+            <span className="font-semibold text-gray-500 dark:text-slate-400">Status:</span>
             <span className={`rounded-lg px-2.5 py-1 text-[13px] font-semibold ${statusTheme[booking.status] || statusTheme.Pending}`}>
               {booking.status || "Pending"}
             </span>
@@ -461,7 +461,7 @@ const BookingDetailsModal = ({ booking, onClose }) => {
           <button
             type="button"
             onClick={onClose}
-            className="rounded-2xl border border-[#d1d5db] bg-temple-100 px-5 py-2.5 text-sm font-semibold text-[#374151] hover:bg-[#f9fafb]"
+            className="rounded-2xl border border-[#d1d5db] bg-temple-100 dark:bg-slate-800 px-5 py-2.5 text-sm font-semibold text-[#374151] dark:text-slate-300 hover:bg-[#f9fafb]"
           >
             Close
           </button>

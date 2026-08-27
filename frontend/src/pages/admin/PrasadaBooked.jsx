@@ -22,11 +22,11 @@ const STATUS_OPTIONS = ["Not Collected", "Collected"];
 const statusClassMap = {
   Pending: "bg-[#fef3c7] text-[#92400e]",
   Approved: "bg-[#dbeafe] text-[#1d4ed8]",
-  Rejected: "bg-[#fee2e2] text-[#b91c1c]",
+  Rejected: "bg-[#fee2e2] text-[#b91c1c] dark:text-rose-400",
   Processing: "bg-[#e0e7ff] text-[#3730a3]",
   "Ready for Pickup": "bg-[#d1fae5] text-[#166534]",
   Completed: "bg-[#d1fae5] text-[#166534]",
-  Cancelled: "bg-[#fee2e2] text-[#b91c1c]",
+  Cancelled: "bg-[#fee2e2] text-[#b91c1c] dark:text-rose-400",
   Placed: "bg-[#fef3c7] text-[#92400e]",
   Preparing: "bg-[#e0e7ff] text-[#3730a3]",
   Ready: "bg-[#d1fae5] text-[#166534]",
@@ -109,17 +109,17 @@ const PrasadaBooked = () => {
 
   return (
     <div className="mt-5 space-y-6">
-      <div className="rounded-2xl border border-[#ece8e1] bg-temple-100 p-8 shadow-sm">
+      <div className="rounded-2xl border border-[#ece8e1] dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-8 shadow-sm">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-[42px] font-bold text-[#111827]">Prasada Booked</h1>
+            <h1 className="text-[42px] font-bold text-[#111827] dark:text-white">Prasada Booked</h1>
             <p className="mt-2 text-[#525252]">Devotee prasada orders appear here when booked from the devotee portal.</p>
           </div>
           <div className="rounded-3xl bg-[#eff6ff] px-5 py-3 text-sm font-semibold text-[#1d4ed8]">Prasada</div>
         </div>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
-          <div className="rounded-3xl border border-[#e5e7eb] bg-[#f8fafc] p-6">
+          <div className="rounded-3xl border border-[#e5e7eb] bg-[#f8fafc] dark:bg-slate-700 p-6">
             <p className="text-sm uppercase tracking-[0.24em] text-[#475569]">Total Orders</p>
             <p className="mt-4 text-[2rem] font-bold text-[#0f172a]">{orders.length}</p>
           </div>
@@ -138,10 +138,10 @@ const PrasadaBooked = () => {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-[#ece8e1] bg-temple-100 p-6 shadow-sm">
+      <div className="rounded-2xl border border-[#ece8e1] dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-6 shadow-sm">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4">
-            <h2 className="text-2xl font-bold text-[#111827]">Prasada Bookings</h2>
+            <h2 className="text-2xl font-bold text-[#111827] dark:text-white">Prasada Bookings</h2>
             {filteredOrders.length > 10 && (
               <button
                 onClick={() => navigate("/admin/prasada/all")}
@@ -174,7 +174,7 @@ const PrasadaBooked = () => {
             <button
               type="button"
               onClick={loadOrders}
-              className="rounded-full border border-[#cbd5e1] bg-temple-100 px-4 py-2 text-sm font-semibold text-[#1f2937] hover:bg-[#f8fafc]"
+              className="rounded-full border border-[#cbd5e1] bg-temple-100 dark:bg-slate-800 px-4 py-2 text-sm font-semibold text-[#1f2937] dark:text-slate-200 hover:bg-[#f8fafc] dark:bg-slate-700"
             >
               Refresh
             </button>
@@ -182,7 +182,7 @@ const PrasadaBooked = () => {
         </div>
 
         {error ? (
-          <div className="mt-4 rounded-2xl border border-[#fee2e2] bg-[#fff1f2] p-4 text-sm text-[#b91c1c]">{error}</div>
+          <div className="mt-4 rounded-2xl border border-[#fee2e2] bg-[#fff1f2] p-4 text-sm text-[#b91c1c] dark:text-rose-400">{error}</div>
         ) : null}
 
         <div className="mt-6 overflow-x-auto">
@@ -219,7 +219,7 @@ const PrasadaBooked = () => {
                   const orderId = order._id || order.id;
                   const status = displayStatus(order);
                   return (
-                    <tr key={orderId} className="border-b border-[#f1f5f9] hover:bg-[#f8fafc]">
+                    <tr key={orderId} className="border-b border-[#f1f5f9] hover:bg-[#f8fafc] dark:bg-slate-700">
                       <td className="px-4 py-4 font-mono font-semibold text-[#6366f1]">
                         PR-{String(orderId).slice(-6).toUpperCase()}
                       </td>
@@ -256,7 +256,7 @@ const PrasadaBooked = () => {
                             type="button"
                             disabled={deletingId === orderId || updatingId === orderId}
                             onClick={() => handleDelete(orderId)}
-                            className="rounded-lg border border-[#fecaca] bg-[#fff1f2] px-2 py-1 text-xs font-semibold text-[#b91c1c] hover:bg-[#ffe4e6] disabled:cursor-not-allowed disabled:opacity-60"
+                            className="rounded-lg border border-[#fecaca] bg-[#fff1f2] px-2 py-1 text-xs font-semibold text-[#b91c1c] dark:text-rose-400 hover:bg-[#ffe4e6] disabled:cursor-not-allowed disabled:opacity-60"
                           >
                             {deletingId === orderId ? "Deleting..." : "Delete"}
                           </button>

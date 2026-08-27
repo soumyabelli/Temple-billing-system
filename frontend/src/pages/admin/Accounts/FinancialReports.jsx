@@ -142,8 +142,8 @@ const FinancialReports = () => {
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-temple-100 p-3 rounded-lg shadow-lg border border-slate-100">
-          <p className="font-bold text-slate-800 mb-2">{label}</p>
+        <div className="bg-temple-100 dark:bg-slate-800 p-3 rounded-lg shadow-lg border border-slate-100">
+          <p className="font-bold text-slate-800 dark:text-slate-200 mb-2">{label}</p>
           {payload.map((entry, index) => (
             <p key={index} className="text-sm" style={{ color: entry.color }}>
               {entry.name}: ₹{entry.value.toLocaleString("en-IN")}
@@ -158,9 +158,9 @@ const FinancialReports = () => {
   const PieTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-temple-100 p-3 rounded-lg shadow-lg border border-slate-100">
-          <p className="font-bold text-slate-800">{payload[0].name}</p>
-          <p className="text-sm text-slate-600 mt-1">₹{payload[0].value.toLocaleString("en-IN")}</p>
+        <div className="bg-temple-100 dark:bg-slate-800 p-3 rounded-lg shadow-lg border border-slate-100">
+          <p className="font-bold text-slate-800 dark:text-slate-200">{payload[0].name}</p>
+          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">₹{payload[0].value.toLocaleString("en-IN")}</p>
         </div>
       );
     }
@@ -168,7 +168,7 @@ const FinancialReports = () => {
   };
 
   if (loading) {
-    return <div className="p-8 text-center text-slate-600">Loading charts and data...</div>;
+    return <div className="p-8 text-center text-slate-600 dark:text-slate-400">Loading charts and data...</div>;
   }
 
   // Format data for Pie Charts
@@ -176,7 +176,7 @@ const FinancialReports = () => {
   const expensePieData = annualData ? Object.entries(annualData.expenseByCategory || {}).map(([key, val]) => ({ name: key, value: val })).filter(item => item.value > 0) : [];
 
   return (
-    <div className="p-4 md:p-8 bg-[#faf9f7] min-h-screen font-sans">
+    <div className="p-4 md:p-8 bg-[#faf9f7] dark:bg-slate-700/50 min-h-screen font-sans">
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
         <div>
           <h1 className="text-2xl font-bold text-[#1d1b19]">Financial Reports & Analytics</h1>
@@ -193,8 +193,8 @@ const FinancialReports = () => {
       </div>
 
       {/* Row 1: Monthly Bar Chart */}
-      <div className="bg-temple-100 p-6 rounded-2xl shadow-sm border border-slate-100 mb-6">
-        <h3 className="text-lg font-bold text-slate-800 mb-6">Monthly Income vs Expense</h3>
+      <div className="bg-temple-100 dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 mb-6">
+        <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200 mb-6">Monthly Income vs Expense</h3>
         <div className="h-[400px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
@@ -216,8 +216,8 @@ const FinancialReports = () => {
       {/* Row 2: Breakdown Pie Charts */}
       {annualData && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <div className="bg-temple-100 p-6 rounded-2xl shadow-sm border border-slate-100">
-            <h3 className="text-lg font-bold text-slate-800 mb-6">Income Sources Distribution</h3>
+          <div className="bg-temple-100 dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100">
+            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200 mb-6">Income Sources Distribution</h3>
             <div className="h-[300px] w-full flex items-center justify-center">
               {incomePieData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
@@ -241,13 +241,13 @@ const FinancialReports = () => {
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <p className="text-slate-500 italic">No income data available.</p>
+                <p className="text-slate-500 dark:text-slate-400 italic">No income data available.</p>
               )}
             </div>
           </div>
 
-          <div className="bg-temple-100 p-6 rounded-2xl shadow-sm border border-slate-100">
-            <h3 className="text-lg font-bold text-slate-800 mb-6">Expense Categories Distribution</h3>
+          <div className="bg-temple-100 dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100">
+            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200 mb-6">Expense Categories Distribution</h3>
             <div className="h-[300px] w-full flex items-center justify-center">
               {expensePieData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
@@ -271,7 +271,7 @@ const FinancialReports = () => {
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <p className="text-slate-500 italic">No expense data available.</p>
+                <p className="text-slate-500 dark:text-slate-400 italic">No expense data available.</p>
               )}
             </div>
           </div>

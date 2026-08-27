@@ -27,12 +27,12 @@ const BankInterest = () => {
 
   return (
     <div className="p-6 max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-6">Record Bank Interest</h2>
+      <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-white mb-6">Record Bank Interest</h2>
 
-      <div className="bg-temple-100 dark:bg-temple-100/10 backdrop-blur-md border border-slate-200 dark:border-white/20 p-6 rounded-2xl shadow-xl">
+      <div className="bg-temple-100 dark:bg-slate-800 dark:bg-temple-100 dark:bg-slate-800/10 backdrop-blur-md border border-slate-200 dark:border-slate-700 dark:border-white/20 p-6 rounded-2xl shadow-xl">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-800 dark:text-white mb-1">Amount (₹)</label>
+            <label className="block text-sm font-medium text-slate-800 dark:text-slate-200 dark:text-white mb-1">Amount (₹)</label>
             <input
               type="number"
               required
@@ -40,27 +40,27 @@ const BankInterest = () => {
               step="0.01"
               value={formData.amount}
               onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-              className="w-full bg-slate-50 dark:bg-temple-100/5 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-2 text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-full bg-slate-50 dark:bg-slate-800/50 dark:bg-temple-100 dark:bg-slate-800/5 border border-slate-200 dark:border-slate-700 dark:border-white/10 rounded-lg px-4 py-2 text-slate-800 dark:text-slate-200 dark:text-white placeholder-slate-400 dark:placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-amber-500"
               placeholder="Enter interest amount"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-800 dark:text-white mb-1">Date</label>
+            <label className="block text-sm font-medium text-slate-800 dark:text-slate-200 dark:text-white mb-1">Date</label>
             <input
               type="date"
               required
               value={formData.date}
               onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-              className="w-full bg-slate-50 dark:bg-temple-100/5 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-2 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-full bg-slate-50 dark:bg-slate-800/50 dark:bg-temple-100 dark:bg-slate-800/5 border border-slate-200 dark:border-slate-700 dark:border-white/10 rounded-lg px-4 py-2 text-slate-800 dark:text-slate-200 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-800 dark:text-white mb-1">Description (Optional)</label>
+            <label className="block text-sm font-medium text-slate-800 dark:text-slate-200 dark:text-white mb-1">Description (Optional)</label>
             <textarea
               rows="3"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="w-full bg-slate-50 dark:bg-temple-100/5 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-2 text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-full bg-slate-50 dark:bg-slate-800/50 dark:bg-temple-100 dark:bg-slate-800/5 border border-slate-200 dark:border-slate-700 dark:border-white/10 rounded-lg px-4 py-2 text-slate-800 dark:text-slate-200 dark:text-white placeholder-slate-400 dark:placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-amber-500"
               placeholder="E.g., Q3 Savings Interest"
             />
           </div>

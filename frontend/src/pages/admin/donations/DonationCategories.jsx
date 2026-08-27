@@ -26,9 +26,9 @@ const DonationCategories = () => {
 
         <SectionCard title="Category Insights" subtitle="Use these categories to build reports and targeted campaigns.">
           <ul className="space-y-3 text-slate-200">
-            <li className="rounded-3xl border border-white/10 bg-temple-100/5 p-4">Annadanam donations drive evening temple queues and community meals.</li>
-            <li className="rounded-3xl border border-white/10 bg-temple-100/5 p-4">Festival donations peak during Rathotsava and Deepavali cycles.</li>
-            <li className="rounded-3xl border border-white/10 bg-temple-100/5 p-4">Temple Fund contributions keep daily maintenance and renovation stable.</li>
+            <li className="rounded-3xl border border-white/10 bg-temple-100 dark:bg-slate-800/5 p-4">Annadanam donations drive evening temple queues and community meals.</li>
+            <li className="rounded-3xl border border-white/10 bg-temple-100 dark:bg-slate-800/5 p-4">Festival donations peak during Rathotsava and Deepavali cycles.</li>
+            <li className="rounded-3xl border border-white/10 bg-temple-100 dark:bg-slate-800/5 p-4">Temple Fund contributions keep daily maintenance and renovation stable.</li>
           </ul>
         </SectionCard>
       </div>

@@ -47,7 +47,7 @@ const Performance = () => {
   }, [dashboard]);
 
   return (
-    <div className="space-y-8 text-slate-800">
+    <div className="space-y-8 text-slate-800 dark:text-slate-200">
       <SectionCard
         title="Performance Analytics"
         subtitle="Leaderboard based on present days and extra duty completed this month for Sri Shanti Mahadev Mandir."
@@ -60,13 +60,13 @@ const Performance = () => {
               type="month"
               value={monthKey}
               onChange={(event) => setMonthKey(event.target.value)}
-              className="ml-3 rounded-2xl border border-slate-300 bg-white px-4 py-2 text-slate-800 font-semibold shadow-xs outline-none focus:border-amber-500"
+              className="ml-3 rounded-2xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-slate-800 dark:text-slate-200 font-semibold shadow-xs outline-none focus:border-amber-500"
             />
           </label>
         </div>
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
           {performanceTiles.map((tile) => (
-            <div key={tile.title} className={`rounded-[28px] border p-5 ${tile.accent} bg-white shadow-xs`}>
+            <div key={tile.title} className={`rounded-[28px] border p-5 ${tile.accent} bg-white dark:bg-slate-800 shadow-xs`}>
               <p className="text-xs font-black uppercase tracking-wider">{tile.title}</p>
               <p className="mt-3 text-3xl font-black">{tile.value}</p>
             </div>
@@ -78,23 +78,23 @@ const Performance = () => {
         <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">{error}</div>
       ) : null}
 
-      <SectionCard title="Performance Leaderboard" subtitle="Ranked by present days and extra duty for this month." className="overflow-hidden bg-temple-100 border-amber-200/60">
+      <SectionCard title="Performance Leaderboard" subtitle="Ranked by present days and extra duty for this month." className="overflow-hidden bg-temple-100 dark:bg-slate-800 border-amber-200/60">
         <div className="space-y-3">
           {loading ? (
-            <p className="text-sm font-semibold text-slate-500">Loading leaderboard…</p>
+            <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">Loading leaderboard…</p>
           ) : (dashboard?.leaderboard || []).length === 0 ? (
-            <p className="text-sm font-semibold text-slate-500">No attendance or extra duty records for this month yet.</p>
+            <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">No attendance or extra duty records for this month yet.</p>
           ) : (
             dashboard.leaderboard.map((person) => (
-              <div key={`${person.rank}-${person.name}`} className="rounded-[22px] border border-amber-200/60 bg-white p-4 shadow-xs">
+              <div key={`${person.rank}-${person.name}`} className="rounded-[22px] border border-amber-200/60 bg-white dark:bg-slate-800 p-4 shadow-xs">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-4">
                     <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 border border-amber-300 text-sm font-black text-amber-900">
                       #{person.rank}
                     </span>
                     <div>
-                      <p className="font-extrabold text-slate-900">{person.name}</p>
-                      <p className="text-xs font-semibold text-slate-500">{person.department}</p>
+                      <p className="font-extrabold text-slate-900 dark:text-slate-100">{person.name}</p>
+                      <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">{person.department}</p>
                       <p className="mt-1 text-xs font-semibold text-amber-800">{person.metric}</p>
                     </div>
                   </div>

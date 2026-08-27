@@ -41,7 +41,7 @@ const statusColors = {
   Late: "text-amber-700 bg-amber-50 border-amber-200",
   Absent: "text-rose-700 bg-rose-50 border-rose-200",
   Leave: "text-sky-700 bg-sky-50 border-sky-200",
-  Holiday: "text-slate-600 bg-slate-100 border-slate-200",
+  Holiday: "text-slate-600 dark:text-slate-400 bg-slate-100 border-slate-200 dark:border-slate-700",
 };
 
 const summaryIconMap = {
@@ -380,11 +380,11 @@ const Attendances = () => {
   return (
     <div className="space-y-6">
       {/* FILTERS PANEL */}
-      <div className="rounded-[28px] border border-slate-200 bg-temple-100 p-6 shadow-sm">
+      <div className="rounded-[28px] border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-6 shadow-sm">
         <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
           <div>
-            <h2 className="text-lg font-bold text-slate-800">Attendance Search Filters</h2>
-            <p className="text-xs text-slate-500">Query and download attendance logs by parameters</p>
+            <h2 className="text-lg font-bold text-slate-800 dark:text-slate-200">Attendance Search Filters</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Query and download attendance logs by parameters</p>
           </div>
           <button
             type="button"
@@ -396,12 +396,12 @@ const Attendances = () => {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
-          <label className="flex flex-col gap-1.5 text-xs font-semibold text-slate-500">
+          <label className="flex flex-col gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
             Employee Profile
             <select
               value={selectedEmployeeId}
               onChange={(event) => setSelectedEmployeeId(event.target.value)}
-              className="rounded-full border border-slate-200 bg-temple-100 px-4 py-2 text-sm font-medium text-slate-700 outline-none"
+              className="rounded-full border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 outline-none"
             >
               <option value="">All Employees</option>
               {employees.map((employee) => (
@@ -412,12 +412,12 @@ const Attendances = () => {
             </select>
           </label>
 
-          <label className="flex flex-col gap-1.5 text-xs font-semibold text-slate-500">
+          <label className="flex flex-col gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
             Organization Role
             <select
               value={filterRole}
               onChange={(event) => setFilterRole(event.target.value)}
-              className="rounded-full border border-slate-200 bg-temple-100 px-4 py-2 text-sm font-medium text-slate-700 outline-none"
+              className="rounded-full border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 outline-none"
             >
               <option value="all">All Roles</option>
               <option value="priest">Priest</option>
@@ -427,12 +427,12 @@ const Attendances = () => {
             </select>
           </label>
 
-          <label className="flex flex-col gap-1.5 text-xs font-semibold text-slate-500">
+          <label className="flex flex-col gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
             Department
             <select
               value={filterDepartment}
               onChange={(event) => setFilterDepartment(event.target.value)}
-              className="rounded-full border border-slate-200 bg-temple-100 px-4 py-2 text-sm font-medium text-slate-700 outline-none"
+              className="rounded-full border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 outline-none"
             >
               <option value="all">All Departments</option>
               {departments.map((dept) => (
@@ -443,12 +443,12 @@ const Attendances = () => {
             </select>
           </label>
 
-          <label className="flex flex-col gap-1.5 text-xs font-semibold text-slate-500">
+          <label className="flex flex-col gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
             Duty Status
             <select
               value={filterStatus}
               onChange={(event) => setFilterStatus(event.target.value)}
-              className="rounded-full border border-slate-200 bg-temple-100 px-4 py-2 text-sm font-medium text-slate-700 outline-none"
+              className="rounded-full border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 outline-none"
             >
               <option value="all">All Statuses</option>
               <option value="Present">Present</option>
@@ -459,7 +459,7 @@ const Attendances = () => {
             </select>
           </label>
 
-          <label className="flex flex-col gap-1.5 text-xs font-semibold text-slate-500">
+          <label className="flex flex-col gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
             Daily Date Filter
             <input
               type="date"
@@ -471,17 +471,17 @@ const Attendances = () => {
                   setMonthKey(ym);
                 }
               }}
-              className="rounded-full border border-slate-200 bg-temple-100 px-4 py-2 text-sm font-medium text-slate-700 outline-none"
+              className="rounded-full border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 outline-none"
             />
           </label>
 
-          <label className="flex flex-col gap-1.5 text-xs font-semibold text-slate-500">
+          <label className="flex flex-col gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
             Monthly Filter
             <input
               type="month"
               value={monthKey}
               onChange={(event) => setMonthKey(event.target.value)}
-              className="rounded-full border border-slate-200 bg-temple-100 px-4 py-2 text-sm font-medium text-slate-700 outline-none"
+              className="rounded-full border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 outline-none"
             />
           </label>
         </div>
@@ -501,7 +501,7 @@ const Attendances = () => {
           return (
             <div
               key={card.label || card.title}
-              className="rounded-[28px] border border-slate-200 bg-temple-100 px-5 py-5 shadow-lg shadow-slate-900/5"
+              className="rounded-[28px] border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-5 py-5 shadow-lg shadow-slate-900/5"
             >
               <div className="flex items-start gap-4">
                 <div
@@ -519,8 +519,8 @@ const Attendances = () => {
                   <Icon className="text-xl" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-slate-500">{card.label || card.title}</p>
-                  <p className="mt-1 text-3xl font-semibold text-slate-900">{card.value}</p>
+                  <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{card.label || card.title}</p>
+                  <p className="mt-1 text-3xl font-semibold text-slate-900 dark:text-slate-100">{card.value}</p>
                 </div>
               </div>
             </div>
@@ -536,32 +536,32 @@ const Attendances = () => {
           className="overflow-hidden border-2 border-amber-300"
         >
           <div className="grid gap-3 md:grid-cols-2">
-            <label className="flex flex-col gap-2 text-sm text-slate-600">
+            <label className="flex flex-col gap-2 text-sm text-slate-600 dark:text-slate-400">
               Check In Time
               <input
                 type="text"
                 value={correctionForm.checkIn}
                 onChange={(event) => setCorrectionForm((current) => ({ ...current, checkIn: event.target.value }))}
-                className="rounded-2xl border border-slate-200 bg-temple-100 px-4 py-3 text-sm outline-none"
+                className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-4 py-3 text-sm outline-none"
                 placeholder="e.g. 09:00 AM"
               />
             </label>
-            <label className="flex flex-col gap-2 text-sm text-slate-600">
+            <label className="flex flex-col gap-2 text-sm text-slate-600 dark:text-slate-400">
               Check Out Time
               <input
                 type="text"
                 value={correctionForm.checkOut}
                 onChange={(event) => setCorrectionForm((current) => ({ ...current, checkOut: event.target.value }))}
-                className="rounded-2xl border border-slate-200 bg-temple-100 px-4 py-3 text-sm outline-none"
+                className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-4 py-3 text-sm outline-none"
                 placeholder="e.g. 05:00 PM"
               />
             </label>
-            <label className="flex flex-col gap-2 text-sm text-slate-600">
+            <label className="flex flex-col gap-2 text-sm text-slate-600 dark:text-slate-400">
               Status Value
               <select
                 value={correctionForm.status}
                 onChange={(event) => setCorrectionForm((current) => ({ ...current, status: event.target.value }))}
-                className="rounded-2xl border border-slate-200 bg-temple-100 px-4 py-3 text-sm outline-none"
+                className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-4 py-3 text-sm outline-none"
               >
                 <option value="Present">Present</option>
                 <option value="Working">Working</option>
@@ -571,12 +571,12 @@ const Attendances = () => {
                 <option value="Holiday">Holiday</option>
               </select>
             </label>
-            <label className="flex flex-col gap-2 text-sm text-slate-600 md:col-span-2">
+            <label className="flex flex-col gap-2 text-sm text-slate-600 dark:text-slate-400 md:col-span-2">
               Correction Reason
               <textarea
                 value={correctionForm.reason}
                 onChange={(event) => setCorrectionForm((current) => ({ ...current, reason: event.target.value }))}
-                className="min-h-[96px] rounded-2xl border border-slate-200 bg-temple-100 px-4 py-3 text-sm outline-none"
+                className="min-h-[96px] rounded-2xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-4 py-3 text-sm outline-none"
                 placeholder="Reason for making manual changes"
                 required
               />
@@ -594,7 +594,7 @@ const Attendances = () => {
             <button
               type="button"
               onClick={() => setEditingRecord(null)}
-              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-temple-100 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              className="inline-flex items-center gap-2 rounded-full border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 transition hover:bg-slate-50 dark:bg-slate-800/50"
             >
               Cancel
             </button>
@@ -609,7 +609,7 @@ const Attendances = () => {
       >
         <div className="overflow-x-auto">
           <table className="min-w-full text-left text-sm">
-            <thead className="border-b border-slate-200 text-slate-500">
+            <thead className="border-b border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400">
               <tr>
                 <th className="px-4 py-3">Photo</th>
                 <th className="px-4 py-3">Employee Name</th>
@@ -628,21 +628,21 @@ const Attendances = () => {
             <tbody>
               {loading ? (
                 <tr>
-                  <td className="px-4 py-6 text-slate-500 text-center" colSpan="11">
+                  <td className="px-4 py-6 text-slate-500 dark:text-slate-400 text-center" colSpan="11">
                     Loading attendance table...
                   </td>
                 </tr>
               ) : todayRecords.length === 0 ? (
                 <tr>
-                  <td className="px-4 py-6 text-slate-500 text-center" colSpan="11">
+                  <td className="px-4 py-6 text-slate-500 dark:text-slate-400 text-center" colSpan="11">
                     No attendance data is available for this date.
                   </td>
                 </tr>
               ) : (
                 todayRecords.map((record) => (
-                  <tr key={record.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
+                  <tr key={record.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50 dark:bg-slate-800/50">
                     <td className="px-4 py-4">
-                      <div className="h-10 w-10 overflow-hidden rounded-full border border-slate-200 bg-slate-100 flex items-center justify-center text-slate-500">
+                      <div className="h-10 w-10 overflow-hidden rounded-full border border-slate-200 dark:border-slate-700 bg-slate-100 flex items-center justify-center text-slate-500 dark:text-slate-400">
                         {record.employeePhoto ? (
                           <img src={record.employeePhoto} alt={record.employeeName} className="h-full w-full object-cover" />
                         ) : (
@@ -652,16 +652,16 @@ const Attendances = () => {
                         )}
                       </div>
                     </td>
-                    <td className="px-4 py-4 font-medium text-slate-900">{record.employeeName}</td>
-                    <td className="px-4 py-4 text-slate-600 capitalize">{record.role || "-"}</td>
-                    <td className="px-4 py-4 text-slate-600">{record.department || "-"}</td>
-                    <td className="px-4 py-4 text-slate-600">{record.shift || "-"}</td>
-                    <td className="px-4 py-4 text-slate-600">
+                    <td className="px-4 py-4 font-medium text-slate-900 dark:text-slate-100">{record.employeeName}</td>
+                    <td className="px-4 py-4 text-slate-600 dark:text-slate-400 capitalize">{record.role || "-"}</td>
+                    <td className="px-4 py-4 text-slate-600 dark:text-slate-400">{record.department || "-"}</td>
+                    <td className="px-4 py-4 text-slate-600 dark:text-slate-400">{record.shift || "-"}</td>
+                    <td className="px-4 py-4 text-slate-600 dark:text-slate-400">
                       {record.shiftStartTime && record.shiftEndTime ? `${record.shiftStartTime} - ${record.shiftEndTime}` : "--"}
                     </td>
-                    <td className="px-4 py-4 text-slate-600">{record.checkIn || "--"}</td>
-                    <td className="px-4 py-4 text-slate-600">{record.checkOut || "--"}</td>
-                    <td className="px-4 py-4 text-slate-700">{record.workingHours || "--"}</td>
+                    <td className="px-4 py-4 text-slate-600 dark:text-slate-400">{record.checkIn || "--"}</td>
+                    <td className="px-4 py-4 text-slate-600 dark:text-slate-400">{record.checkOut || "--"}</td>
+                    <td className="px-4 py-4 text-slate-700 dark:text-slate-300">{record.workingHours || "--"}</td>
                     <td className="px-4 py-4">
                       <div className="flex flex-col gap-1 text-[10px] font-semibold uppercase">
                         {record.faceVerified ? (
@@ -678,7 +678,7 @@ const Attendances = () => {
                     </td>
                     <td className="px-4 py-4">
                       <span
-                        className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${statusColors[record.status] || "border-slate-200 bg-slate-100 text-slate-700"}`}
+                        className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${statusColors[record.status] || "border-slate-200 dark:border-slate-700 bg-slate-100 text-slate-700 dark:text-slate-300"}`}
                       >
                         {record.status}
                       </span>
@@ -688,14 +688,14 @@ const Attendances = () => {
                         <button
                           type="button"
                           onClick={() => setViewingDetailsRecord(record)}
-                          className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-temple-100 px-3 py-1.5 text-xs font-semibold text-sky-700 transition hover:bg-sky-50"
+                          className="inline-flex items-center gap-2 rounded-full border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-3 py-1.5 text-xs font-semibold text-sky-700 transition hover:bg-sky-50"
                         >
                           Details
                         </button>
                         <button
                           type="button"
                           onClick={() => openCorrection(record)}
-                          className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-temple-100 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+                          className="inline-flex items-center gap-2 rounded-full border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 transition hover:bg-slate-50 dark:bg-slate-800/50"
                         >
                           <FiEdit2 /> Correct
                         </button>
@@ -716,7 +716,7 @@ const Attendances = () => {
       >
         <div className="overflow-x-auto">
           <table className="min-w-full text-left text-sm">
-            <thead className="border-b border-slate-200 text-slate-500">
+            <thead className="border-b border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400">
               <tr>
                 <th className="px-4 py-3">Date</th>
                 <th className="px-4 py-3">Employee</th>
@@ -733,26 +733,26 @@ const Attendances = () => {
             <tbody>
               {loading ? (
                 <tr>
-                  <td className="px-4 py-6 text-slate-500 text-center" colSpan="9">
+                  <td className="px-4 py-6 text-slate-500 dark:text-slate-400 text-center" colSpan="9">
                     Loading records history...
                   </td>
                 </tr>
               ) : records.length === 0 ? (
                 <tr>
-                  <td className="px-4 py-6 text-slate-500 text-center" colSpan="9">
+                  <td className="px-4 py-6 text-slate-500 dark:text-slate-400 text-center" colSpan="9">
                     No monthly records match the filter query.
                   </td>
                 </tr>
               ) : (
                 records.map((record) => (
-                  <tr key={record.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
-                    <td className="px-4 py-4 font-medium text-slate-900">{record.date}</td>
-                    <td className="px-4 py-4 text-slate-700">{record.employeeName || "Unknown"}</td>
-                    <td className="px-4 py-4 text-slate-600">{record.department || "-"}</td>
-                    <td className="px-4 py-4 text-slate-600">{record.shift || "-"}</td>
-                    <td className="px-4 py-4 text-slate-600">{record.checkIn || "--"}</td>
-                    <td className="px-4 py-4 text-slate-600">{record.checkOut || "--"}</td>
-                    <td className="px-4 py-4 text-slate-700">{record.workingHours || "--"}</td>
+                  <tr key={record.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50 dark:bg-slate-800/50">
+                    <td className="px-4 py-4 font-medium text-slate-900 dark:text-slate-100">{record.date}</td>
+                    <td className="px-4 py-4 text-slate-700 dark:text-slate-300">{record.employeeName || "Unknown"}</td>
+                    <td className="px-4 py-4 text-slate-600 dark:text-slate-400">{record.department || "-"}</td>
+                    <td className="px-4 py-4 text-slate-600 dark:text-slate-400">{record.shift || "-"}</td>
+                    <td className="px-4 py-4 text-slate-600 dark:text-slate-400">{record.checkIn || "--"}</td>
+                    <td className="px-4 py-4 text-slate-600 dark:text-slate-400">{record.checkOut || "--"}</td>
+                    <td className="px-4 py-4 text-slate-700 dark:text-slate-300">{record.workingHours || "--"}</td>
                     <td className="px-4 py-4">
                       <div className="flex flex-col gap-1 text-[10px] font-semibold uppercase">
                         {record.faceVerified ? (
@@ -769,7 +769,7 @@ const Attendances = () => {
                     </td>
                     <td className="px-4 py-4">
                       <span
-                        className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${statusColors[record.status] || "border-slate-200 bg-slate-100 text-slate-700"}`}
+                        className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${statusColors[record.status] || "border-slate-200 dark:border-slate-700 bg-slate-100 text-slate-700 dark:text-slate-300"}`}
                       >
                         {record.status}
                       </span>
@@ -779,14 +779,14 @@ const Attendances = () => {
                         <button
                           type="button"
                           onClick={() => setViewingDetailsRecord(record)}
-                          className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-temple-100 px-3 py-1.5 text-xs font-semibold text-sky-700 transition hover:bg-sky-50"
+                          className="inline-flex items-center gap-2 rounded-full border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-3 py-1.5 text-xs font-semibold text-sky-700 transition hover:bg-sky-50"
                         >
                           Details
                         </button>
                         <button
                           type="button"
                           onClick={() => openCorrection(record)}
-                          className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-temple-100 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+                          className="inline-flex items-center gap-2 rounded-full border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 transition hover:bg-slate-50 dark:bg-slate-800/50"
                         >
                           <FiEdit2 /> Correct
                         </button>
@@ -807,7 +807,7 @@ const Attendances = () => {
           title="Attendance Calendar"
           subtitle="Day-wise aggregate headcount. Click any cell to view employee listing."
         >
-          <div className="grid grid-cols-7 gap-2 text-center text-xs font-semibold text-slate-500 mb-3">
+          <div className="grid grid-cols-7 gap-2 text-center text-xs font-semibold text-slate-500 dark:text-slate-400 mb-3">
             {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((wd) => (
               <div key={wd} className="rounded-xl bg-slate-100 py-2">
                 {wd}
@@ -821,18 +821,18 @@ const Attendances = () => {
                 key={`${day.dateKey}-${idx}`}
                 type="button"
                 onClick={() => setSelectedCalDate(day.dateKey)}
-                className={`rounded-2xl border text-left p-2.5 transition flex flex-col justify-between ${day.muted ? "bg-slate-50 opacity-40" : "bg-temple-100"
-                  } ${day.today ? "ring-2 ring-amber-400 border-amber-400" : "border-slate-200"
+                className={`rounded-2xl border text-left p-2.5 transition flex flex-col justify-between ${day.muted ? "bg-slate-50 dark:bg-slate-800/50 opacity-40" : "bg-temple-100 dark:bg-slate-800"
+                  } ${day.today ? "ring-2 ring-amber-400 border-amber-400" : "border-slate-200 dark:border-slate-700"
                   } ${selectedCalDate === day.dateKey ? "border-slate-800 ring-2 ring-slate-800" : ""
-                  } hover:bg-slate-50`}
+                  } hover:bg-slate-50 dark:bg-slate-800/50`}
               >
-                <span className="text-sm font-bold text-slate-800 mb-1">{day.day}</span>
+                <span className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-1">{day.day}</span>
                 <div className="w-full text-[9px] font-bold space-y-0.5">
                   <div className="text-emerald-700 bg-emerald-50 rounded px-1 py-0.2">P: {day.stats.present}</div>
                   <div className="text-rose-700 bg-rose-50 rounded px-1 py-0.2">A: {day.stats.absent}</div>
                   <div className="text-sky-700 bg-sky-50 rounded px-1 py-0.2">L: {day.stats.leave}</div>
                   {day.stats.holiday > 0 ? (
-                    <div className="text-slate-700 bg-slate-100 rounded px-1 py-0.2">H: {day.stats.holiday}</div>
+                    <div className="text-slate-700 dark:text-slate-300 bg-slate-100 rounded px-1 py-0.2">H: {day.stats.holiday}</div>
                   ) : null}
                 </div>
               </button>
@@ -848,7 +848,7 @@ const Attendances = () => {
           >
             <div className="overflow-x-auto max-h-[360px] overflow-y-auto">
               <table className="min-w-full text-left text-sm">
-                <thead className="border-b border-slate-200 text-slate-500">
+                <thead className="border-b border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400">
                   <tr>
                     <th className="px-4 py-3">Employee</th>
                     <th className="px-4 py-3">Check In</th>
@@ -859,16 +859,16 @@ const Attendances = () => {
                 <tbody>
                   {calDayRecords.length === 0 ? (
                     <tr>
-                      <td className="px-4 py-6 text-slate-500 text-center" colSpan="4">
+                      <td className="px-4 py-6 text-slate-500 dark:text-slate-400 text-center" colSpan="4">
                         No employees match the filters.
                       </td>
                     </tr>
                   ) : (
                     calDayRecords.map((item) => (
-                      <tr key={item.employeeId} className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
+                      <tr key={item.employeeId} className="border-b border-slate-100 last:border-0 hover:bg-slate-50 dark:bg-slate-800/50">
                         <td className="px-4 py-4">
                           <div className="flex items-center gap-3">
-                            <div className="h-8 w-8 overflow-hidden rounded-full border border-slate-200 bg-slate-100 flex items-center justify-center text-slate-500 text-xs">
+                            <div className="h-8 w-8 overflow-hidden rounded-full border border-slate-200 dark:border-slate-700 bg-slate-100 flex items-center justify-center text-slate-500 dark:text-slate-400 text-xs">
                               {item.employeePhoto ? (
                                 <img src={item.employeePhoto} alt={item.employeeName} className="h-full w-full object-cover" />
                               ) : (
@@ -877,14 +877,14 @@ const Attendances = () => {
                                 </span>
                               )}
                             </div>
-                            <div className="font-medium text-slate-900">{item.employeeName}</div>
+                            <div className="font-medium text-slate-900 dark:text-slate-100">{item.employeeName}</div>
                           </div>
                         </td>
-                        <td className="px-4 py-4 text-slate-600">{item.checkIn}</td>
-                        <td className="px-4 py-4 text-slate-600">{item.checkOut}</td>
+                        <td className="px-4 py-4 text-slate-600 dark:text-slate-400">{item.checkIn}</td>
+                        <td className="px-4 py-4 text-slate-600 dark:text-slate-400">{item.checkOut}</td>
                         <td className="px-4 py-4">
                           <span
-                            className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold ${statusColors[item.status] || "border-slate-200 bg-slate-100 text-slate-700"}`}
+                            className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold ${statusColors[item.status] || "border-slate-200 dark:border-slate-700 bg-slate-100 text-slate-700 dark:text-slate-300"}`}
                           >
                             {item.status}
                           </span>
@@ -906,17 +906,17 @@ const Attendances = () => {
           subtitle={`Monthly analytics summary and average statistics for ${selectedEmployeeSummary.name}.`}
         >
           <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6 mb-4">
-            <div className="rounded-2xl border border-slate-100 p-4 bg-slate-50/50">
-              <span className="text-xs text-slate-500 font-medium">Employee Name</span>
-              <p className="mt-1 text-base font-bold text-slate-800">{selectedEmployeeSummary.name}</p>
+            <div className="rounded-2xl border border-slate-100 p-4 bg-slate-50 dark:bg-slate-800/50/50">
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Employee Name</span>
+              <p className="mt-1 text-base font-bold text-slate-800 dark:text-slate-200">{selectedEmployeeSummary.name}</p>
             </div>
-            <div className="rounded-2xl border border-slate-100 p-4 bg-slate-50/50">
-              <span className="text-xs text-slate-500 font-medium">Role</span>
+            <div className="rounded-2xl border border-slate-100 p-4 bg-slate-50 dark:bg-slate-800/50/50">
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Role</span>
               <p className="mt-1 text-base font-bold text-slate-850 capitalize">{selectedEmployeeSummary.role}</p>
             </div>
-            <div className="rounded-2xl border border-slate-100 p-4 bg-slate-50/50">
-              <span className="text-xs text-slate-500 font-medium">Department</span>
-              <p className="mt-1 text-base font-bold text-slate-800">{selectedEmployeeSummary.department}</p>
+            <div className="rounded-2xl border border-slate-100 p-4 bg-slate-50 dark:bg-slate-800/50/50">
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Department</span>
+              <p className="mt-1 text-base font-bold text-slate-800 dark:text-slate-200">{selectedEmployeeSummary.department}</p>
             </div>
             <div className="rounded-2xl border border-slate-150 p-4 bg-emerald-50/40">
               <span className="text-xs text-emerald-600 font-semibold">Attendance Rate</span>

@@ -223,8 +223,8 @@ const ManualEntriesView = () => {
       {/* HEADER SECTION */}
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-amber-200 dark:border-amber-700/50/60 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-600/10 p-6 backdrop-blur-md shadow-sm">
         <div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#4a2b0f]">Manual Entries & Expense Vouchers</h1>
-          <p className="mt-1.5 text-base sm:text-lg font-medium text-[#7a4918]">
+          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#4a2b0f] dark:text-amber-100">Manual Entries & Expense Vouchers</h1>
+          <p className="mt-1.5 text-base sm:text-lg font-medium text-[#7a4918] dark:text-amber-200/80">
             Record manual debit vouchers, specify where money is spent, attach receipts (PDF/Image), and reflect on debits.
           </p>
         </div>
@@ -300,7 +300,7 @@ const ManualEntriesView = () => {
                   onClick={() => setForm({ ...form, entryType: "Debit" })}
                   className={`flex items-center justify-center gap-2 rounded-2xl py-3.5 px-4 text-base font-extrabold transition-all border ${
                     form.entryType === "Debit"
-                      ? "bg-red-50 dark:bg-red-900/40 dark:border-red-800/50 dark:border-red-800/500 text-white border-red-600 shadow-md shadow-red-500/20 scale-[1.02]"
+                      ? "bg-red-600 text-white border-red-700 shadow-md shadow-red-600/20 scale-[1.02]"
                       : "bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100"
                   }`}
                 >

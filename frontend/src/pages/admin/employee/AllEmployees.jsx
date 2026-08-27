@@ -444,12 +444,12 @@ const AllEmployees = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="rounded-[28px] border border-white/15 bg-temple-100/80 p-5 shadow-2xl shadow-slate-900/5 backdrop-blur-xl"
+            className="rounded-[28px] border border-white/15 bg-temple-100 dark:bg-slate-800/80 p-5 shadow-2xl shadow-slate-900/5 backdrop-blur-xl"
           >
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-medium uppercase tracking-[0.16em] text-slate-500">{metric.title}</p>
-                <h3 className="mt-3 text-3xl font-semibold text-slate-900">{metric.value}</h3>
+                <p className="text-sm font-medium uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">{metric.title}</p>
+                <h3 className="mt-3 text-3xl font-semibold text-slate-900 dark:text-slate-100">{metric.value}</h3>
               </div>
               <div className={`grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br ${metric.accent} text-white shadow-lg shadow-slate-900/10`}>
                 <span>{metric.icon}</span>
@@ -460,43 +460,43 @@ const AllEmployees = () => {
       </div>
 
       <SectionCard title="Employee roster" subtitle="Search employees, filter by status, or export a PDF report." topRight={<div className="flex flex-wrap items-center gap-3">
-          <div className="inline-flex items-center gap-2 rounded-full bg-slate-100/90 px-4 py-2 text-slate-600 shadow-sm">
+          <div className="inline-flex items-center gap-2 rounded-full bg-slate-100/90 px-4 py-2 text-slate-600 dark:text-slate-400 shadow-sm">
             <FiSearch /> <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} type="text" placeholder="Search employees..." className="w-48 bg-transparent text-sm outline-none" />
           </div>
           <button onClick={() => setShowFilters((current) => !current)} className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-lg hover:bg-slate-800 transition">
             <FiFilter /> Filters
           </button>
-          <button onClick={handleExport} className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-temple-100 px-4 py-2 text-sm font-semibold text-amber-600 shadow-sm hover:bg-amber-50 transition">
+          <button onClick={handleExport} className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-temple-100 dark:bg-slate-800 px-4 py-2 text-sm font-semibold text-amber-600 shadow-sm hover:bg-amber-50 transition">
             <FiUpload /> Export
           </button>
         </div>}>
         {showFilters && (
-          <div className="mb-5 grid gap-3 rounded-[28px] border border-slate-200 bg-slate-50 p-4 md:grid-cols-2 xl:grid-cols-4">
-            <select value={filters.role} onChange={(e) => setFilters((prev) => ({ ...prev, role: e.target.value }))} className="rounded-3xl border border-slate-200 bg-temple-100 px-4 py-3 text-sm outline-none">
+          <div className="mb-5 grid gap-3 rounded-[28px] border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4 md:grid-cols-2 xl:grid-cols-4">
+            <select value={filters.role} onChange={(e) => setFilters((prev) => ({ ...prev, role: e.target.value }))} className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-4 py-3 text-sm outline-none">
               <option value="">Role</option>
               {roleFilterOptions.filter((role) => role !== "All").map((role) => <option key={role}>{role}</option>)}
             </select>
-            <select value={filters.department} onChange={(e) => setFilters((prev) => ({ ...prev, department: e.target.value }))} className="rounded-3xl border border-slate-200 bg-temple-100 px-4 py-3 text-sm outline-none">
+            <select value={filters.department} onChange={(e) => setFilters((prev) => ({ ...prev, department: e.target.value }))} className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-4 py-3 text-sm outline-none">
               <option value="">Department</option>
               {filterOptions.departments.map((department) => <option key={department}>{department}</option>)}
             </select>
-            <select value={filters.status} onChange={(e) => setFilters((prev) => ({ ...prev, status: e.target.value }))} className="rounded-3xl border border-slate-200 bg-temple-100 px-4 py-3 text-sm outline-none">
+            <select value={filters.status} onChange={(e) => setFilters((prev) => ({ ...prev, status: e.target.value }))} className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-4 py-3 text-sm outline-none">
               <option value="">Status</option>
               {statusFilterOptions.map((status) => <option key={status}>{status}</option>)}
             </select>
-            <select value={filters.shift} onChange={(e) => setFilters((prev) => ({ ...prev, shift: e.target.value }))} className="rounded-3xl border border-slate-200 bg-temple-100 px-4 py-3 text-sm outline-none">
+            <select value={filters.shift} onChange={(e) => setFilters((prev) => ({ ...prev, shift: e.target.value }))} className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-4 py-3 text-sm outline-none">
               <option value="">Shift</option>
               {filterOptions.shifts.map((shift) => <option key={shift}>{shift}</option>)}
             </select>
-            <select value={filters.employmentType} onChange={(e) => setFilters((prev) => ({ ...prev, employmentType: e.target.value }))} className="rounded-3xl border border-slate-200 bg-temple-100 px-4 py-3 text-sm outline-none">
+            <select value={filters.employmentType} onChange={(e) => setFilters((prev) => ({ ...prev, employmentType: e.target.value }))} className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-4 py-3 text-sm outline-none">
               <option value="">Employment Type</option>
               {employmentTypeOptions.map((type) => <option key={type}>{type}</option>)}
             </select>
-            <input type="date" value={filters.joiningDate} onChange={(e) => setFilters((prev) => ({ ...prev, joiningDate: e.target.value }))} className="rounded-3xl border border-slate-200 bg-temple-100 px-4 py-3 text-sm outline-none" />
-            <input type="number" min="0" value={filters.salaryMin} onChange={(e) => setFilters((prev) => ({ ...prev, salaryMin: e.target.value }))} placeholder="Salary Min" className="rounded-3xl border border-slate-200 bg-temple-100 px-4 py-3 text-sm outline-none" />
+            <input type="date" value={filters.joiningDate} onChange={(e) => setFilters((prev) => ({ ...prev, joiningDate: e.target.value }))} className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-4 py-3 text-sm outline-none" />
+            <input type="number" min="0" value={filters.salaryMin} onChange={(e) => setFilters((prev) => ({ ...prev, salaryMin: e.target.value }))} placeholder="Salary Min" className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-4 py-3 text-sm outline-none" />
             <div className="flex gap-2">
-              <input type="number" min="0" value={filters.salaryMax} onChange={(e) => setFilters((prev) => ({ ...prev, salaryMax: e.target.value }))} placeholder="Salary Max" className="min-w-0 flex-1 rounded-3xl border border-slate-200 bg-temple-100 px-4 py-3 text-sm outline-none" />
-              <button type="button" onClick={() => setFilters(emptyFilters)} className="rounded-full border border-slate-200 bg-temple-100 px-4 py-2 text-sm font-semibold text-slate-600">
+              <input type="number" min="0" value={filters.salaryMax} onChange={(e) => setFilters((prev) => ({ ...prev, salaryMax: e.target.value }))} placeholder="Salary Max" className="min-w-0 flex-1 rounded-3xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-4 py-3 text-sm outline-none" />
+              <button type="button" onClick={() => setFilters(emptyFilters)} className="rounded-full border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-400">
                 Clear
               </button>
             </div>
@@ -506,7 +506,7 @@ const AllEmployees = () => {
       </SectionCard>
 
       {selectedEmployee && (
-        <SectionCard title="Selected Employee" subtitle="Review detailed employee profile." className="bg-temple-100/95 text-slate-950 relative">
+        <SectionCard title="Selected Employee" subtitle="Review detailed employee profile." className="bg-temple-100 dark:bg-slate-800/95 text-slate-950 relative">
           <div className="absolute right-6 top-6">
             <button
               onClick={() => setIsEditModalOpen(true)}
@@ -516,35 +516,35 @@ const AllEmployees = () => {
             </button>
           </div>
           <div className="grid gap-4 lg:grid-cols-3 mt-4">
-            <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+            <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-5">
               <div className="flex items-center gap-4">
                 <div className="h-16 w-16 overflow-hidden rounded-2xl bg-slate-200">
                   {selectedEmployee.photo ? (
                     <img src={selectedEmployee.photo} alt={selectedEmployee.name} className="h-full w-full object-cover" />
                   ) : (
-                    <div className="grid h-full w-full place-items-center text-xl font-bold text-slate-600">
+                    <div className="grid h-full w-full place-items-center text-xl font-bold text-slate-600 dark:text-slate-400">
                       {(selectedEmployee.name || "E").charAt(0).toUpperCase()}
                     </div>
                   )}
                 </div>
                 <div>
-                  <p className="text-sm text-slate-500">Name</p>
-                  <h3 className="mt-2 text-xl font-semibold text-slate-900">{selectedEmployee.name}</h3>
-                  <p className="mt-1 text-sm text-slate-600">
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Name</p>
+                  <h3 className="mt-2 text-xl font-semibold text-slate-900 dark:text-slate-100">{selectedEmployee.name}</h3>
+                  <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
                     {selectedEmployee.role} | {selectedEmployee.status || "Active"}
                   </p>
                 </div>
               </div>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
-              <p className="text-sm text-slate-500">Department</p>
-              <p className="mt-2 text-lg font-semibold text-slate-900">{selectedEmployee.department || "-"}</p>
-              <p className="mt-1 text-sm text-slate-600">Shift: {selectedEmployee.currentDuty?.shift || selectedEmployee.defaultShift || selectedEmployee.shift || "-"}</p>
+            <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-5">
+              <p className="text-sm text-slate-500 dark:text-slate-400">Department</p>
+              <p className="mt-2 text-lg font-semibold text-slate-900 dark:text-slate-100">{selectedEmployee.department || "-"}</p>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Shift: {selectedEmployee.currentDuty?.shift || selectedEmployee.defaultShift || selectedEmployee.shift || "-"}</p>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
-              <p className="text-sm text-slate-500">Contact</p>
-              <p className="mt-2 text-lg font-semibold text-slate-900">{selectedEmployee.phone || selectedEmployee.emergencyContact || "-"}</p>
-              <p className="mt-1 text-sm text-slate-600">Joined: {formatDate(selectedEmployee.joiningDate || selectedEmployee.createdAt)}</p>
+            <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-5">
+              <p className="text-sm text-slate-500 dark:text-slate-400">Contact</p>
+              <p className="mt-2 text-lg font-semibold text-slate-900 dark:text-slate-100">{selectedEmployee.phone || selectedEmployee.emergencyContact || "-"}</p>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Joined: {formatDate(selectedEmployee.joiningDate || selectedEmployee.createdAt)}</p>
             </div>
           </div>
 
@@ -554,7 +554,7 @@ const AllEmployees = () => {
                 key={tab}
                 type="button"
                 onClick={() => setSelectedTab(tab)}
-                className={`rounded-full px-4 py-2 text-sm font-semibold transition ${selectedTab === tab ? "bg-slate-900 text-white" : "border border-slate-200 bg-temple-100 text-slate-600"}`}
+                className={`rounded-full px-4 py-2 text-sm font-semibold transition ${selectedTab === tab ? "bg-slate-900 text-white" : "border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"}`}
               >
                 {tab}
               </button>
@@ -564,91 +564,91 @@ const AllEmployees = () => {
           {selectedTab === "Profile" && (
           <>
           <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            <div className="rounded-3xl border border-slate-200 bg-temple-100 p-4">
-              <p className="text-sm text-slate-500">Email</p>
-              <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.email || "-"}</p>
+            <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-4">
+              <p className="text-sm text-slate-500 dark:text-slate-400">Email</p>
+              <p className="mt-1 font-semibold text-slate-900 dark:text-slate-100">{selectedEmployee.email || "-"}</p>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-temple-100 p-4">
-              <p className="text-sm text-slate-500">Gender</p>
-              <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.gender || "-"}</p>
+            <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-4">
+              <p className="text-sm text-slate-500 dark:text-slate-400">Gender</p>
+              <p className="mt-1 font-semibold text-slate-900 dark:text-slate-100">{selectedEmployee.gender || "-"}</p>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-temple-100 p-4">
-              <p className="text-sm text-slate-500">Date of Birth</p>
-              <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.dob || "-"}</p>
+            <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-4">
+              <p className="text-sm text-slate-500 dark:text-slate-400">Date of Birth</p>
+              <p className="mt-1 font-semibold text-slate-900 dark:text-slate-100">{selectedEmployee.dob || "-"}</p>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-temple-100 p-4">
-              <p className="text-sm text-slate-500">Blood Group</p>
-              <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.bloodGroup || "-"}</p>
+            <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-4">
+              <p className="text-sm text-slate-500 dark:text-slate-400">Blood Group</p>
+              <p className="mt-1 font-semibold text-slate-900 dark:text-slate-100">{selectedEmployee.bloodGroup || "-"}</p>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-temple-100 p-4">
-              <p className="text-sm text-slate-500">Aadhaar</p>
-              <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.aadhaar || "-"}</p>
+            <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-4">
+              <p className="text-sm text-slate-500 dark:text-slate-400">Aadhaar</p>
+              <p className="mt-1 font-semibold text-slate-900 dark:text-slate-100">{selectedEmployee.aadhaar || "-"}</p>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-temple-100 p-4">
-              <p className="text-sm text-slate-500">Emergency Contact</p>
-              <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.emergencyContact || "-"}</p>
+            <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-4">
+              <p className="text-sm text-slate-500 dark:text-slate-400">Emergency Contact</p>
+              <p className="mt-1 font-semibold text-slate-900 dark:text-slate-100">{selectedEmployee.emergencyContact || "-"}</p>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-temple-100 p-4">
-              <p className="text-sm text-slate-500">Employment Type</p>
-              <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.employmentType || "-"}</p>
+            <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-4">
+              <p className="text-sm text-slate-500 dark:text-slate-400">Employment Type</p>
+              <p className="mt-1 font-semibold text-slate-900 dark:text-slate-100">{selectedEmployee.employmentType || "-"}</p>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-temple-100 p-4">
-              <p className="text-sm text-slate-500">Salary</p>
-              <p className="mt-1 font-semibold text-slate-900">{formatCurrency(selectedEmployee.salary)}</p>
+            <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-4">
+              <p className="text-sm text-slate-500 dark:text-slate-400">Salary</p>
+              <p className="mt-1 font-semibold text-slate-900 dark:text-slate-100">{formatCurrency(selectedEmployee.salary)}</p>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-temple-100 p-4">
-              <p className="text-sm text-slate-500">Bank Name</p>
-              <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.bankName || "-"}</p>
+            <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-4">
+              <p className="text-sm text-slate-500 dark:text-slate-400">Bank Name</p>
+              <p className="mt-1 font-semibold text-slate-900 dark:text-slate-100">{selectedEmployee.bankName || "-"}</p>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-temple-100 p-4">
-              <p className="text-sm text-slate-500">Account Number</p>
-              <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.accountNumber || "-"}</p>
+            <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-4">
+              <p className="text-sm text-slate-500 dark:text-slate-400">Account Number</p>
+              <p className="mt-1 font-semibold text-slate-900 dark:text-slate-100">{selectedEmployee.accountNumber || "-"}</p>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-temple-100 p-4">
-              <p className="text-sm text-slate-500">Current Duty</p>
-              <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.currentDuty?.dutyName || selectedEmployee.defaultDuty || "-"}</p>
+            <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-4">
+              <p className="text-sm text-slate-500 dark:text-slate-400">Current Duty</p>
+              <p className="mt-1 font-semibold text-slate-900 dark:text-slate-100">{selectedEmployee.currentDuty?.dutyName || selectedEmployee.defaultDuty || "-"}</p>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-temple-100 p-4">
-              <p className="text-sm text-slate-500">Default Shift</p>
-              <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.defaultShift || "-"}</p>
+            <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-4">
+              <p className="text-sm text-slate-500 dark:text-slate-400">Default Shift</p>
+              <p className="mt-1 font-semibold text-slate-900 dark:text-slate-100">{selectedEmployee.defaultShift || "-"}</p>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-temple-100 p-4">
-              <p className="text-sm text-slate-500">Default Duty</p>
-              <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.defaultDuty || "-"}</p>
+            <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-4">
+              <p className="text-sm text-slate-500 dark:text-slate-400">Default Duty</p>
+              <p className="mt-1 font-semibold text-slate-900 dark:text-slate-100">{selectedEmployee.defaultDuty || "-"}</p>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-temple-100 p-4">
-              <p className="text-sm text-slate-500">Duty Location</p>
-              <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.currentDuty?.dutyLocation || selectedEmployee.dutyLocation || "-"}</p>
+            <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-4">
+              <p className="text-sm text-slate-500 dark:text-slate-400">Duty Location</p>
+              <p className="mt-1 font-semibold text-slate-900 dark:text-slate-100">{selectedEmployee.currentDuty?.dutyLocation || selectedEmployee.dutyLocation || "-"}</p>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-temple-100 p-4">
-              <p className="text-sm text-slate-500">Attendance Status</p>
-              <p className="mt-1 break-words font-semibold text-slate-900">{selectedEmployee.attendanceStatus || "Not Marked"}</p>
+            <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-4">
+              <p className="text-sm text-slate-500 dark:text-slate-400">Attendance Status</p>
+              <p className="mt-1 break-words font-semibold text-slate-900 dark:text-slate-100">{selectedEmployee.attendanceStatus || "Not Marked"}</p>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-temple-100 p-4">
-              <p className="text-sm text-slate-500">Leave Balance</p>
-              <p className="mt-1 break-words font-semibold text-slate-900">{selectedEmployee.leaveBalance ?? 0} days</p>
+            <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-4">
+              <p className="text-sm text-slate-500 dark:text-slate-400">Leave Balance</p>
+              <p className="mt-1 break-words font-semibold text-slate-900 dark:text-slate-100">{selectedEmployee.leaveBalance ?? 0} days</p>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-temple-100 p-4">
-              <p className="text-sm text-slate-500">Created Date</p>
-              <p className="mt-1 break-words font-semibold text-slate-900">{formatDate(selectedEmployee.createdAt)}</p>
+            <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-4">
+              <p className="text-sm text-slate-500 dark:text-slate-400">Created Date</p>
+              <p className="mt-1 break-words font-semibold text-slate-900 dark:text-slate-100">{formatDate(selectedEmployee.createdAt)}</p>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-temple-100 p-4">
-              <p className="text-sm text-slate-500">Updated Date</p>
-              <p className="mt-1 break-words font-semibold text-slate-900">{formatDate(selectedEmployee.updatedAt)}</p>
+            <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-4">
+              <p className="text-sm text-slate-500 dark:text-slate-400">Updated Date</p>
+              <p className="mt-1 break-words font-semibold text-slate-900 dark:text-slate-100">{formatDate(selectedEmployee.updatedAt)}</p>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-temple-100 p-4">
-              <p className="text-sm text-slate-500">Created By</p>
-              <p className="mt-1 break-words font-semibold text-slate-900">{selectedEmployee.createdBy || "Admin"}</p>
+            <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-4">
+              <p className="text-sm text-slate-500 dark:text-slate-400">Created By</p>
+              <p className="mt-1 break-words font-semibold text-slate-900 dark:text-slate-100">{selectedEmployee.createdBy || "Admin"}</p>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-temple-100 p-4">
-              <p className="text-sm text-slate-500">Last Login</p>
-              <p className="mt-1 break-words font-semibold text-slate-900">{formatDate(selectedEmployee.lastLogin)}</p>
+            <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-4">
+              <p className="text-sm text-slate-500 dark:text-slate-400">Last Login</p>
+              <p className="mt-1 break-words font-semibold text-slate-900 dark:text-slate-100">{formatDate(selectedEmployee.lastLogin)}</p>
             </div>
           </div>
 
-          <div className="mt-4 rounded-3xl border border-slate-200 bg-temple-100 p-4">
-            <p className="text-sm text-slate-500">Address</p>
-            <p className="mt-1 font-semibold text-slate-900">{selectedEmployee.address || "-"}</p>
+          <div className="mt-4 rounded-3xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-4">
+            <p className="text-sm text-slate-500 dark:text-slate-400">Address</p>
+            <p className="mt-1 font-semibold text-slate-900 dark:text-slate-100">{selectedEmployee.address || "-"}</p>
           </div>
           </>
           )}
@@ -666,7 +666,7 @@ const AllEmployees = () => {
           )}
 
           {selectedTab !== "Profile" && selectedTab !== "Face Registration" && (
-            <div className="mt-4 rounded-3xl border border-slate-200 bg-temple-100 p-4">
+            <div className="mt-4 rounded-3xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-4">
               {selectedTab === "Attendance" && (
                 <DetailRows rows={selectedEmployee.details?.attendance || []} empty="No attendance records found." getKey={(row) => row._id || row.id} render={(row) => `${formatDate(row.dateKey)} - ${row.status || "Pending"} - ${row.checkIn || "--"} to ${row.checkOut || "--"}`} />
               )}
@@ -696,22 +696,22 @@ const AllEmployees = () => {
               className="h-full"
               topRight={
                 <div className="flex flex-wrap items-center gap-2">
-                  <select value={attendanceFilters.role} onChange={(e) => setAttendanceFilters((prev) => ({ ...prev, role: e.target.value }))} className="rounded-full border border-slate-200 bg-temple-100 px-3 py-2 text-xs outline-none">
+                  <select value={attendanceFilters.role} onChange={(e) => setAttendanceFilters((prev) => ({ ...prev, role: e.target.value }))} className="rounded-full border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-3 py-2 text-xs outline-none">
                     <option value="All">All Roles</option>
                     {roleFilterOptions.filter((role) => role !== "All").map((role) => <option key={role}>{role}</option>)}
                   </select>
-                  <select value={attendanceFilters.department} onChange={(e) => setAttendanceFilters((prev) => ({ ...prev, department: e.target.value }))} className="rounded-full border border-slate-200 bg-temple-100 px-3 py-2 text-xs outline-none">
+                  <select value={attendanceFilters.department} onChange={(e) => setAttendanceFilters((prev) => ({ ...prev, department: e.target.value }))} className="rounded-full border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-3 py-2 text-xs outline-none">
                     <option value="">All Departments</option>
                     {filterOptions.departments.map((department) => <option key={department}>{department}</option>)}
                   </select>
-                  <select value={attendanceFilters.month} onChange={(e) => setAttendanceFilters((prev) => ({ ...prev, month: e.target.value }))} className="rounded-full border border-slate-200 bg-temple-100 px-3 py-2 text-xs outline-none">
+                  <select value={attendanceFilters.month} onChange={(e) => setAttendanceFilters((prev) => ({ ...prev, month: e.target.value }))} className="rounded-full border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-3 py-2 text-xs outline-none">
                     {Array.from({ length: 12 }, (_, index) => {
                       const monthNumber = String(index + 1).padStart(2, "0");
                       const label = new Date(2026, index, 1).toLocaleDateString("en-IN", { month: "short" });
                       return <option key={monthNumber} value={monthNumber}>{label}</option>;
                     })}
                   </select>
-                  <select value={attendanceFilters.year} onChange={(e) => setAttendanceFilters((prev) => ({ ...prev, year: e.target.value }))} className="rounded-full border border-slate-200 bg-temple-100 px-3 py-2 text-xs outline-none">
+                  <select value={attendanceFilters.year} onChange={(e) => setAttendanceFilters((prev) => ({ ...prev, year: e.target.value }))} className="rounded-full border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-3 py-2 text-xs outline-none">
                     {Array.from({ length: 5 }, (_, index) => {
                       const year = String(new Date().getFullYear() - index);
                       return <option key={year} value={year}>{year}</option>;
@@ -738,7 +738,7 @@ const AllEmployees = () => {
               subtitle="Team distribution across temple departments."
               className="h-full"
               topRight={
-                <select value={departmentRoleFilter} onChange={(e) => setDepartmentRoleFilter(e.target.value)} className="rounded-full border border-slate-200 bg-temple-100 px-3 py-2 text-xs outline-none">
+                <select value={departmentRoleFilter} onChange={(e) => setDepartmentRoleFilter(e.target.value)} className="rounded-full border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-3 py-2 text-xs outline-none">
                   {roleFilterOptions.map((role) => <option key={role}>{role}</option>)}
                 </select>
               }
@@ -746,7 +746,7 @@ const AllEmployees = () => {
               <div className="space-y-4">
                 {departmentStrength.map((dept) => (
                   <div key={dept.department} className="space-y-2">
-                    <div className="flex items-center justify-between text-sm text-slate-600">
+                    <div className="flex items-center justify-between text-sm text-slate-600 dark:text-slate-400">
                       <span>{dept.department}</span>
                       <span>{dept.value}</span>
                     </div>
@@ -768,18 +768,18 @@ const AllEmployees = () => {
             subtitle="Newest additions to the temple team."
             className="overflow-hidden"
             topRight={
-              <select value={recentRoleFilter} onChange={(e) => setRecentRoleFilter(e.target.value)} className="rounded-full border border-slate-200 bg-temple-100 px-3 py-2 text-xs outline-none">
+              <select value={recentRoleFilter} onChange={(e) => setRecentRoleFilter(e.target.value)} className="rounded-full border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-3 py-2 text-xs outline-none">
                 {roleFilterOptions.map((role) => <option key={role}>{role}</option>)}
               </select>
             }
           >
             <div className="space-y-4">
               {recentJoinings.map((item) => (
-                <div key={item.name} className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
+                <div key={item.name} className="rounded-[22px] border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4">
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <p className="font-semibold text-slate-900">{item.name}</p>
-                      <p className="text-sm text-slate-500">{item.role}</p>
+                      <p className="font-semibold text-slate-900 dark:text-slate-100">{item.name}</p>
+                      <p className="text-sm text-slate-500 dark:text-slate-400">{item.role}</p>
                     </div>
                     <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">{item.date}</span>
                   </div>
@@ -821,13 +821,13 @@ const AllEmployees = () => {
 
 const DetailRows = ({ rows, empty, getKey, render }) => {
   if (!rows.length) {
-    return <p className="text-sm text-slate-500">{empty}</p>;
+    return <p className="text-sm text-slate-500 dark:text-slate-400">{empty}</p>;
   }
 
   return (
     <div className="space-y-3">
       {rows.slice(0, 8).map((row, index) => (
-        <div key={getKey(row, index)} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-800">
+        <div key={getKey(row, index)} className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-semibold text-slate-800 dark:text-slate-200">
           {render(row, index)}
         </div>
       ))}

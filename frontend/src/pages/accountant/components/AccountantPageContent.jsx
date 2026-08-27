@@ -43,6 +43,8 @@ import LeaveRequest from "../../staff/LeaveRequest";
 import StaffInventory from "../../staff/StaffInventory";
 import AccountantInventory from "../AccountantInventory";
 import EmployeeProfileView from "../../../components/shared/EmployeeProfileView";
+import EmailNotificationsView from "../../../components/shared/EmailNotificationsView";
+import axios from "axios";
 import ManualEntriesView from "./ManualEntriesView";
 import ProfitLossView from "./ProfitLossView";
 import AccountLedgersView from "./AccountLedgersView";
@@ -1380,43 +1382,49 @@ const ReportsAnalyticsView = () => (
   </div>
 );
 
-const NotificationsView = () => {
+const NotificationsView = ({ user }) => {
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const loadNotifications = async () => {
+    try {
+      setLoading(true);
+      setError("");
+      const userId = user?.id || user?._id || "accountant";
+      const { data } = await axios.get(`http://localhost:5000/api/notifications/accountant/${userId}`);
+      setNotifications(data?.notifications || data || []);
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to load notifications");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadNotifications();
+  }, [user]);
+
+  const handleRead = async (id) => {
+    try {
+      await axios.put(`http://localhost:5000/api/notifications/read/${id}`);
+      setNotifications(notifications.map(n => n._id === id || n.id === id ? { ...n, read: true, isRead: true } : n));
+    } catch (err) {
+      alert("Failed to mark as read");
+    }
+  };
+
   return (
     <div className="accountant-view">
-      <ViewHero
-        eyebrow="Notification Center"
+      <EmailNotificationsView
         title="Notifications"
-        description="View all recent system alerts and notifications."
+        subtitle="View all recent system alerts and notifications."
+        notifications={notifications}
+        loading={loading}
+        error={error}
+        onMarkRead={handleRead}
+        onRefresh={loadNotifications}
       />
-
-      <section className="accountant-panel" style={{ marginTop: "1rem" }}>
-        <div className="accountant-panel__header">
-          <div>
-            <p className="accountant-panel__eyebrow">All Notifications</p>
-            <h3 className="accountant-panel__title">Recent Alerts</h3>
-          </div>
-        </div>
-
-        <div className="accountant-notificationList">
-          {notificationRows.map((row) => (
-            <article className="accountant-notificationItem" key={`${row.title}-${row.date}`}>
-              <div className="accountant-notificationItem__meta">
-                <div className="accountant-notificationItem__icon" aria-hidden="true">
-                  <FaBell />
-                </div>
-                <div>
-                  <h4>{row.title}</h4>
-                  <p>{row.message}</p>
-                </div>
-              </div>
-              <div className="accountant-notificationItem__side">
-                <StatusBadge value={row.status} />
-                <span>{row.date}</span>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
     </div>
   );
 };
@@ -1636,7 +1644,7 @@ const AccountantPageContent = ({ activeItem, setActiveItem, user, currentDate, c
     case "Reports & Analytics":
       return <ReportsAnalyticsView />;
     case "Notifications":
-      return <NotificationsView />;
+      return <NotificationsView user={user} />;
     case "Attendance":
       return (
         <div style={{ padding: "2rem" }}>

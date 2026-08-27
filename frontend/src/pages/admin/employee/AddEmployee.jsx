@@ -419,7 +419,7 @@ const AddEmployee = () => {
                     ? "border-amber-400 bg-amber-50 shadow-lg"
                     : index < step
                     ? "border-emerald-300 bg-emerald-50"
-                    : "border-slate-200 bg-temple-100/90"
+                    : "border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800/90"
                 }`}
               >
                 <div
@@ -428,12 +428,12 @@ const AddEmployee = () => {
                       ? "bg-amber-400 text-white"
                       : index < step
                       ? "bg-emerald-400 text-white"
-                      : "bg-slate-100 text-slate-500"
+                      : "bg-slate-100 text-slate-500 dark:text-slate-400"
                   }`}
                 >
                   {index < step ? "✓" : index + 1}
                 </div>
-                <p className="text-sm font-semibold text-slate-800">{label}</p>
+                <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{label}</p>
               </div>
             ))}
           </div>
@@ -443,53 +443,53 @@ const AddEmployee = () => {
             {step === 0 && (
               <div className="grid gap-5 md:grid-cols-2">
                 {/* Employee Name */}
-                <label className="block space-y-2 text-sm text-slate-700">
+                <label className="block space-y-2 text-sm text-slate-700 dark:text-slate-300">
                   Employee Name <span className="text-rose-500">*</span>
                   <input
                     value={form.name}
                     onChange={handleChange("name")}
                     placeholder="e.g., Ramesh Kumar"
-                    className={`w-full rounded-3xl border ${errors.name ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition`}
+                    className={`w-full rounded-3xl border ${errors.name ? "border-rose-500" : "border-slate-200 dark:border-slate-700"} bg-slate-50 dark:bg-slate-800/50 px-4 py-3 outline-none focus:border-amber-400 transition`}
                     required
                   />
                   {errors.name && <p className="text-rose-500 text-xs mt-1">{errors.name}</p>}
                 </label>
 
                 {/* Email */}
-                <label className="block space-y-2 text-sm text-slate-700">
+                <label className="block space-y-2 text-sm text-slate-700 dark:text-slate-300">
                   Email <span className="text-rose-500">*</span>
                   <input
                     type="email"
                     value={form.email}
                     onChange={handleChange("email")}
                     placeholder="employee@temple.org"
-                    className={`w-full rounded-3xl border ${errors.email ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition`}
+                    className={`w-full rounded-3xl border ${errors.email ? "border-rose-500" : "border-slate-200 dark:border-slate-700"} bg-slate-50 dark:bg-slate-800/50 px-4 py-3 outline-none focus:border-amber-400 transition`}
                     required
                   />
                   {errors.email && <p className="text-rose-500 text-xs mt-1">{errors.email}</p>}
                 </label>
 
                 {/* Phone Number */}
-                <label className="block space-y-2 text-sm text-slate-700">
+                <label className="block space-y-2 text-sm text-slate-700 dark:text-slate-300">
                   Phone Number <span className="text-rose-500">*</span>
                   <input
                     type="tel"
                     value={form.phone}
                     onChange={handleChange("phone")}
                     placeholder="+91 90000 00000"
-                    className={`w-full rounded-3xl border ${errors.phone ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition`}
+                    className={`w-full rounded-3xl border ${errors.phone ? "border-rose-500" : "border-slate-200 dark:border-slate-700"} bg-slate-50 dark:bg-slate-800/50 px-4 py-3 outline-none focus:border-amber-400 transition`}
                     required
                   />
                   {errors.phone && <p className="text-rose-500 text-xs mt-1">{errors.phone}</p>}
                 </label>
 
                 {/* Gender */}
-                <label className="block space-y-2 text-sm text-slate-700">
+                <label className="block space-y-2 text-sm text-slate-700 dark:text-slate-300">
                   Gender
                   <select
                     value={form.gender}
                     onChange={handleChange("gender")}
-                    className={`w-full rounded-3xl border ${errors.gender ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition`}
+                    className={`w-full rounded-3xl border ${errors.gender ? "border-rose-500" : "border-slate-200 dark:border-slate-700"} bg-slate-50 dark:bg-slate-800/50 px-4 py-3 outline-none focus:border-amber-400 transition`}
                   >
                     <option>Male</option>
                     <option>Female</option>
@@ -499,7 +499,7 @@ const AddEmployee = () => {
                 </label>
 
                 {/* Date of Birth */}
-                <label className="block space-y-2 text-sm text-slate-700">
+                <label className="block space-y-2 text-sm text-slate-700 dark:text-slate-300">
                   Date of Birth <span className="text-rose-500">*</span>
                   <input
                     type="date"
@@ -514,18 +514,18 @@ const AddEmployee = () => {
                     .toISOString()
                     .split("T")[0]
                     }
-                    className={`w-full rounded-3xl border ${errors.dob ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition`}
+                    className={`w-full rounded-3xl border ${errors.dob ? "border-rose-500" : "border-slate-200 dark:border-slate-700"} bg-slate-50 dark:bg-slate-800/50 px-4 py-3 outline-none focus:border-amber-400 transition`}
                   />
                   {errors.dob && <p className="text-rose-500 text-xs mt-1">{errors.dob}</p>}
                 </label>
 
                 {/* Blood Group */}
-                <label className="block space-y-2 text-sm text-slate-700">
+                <label className="block space-y-2 text-sm text-slate-700 dark:text-slate-300">
                   Blood Group <span className="text-rose-500">*</span>
                   <select
                     value={form.bloodGroup}
                     onChange={handleChange("bloodGroup")}
-                    className={`w-full rounded-3xl border ${errors.bloodGroup ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition`}
+                    className={`w-full rounded-3xl border ${errors.bloodGroup ? "border-rose-500" : "border-slate-200 dark:border-slate-700"} bg-slate-50 dark:bg-slate-800/50 px-4 py-3 outline-none focus:border-amber-400 transition`}
                   >
                     <option value="">Select Blood Group</option>
                     <option value="A+">A+</option>
@@ -541,20 +541,20 @@ const AddEmployee = () => {
                 </label>
 
                 {/*Emergency Contact*/}
-                <label className="block space-y-2 text-sm text-slate-700">
+                <label className="block space-y-2 text-sm text-slate-700 dark:text-slate-300">
                   Emergency Contact *
                   <input
                     type="tel"
                     value={form.emergencyContact}
                     onChange={handleChange("emergencyContact")}
                     placeholder="Emergency Contact Number"
-                    className={`w-full rounded-3xl border ${errors.emergencyContact ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3`}
+                    className={`w-full rounded-3xl border ${errors.emergencyContact ? "border-rose-500" : "border-slate-200 dark:border-slate-700"} bg-slate-50 dark:bg-slate-800/50 px-4 py-3`}
                   />
                   {errors.emergencyContact && <p className="text-rose-500 text-xs mt-1">{errors.emergencyContact}</p>}
                 </label>
 
                 {/* Aadhar Number */}
-                <label className="block space-y-2 text-sm text-slate-700">
+                <label className="block space-y-2 text-sm text-slate-700 dark:text-slate-300">
                   Aadhaar Number *
                   <input
                     type="text"
@@ -562,33 +562,33 @@ const AddEmployee = () => {
                     value={form.aadhar}
                     onChange={handleChange("aadhar")}
                     placeholder="123456789012"
-                    className={`w-full rounded-3xl border ${errors.aadhar ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3`}
+                    className={`w-full rounded-3xl border ${errors.aadhar ? "border-rose-500" : "border-slate-200 dark:border-slate-700"} bg-slate-50 dark:bg-slate-800/50 px-4 py-3`}
                   />
                   {errors.aadhar && <p className="text-rose-500 text-xs mt-1">{errors.aadhar}</p>}
                 </label>
 
                 {/* Address */}
-                <label className="block space-y-2 text-sm text-slate-700 md:col-span-2">
+                <label className="block space-y-2 text-sm text-slate-700 dark:text-slate-300 md:col-span-2">
                   Address
                   <textarea
                     value={form.address}
                     onChange={handleChange("address")}
                     rows={3}
                     placeholder="Full residential address"
-                    className={`w-full rounded-3xl border ${errors.address ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition`}
+                    className={`w-full rounded-3xl border ${errors.address ? "border-rose-500" : "border-slate-200 dark:border-slate-700"} bg-slate-50 dark:bg-slate-800/50 px-4 py-3 outline-none focus:border-amber-400 transition`}
                   />
                   {errors.address && <p className="text-rose-500 text-xs mt-1">{errors.address}</p>}
                 </label>
 
                 {/* Photo Upload */}
-                <label className="block space-y-2 text-sm text-slate-700 md:col-span-2">
+                <label className="block space-y-2 text-sm text-slate-700 dark:text-slate-300 md:col-span-2">
                   Profile Photo
-                  <div className={`flex items-center gap-4 rounded-3xl border ${errors.photo ? "border-rose-500 bg-rose-50" : "border-dashed border-slate-300 bg-slate-50"} p-4`}>
+                  <div className={`flex items-center gap-4 rounded-3xl border ${errors.photo ? "border-rose-500 bg-rose-50" : "border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/50"} p-4`}>
                     {photoPreview && (
                       <img
                         src={photoPreview}
                         alt="Preview"
-                        className="h-14 w-14 rounded-2xl object-cover border border-slate-200"
+                        className="h-14 w-14 rounded-2xl object-cover border border-slate-200 dark:border-slate-700"
                       />
                     )}
                     <input
@@ -600,11 +600,11 @@ const AddEmployee = () => {
                     />
                     <label
                       htmlFor="photo-upload"
-                      className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-temple-100 px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-100 transition"
+                      className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-temple-100 dark:bg-slate-800 px-4 py-2 text-sm font-semibold text-slate-900 dark:text-slate-100 shadow-sm hover:bg-slate-100 transition"
                     >
                       <FiUpload /> {form.photo ? "Change Photo" : "Choose Photo"}
                     </label>
-                    <span className="text-sm text-slate-500">PNG, JPG up to 5 MB</span>
+                    <span className="text-sm text-slate-500 dark:text-slate-400">PNG, JPG up to 5 MB</span>
                   </div>
                   {errors.photo && <p className="text-rose-500 text-xs mt-1">{errors.photo}</p>}
                 </label>
@@ -615,12 +615,12 @@ const AddEmployee = () => {
             {step === 1 && (
               <div className="grid gap-5 md:grid-cols-2">
                 {/* Role */}
-                <label className="block space-y-2 text-sm text-slate-700">
+                <label className="block space-y-2 text-sm text-slate-700 dark:text-slate-300">
                   Role <span className="text-rose-500">*</span>
                   <select
                     value={form.role}
                     onChange={handleChange("role")}
-                    className={`w-full rounded-3xl border ${errors.role ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition`}
+                    className={`w-full rounded-3xl border ${errors.role ? "border-rose-500" : "border-slate-200 dark:border-slate-700"} bg-slate-50 dark:bg-slate-800/50 px-4 py-3 outline-none focus:border-amber-400 transition`}
                   >
                     {employeeRoles.map((r) => (
                       <option key={r.value} value={r.value}>
@@ -632,12 +632,12 @@ const AddEmployee = () => {
                 </label>
 
                 {/* Department — auto-updates when role changes */}
-                <label className="block space-y-2 text-sm text-slate-700">
+                <label className="block space-y-2 text-sm text-slate-700 dark:text-slate-300">
                   Department <span className="text-rose-500">*</span>
                   <select
                     value={form.department}
                     onChange={handleChange("department")}
-                    className={`w-full rounded-3xl border ${errors.department ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition`}
+                    className={`w-full rounded-3xl border ${errors.department ? "border-rose-500" : "border-slate-200 dark:border-slate-700"} bg-slate-50 dark:bg-slate-800/50 px-4 py-3 outline-none focus:border-amber-400 transition`}
                   >
                     {departmentList.map((dept) => (
                       <option key={dept} value={dept}>
@@ -653,12 +653,12 @@ const AddEmployee = () => {
                 </label>
 
                 {/* Employee Type */}
-                <label className="block space-y-2 text-sm text-slate-700">
+                <label className="block space-y-2 text-sm text-slate-700 dark:text-slate-300">
                   Employee Type *
                   <select
                     value={form.employeeType}
                     onChange={handleChange("employeeType")}
-                    className={`w-full rounded-3xl border ${errors.employeeType ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3`}
+                    className={`w-full rounded-3xl border ${errors.employeeType ? "border-rose-500" : "border-slate-200 dark:border-slate-700"} bg-slate-50 dark:bg-slate-800/50 px-4 py-3`}
                   >
                   <option value="Full Time">Full Time</option>
                   <option value="Part Time">Part Time</option>
@@ -668,7 +668,7 @@ const AddEmployee = () => {
                 </label>
 
                 {/* Salary */}
-                <label className="block space-y-2 text-sm text-slate-700">
+                <label className="block space-y-2 text-sm text-slate-700 dark:text-slate-300">
                   Monthly Salary *
                   <input
                     type="number"
@@ -676,13 +676,13 @@ const AddEmployee = () => {
                     value={form.salary}
                     onChange={handleChange("salary")}
                     placeholder="25000"
-                    className={`w-full rounded-3xl border ${errors.salary ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3`}
+                    className={`w-full rounded-3xl border ${errors.salary ? "border-rose-500" : "border-slate-200 dark:border-slate-700"} bg-slate-50 dark:bg-slate-800/50 px-4 py-3`}
                   />
                   {errors.salary && <p className="text-rose-500 text-xs mt-1">{errors.salary}</p>}
                 </label>
 
                 {/* Joining Date */}
-                <label className="block space-y-2 text-sm text-slate-700">
+                <label className="block space-y-2 text-sm text-slate-700 dark:text-slate-300">
                   Joining Date *
                   <input
   type="date"
@@ -700,18 +700,18 @@ const AddEmployee = () => {
       : ""
   }
   max={new Date().toISOString().split("T")[0]}
-  className={`w-full rounded-3xl border ${errors.joiningDate ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3`}
+  className={`w-full rounded-3xl border ${errors.joiningDate ? "border-rose-500" : "border-slate-200 dark:border-slate-700"} bg-slate-50 dark:bg-slate-800/50 px-4 py-3`}
 />
                   {errors.joiningDate && <p className="text-rose-500 text-xs mt-1">{errors.joiningDate}</p>}
                 </label>
 
                 {/* Default Shift */}
-                <label className="block space-y-2 text-sm text-slate-700">
+                <label className="block space-y-2 text-sm text-slate-700 dark:text-slate-300">
                   Default Shift <span className="text-rose-500">*</span>
                   <select
                     value={form.defaultShift}
                     onChange={handleChange("defaultShift")}
-                    className={`w-full rounded-3xl border ${errors.defaultShift ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition`}
+                    className={`w-full rounded-3xl border ${errors.defaultShift ? "border-rose-500" : "border-slate-200 dark:border-slate-700"} bg-slate-50 dark:bg-slate-800/50 px-4 py-3 outline-none focus:border-amber-400 transition`}
                   >
                     {shiftOptions.map((s) => (
                       <option key={s} value={s}>
@@ -723,12 +723,12 @@ const AddEmployee = () => {
                 </label>
 
                 {/* Default Duty — auto-updates when department changes */}
-                <label className="block space-y-2 text-sm text-slate-700">
+                <label className="block space-y-2 text-sm text-slate-700 dark:text-slate-300">
                   Default Duty <span className="text-rose-500">*</span>
                   <select
                     value={form.defaultDuty}
                     onChange={handleChange("defaultDuty")}
-                    className={`w-full rounded-3xl border ${errors.defaultDuty ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition`}
+                    className={`w-full rounded-3xl border ${errors.defaultDuty ? "border-rose-500" : "border-slate-200 dark:border-slate-700"} bg-slate-50 dark:bg-slate-800/50 px-4 py-3 outline-none focus:border-amber-400 transition`}
                   >
                     {dutyList.map((duty) => (
                       <option key={duty} value={duty}>
@@ -745,12 +745,12 @@ const AddEmployee = () => {
                 </label>
 
                 {/* Duty Location */}
-                <label className="block space-y-2 text-sm text-slate-700">
+                <label className="block space-y-2 text-sm text-slate-700 dark:text-slate-300">
                   Duty Location <span className="text-rose-500">*</span>
                   <select
                     value={form.dutyLocation}
                     onChange={handleChange("dutyLocation")}
-                    className={`w-full rounded-3xl border ${errors.dutyLocation ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition`}
+                    className={`w-full rounded-3xl border ${errors.dutyLocation ? "border-rose-500" : "border-slate-200 dark:border-slate-700"} bg-slate-50 dark:bg-slate-800/50 px-4 py-3 outline-none focus:border-amber-400 transition`}
                   >
                     {locationList.map((loc) => (
                       <option key={loc} value={loc}>
@@ -762,12 +762,12 @@ const AddEmployee = () => {
                 </label>
 
                 {/* Weekly Off */}
-                <label className="block space-y-2 text-sm text-slate-700">
+                <label className="block space-y-2 text-sm text-slate-700 dark:text-slate-300">
                   Weekly Off
                   <select
                     value={form.weeklyOff}
                     onChange={handleChange("weeklyOff")}
-                    className={`w-full rounded-3xl border ${errors.weeklyOff ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition`}
+                    className={`w-full rounded-3xl border ${errors.weeklyOff ? "border-rose-500" : "border-slate-200 dark:border-slate-700"} bg-slate-50 dark:bg-slate-800/50 px-4 py-3 outline-none focus:border-amber-400 transition`}
                   >
                     <option value="">No Weekly Off</option>
                     <option value="Sunday">Sunday</option>
@@ -781,12 +781,12 @@ const AddEmployee = () => {
                 </label>
 
                 {/* Attendance Location */}
-                <label className="block space-y-2 text-sm text-slate-700">
+                <label className="block space-y-2 text-sm text-slate-700 dark:text-slate-300">
                   Attendance Location
                   <select
                     value={form.attendanceLocation}
                     onChange={handleChange("attendanceLocation")}
-                    className={`w-full rounded-3xl border ${errors.attendanceLocation ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition`}
+                    className={`w-full rounded-3xl border ${errors.attendanceLocation ? "border-rose-500" : "border-slate-200 dark:border-slate-700"} bg-slate-50 dark:bg-slate-800/50 px-4 py-3 outline-none focus:border-amber-400 transition`}
                   >
                     <option value="">Select Location</option>
                     {locations.map(loc => (
@@ -796,9 +796,9 @@ const AddEmployee = () => {
                 </label>
                 
                 {form.role === "priest" && (
-                  <label className="block space-y-2 text-sm text-slate-700 md:col-span-2">
+                  <label className="block space-y-2 text-sm text-slate-700 dark:text-slate-300 md:col-span-2">
                     Eligible Poojas
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2 border rounded-3xl border-slate-200 bg-slate-50 p-4">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2 border rounded-3xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4">
                       {poojas.map(pooja => (
                         <label key={pooja._id} className="flex items-center gap-2 cursor-pointer text-sm">
                           <input 
@@ -822,7 +822,7 @@ const AddEmployee = () => {
 
                 {/* Face Registration */}
                 <div className="md:col-span-2 space-y-2">
-                  <span className="text-sm text-slate-700 font-medium">Face Registration</span>
+                  <span className="text-sm text-slate-700 dark:text-slate-300 font-medium">Face Registration</span>
                   {form.faceRegistered ? (
                      <div className="rounded-3xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-emerald-800 flex justify-between items-center">
                         <div>
@@ -860,9 +860,9 @@ const AddEmployee = () => {
             {/* ── Step 3: Account Details ── */}
             {step === 2 && (
               <div className="grid gap-5 md:grid-cols-2">
-                <label className="block space-y-2 text-sm text-slate-700 md:col-span-2">
+                <label className="block space-y-2 text-sm text-slate-700 dark:text-slate-300 md:col-span-2">
                   <span className="font-medium">Login Email</span>
-                  <div className="w-full rounded-3xl border border-slate-200 bg-slate-100 px-4 py-3 text-slate-600 text-sm">
+                  <div className="w-full rounded-3xl border border-slate-200 dark:border-slate-700 bg-slate-100 px-4 py-3 text-slate-600 dark:text-slate-400 text-sm">
                     {form.email || "—"}
                   </div>
                   <p className="text-xs text-slate-400">Email entered in Step 1 will be used as login</p>
@@ -872,12 +872,12 @@ const AddEmployee = () => {
                     </div>
 
                 {/* Bank Name */}
-                <label className="block space-y-2 text-sm text-slate-700">
+                <label className="block space-y-2 text-sm text-slate-700 dark:text-slate-300">
                   Bank Name <span className="text-rose-500">*</span>
                   <select
                     value={form.bankName}
                     onChange={handleChange("bankName")}
-                    className={`w-full rounded-3xl border ${errors.bankName ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition`}
+                    className={`w-full rounded-3xl border ${errors.bankName ? "border-rose-500" : "border-slate-200 dark:border-slate-700"} bg-slate-50 dark:bg-slate-800/50 px-4 py-3 outline-none focus:border-amber-400 transition`}
                   >
                     {bankOptions.map((bank) => (
                       <option key={bank} value={bank} disabled={bank === ""}>
@@ -889,85 +889,85 @@ const AddEmployee = () => {
                 </label>
 
                 {/* Account Number */}
-                <label className="block space-y-2 text-sm text-slate-700">
+                <label className="block space-y-2 text-sm text-slate-700 dark:text-slate-300">
                   Account Number <span className="text-rose-500">*</span>
                   <input
                     type="text"
                     value={form.accountNumber}
                     onChange={handleChange("accountNumber")}
                     placeholder="e.g. 123456789012"
-                    className={`w-full rounded-3xl border ${errors.accountNumber ? "border-rose-500" : "border-slate-200"} bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 transition`}
+                    className={`w-full rounded-3xl border ${errors.accountNumber ? "border-rose-500" : "border-slate-200 dark:border-slate-700"} bg-slate-50 dark:bg-slate-800/50 px-4 py-3 outline-none focus:border-amber-400 transition`}
                   />
                   {errors.accountNumber && <p className="text-rose-500 text-xs mt-1">{errors.accountNumber}</p>}
                 </label>
 
                 {/* Summary Review */}
-                <div className="md:col-span-2 rounded-3xl border border-slate-200 bg-slate-50 p-5 space-y-3">
-                  <p className="text-sm font-semibold text-slate-700 mb-3">Review Before Saving</p>
+                <div className="md:col-span-2 rounded-3xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-5 space-y-3">
+                  <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Review Before Saving</p>
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div>
-                      <p className="text-slate-500 text-xs">Name</p>
-                      <p className="font-semibold text-slate-800">{form.name || "—"}</p>
+                      <p className="text-slate-500 dark:text-slate-400 text-xs">Name</p>
+                      <p className="font-semibold text-slate-800 dark:text-slate-200">{form.name || "—"}</p>
                     </div>
                     <div>
-                      <p className="text-slate-500 text-xs">Gender</p>
-                      <p className="font-semibold text-slate-800">{form.gender}</p>
+                      <p className="text-slate-500 dark:text-slate-400 text-xs">Gender</p>
+                      <p className="font-semibold text-slate-800 dark:text-slate-200">{form.gender}</p>
                     </div>
                     <div>
-                      <p className="text-slate-500 text-xs">Role</p>
-                      <p className="font-semibold text-slate-800 capitalize">{form.role}</p>
+                      <p className="text-slate-500 dark:text-slate-400 text-xs">Role</p>
+                      <p className="font-semibold text-slate-800 dark:text-slate-200 capitalize">{form.role}</p>
                     </div>
                     <div>
-                      <p className="text-slate-500 text-xs">Blood Group</p>
-                      <p className="font-semibold text-slate-800">{form.bloodGroup || "—"}</p>
+                      <p className="text-slate-500 dark:text-slate-400 text-xs">Blood Group</p>
+                      <p className="font-semibold text-slate-800 dark:text-slate-200">{form.bloodGroup || "—"}</p>
                     </div>
                     <div>
-                      <p className="text-slate-500 text-xs">Department</p>
-                      <p className="font-semibold text-slate-800">{form.department}</p>
+                      <p className="text-slate-500 dark:text-slate-400 text-xs">Department</p>
+                      <p className="font-semibold text-slate-800 dark:text-slate-200">{form.department}</p>
                     </div>
                     <div>
-                      <p className="text-slate-500 text-xs">Employee Type</p>
-                      <p className="font-semibold text-slate-800">{form.employeeType}</p>
+                      <p className="text-slate-500 dark:text-slate-400 text-xs">Employee Type</p>
+                      <p className="font-semibold text-slate-800 dark:text-slate-200">{form.employeeType}</p>
                     </div>
                     <div>
-                      <p className="text-slate-500 text-xs">Salary</p>
-                      <p className="font-semibold text-slate-800">₹{form.salary}</p>
+                      <p className="text-slate-500 dark:text-slate-400 text-xs">Salary</p>
+                      <p className="font-semibold text-slate-800 dark:text-slate-200">₹{form.salary}</p>
                     </div>
                     <div>
-                      <p className="text-slate-500 text-xs">Joining Date</p>
-                      <p className="font-semibold text-slate-800">{form.joiningDate}</p>
+                      <p className="text-slate-500 dark:text-slate-400 text-xs">Joining Date</p>
+                      <p className="font-semibold text-slate-800 dark:text-slate-200">{form.joiningDate}</p>
                     </div>
                     <div>
-                      <p className="text-slate-500 text-xs">Emergency Contact</p>
-                      <p className="font-semibold text-slate-800">{form.emergencyContact}</p>
+                      <p className="text-slate-500 dark:text-slate-400 text-xs">Emergency Contact</p>
+                      <p className="font-semibold text-slate-800 dark:text-slate-200">{form.emergencyContact}</p>
                     </div>
                     <div>
-                      <p className="text-slate-500 text-xs">Aadhaar</p>
-                      <p className="font-semibold text-slate-800">{form.aadhar}</p>
+                      <p className="text-slate-500 dark:text-slate-400 text-xs">Aadhaar</p>
+                      <p className="font-semibold text-slate-800 dark:text-slate-200">{form.aadhar}</p>
                     </div>
                     <div>
-                      <p className="text-slate-500 text-xs">Default Shift</p>
-                      <p className="font-semibold text-slate-800">{form.defaultShift}</p>
+                      <p className="text-slate-500 dark:text-slate-400 text-xs">Default Shift</p>
+                      <p className="font-semibold text-slate-800 dark:text-slate-200">{form.defaultShift}</p>
                     </div>
                     <div>
-                      <p className="text-slate-500 text-xs">Default Duty</p>
-                      <p className="font-semibold text-slate-800">{form.defaultDuty || "—"}</p>
+                      <p className="text-slate-500 dark:text-slate-400 text-xs">Default Duty</p>
+                      <p className="font-semibold text-slate-800 dark:text-slate-200">{form.defaultDuty || "—"}</p>
                     </div>
                     <div>
-                      <p className="text-slate-500 text-xs">Duty Location</p>
-                      <p className="font-semibold text-slate-800">{form.dutyLocation}</p>
+                      <p className="text-slate-500 dark:text-slate-400 text-xs">Duty Location</p>
+                      <p className="font-semibold text-slate-800 dark:text-slate-200">{form.dutyLocation}</p>
                     </div>
                     <div>
-                      <p className="text-slate-500 text-xs">Face Registered</p>
-                      <p className="font-semibold text-slate-800">{form.faceRegistered ? "Yes" : "No"}</p>
+                      <p className="text-slate-500 dark:text-slate-400 text-xs">Face Registered</p>
+                      <p className="font-semibold text-slate-800 dark:text-slate-200">{form.faceRegistered ? "Yes" : "No"}</p>
                     </div>
                     <div>
-                      <p className="text-slate-500 text-xs">Bank Name</p>
-                      <p className="font-semibold text-slate-800">{form.bankName || "—"}</p>
+                      <p className="text-slate-500 dark:text-slate-400 text-xs">Bank Name</p>
+                      <p className="font-semibold text-slate-800 dark:text-slate-200">{form.bankName || "—"}</p>
                     </div>
                     <div>
-                      <p className="text-slate-500 text-xs">Account Number</p>
-                      <p className="font-semibold text-slate-800">{form.accountNumber || "—"}</p>
+                      <p className="text-slate-500 dark:text-slate-400 text-xs">Account Number</p>
+                      <p className="font-semibold text-slate-800 dark:text-slate-200">{form.accountNumber || "—"}</p>
                     </div>
                   </div>
                 </div>
@@ -993,7 +993,7 @@ const AddEmployee = () => {
                 type="button"
                 onClick={handlePrev}
                 disabled={step === 0}
-                className="rounded-full border border-slate-300 bg-temple-100 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-full border border-slate-300 dark:border-slate-600 bg-temple-100 dark:bg-slate-800 px-5 py-3 text-sm font-semibold text-slate-700 dark:text-slate-300 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Back
               </button>
@@ -1026,7 +1026,7 @@ const AddEmployee = () => {
             {/* Avatar */}
             <div className="flex items-center gap-4">
               {photoPreview ? (
-                <img src={photoPreview} alt="Preview" className="h-20 w-20 rounded-3xl object-cover border border-slate-200" />
+                <img src={photoPreview} alt="Preview" className="h-20 w-20 rounded-3xl object-cover border border-slate-200 dark:border-slate-700" />
               ) : (
                 <div className="h-20 w-20 rounded-3xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white text-3xl font-bold shadow-md">
                   {form.name ? form.name[0].toUpperCase() : "?"}
@@ -1034,8 +1034,8 @@ const AddEmployee = () => {
               )}
               <div>
                 <p className="text-xs uppercase tracking-widest text-slate-400">Employee</p>
-                <h3 className="mt-1 text-xl font-bold text-slate-900">{form.name || "New Employee"}</h3>
-                <p className="text-sm text-slate-500 capitalize">{form.role}</p>
+                <h3 className="mt-1 text-xl font-bold text-slate-900 dark:text-slate-100">{form.name || "New Employee"}</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 capitalize">{form.role}</p>
               </div>
             </div>
 
@@ -1044,7 +1044,7 @@ const AddEmployee = () => {
               <InfoRow label="Phone" value={form.phone || "—"} />
               <InfoRow label="Gender" value={form.gender} />
               <InfoRow label="Date of Birth" value={form.dob || "—"} />
-              <div className="border-t border-slate-200 pt-3 space-y-3">
+              <div className="border-t border-slate-200 dark:border-slate-700 pt-3 space-y-3">
                 <InfoRow label="Employee ID" value="Auto-generated" highlight />
                 <InfoRow label="Username" value="Auto-generated" highlight />
                 <InfoRow label="Temporary Password" value="Auto-generated & Emailed" highlight />
@@ -1070,10 +1070,10 @@ const AddEmployee = () => {
       </div>
       {credentials && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/40 px-4">
-          <div className="w-full max-w-md rounded-[28px] border border-slate-200 bg-temple-100 p-6 shadow-2xl">
+          <div className="w-full max-w-md rounded-[28px] border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-6 shadow-2xl">
             <p className="text-sm uppercase tracking-[0.2em] text-emerald-600">Success</p>
-            <h3 className="mt-2 text-2xl font-bold text-slate-900">Employee Created</h3>
-            <div className="mt-5 space-y-3 rounded-3xl bg-slate-50 p-4 text-sm text-slate-700">
+            <h3 className="mt-2 text-2xl font-bold text-slate-900 dark:text-slate-100">Employee Created</h3>
+            <div className="mt-5 space-y-3 rounded-3xl bg-slate-50 dark:bg-slate-800/50 p-4 text-sm text-slate-700 dark:text-slate-300">
               <p>The employee profile for <strong>{createdEmployee?.name || form.name}</strong> has been created successfully.</p>
               <p>The login credentials (including their temporary password) have been sent to <strong>{createdEmployee?.email || form.email}</strong>.</p>
             </div>
@@ -1081,7 +1081,7 @@ const AddEmployee = () => {
               <button
                 type="button"
                 onClick={copyCredentials}
-                className="rounded-full bg-slate-200 px-5 py-2 text-sm font-semibold text-slate-700 shadow hover:bg-slate-300 transition"
+                className="rounded-full bg-slate-200 px-5 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 shadow hover:bg-slate-300 transition"
               >
                 Copy Credentials
               </button>
@@ -1102,9 +1102,9 @@ const AddEmployee = () => {
 
 // Small helper component for preview rows
 const InfoRow = ({ label, value, highlight }) => (
-  <div className={`rounded-2xl px-4 py-3 ${highlight ? "bg-violet-50" : "bg-temple-100"} shadow-sm`}>
+  <div className={`rounded-2xl px-4 py-3 ${highlight ? "bg-violet-50" : "bg-temple-100 dark:bg-slate-800"} shadow-sm`}>
     <p className="text-xs text-slate-400">{label}</p>
-    <p className={`mt-0.5 text-sm font-semibold ${highlight ? "text-violet-800" : "text-slate-800"}`}>{value}</p>
+    <p className={`mt-0.5 text-sm font-semibold ${highlight ? "text-violet-800" : "text-slate-800 dark:text-slate-200"}`}>{value}</p>
   </div>
 );
 

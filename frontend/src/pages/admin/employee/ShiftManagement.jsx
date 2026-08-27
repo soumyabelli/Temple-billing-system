@@ -57,7 +57,7 @@ const parseTime = (timeStr) => {
 
 const getBadgeClass = (status, type) => {
   if (status === "Completed") return "bg-green-500/10 text-green-500 border border-green-500/20";
-  if (status === "Cancelled") return "bg-gray-500/10 text-gray-500 border border-gray-500/20";
+  if (status === "Cancelled") return "bg-gray-50 dark:bg-slate-800/500/10 text-gray-500 dark:text-slate-400 border border-gray-500/20";
   if (type === "Extra Duty") return "bg-blue-500/10 text-blue-500 border border-blue-500/20";
   if (type === "Festival Duty") return "bg-orange-500/10 text-orange-500 border border-orange-500/20";
   if (type === "Emergency Duty") return "bg-red-500/10 text-red-500 border border-red-500/20";
@@ -76,7 +76,7 @@ const getBadgeClass = (status, type) => {
       return "bg-red-500/10 text-red-500 border border-red-500/20";
     case "Pending":
     default:
-      return "bg-slate-500/10 text-slate-500 border border-slate-500/20";
+      return "bg-slate-50 dark:bg-slate-800/500/10 text-slate-500 dark:text-slate-400 border border-slate-500/20";
   }
 };
 
@@ -465,7 +465,7 @@ const ShiftManagement = () => {
       case "Pending": return "bg-yellow-100 text-yellow-700";
       case "Approved": return "bg-green-100 text-green-700";
       case "Rejected": return "bg-rose-100 text-rose-700";
-      default: return "bg-slate-100 text-slate-700";
+      default: return "bg-slate-100 text-slate-700 dark:text-slate-300";
     }
   };
 
@@ -488,10 +488,10 @@ const ShiftManagement = () => {
 
   if (loading && !shifts.length) {
     return (
-      <div className="flex h-64 items-center justify-center rounded-3xl border border-slate-200 bg-temple-100 shadow-sm">
+      <div className="flex h-64 items-center justify-center rounded-3xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 shadow-sm">
         <div className="text-center">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-violet-600 border-t-transparent mx-auto"></div>
-          <p className="mt-4 text-sm text-slate-500">Loading Duty & Shift Management data...</p>
+          <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">Loading Duty & Shift Management data...</p>
         </div>
       </div>
     );
@@ -515,23 +515,23 @@ const ShiftManagement = () => {
       >
         {/* Statistics Cards */}
         <div className="mt-6 grid gap-5 sm:grid-cols-2 xl:grid-cols-5">
-          <div className="rounded-[24px] border border-white/10 bg-temple-100/5 p-5 shadow-xl backdrop-blur-sm transition-all hover:bg-temple-100/10">
+          <div className="rounded-[24px] border border-white/10 bg-temple-100 dark:bg-slate-800/5 p-5 shadow-xl backdrop-blur-sm transition-all hover:bg-temple-100 dark:bg-slate-800/10">
             <p className="text-xs uppercase tracking-wider text-white/60">Total Shift Types</p>
             <p className="mt-3 text-3xl font-bold text-white">{stats.totalShifts}</p>
           </div>
-          <div className="rounded-[24px] border border-white/10 bg-temple-100/5 p-5 shadow-xl backdrop-blur-sm transition-all hover:bg-temple-100/10">
+          <div className="rounded-[24px] border border-white/10 bg-temple-100 dark:bg-slate-800/5 p-5 shadow-xl backdrop-blur-sm transition-all hover:bg-temple-100 dark:bg-slate-800/10">
             <p className="text-xs uppercase tracking-wider text-white/60">Completed Shifts</p>
             <p className="mt-3 text-3xl font-bold text-emerald-400">{stats.completedShifts}</p>
           </div>
-          <div className="rounded-[24px] border border-white/10 bg-temple-100/5 p-5 shadow-xl backdrop-blur-sm transition-all hover:bg-temple-100/10">
+          <div className="rounded-[24px] border border-white/10 bg-temple-100 dark:bg-slate-800/5 p-5 shadow-xl backdrop-blur-sm transition-all hover:bg-temple-100 dark:bg-slate-800/10">
             <p className="text-xs uppercase tracking-wider text-white/60">Missed Shifts</p>
             <p className="mt-3 text-3xl font-bold text-rose-400">{stats.missedShifts}</p>
           </div>
-          <div className="rounded-[24px] border border-white/10 bg-temple-100/5 p-5 shadow-xl backdrop-blur-sm transition-all hover:bg-temple-100/10">
+          <div className="rounded-[24px] border border-white/10 bg-temple-100 dark:bg-slate-800/5 p-5 shadow-xl backdrop-blur-sm transition-all hover:bg-temple-100 dark:bg-slate-800/10">
             <p className="text-xs uppercase tracking-wider text-white/60">Overtime Hours</p>
             <p className="mt-3 text-3xl font-bold text-sky-400">{stats.overtimeHours} hrs</p>
           </div>
-          <div className="rounded-[24px] border border-white/10 bg-temple-100/5 p-5 shadow-xl backdrop-blur-sm transition-all hover:bg-temple-100/10">
+          <div className="rounded-[24px] border border-white/10 bg-temple-100 dark:bg-slate-800/5 p-5 shadow-xl backdrop-blur-sm transition-all hover:bg-temple-100 dark:bg-slate-800/10">
             <p className="text-xs uppercase tracking-wider text-white/60">Active Staff Available</p>
             <p className="mt-3 text-3xl font-bold text-amber-400">{stats.manpowerAvailable}</p>
           </div>
@@ -546,13 +546,13 @@ const ShiftManagement = () => {
       )}
 
       {/* Tabs */}
-      <div className="flex gap-4 border-b border-slate-200">
+      <div className="flex gap-4 border-b border-slate-200 dark:border-slate-700">
         <button
           onClick={() => setActiveTab("planner")}
           className={`pb-3 text-sm font-semibold transition-colors ${
             activeTab === "planner"
               ? "border-b-2 border-violet-600 text-violet-700"
-              : "text-slate-500 hover:text-slate-700"
+              : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-300"
           }`}
         >
           Shift Planner
@@ -562,7 +562,7 @@ const ShiftManagement = () => {
           className={`pb-3 text-sm font-semibold transition-colors flex items-center gap-2 ${
             activeTab === "transfers"
               ? "border-b-2 border-orange-500 text-orange-600"
-              : "text-slate-500 hover:text-slate-700"
+              : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-300"
           }`}
         >
           <FaExchangeAlt /> Duty Transfers
@@ -579,17 +579,17 @@ const ShiftManagement = () => {
           <div className="flex items-center gap-3">
             <button 
               onClick={handlePrevWeek} 
-              className="rounded-xl border border-slate-200 bg-temple-100 p-2.5 text-slate-600 hover:bg-slate-50 transition active:scale-95"
+              className="rounded-xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-800/50 transition active:scale-95"
               title="Previous Week"
             >
               <FiArrowLeft size={16} />
             </button>
-            <span className="text-sm font-semibold text-slate-800 bg-slate-100/70 border border-slate-200/50 rounded-xl px-4 py-2">
+            <span className="text-sm font-semibold text-slate-800 dark:text-slate-200 bg-slate-100/70 border border-slate-200 dark:border-slate-700/50 rounded-xl px-4 py-2">
               Week start: {weekStart ? new Date(`${weekStart}T00:00:00`).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "Loading..."}
             </span>
             <button 
               onClick={handleNextWeek} 
-              className="rounded-xl border border-slate-200 bg-temple-100 p-2.5 text-slate-600 hover:bg-slate-50 transition active:scale-95"
+              className="rounded-xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-800/50 transition active:scale-95"
               title="Next Week"
             >
               <FiArrowRight size={16} />
@@ -606,10 +606,10 @@ const ShiftManagement = () => {
         <div className="overflow-x-auto pb-4">
           <div className="grid grid-cols-7 gap-4 min-w-[1024px]">
             {planner.map((day) => (
-              <div key={day.dateKey} className="rounded-3xl border border-slate-200 bg-slate-50/50 p-4 shadow-sm min-h-[360px] flex flex-col">
-                <div className="text-center border-b border-slate-200/60 pb-2 mb-3">
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest">{day.label.split(",")[0]}</p>
-                  <p className="text-sm font-bold text-slate-900 mt-0.5">{day.label.split(",")[1] || day.dateKey.split("-")[2]}</p>
+              <div key={day.dateKey} className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50/50 p-4 shadow-sm min-h-[360px] flex flex-col">
+                <div className="text-center border-b border-slate-200 dark:border-slate-700/60 pb-2 mb-3">
+                  <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest">{day.label.split(",")[0]}</p>
+                  <p className="text-sm font-bold text-slate-900 dark:text-slate-100 mt-0.5">{day.label.split(",")[1] || day.dateKey.split("-")[2]}</p>
                 </div>
                 
                 <div className="flex-1 space-y-3">
@@ -618,8 +618,8 @@ const ShiftManagement = () => {
                       key={item.id} 
                       className={`relative rounded-2xl border p-3 shadow-sm flex flex-col gap-1.5 transition-all hover:-translate-y-0.5 ${
                         item.conflict 
-                          ? "bg-rose-50/60 border-rose-200/60 text-slate-900" 
-                          : "bg-temple-100 border-slate-200/60 text-slate-900"
+                          ? "bg-rose-50/60 border-rose-200/60 text-slate-900 dark:text-slate-100" 
+                          : "bg-temple-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700/60 text-slate-900 dark:text-slate-100"
                       }`}
                     >
                       <div className="flex justify-between items-start gap-2">
@@ -633,26 +633,26 @@ const ShiftManagement = () => {
                         </button>
                       </div>
                       
-                      <div className="flex items-center gap-1.5 text-xs text-slate-700">
+                      <div className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300">
                         <FiUser size={12} className="text-slate-400 flex-shrink-0" />
                         <span className="font-semibold truncate">{item.shiftName}</span>
                       </div>
 
-                      <span className="inline-flex self-start rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-semibold text-slate-600">
+                      <span className="inline-flex self-start rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-semibold text-slate-600 dark:text-slate-400">
                         {item.assignmentType || "Extra Duty"}
                       </span>
                       
-                      <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
+                      <div className="flex items-center gap-1.5 text-[10px] text-slate-500 dark:text-slate-400">
                         <FiClock size={11} className="text-slate-400 flex-shrink-0" />
                         <span>{item.shiftName}</span>
                       </div>
 
-                      <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
+                      <div className="flex items-center gap-1.5 text-[10px] text-slate-500 dark:text-slate-400">
                         <FiInfo size={11} className="text-slate-400 flex-shrink-0" />
                         <span>{item.dutyName}</span>
                       </div>
 
-                      <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
+                      <div className="flex items-center gap-1.5 text-[10px] text-slate-500 dark:text-slate-400">
                         <FiClock size={11} className="text-slate-400 flex-shrink-0" />
                         <span>{item.reportingTime || item.startTime} • {item.dutyArea}</span>
                       </div>
@@ -699,8 +699,8 @@ const ShiftManagement = () => {
           }
         >
           <div className="overflow-x-auto">
-            <table className="min-w-full text-left text-xs text-slate-600">
-              <thead className="bg-slate-100/80 text-slate-500 rounded-xl">
+            <table className="min-w-full text-left text-xs text-slate-600 dark:text-slate-400">
+              <thead className="bg-slate-100/80 text-slate-500 dark:text-slate-400 rounded-xl">
                 <tr>
                   <th className="px-4 py-3 rounded-l-xl">Shift Name</th>
                   <th className="px-4 py-3">Timings</th>
@@ -716,27 +716,27 @@ const ShiftManagement = () => {
                   </tr>
                 ) : (
                   shifts.map((s) => (
-                    <tr key={s.id} className="hover:bg-slate-50/50 transition">
-                      <td className="px-4 py-3.5 font-bold text-slate-800">{s.shiftName}</td>
-                      <td className="px-4 py-3.5 text-slate-700 font-medium">{s.startTime} - {s.endTime}</td>
+                    <tr key={s.id} className="hover:bg-slate-50 dark:bg-slate-800/50/50 transition">
+                      <td className="px-4 py-3.5 font-bold text-slate-800 dark:text-slate-200">{s.shiftName}</td>
+                      <td className="px-4 py-3.5 text-slate-700 dark:text-slate-300 font-medium">{s.startTime} - {s.endTime}</td>
                       <td className="px-4 py-3.5">
-                        <span className="inline-block rounded-xl bg-slate-100 px-2.5 py-1 font-semibold text-slate-600 text-[10px]">
+                        <span className="inline-block rounded-xl bg-slate-100 px-2.5 py-1 font-semibold text-slate-600 dark:text-slate-400 text-[10px]">
                           {s.category}
                         </span>
                       </td>
-                      <td className="px-4 py-3.5 text-slate-700 font-semibold">{s.requiredStaff} staff</td>
+                      <td className="px-4 py-3.5 text-slate-700 dark:text-slate-300 font-semibold">{s.requiredStaff} staff</td>
                       <td className="px-4 py-3.5 text-center">
                         <div className="flex justify-center gap-2">
                           <button 
                             onClick={() => handleEditShiftClick(s)}
-                            className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-violet-600 hover:border-violet-200 transition"
+                            className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-violet-600 hover:border-violet-200 transition"
                             title="Edit shift settings"
                           >
                             <FiEdit2 size={13} />
                           </button>
                           <button 
                             onClick={() => handleDeleteShiftClick(s.id)}
-                            className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-rose-600 hover:border-rose-200 transition"
+                            className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-rose-600 hover:border-rose-200 transition"
                             title="Delete shift type"
                           >
                             <FiTrash2 size={13} />
@@ -757,7 +757,7 @@ const ShiftManagement = () => {
           <SectionCard title="Assignment Alerts" subtitle="Conflicts, leaves, and staff capacity warnings.">
             <div className="space-y-3">
               {alerts.length === 0 ? (
-                <div className="rounded-[22px] border border-slate-100 bg-slate-50/50 p-4 text-center text-xs text-slate-500">
+                <div className="rounded-[22px] border border-slate-100 bg-slate-50 dark:bg-slate-800/50/50 p-4 text-center text-xs text-slate-500 dark:text-slate-400">
                   <FiInfo size={16} className="mx-auto text-slate-400 mb-1" />
                   No roster conflicts or low capacity issues detected.
                 </div>
@@ -786,19 +786,19 @@ const ShiftManagement = () => {
           <SectionCard title="Upcoming Roster" subtitle="Next scheduled duties and shifts.">
             <div className="space-y-2.5">
               {upcomingAssignments.length === 0 ? (
-                <div className="rounded-[22px] border border-slate-100 bg-slate-50/50 p-4 text-center text-xs text-slate-500">
+                <div className="rounded-[22px] border border-slate-100 bg-slate-50 dark:bg-slate-800/50/50 p-4 text-center text-xs text-slate-500 dark:text-slate-400">
                   No upcoming shifts scheduled.
                 </div>
               ) : (
                 upcomingAssignments.map((a) => (
-                  <div key={a.id} className="rounded-2xl border border-slate-200 bg-temple-100 p-3.5 shadow-sm hover:border-slate-300 transition flex items-center justify-between gap-3 text-xs">
+                  <div key={a.id} className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-3.5 shadow-sm hover:border-slate-300 dark:border-slate-600 transition flex items-center justify-between gap-3 text-xs">
                     <div>
-                      <p className="font-bold text-slate-800">{a.employeeName}</p>
+                      <p className="font-bold text-slate-800 dark:text-slate-200">{a.employeeName}</p>
                       <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mt-0.5">
                         {a.assignmentType || "Extra Duty"}
                       </p>
-                      <p className="text-slate-500 font-medium mt-0.5">{a.shiftName}</p>
-                      <p className="text-slate-500 font-medium mt-0.5">{a.dutyName}</p>
+                      <p className="text-slate-500 dark:text-slate-400 font-medium mt-0.5">{a.shiftName}</p>
+                      <p className="text-slate-500 dark:text-slate-400 font-medium mt-0.5">{a.dutyName}</p>
                       <p className="text-[10px] text-slate-400 mt-1">{new Date(`${a.dateKey}T00:00:00`).toLocaleDateString("en-IN", { weekday: "short", day: "2-digit", month: "short" })} • {a.reportingTime || a.startTime} • {a.dutyArea}</p>
                     </div>
                     <span className={`text-[9px] font-bold tracking-wider rounded-full px-2 py-0.5 border ${getBadgeClass(a.status || a.attendanceStatus, a.assignmentType)}`}>
@@ -823,7 +823,7 @@ const ShiftManagement = () => {
           <div className="overflow-x-auto pb-4">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="bg-slate-50 text-slate-600 border-b border-slate-200">
+                <tr className="bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
                   <th className="p-3 font-bold rounded-tl-xl">Duty Details</th>
                   <th className="p-3 font-bold">Requested By</th>
                   <th className="p-3 font-bold">Target Priest</th>
@@ -841,27 +841,27 @@ const ShiftManagement = () => {
                   </tr>
                 ) : requests.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="text-center p-8 text-slate-500 italic">
+                    <td colSpan="6" className="text-center p-8 text-slate-500 dark:text-slate-400 italic">
                       No transfer requests found.
                     </td>
                   </tr>
                 ) : (
                   requests.map((req) => (
-                    <tr key={req.id} className="border-b last:border-0 border-slate-100 hover:bg-slate-50 transition-colors">
+                    <tr key={req.id} className="border-b last:border-0 border-slate-100 hover:bg-slate-50 dark:bg-slate-800/50 transition-colors">
                       <td className="p-3">
-                        <div className="font-bold text-slate-800">{req.dutyName}</div>
-                        <div className="text-[10px] text-slate-500">{req.date} at {req.time}</div>
+                        <div className="font-bold text-slate-800 dark:text-slate-200">{req.dutyName}</div>
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400">{req.date} at {req.time}</div>
                         <div className="text-[10px] text-orange-500 mt-0.5 font-semibold">({req.referenceType})</div>
                       </td>
                       <td className="p-3">
-                        <div className="font-semibold text-slate-800">{req.originalPriest?.name || "Unknown"}</div>
+                        <div className="font-semibold text-slate-800 dark:text-slate-200">{req.originalPriest?.name || "Unknown"}</div>
                       </td>
                       <td className="p-3">
-                        <div className="font-semibold text-slate-800">{req.requestedPriest?.name || "Unknown"}</div>
+                        <div className="font-semibold text-slate-800 dark:text-slate-200">{req.requestedPriest?.name || "Unknown"}</div>
                         {req.status === "Pending" && (
                           <div className="mt-1.5">
                             <select
-                              className="text-[10px] border border-slate-200 rounded px-1.5 py-1 w-full max-w-[150px] outline-none"
+                              className="text-[10px] border border-slate-200 dark:border-slate-700 rounded px-1.5 py-1 w-full max-w-[150px] outline-none"
                               value={selectedPriest[req.id] || req.requestedPriest?._id || ""}
                               onChange={(e) => setSelectedPriest({ ...selectedPriest, [req.id]: e.target.value })}
                             >
@@ -876,7 +876,7 @@ const ShiftManagement = () => {
                         )}
                       </td>
                       <td className="p-3">
-                        <div className="text-slate-700">{req.reason}</div>
+                        <div className="text-slate-700 dark:text-slate-300">{req.reason}</div>
                         {req.remarks && <div className="text-[10px] text-slate-400 mt-0.5 italic">"{req.remarks}"</div>}
                       </td>
                       <td className="p-3">
@@ -920,12 +920,12 @@ const ShiftManagement = () => {
       {/* 4. Add/Edit Shift Modal */}
       {showShiftModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-[32px] border border-slate-200 bg-temple-100 p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+          <div className="w-full max-w-lg rounded-[32px] border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-lg font-bold text-slate-900">{editingShift ? "Edit Shift Type" : "Add Shift Type"}</h3>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">{editingShift ? "Edit Shift Type" : "Add Shift Type"}</h3>
               <button 
                 onClick={() => setShowShiftModal(false)}
-                className="rounded-xl border border-slate-100 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition"
+                className="rounded-xl border border-slate-100 p-2 text-slate-400 hover:text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-800/50 transition"
               >
                 <FiX size={16} />
               </button>
@@ -939,38 +939,38 @@ const ShiftManagement = () => {
               )}
 
               <div>
-                <label className="block text-slate-600 font-semibold mb-1.5">Shift Name</label>
+                <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1.5">Shift Name</label>
                 <input 
                   type="text" 
                   value={shiftForm.shiftName}
                   onChange={(e) => setShiftForm({ ...shiftForm, shiftName: e.target.value })}
                   placeholder="e.g. Morning Pooja"
-                  className="w-full rounded-xl border border-slate-200 bg-temple-100 px-3.5 py-2.5 outline-none focus:border-violet-600 font-medium text-slate-800 transition"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-3.5 py-2.5 outline-none focus:border-violet-600 font-medium text-slate-800 dark:text-slate-200 transition"
                 />
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
-                  <label className="block text-slate-600 font-semibold mb-1.5">Start Time</label>
+                  <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1.5">Start Time</label>
                   <div className="flex gap-1.5">
                     <select 
                       value={shiftForm.startHour}
                       onChange={(e) => setShiftForm({ ...shiftForm, startHour: e.target.value })}
-                      className="flex-1 rounded-xl border border-slate-200 bg-temple-100 px-2 py-2.5 outline-none font-medium text-slate-800 transition"
+                      className="flex-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-2 py-2.5 outline-none font-medium text-slate-800 dark:text-slate-200 transition"
                     >
                       {hoursOptions.map(h => <option key={h} value={h}>{h}</option>)}
                     </select>
                     <select 
                       value={shiftForm.startMinute}
                       onChange={(e) => setShiftForm({ ...shiftForm, startMinute: e.target.value })}
-                      className="flex-1 rounded-xl border border-slate-200 bg-temple-100 px-2 py-2.5 outline-none font-medium text-slate-800 transition"
+                      className="flex-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-2 py-2.5 outline-none font-medium text-slate-800 dark:text-slate-200 transition"
                     >
                       {minutesOptions.map(m => <option key={m} value={m}>{m}</option>)}
                     </select>
                     <select 
                       value={shiftForm.startMeridiem}
                       onChange={(e) => setShiftForm({ ...shiftForm, startMeridiem: e.target.value })}
-                      className="rounded-xl border border-slate-200 bg-temple-100 px-2 py-2.5 outline-none font-bold text-slate-800 transition"
+                      className="rounded-xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-2 py-2.5 outline-none font-bold text-slate-800 dark:text-slate-200 transition"
                     >
                       <option value="AM">AM</option>
                       <option value="PM">PM</option>
@@ -979,26 +979,26 @@ const ShiftManagement = () => {
                 </div>
 
                 <div>
-                  <label className="block text-slate-600 font-semibold mb-1.5">End Time</label>
+                  <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1.5">End Time</label>
                   <div className="flex gap-1.5">
                     <select 
                       value={shiftForm.endHour}
                       onChange={(e) => setShiftForm({ ...shiftForm, endHour: e.target.value })}
-                      className="flex-1 rounded-xl border border-slate-200 bg-temple-100 px-2 py-2.5 outline-none font-medium text-slate-800 transition"
+                      className="flex-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-2 py-2.5 outline-none font-medium text-slate-800 dark:text-slate-200 transition"
                     >
                       {hoursOptions.map(h => <option key={h} value={h}>{h}</option>)}
                     </select>
                     <select 
                       value={shiftForm.endMinute}
                       onChange={(e) => setShiftForm({ ...shiftForm, endMinute: e.target.value })}
-                      className="flex-1 rounded-xl border border-slate-200 bg-temple-100 px-2 py-2.5 outline-none font-medium text-slate-800 transition"
+                      className="flex-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-2 py-2.5 outline-none font-medium text-slate-800 dark:text-slate-200 transition"
                     >
                       {minutesOptions.map(m => <option key={m} value={m}>{m}</option>)}
                     </select>
                     <select 
                       value={shiftForm.endMeridiem}
                       onChange={(e) => setShiftForm({ ...shiftForm, endMeridiem: e.target.value })}
-                      className="rounded-xl border border-slate-200 bg-temple-100 px-2 py-2.5 outline-none font-bold text-slate-800 transition"
+                      className="rounded-xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-2 py-2.5 outline-none font-bold text-slate-800 dark:text-slate-200 transition"
                     >
                       <option value="AM">AM</option>
                       <option value="PM">PM</option>
@@ -1009,36 +1009,36 @@ const ShiftManagement = () => {
 
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
-                  <label className="block text-slate-600 font-semibold mb-1.5">Category</label>
+                  <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1.5">Category</label>
                   <select 
                     value={shiftForm.category}
                     onChange={(e) => setShiftForm({ ...shiftForm, category: e.target.value })}
-                    className="w-full rounded-xl border border-slate-200 bg-temple-100 px-3.5 py-2.5 outline-none font-medium text-slate-800 transition"
+                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-3.5 py-2.5 outline-none font-medium text-slate-800 dark:text-slate-200 transition"
                   >
                     {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-slate-600 font-semibold mb-1.5">Required Staff</label>
+                  <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1.5">Required Staff</label>
                   <input 
                     type="number" 
                     min="1"
                     value={shiftForm.requiredStaff}
                     onChange={(e) => setShiftForm({ ...shiftForm, requiredStaff: e.target.value })}
-                    className="w-full rounded-xl border border-slate-200 bg-temple-100 px-3.5 py-2.5 outline-none font-medium text-slate-800 transition"
+                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-3.5 py-2.5 outline-none font-medium text-slate-800 dark:text-slate-200 transition"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-slate-600 font-semibold mb-1.5">Notes (Optional)</label>
+                <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1.5">Notes (Optional)</label>
                 <textarea 
                   value={shiftForm.notes}
                   onChange={(e) => setShiftForm({ ...shiftForm, notes: e.target.value })}
                   placeholder="Notes about location or specific duties"
                   rows="2"
-                  className="w-full rounded-xl border border-slate-200 bg-temple-100 px-3.5 py-2.5 outline-none focus:border-violet-600 font-medium text-slate-800 transition resize-none"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-3.5 py-2.5 outline-none focus:border-violet-600 font-medium text-slate-800 dark:text-slate-200 transition resize-none"
                 />
               </div>
 
@@ -1046,7 +1046,7 @@ const ShiftManagement = () => {
                 <button 
                   type="button" 
                   onClick={() => setShowShiftModal(false)}
-                  className="rounded-xl border border-slate-200 px-4 py-2.5 font-semibold text-slate-600 hover:bg-slate-50 transition"
+                  className="rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-2.5 font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-800/50 transition"
                 >
                   Cancel
                 </button>
@@ -1065,12 +1065,12 @@ const ShiftManagement = () => {
       {/* 5. Assign Shift Modal */}
       {showAssignModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md max-h-[95vh] overflow-y-auto rounded-[32px] border border-slate-200 bg-temple-100 p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+          <div className="w-full max-w-md max-h-[95vh] overflow-y-auto rounded-[32px] border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-lg font-bold text-slate-900">Assign Duty & Shift</h3>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">Assign Duty & Shift</h3>
               <button 
                 onClick={() => setShowAssignModal(false)}
-                className="rounded-xl border border-slate-100 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition"
+                className="rounded-xl border border-slate-100 p-2 text-slate-400 hover:text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-800/50 transition"
               >
                 <FiX size={16} />
               </button>
@@ -1085,11 +1085,11 @@ const ShiftManagement = () => {
               )}
 
               <div>
-                <label className="block text-slate-600 font-semibold mb-1.5">Assignment Type</label>
+                <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1.5">Assignment Type</label>
                 <select
                   value={assignForm.assignmentType}
                   onChange={(e) => setAssignForm({ ...assignForm, assignmentType: e.target.value })}
-                  className="w-full rounded-xl border border-slate-200 bg-temple-100 px-3.5 py-2.5 outline-none font-semibold text-slate-800 transition"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-3.5 py-2.5 outline-none font-semibold text-slate-800 dark:text-slate-200 transition"
                 >
                   {ASSIGNMENT_TYPES.map((type) => (
                     <option key={type} value={type}>
@@ -1100,7 +1100,7 @@ const ShiftManagement = () => {
               </div>
 
               <div>
-                <label className="block text-slate-600 font-semibold mb-1.5">Date</label>
+                <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1.5">Date</label>
                 <input
                   type="date"
                   value={assignForm.date}
@@ -1108,16 +1108,16 @@ const ShiftManagement = () => {
                   onChange={(e) =>
                     setAssignForm({ ...assignForm, date: e.target.value })
                   }
-                  className="w-full rounded-xl border border-slate-200 bg-temple-100 px-3.5 py-2.5 outline-none font-semibold text-slate-850 transition"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-3.5 py-2.5 outline-none font-semibold text-slate-850 transition"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-600 font-semibold mb-1.5">Select Shift Type</label>
+                <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1.5">Select Shift Type</label>
                 <select 
                   value={assignForm.shiftId}
                   onChange={(e) => setAssignForm({ ...assignForm, shiftId: e.target.value })}
-                  className="w-full rounded-xl border border-slate-200 bg-temple-100 px-3.5 py-2.5 outline-none font-semibold text-slate-800 transition"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-3.5 py-2.5 outline-none font-semibold text-slate-800 dark:text-slate-200 transition"
                 >
                   <option value="">-- Select Shift Type --</option>
                   {shifts.map(s => (
@@ -1129,7 +1129,7 @@ const ShiftManagement = () => {
               </div>
 
               <div>
-                <label className="block text-slate-600 font-semibold mb-1.5 flex justify-between">
+                <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1.5 flex justify-between">
                   <span>Select Employee</span>
                   {fetchingAvailable && <span className="text-[10px] text-violet-500 flex items-center gap-1"><FaSpinner className="animate-spin" /> Checking availability...</span>}
                 </label>
@@ -1137,7 +1137,7 @@ const ShiftManagement = () => {
                   value={assignForm.employeeId}
                   onChange={(e) => setAssignForm({ ...assignForm, employeeId: e.target.value })}
                   disabled={!assignForm.date || !assignForm.shiftId || fetchingAvailable}
-                  className="w-full rounded-xl border border-slate-200 bg-temple-100 px-3.5 py-2.5 outline-none font-semibold text-slate-800 transition disabled:opacity-60 disabled:bg-slate-50"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-3.5 py-2.5 outline-none font-semibold text-slate-800 dark:text-slate-200 transition disabled:opacity-60 disabled:bg-slate-50 dark:bg-slate-800/50"
                 >
                   <option value="">
                     {!assignForm.date || !assignForm.shiftId ? "-- Select Date & Shift First --" : "-- Select Available Employee --"}
@@ -1154,7 +1154,7 @@ const ShiftManagement = () => {
               </div>
 
               <div>
-                <label className="block text-slate-600 font-semibold mb-1.5">
+                <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1.5">
                   {isTemporaryShiftChange ? "Shift Note" : "Duty Name"}
                 </label>
                 <input
@@ -1162,12 +1162,12 @@ const ShiftManagement = () => {
                   value={assignForm.dutyName}
                   onChange={(e) => setAssignForm({ ...assignForm, dutyName: e.target.value })}
                   placeholder={isTemporaryShiftChange ? "Optional note for the shift change" : "e.g. Arrange Flowers"}
-                  className="w-full rounded-xl border border-slate-200 bg-temple-100 px-3.5 py-2.5 outline-none font-semibold text-slate-800 transition"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-3.5 py-2.5 outline-none font-semibold text-slate-800 dark:text-slate-200 transition"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-600 font-semibold mb-1.5">
+                <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1.5">
                   {isTemporaryShiftChange ? "Shift Location" : "Duty Area / Location"}
                 </label>
                 <input
@@ -1175,40 +1175,40 @@ const ShiftManagement = () => {
                   value={assignForm.dutyArea}
                   onChange={(e) => setAssignForm({ ...assignForm, dutyArea: e.target.value })}
                   placeholder={isTemporaryShiftChange ? "Optional shift location" : "e.g. Temple Hall"}
-                  className="w-full rounded-xl border border-slate-200 bg-temple-100 px-3.5 py-2.5 outline-none font-semibold text-slate-800 transition"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-3.5 py-2.5 outline-none font-semibold text-slate-800 dark:text-slate-200 transition"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-600 font-semibold mb-1.5">Reason</label>
+                <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1.5">Reason</label>
                 <input
                   type="text"
                   value={assignForm.reason}
                   onChange={(e) => setAssignForm({ ...assignForm, reason: e.target.value })}
                   placeholder="e.g. Special Poojas, Sick Cover"
-                  className="w-full rounded-xl border border-slate-200 bg-temple-100 px-3.5 py-2.5 outline-none font-semibold text-slate-800 transition"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-3.5 py-2.5 outline-none font-semibold text-slate-800 dark:text-slate-200 transition"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-600 font-semibold mb-1.5">Assigned By</label>
+                <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1.5">Assigned By</label>
                 <input
                   type="text"
                   value={assignForm.assignedBy}
                   onChange={(e) => setAssignForm({ ...assignForm, assignedBy: e.target.value })}
                   placeholder="Admin"
-                  className="w-full rounded-xl border border-slate-200 bg-temple-100 px-3.5 py-2.5 outline-none font-semibold text-slate-800 transition"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-3.5 py-2.5 outline-none font-semibold text-slate-800 dark:text-slate-200 transition"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-600 font-semibold mb-1.5">Assignment Notes (Optional)</label>
+                <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1.5">Assignment Notes (Optional)</label>
                 <textarea 
                   value={assignForm.notes}
                   onChange={(e) => setAssignForm({ ...assignForm, notes: e.target.value })}
                   placeholder="Special instructions for the duty"
                   rows="2"
-                  className="w-full rounded-xl border border-slate-200 bg-temple-100 px-3.5 py-2.5 outline-none focus:border-violet-600 font-medium text-slate-800 transition resize-none"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-3.5 py-2.5 outline-none focus:border-violet-600 font-medium text-slate-800 dark:text-slate-200 transition resize-none"
                 />
               </div>
 
@@ -1216,7 +1216,7 @@ const ShiftManagement = () => {
                 <button 
                   type="button" 
                   onClick={() => setShowAssignModal(false)}
-                  className="rounded-xl border border-slate-200 px-4 py-2.5 font-semibold text-slate-600 hover:bg-slate-50 transition"
+                  className="rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-2.5 font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-800/50 transition"
                 >
                   Cancel
                 </button>

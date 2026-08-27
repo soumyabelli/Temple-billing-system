@@ -59,20 +59,20 @@ const AllBookings = () => {
     <div className="mt-5 space-y-4">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <h1 className="text-[42px] leading-tight font-bold text-[#15141f]">All Pooja Bookings</h1>
-          <p className="mt-1 text-[20px] text-[#5d6674]">View complete booking history and detailed records.</p>
+          <h1 className="text-[42px] leading-tight font-bold text-[#15141f] dark:text-slate-100">All Pooja Bookings</h1>
+          <p className="mt-1 text-[20px] text-[#5d6674] dark:text-slate-400">View complete booking history and detailed records.</p>
         </div>
       </div>
 
-      <div className="rounded-2xl border border-[#ece8e1] bg-temple-100 p-5">
+      <div className="rounded-2xl border border-[#ece8e1] dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-4">
           <div className="flex flex-wrap items-center gap-3">
-            <div className="flex h-11 items-center gap-2 rounded-xl border border-[#ece8e1] bg-[#faf9f7] px-3 text-[#858b96]">
+            <div className="flex h-11 items-center gap-2 rounded-xl border border-[#ece8e1] dark:border-slate-700 bg-[#faf9f7] dark:bg-slate-700/50 px-3 text-[#858b96] dark:text-slate-400">
               <MdOutlineSearch size={20} />
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="w-[240px] bg-transparent text-[15px] text-[#242938] outline-none placeholder:text-[#9ca3af]"
+                className="w-[240px] bg-transparent text-[15px] text-[#242938] dark:text-slate-100 outline-none placeholder:text-[#9ca3af]"
                 placeholder="Search ID, Name or Pooja..."
               />
             </div>
@@ -81,7 +81,7 @@ const AllBookings = () => {
             <select
               value={dateFilter}
               onChange={(e) => { setDateFilter(e.target.value); setPage(1); }}
-              className="h-11 rounded-xl border border-[#ece8e1] bg-[#faf9f7] px-3 text-[15px] text-[#4b5563] outline-none"
+              className="h-11 rounded-xl border border-[#ece8e1] dark:border-slate-700 bg-[#faf9f7] dark:bg-slate-700/50 px-3 text-[15px] text-[#4b5563] dark:text-slate-300 outline-none"
             >
               <option value="">All Time</option>
               <option value="Today">Today</option>
@@ -93,7 +93,7 @@ const AllBookings = () => {
 
         <div className="overflow-auto min-h-[400px]">
           <table className="w-full min-w-[920px] text-[15px]">
-            <thead className="bg-[#faf9f7] text-[#2b3240]">
+            <thead className="bg-[#faf9f7] dark:bg-slate-700/50 text-[#2b3240] dark:text-slate-200">
               <tr>
                 <th className="px-4 py-3 text-left font-semibold">Booking ID</th>
                 <th className="px-4 py-3 text-left font-semibold">Devotee</th>
@@ -110,15 +110,15 @@ const AllBookings = () => {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="9" className="py-8 text-center text-gray-500">Loading bookings...</td>
+                  <td colSpan="9" className="py-8 text-center text-gray-500 dark:text-slate-400">Loading bookings...</td>
                 </tr>
               ) : bookings.length === 0 ? (
                 <tr>
-                  <td colSpan="10" className="py-8 text-center text-gray-500">No bookings found.</td>
+                  <td colSpan="10" className="py-8 text-center text-gray-500 dark:text-slate-400">No bookings found.</td>
                 </tr>
               ) : (
                 bookings.map((row) => (
-                  <tr key={row._id} className="border-t border-[#f0ece6] text-[#2f3645]">
+                  <tr key={row._id} className="border-t border-[#f0ece6] dark:border-slate-700 text-[#2f3645] dark:text-slate-300">
                     <td className="px-4 py-3">BK{String(row._id).slice(-6).toUpperCase()}</td>
                     <td className="px-4 py-3 font-medium">{row.devoteeName || row.customerName}</td>
                     <td className="px-4 py-3">{row.service}</td>
@@ -166,22 +166,22 @@ const AllBookings = () => {
         </div>
 
         {!loading && totalPages > 1 && (
-          <div className="mt-4 flex items-center justify-between border-t border-[#f0ece6] pt-4">
-            <span className="text-sm text-[#5d6674]">
-              Page <span className="font-semibold text-[#15141f]">{page}</span> of <span className="font-semibold text-[#15141f]">{totalPages}</span>
+          <div className="mt-4 flex items-center justify-between border-t border-[#f0ece6] dark:border-slate-700 pt-4">
+            <span className="text-sm text-[#5d6674] dark:text-slate-400">
+              Page <span className="font-semibold text-[#15141f] dark:text-slate-100">{page}</span> of <span className="font-semibold text-[#15141f] dark:text-slate-100">{totalPages}</span>
             </span>
             <div className="flex items-center gap-2">
               <button
                 disabled={page === 1}
                 onClick={() => setPage(page - 1)}
-                className="flex items-center gap-1 rounded-lg border border-[#e5e7eb] px-3 py-1.5 text-sm font-medium text-[#374151] hover:bg-[#f9fafb] disabled:opacity-50"
+                className="flex items-center gap-1 rounded-lg border border-[#e5e7eb] px-3 py-1.5 text-sm font-medium text-[#374151] dark:text-slate-300 hover:bg-[#f9fafb] disabled:opacity-50"
               >
                 <MdChevronLeft size={18} /> Previous
               </button>
               <button
                 disabled={page === totalPages}
                 onClick={() => setPage(page + 1)}
-                className="flex items-center gap-1 rounded-lg border border-[#e5e7eb] px-3 py-1.5 text-sm font-medium text-[#374151] hover:bg-[#f9fafb] disabled:opacity-50"
+                className="flex items-center gap-1 rounded-lg border border-[#e5e7eb] px-3 py-1.5 text-sm font-medium text-[#374151] dark:text-slate-300 hover:bg-[#f9fafb] disabled:opacity-50"
               >
                 Next <MdChevronRight size={18} />
               </button>

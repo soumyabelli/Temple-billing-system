@@ -11,10 +11,10 @@ import { useAuth } from "../../context/AuthContext";
 import { changePassword } from "../../services/authService";
 
 const fieldClass =
-  "h-9 w-full rounded-lg border border-[#ece8e1] bg-[#faf9f7] px-3 text-sm text-[#202632] outline-none transition focus:border-[#ff8b00]";
+  "h-9 w-full rounded-lg border border-[#ece8e1] dark:border-slate-700 bg-[#faf9f7] dark:bg-slate-700/50 px-3 text-sm text-[#202632] outline-none transition focus:border-[#ff8b00]";
 
 const sectionClass =
-  "rounded-2xl border border-[#ece8e1] bg-[#fffdfb] p-5 shadow-sm";
+  "rounded-2xl border border-[#ece8e1] dark:border-slate-700 bg-[#fffdfb] p-5 shadow-sm";
 
 const sectionTitleClass =
   "text-[20px] font-bold text-[#17151f]";
@@ -28,7 +28,7 @@ const Toggle = ({ checked, onChange }) => (
       className="peer sr-only"
     />
     <span className="h-6 w-11 rounded-full bg-[#d7dbe1] transition peer-checked:bg-[#ff8b00]" />
-    <span className="absolute left-0.5 h-5 w-5 rounded-full bg-temple-100 transition peer-checked:translate-x-5" />
+    <span className="absolute left-0.5 h-5 w-5 rounded-full bg-temple-100 dark:bg-slate-800 transition peer-checked:translate-x-5" />
   </label>
 );
 
@@ -183,7 +183,7 @@ const SettingsManagement = () => {
             <textarea
               value={templeAddress}
               onChange={(e) => setTempleAddress(e.target.value)}
-              className="w-full rounded-lg border border-[#ece8e1] bg-[#faf9f7] px-3 py-2 text-sm text-[#202632] outline-none transition focus:border-[#ff8b00]"
+              className="w-full rounded-lg border border-[#ece8e1] dark:border-slate-700 bg-[#faf9f7] dark:bg-slate-700/50 px-3 py-2 text-sm text-[#202632] outline-none transition focus:border-[#ff8b00]"
               rows={2}
             />
 
@@ -211,7 +211,7 @@ const SettingsManagement = () => {
             <div className="pt-1">
               <p className="mb-2">Temple Logo</p>
               <div className="flex items-center gap-3">
-                <div className="flex h-14 w-14 overflow-hidden items-center justify-center rounded-full border border-[#ece8e1] bg-orange-50 text-[#ff8b00]">
+                <div className="flex h-14 w-14 overflow-hidden items-center justify-center rounded-full border border-[#ece8e1] dark:border-slate-700 bg-orange-50 text-[#ff8b00]">
                   {templeLogo ? (
                     <img src={templeLogo} alt="Temple Logo" className="h-full w-full object-cover" />
                   ) : (
@@ -355,7 +355,7 @@ const SettingsManagement = () => {
               </button>
               <button
                 onClick={handleResetPassword}
-                className="h-10 flex-1 rounded-lg border border-[#ece8e1] text-sm font-semibold text-[#4b5563] hover:bg-gray-50"
+                className="h-10 flex-1 rounded-lg border border-[#ece8e1] dark:border-slate-700 text-sm font-semibold text-[#4b5563] dark:text-slate-300 hover:bg-gray-50 dark:bg-slate-800/50"
               >
                 Reset Password
               </button>
@@ -424,7 +424,7 @@ const SettingsManagement = () => {
           </h3>
 
           <div className="mt-3 flex items-center gap-3">
-            <div className="h-20 w-20 overflow-hidden rounded-full border border-[#ece8e1] bg-[#f8f5ef]">
+            <div className="h-20 w-20 overflow-hidden rounded-full border border-[#ece8e1] dark:border-slate-700 bg-[#f8f5ef]">
               {avatarSrc ? (
                 <img
                   src={avatarSrc}

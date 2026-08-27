@@ -328,10 +328,10 @@ const ProfitLossView = ({ hideHeader = false }) => {
         <div className="mb-6 rounded-3xl border border-amber-200 dark:border-amber-700/50/60 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-600/10 p-6 backdrop-blur-md shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#4a2b0f]">
+              <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#4a2b0f] dark:text-amber-100">
                 Profit & Loss
               </h1>
-              <p className="mt-1 text-base font-medium text-[#7a4918]">
+              <p className="mt-1 text-base font-medium text-[#7a4918] dark:text-amber-200/80">
                 Live financial overview of Income vs Expenses with date filtering and interactive analytics.
               </p>
             </div>

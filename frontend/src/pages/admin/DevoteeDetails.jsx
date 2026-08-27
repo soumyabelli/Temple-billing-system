@@ -24,29 +24,29 @@ const DevoteeDetails = ({ darkMode, devotee, bookings = [], donations = [], onBa
       </div>
 
       <div className="grid grid-cols-1 gap-3 xl:grid-cols-4">
-        <div className={`rounded-2xl border p-4 xl:col-span-2 ${darkMode ? "bg-[#1f2937] border-[#334155]" : "bg-temple-100 border-[#ece8e1]"}`}>
+        <div className={`rounded-2xl border p-4 xl:col-span-2 ${darkMode ? "bg-[#1f2937] border-[#334155]" : "bg-temple-100 dark:bg-slate-800 border-[#ece8e1] dark:border-slate-700"}`}>
           <h2 className={`text-[28px] font-bold ${darkMode ? "text-slate-100" : "text-[#17151f]"}`}>{devoteeName}</h2>
-          <p className={`${darkMode ? "text-slate-300" : "text-gray-700"}`}>{devoteeEmail}</p>
-          <p className={`mt-2 text-sm ${darkMode ? "text-slate-300" : "text-gray-600"}`}>Role: {devotee?.role || "devotee"}</p>
+          <p className={`${darkMode ? "text-slate-300" : "text-gray-700 dark:text-slate-300"}`}>{devoteeEmail}</p>
+          <p className={`mt-2 text-sm ${darkMode ? "text-slate-300" : "text-gray-600 dark:text-slate-400"}`}>Role: {devotee?.role || "devotee"}</p>
         </div>
 
-        <div className={`rounded-2xl border p-4 ${darkMode ? "bg-[#1f2937] border-[#334155]" : "bg-temple-100 border-[#ece8e1]"}`}>
-          <p className={`${darkMode ? "text-slate-300" : "text-gray-500"} text-sm`}>Total Bookings</p>
+        <div className={`rounded-2xl border p-4 ${darkMode ? "bg-[#1f2937] border-[#334155]" : "bg-temple-100 dark:bg-slate-800 border-[#ece8e1] dark:border-slate-700"}`}>
+          <p className={`${darkMode ? "text-slate-300" : "text-gray-500 dark:text-slate-400"} text-sm`}>Total Bookings</p>
           <p className={`text-[36px] font-bold ${darkMode ? "text-slate-100" : "text-[#17151f]"}`}>{devoteeBookings.length}</p>
         </div>
 
-        <div className={`rounded-2xl border p-4 ${darkMode ? "bg-[#1f2937] border-[#334155]" : "bg-temple-100 border-[#ece8e1]"}`}>
-          <p className={`${darkMode ? "text-slate-300" : "text-gray-500"} text-sm`}>Total Donations</p>
+        <div className={`rounded-2xl border p-4 ${darkMode ? "bg-[#1f2937] border-[#334155]" : "bg-temple-100 dark:bg-slate-800 border-[#ece8e1] dark:border-slate-700"}`}>
+          <p className={`${darkMode ? "text-slate-300" : "text-gray-500 dark:text-slate-400"} text-sm`}>Total Donations</p>
           <p className={`text-[30px] font-bold ${darkMode ? "text-slate-100" : "text-[#17151f]"}`}>{formatCurrency(totalDonation)}</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-        <div className={`rounded-2xl border p-4 ${darkMode ? "bg-[#1f2937] border-[#334155]" : "bg-temple-100 border-[#ece8e1]"}`}>
+        <div className={`rounded-2xl border p-4 ${darkMode ? "bg-[#1f2937] border-[#334155]" : "bg-temple-100 dark:bg-slate-800 border-[#ece8e1] dark:border-slate-700"}`}>
           <h3 className={`text-[22px] font-bold mb-3 ${darkMode ? "text-slate-100" : "text-[#17151f]"}`}>Bookings</h3>
           <div className="overflow-auto">
             <table className="w-full min-w-[520px] text-sm">
-              <thead className={`${darkMode ? "text-slate-300" : "text-gray-600"}`}>
+              <thead className={`${darkMode ? "text-slate-300" : "text-gray-600 dark:text-slate-400"}`}>
                 <tr>
                   <th className="py-2 text-left">Service</th>
                   <th className="py-2 text-left">Date/Time</th>
@@ -56,7 +56,7 @@ const DevoteeDetails = ({ darkMode, devotee, bookings = [], donations = [], onBa
               </thead>
               <tbody>
                 {devoteeBookings.map((row) => (
-                  <tr key={row._id} className={`border-t ${darkMode ? "border-[#334155] text-slate-300" : "border-[#f1ede6] text-gray-700"}`}>
+                  <tr key={row._id} className={`border-t ${darkMode ? "border-[#334155] text-slate-300" : "border-[#f1ede6] text-gray-700 dark:text-slate-300"}`}>
                     <td className="py-2">{row.service}</td>
                     <td className="py-2">{row.datetime}</td>
                     <td className="py-2">{formatCurrency(row.amount)}</td>
@@ -68,11 +68,11 @@ const DevoteeDetails = ({ darkMode, devotee, bookings = [], donations = [], onBa
           </div>
         </div>
 
-        <div className={`rounded-2xl border p-4 ${darkMode ? "bg-[#1f2937] border-[#334155]" : "bg-temple-100 border-[#ece8e1]"}`}>
+        <div className={`rounded-2xl border p-4 ${darkMode ? "bg-[#1f2937] border-[#334155]" : "bg-temple-100 dark:bg-slate-800 border-[#ece8e1] dark:border-slate-700"}`}>
           <h3 className={`text-[22px] font-bold mb-3 ${darkMode ? "text-slate-100" : "text-[#17151f]"}`}>Donations / Receipts</h3>
           <div className="overflow-auto">
             <table className="w-full min-w-[520px] text-sm">
-              <thead className={`${darkMode ? "text-slate-300" : "text-gray-600"}`}>
+              <thead className={`${darkMode ? "text-slate-300" : "text-gray-600 dark:text-slate-400"}`}>
                 <tr>
                   <th className="py-2 text-left">Type</th>
                   <th className="py-2 text-left">Date</th>
@@ -82,7 +82,7 @@ const DevoteeDetails = ({ darkMode, devotee, bookings = [], donations = [], onBa
               </thead>
               <tbody>
                 {devoteeDonations.map((row) => (
-                  <tr key={row._id} className={`border-t ${darkMode ? "border-[#334155] text-slate-300" : "border-[#f1ede6] text-gray-700"}`}>
+                  <tr key={row._id} className={`border-t ${darkMode ? "border-[#334155] text-slate-300" : "border-[#f1ede6] text-gray-700 dark:text-slate-300"}`}>
                     <td className="py-2">{row.category || "Donation"}</td>
                     <td className="py-2">{new Date(row.createdAt).toLocaleDateString()}</td>
                     <td className="py-2">{formatCurrency(row.amount)}</td>

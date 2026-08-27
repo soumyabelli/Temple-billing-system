@@ -32,7 +32,7 @@ const DonorManagement = () => {
         </SectionCard>
 
         <SectionCard title="Contact Insights" subtitle="Store donor contact details and festival participation history.">
-          <div className="rounded-[28px] border border-white/10 bg-temple-100/5 p-5 text-slate-200">
+          <div className="rounded-[28px] border border-white/10 bg-temple-100 dark:bg-slate-800/5 p-5 text-slate-200">
             <p className="text-sm text-amber-200">Donor profiles contain address, phone, email and receipt history.</p>
             <ul className="mt-4 space-y-3 text-slate-300">
               <li>Top donor badges for festival sponsors.</li>

@@ -136,9 +136,9 @@ const LeaveManagement = () => {
       >
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
           {leaveTiles.map((tile) => (
-            <div key={tile.title} className="rounded-[28px] border border-amber-200/60 bg-white p-5 shadow-xs">
+            <div key={tile.title} className="rounded-[28px] border border-amber-200/60 bg-white dark:bg-slate-800 p-5 shadow-xs">
               <p className="text-xs font-black uppercase tracking-wider text-amber-800">{tile.title}</p>
-              <p className="mt-3 text-3xl font-black text-slate-900">{tile.value}</p>
+              <p className="mt-3 text-3xl font-black text-slate-900 dark:text-slate-100">{tile.value}</p>
             </div>
           ))}
         </div>
@@ -148,9 +148,9 @@ const LeaveManagement = () => {
 
       <div className="grid gap-5 xl:grid-cols-[1.4fr_0.8fr]">
         <SectionCard title="Leave Requests" subtitle="Review pending requests and update approval status." className="overflow-hidden">
-          <div className="overflow-x-auto rounded-[28px] border border-slate-200 bg-temple-100 shadow-sm">
-            <table className="min-w-full text-left text-sm text-slate-600">
-              <thead className="bg-slate-100 text-slate-500">
+          <div className="overflow-x-auto rounded-[28px] border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 shadow-sm">
+            <table className="min-w-full text-left text-sm text-slate-600 dark:text-slate-400">
+              <thead className="bg-slate-100 text-slate-500 dark:text-slate-400">
                 <tr>
                   <th className="px-5 py-4">Employee</th>
                   <th className="px-5 py-4">Reason</th>
@@ -165,13 +165,13 @@ const LeaveManagement = () => {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan="8" className="px-5 py-6 text-center text-slate-500">
+                    <td colSpan="8" className="px-5 py-6 text-center text-slate-500 dark:text-slate-400">
                       Loading leave requests...
                     </td>
                   </tr>
                 ) : leaves.length === 0 ? (
                   <tr>
-                    <td colSpan="8" className="px-5 py-6 text-center text-slate-500">
+                    <td colSpan="8" className="px-5 py-6 text-center text-slate-500 dark:text-slate-400">
                       No leave requests found
                     </td>
                   </tr>
@@ -180,8 +180,8 @@ const LeaveManagement = () => {
                     const statusClass = statusClasses[leave.status] || statusClasses.Pending;
                     const days = getLeaveDays(leave.fromDate, leave.toDate);
                     return (
-                      <tr key={leave._id} className="border-b border-slate-200 hover:bg-slate-50">
-                        <td className="px-5 py-4 font-semibold text-slate-900">{leave.staffName}</td>
+                      <tr key={leave._id} className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:bg-slate-800/50">
+                        <td className="px-5 py-4 font-semibold text-slate-900 dark:text-slate-100">{leave.staffName}</td>
                         <td className="px-5 py-4">{leave.reason}</td>
                         <td className="px-5 py-4">{leave.leaveType || "General"}</td>
                         <td className="px-5 py-4">{days}</td>
@@ -211,7 +211,7 @@ const LeaveManagement = () => {
                               </button>
                             </div>
                           ) : (
-                            <span className="text-xs text-slate-500">{leave.reviewedBy ? `By ${leave.reviewedBy}` : "Action completed"}</span>
+                            <span className="text-xs text-slate-500 dark:text-slate-400">{leave.reviewedBy ? `By ${leave.reviewedBy}` : "Action completed"}</span>
                           )}
                         </td>
                       </tr>
@@ -226,18 +226,18 @@ const LeaveManagement = () => {
         <SectionCard title="Upcoming Leaves" subtitle="Recently approved employee leaves." className="overflow-hidden">
           <div className="space-y-4">
             {approvedUpcomingLeaves.length === 0 ? (
-              <div className="rounded-[22px] border border-slate-200 bg-temple-100 p-4 text-sm text-slate-500">No approved leaves yet.</div>
+              <div className="rounded-[22px] border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-4 text-sm text-slate-500 dark:text-slate-400">No approved leaves yet.</div>
             ) : (
               approvedUpcomingLeaves.map((leave) => (
-                <div key={leave.id} className="rounded-[22px] border border-slate-200 bg-temple-100 p-4 shadow-sm">
+                <div key={leave.id} className="rounded-[22px] border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-4 shadow-sm">
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <p className="font-semibold text-slate-900">{leave.name}</p>
-                      <p className="text-sm text-slate-500">
+                      <p className="font-semibold text-slate-900 dark:text-slate-100">{leave.name}</p>
+                      <p className="text-sm text-slate-500 dark:text-slate-400">
                         {leave.type} - {leave.period}
                       </p>
                     </div>
-                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">{leave.days} days</span>
+                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 dark:text-slate-300">{leave.days} days</span>
                   </div>
                 </div>
               ))

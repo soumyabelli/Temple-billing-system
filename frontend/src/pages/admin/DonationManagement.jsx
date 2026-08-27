@@ -78,7 +78,7 @@ const DonationManagement = () => {
   };
 
   return (
-    <div className="space-y-6 mt-5 text-slate-800">
+    <div className="space-y-6 mt-5 text-slate-800 dark:text-slate-200">
       {/* TEMPLE HERO BANNER */}
       <div className="relative overflow-hidden rounded-[32px] border border-amber-200/60 bg-gradient-to-r from-amber-500/15 via-orange-500/15 to-amber-600/15 p-8 text-[#4a2b0f] shadow-sm backdrop-blur-md">
         <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
@@ -108,10 +108,10 @@ const DonationManagement = () => {
         <div className="grid gap-6">
           <DonationFilters categories={categories} onApplyFilters={handleApplyFilters} />
 
-          <div className="rounded-[32px] border border-amber-200/60 bg-temple-100 p-6 shadow-md backdrop-blur-lg">
+          <div className="rounded-[32px] border border-amber-200/60 bg-temple-100 dark:bg-slate-800 p-6 shadow-md backdrop-blur-lg">
             <p className="text-xs uppercase tracking-[0.28em] font-extrabold text-amber-700">Donation Types</p>
-            <h2 className="mt-2 text-2xl font-black text-slate-800">Manage Donation Categories</h2>
-            <p className="mt-2 text-slate-600 text-sm font-semibold">
+            <h2 className="mt-2 text-2xl font-black text-slate-800 dark:text-slate-200">Manage Donation Categories</h2>
+            <p className="mt-2 text-slate-600 dark:text-slate-400 text-sm font-semibold">
               Admin-defined donation types are stored centrally and reflected across Add Donation, filters, reports and tables.
             </p>
             <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">

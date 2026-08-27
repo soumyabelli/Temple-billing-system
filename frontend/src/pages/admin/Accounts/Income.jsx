@@ -72,7 +72,7 @@ const Income = () => {
   const sources = ["All Income", "Donation", "Pooja Booking", "Prasadam", "Room Booking", "Inventory", "Other Income"];
 
   return (
-    <div className="p-4 md:p-8 bg-[#faf9f7] min-h-screen font-sans">
+    <div className="p-4 md:p-8 bg-[#faf9f7] dark:bg-slate-700/50 min-h-screen font-sans">
       <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-[#1d1b19]">Income</h1>
@@ -89,7 +89,7 @@ const Income = () => {
             className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${
               filterSource === src
                 ? "bg-[#ff8b00] text-white border-[#ff8b00]"
-                : "bg-temple-100 text-slate-600 border-slate-200 hover:bg-slate-50"
+                : "bg-temple-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:bg-slate-800/50"
             }`}
           >
             {src}
@@ -99,11 +99,11 @@ const Income = () => {
 
       {/* Controls */}
       <div className="flex flex-wrap items-center gap-4 mb-6">
-        <div className="flex items-center gap-2 bg-temple-100 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-600">
+        <div className="flex items-center gap-2 bg-temple-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-600 dark:text-slate-400">
           <span className="text-slate-400">01/07/2026 - 27/07/2026</span>
         </div>
         <select 
-          className="bg-temple-100 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-600 outline-none"
+          className="bg-temple-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-600 dark:text-slate-400 outline-none"
           value={paymentMethod}
           onChange={(e) => { setPaymentMethod(e.target.value); setCurrentPage(1); }}
         >
@@ -113,7 +113,7 @@ const Income = () => {
           <option>Card</option>
           <option>Bank Transfer</option>
         </select>
-        <div className="flex items-center bg-temple-100 border border-slate-200 rounded-lg px-3 py-2 flex-grow max-w-md">
+        <div className="flex items-center bg-temple-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 flex-grow max-w-md">
           <FiSearch className="text-slate-400 mr-2" />
           <input
             type="text"
@@ -123,7 +123,7 @@ const Income = () => {
             onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
           />
         </div>
-        <button className="flex items-center gap-2 bg-temple-100 border border-slate-200 text-slate-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-50 ml-auto">
+        <button className="flex items-center gap-2 bg-temple-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-50 dark:bg-slate-800/50 ml-auto">
           <FiFilter /> Filter
         </button>
         <button className="flex items-center gap-2 bg-[#ff8b00] hover:bg-[#e67a00] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm">
@@ -133,46 +133,46 @@ const Income = () => {
 
       {/* Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
-        <div className="bg-temple-100 p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+        <div className="bg-temple-100 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-between">
           <div>
-            <p className="text-xs text-slate-500 font-medium mb-1">Total Income</p>
-            <p className="text-xl font-bold text-slate-800">₹{totalIncome.toLocaleString("en-IN")}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-1">Total Income</p>
+            <p className="text-xl font-bold text-slate-800 dark:text-slate-200">₹{totalIncome.toLocaleString("en-IN")}</p>
           </div>
           <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-500">
             <BiTrendingUp size={20} />
           </div>
         </div>
-        <div className="bg-temple-100 p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+        <div className="bg-temple-100 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-between">
           <div>
-            <p className="text-xs text-slate-500 font-medium mb-1">Cash Income</p>
-            <p className="text-xl font-bold text-slate-800">₹{cashIncome.toLocaleString("en-IN")}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-1">Cash Income</p>
+            <p className="text-xl font-bold text-slate-800 dark:text-slate-200">₹{cashIncome.toLocaleString("en-IN")}</p>
           </div>
           <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center text-green-500">
             <BiMoney size={20} />
           </div>
         </div>
-        <div className="bg-temple-100 p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+        <div className="bg-temple-100 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-between">
           <div>
-            <p className="text-xs text-slate-500 font-medium mb-1">UPI Income</p>
-            <p className="text-xl font-bold text-slate-800">₹{upiIncome.toLocaleString("en-IN")}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-1">UPI Income</p>
+            <p className="text-xl font-bold text-slate-800 dark:text-slate-200">₹{upiIncome.toLocaleString("en-IN")}</p>
           </div>
           <div className="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center text-purple-500">
             <MdOutlineAccountBalanceWallet size={20} />
           </div>
         </div>
-        <div className="bg-temple-100 p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+        <div className="bg-temple-100 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-between">
           <div>
-            <p className="text-xs text-slate-500 font-medium mb-1">Card Income</p>
-            <p className="text-xl font-bold text-slate-800">₹{cardIncome.toLocaleString("en-IN")}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-1">Card Income</p>
+            <p className="text-xl font-bold text-slate-800 dark:text-slate-200">₹{cardIncome.toLocaleString("en-IN")}</p>
           </div>
           <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-500">
             <BiCreditCard size={20} />
           </div>
         </div>
-        <div className="bg-temple-100 p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+        <div className="bg-temple-100 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-between">
           <div>
-            <p className="text-xs text-slate-500 font-medium mb-1">Bank Transfer</p>
-            <p className="text-xl font-bold text-slate-800">₹{bankTransfer.toLocaleString("en-IN")}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-1">Bank Transfer</p>
+            <p className="text-xl font-bold text-slate-800 dark:text-slate-200">₹{bankTransfer.toLocaleString("en-IN")}</p>
           </div>
           <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center text-red-500">
             <BiTransfer size={20} />
@@ -181,13 +181,13 @@ const Income = () => {
       </div>
 
       {/* Table */}
-      <div className="bg-temple-100 rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-200">
-          <h2 className="text-lg font-bold text-slate-800">Income Transactions</h2>
+      <div className="bg-temple-100 dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+          <h2 className="text-lg font-bold text-slate-800 dark:text-slate-200">Income Transactions</h2>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-slate-600">
-            <thead className="bg-slate-50 text-xs uppercase font-medium text-slate-500">
+          <table className="w-full text-left text-sm text-slate-600 dark:text-slate-400">
+            <thead className="bg-slate-50 dark:bg-slate-800/50 text-xs uppercase font-medium text-slate-500 dark:text-slate-400">
               <tr>
                 <th className="px-6 py-3">Date</th>
                 <th className="px-6 py-3">Source</th>
@@ -209,16 +209,16 @@ const Income = () => {
                 </tr>
               ) : (
                 paginatedData.map((t) => (
-                  <tr key={t._id} className="hover:bg-slate-50">
+                  <tr key={t._id} className="hover:bg-slate-50 dark:bg-slate-800/50">
                     <td className="px-6 py-3 whitespace-nowrap">{new Date(t.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
                     <td className="px-6 py-3">{t.source}</td>
                     <td className="px-6 py-3">{t.category}</td>
                     <td className="px-6 py-3">{t.paymentMethod || "System"}</td>
                     <td className="px-6 py-3">{`${t.source.substring(0, 3).toUpperCase()}/2026/${t._id.substring(t._id.length - 3)}`}</td>
-                    <td className="px-6 py-3 text-right font-medium text-slate-700">{t.amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+                    <td className="px-6 py-3 text-right font-medium text-slate-700 dark:text-slate-300">{t.amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
                     <td className="px-6 py-3 text-center">
                       <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                        t.status === "Completed" || t.status === "Approved" ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-800"
+                        t.status === "Completed" || t.status === "Approved" ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-800 dark:text-slate-200"
                       }`}>
                         {t.status}
                       </span>
@@ -231,15 +231,15 @@ const Income = () => {
         </div>
         
         {/* Pagination */}
-        <div className="px-6 py-4 border-t border-slate-200 flex items-center justify-between">
-          <p className="text-sm text-slate-500">
+        <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
             Showing {Math.min((currentPage - 1) * itemsPerPage + 1, filteredData.length)} to {Math.min(currentPage * itemsPerPage, filteredData.length)} of {filteredData.length} entries
           </p>
           <div className="flex gap-1">
             <button 
               disabled={currentPage === 1}
               onClick={() => setCurrentPage(p => p - 1)}
-              className="p-1 rounded-md border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-50"
+              className="p-1 rounded-md border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-800/50 disabled:opacity-50"
             >
               <FiChevronLeft size={18} />
             </button>
@@ -253,7 +253,7 @@ const Income = () => {
                     ? "bg-[#ff8b00] text-white border border-[#ff8b00]" 
                     : page === '...'
                     ? "text-slate-400 cursor-default"
-                    : "border border-slate-200 text-slate-600 hover:bg-slate-50"
+                    : "border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-800/50"
                 }`}
               >
                 {page}
@@ -262,7 +262,7 @@ const Income = () => {
             <button 
               disabled={currentPage === totalPages || totalPages === 0}
               onClick={() => setCurrentPage(p => p + 1)}
-              className="p-1 rounded-md border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-50"
+              className="p-1 rounded-md border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-800/50 disabled:opacity-50"
             >
               <FiChevronRight size={18} />
             </button>

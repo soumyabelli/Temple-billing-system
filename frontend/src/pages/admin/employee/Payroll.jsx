@@ -169,13 +169,13 @@ const Payroll = () => {
               type="month"
               value={monthKey}
               onChange={(event) => setMonthKey(event.target.value)}
-              className="ml-3 rounded-2xl border border-slate-300 bg-white px-4 py-2 text-slate-800 font-semibold shadow-xs outline-none focus:border-amber-500"
+              className="ml-3 rounded-2xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-slate-800 dark:text-slate-200 font-semibold shadow-xs outline-none focus:border-amber-500"
             />
           </label>
         </div>
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
           {summaryTiles.map((tile) => (
-            <div key={tile.title} className={`rounded-[28px] border border-white/10 px-5 py-6 ${tile.accent} bg-temple-100/10 shadow-xl shadow-slate-900/10`}>
+            <div key={tile.title} className={`rounded-[28px] border border-white/10 px-5 py-6 ${tile.accent} bg-temple-100 dark:bg-slate-800/10 shadow-xl shadow-slate-900/10`}>
               <p className="text-sm uppercase tracking-[0.16em] text-slate-100/70">{tile.title}</p>
               <p className="mt-4 text-3xl font-semibold text-white">{tile.value}</p>
             </div>
@@ -190,9 +190,9 @@ const Payroll = () => {
       <div className="grid gap-5 xl:grid-cols-[1.7fr_0.9fr]">
         <div className="space-y-5">
           <SectionCard title="Payroll Table" subtitle="Salary calculated from present, absent, leave, and admin-entered extra duty pay." className="overflow-hidden">
-            <div className="overflow-x-auto rounded-[28px] border border-slate-200 bg-temple-100 shadow-sm">
-              <table className="min-w-full text-left text-sm text-slate-600">
-                <thead className="bg-slate-100 text-slate-500">
+            <div className="overflow-x-auto rounded-[28px] border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 shadow-sm">
+              <table className="min-w-full text-left text-sm text-slate-600 dark:text-slate-400">
+                <thead className="bg-slate-100 text-slate-500 dark:text-slate-400">
                   <tr>
                     <th className="px-5 py-4">Employee</th>
                     <th className="px-5 py-4">Present</th>
@@ -210,11 +210,11 @@ const Payroll = () => {
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan="11" className="px-5 py-8 text-center text-slate-500">Loading payroll records…</td>
+                      <td colSpan="11" className="px-5 py-8 text-center text-slate-500 dark:text-slate-400">Loading payroll records…</td>
                     </tr>
                   ) : (dashboard?.employees || []).length === 0 ? (
                     <tr>
-                      <td colSpan="11" className="px-5 py-8 text-center text-slate-500">No employee payroll records found.</td>
+                      <td colSpan="11" className="px-5 py-8 text-center text-slate-500 dark:text-slate-400">No employee payroll records found.</td>
                     </tr>
                   ) : (
                     dashboard.employees.map((employee) => {
@@ -222,10 +222,10 @@ const Payroll = () => {
                       const isPaid = employee.status === "Paid";
                       const previewNetSalary = isPaid ? employee.netSalary : computeNetSalary(employee, form);
                       return (
-                        <tr key={employee.employeeId} className="border-b border-slate-200 hover:bg-slate-50">
+                        <tr key={employee.employeeId} className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:bg-slate-800/50">
                           <td className="px-5 py-4">
-                            <p className="font-semibold text-slate-900">{employee.employeeName}</p>
-                            <p className="text-xs text-slate-500">{employee.department}</p>
+                            <p className="font-semibold text-slate-900 dark:text-slate-100">{employee.employeeName}</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">{employee.department}</p>
                           </td>
                           <td className="px-5 py-4">{employee.presentDays}</td>
                           <td className="px-5 py-4">{employee.absentDays}</td>
@@ -239,7 +239,7 @@ const Payroll = () => {
                               disabled={isPaid || employee.extraDutyDays === 0}
                               value={form.extraDutyPay ?? employee.extraDutyPay ?? 0}
                               onChange={(event) => updatePaymentForm(employee.employeeId, "extraDutyPay", event.target.value)}
-                              className="w-24 rounded-lg border border-slate-200 px-2 py-1"
+                              className="w-24 rounded-lg border border-slate-200 dark:border-slate-700 px-2 py-1"
                               title={employee.extraDutyDays === 0 ? "No extra duty this month" : "Enter extra duty pay amount"}
                             />
                           </td>
@@ -250,25 +250,25 @@ const Payroll = () => {
                               disabled={isPaid}
                               value={form.bonus ?? employee.bonus ?? 0}
                               onChange={(event) => updatePaymentForm(employee.employeeId, "bonus", event.target.value)}
-                              className="w-24 rounded-lg border border-slate-200 px-2 py-1"
+                              className="w-24 rounded-lg border border-slate-200 dark:border-slate-700 px-2 py-1"
                             />
                           </td>
-                          <td className="px-5 py-4 font-semibold text-slate-900">{formatCurrency(previewNetSalary)}</td>
+                          <td className="px-5 py-4 font-semibold text-slate-900 dark:text-slate-100">{formatCurrency(previewNetSalary)}</td>
                           <td className="px-5 py-4">
                             <span className={`rounded-full px-3 py-1 text-xs font-semibold ${isPaid ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
                               {employee.status}
                             </span>
-                            {isPaid ? <p className="mt-1 text-xs text-slate-500">{employee.paymentMethod}</p> : null}
+                            {isPaid ? <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{employee.paymentMethod}</p> : null}
                           </td>
                           <td className="px-5 py-4">
                             {isPaid ? (
-                              <span className="text-xs text-slate-500">{employee.transactionId || "Paid"}</span>
+                              <span className="text-xs text-slate-500 dark:text-slate-400">{employee.transactionId || "Paid"}</span>
                             ) : (
                               <div className="flex min-w-[220px] flex-col gap-2">
                                 <select
                                   value={form.paymentMethod || "Bank Transfer"}
                                   onChange={(event) => updatePaymentForm(employee.employeeId, "paymentMethod", event.target.value)}
-                                  className="rounded-lg border border-slate-200 px-2 py-1 text-xs"
+                                  className="rounded-lg border border-slate-200 dark:border-slate-700 px-2 py-1 text-xs"
                                 >
                                   {PAYMENT_METHODS.map((method) => (
                                     <option key={method} value={method}>{method}</option>
@@ -279,7 +279,7 @@ const Payroll = () => {
                                   placeholder="Transaction ID"
                                   value={form.transactionId || ""}
                                   onChange={(event) => updatePaymentForm(employee.employeeId, "transactionId", event.target.value)}
-                                  className="rounded-lg border border-slate-200 px-2 py-1 text-xs"
+                                  className="rounded-lg border border-slate-200 dark:border-slate-700 px-2 py-1 text-xs"
                                 />
                                 <button
                                   type="button"
@@ -306,16 +306,16 @@ const Payroll = () => {
           <SectionCard title="Growth by Department" subtitle="Payroll allocation by team." className="overflow-hidden">
             <div className="space-y-4">
               {(dashboard?.departmentBreakdown || []).length === 0 ? (
-                <p className="text-sm text-slate-500">No department payroll data yet.</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">No department payroll data yet.</p>
               ) : (
                 dashboard.departmentBreakdown.map((item) => (
-                  <div key={item.name} className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
+                  <div key={item.name} className="rounded-[22px] border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4">
                     <div className="flex items-center justify-between gap-3">
                       <div>
-                        <p className="font-semibold text-slate-900">{item.name}</p>
-                        <p className="text-sm text-slate-500">Salary cost</p>
+                        <p className="font-semibold text-slate-900 dark:text-slate-100">{item.name}</p>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">Salary cost</p>
                       </div>
-                      <p className="font-semibold text-slate-900">{formatCurrency(item.value)}</p>
+                      <p className="font-semibold text-slate-900 dark:text-slate-100">{formatCurrency(item.value)}</p>
                     </div>
                   </div>
                 ))
@@ -326,14 +326,14 @@ const Payroll = () => {
           <SectionCard title="Upcoming Salary Dates" subtitle="Employees with pending salary for this month." className="overflow-hidden">
             <div className="grid gap-4">
               {(dashboard?.upcomingPayments || []).length === 0 ? (
-                <p className="text-sm text-slate-500">All salaries are paid for this month.</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">All salaries are paid for this month.</p>
               ) : (
                 dashboard.upcomingPayments.map((item) => (
-                  <div key={item.employeeId} className="rounded-[22px] border border-slate-200 bg-temple-100 p-4 shadow-sm">
+                  <div key={item.employeeId} className="rounded-[22px] border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-4 shadow-sm">
                     <div className="flex items-center justify-between gap-3">
                       <div>
-                        <p className="font-semibold text-slate-900">{item.name}</p>
-                        <p className="text-sm text-slate-500">{item.role}</p>
+                        <p className="font-semibold text-slate-900 dark:text-slate-100">{item.name}</p>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">{item.role}</p>
                       </div>
                       <span className="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-700">
                         {formatCurrency(item.netSalary)}

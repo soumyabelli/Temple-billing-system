@@ -39,12 +39,12 @@ const DebitCreditManagement = () => {
 
   return (
     <div className="p-6 space-y-6">
-      <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-6">Debit & Credit Management</h2>
+      <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-white mb-6">Debit & Credit Management</h2>
 
-      <div className="bg-temple-100 dark:bg-temple-100/10 backdrop-blur-md border border-slate-200 dark:border-white/20 rounded-2xl overflow-hidden shadow-xl">
+      <div className="bg-temple-100 dark:bg-slate-800 dark:bg-temple-100 dark:bg-slate-800/10 backdrop-blur-md border border-slate-200 dark:border-slate-700 dark:border-white/20 rounded-2xl overflow-hidden shadow-xl">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-slate-800 dark:text-white">
-            <thead className="bg-slate-100 dark:bg-temple-100/10 text-slate-600 dark:text-white/90">
+          <table className="w-full text-left text-sm text-slate-800 dark:text-slate-200 dark:text-white">
+            <thead className="bg-slate-100 dark:bg-temple-100 dark:bg-slate-800/10 text-slate-600 dark:text-slate-400 dark:text-white/90">
               <tr>
                 <th className="px-6 py-4 font-semibold">Date</th>
                 <th className="px-6 py-4 font-semibold">Type</th>
@@ -58,15 +58,15 @@ const DebitCreditManagement = () => {
             <tbody className="divide-y divide-slate-200 dark:divide-white/10">
               {loading ? (
                 <tr>
-                  <td colSpan="7" className="px-6 py-8 text-center text-slate-500 dark:text-white/60">Loading...</td>
+                  <td colSpan="7" className="px-6 py-8 text-center text-slate-500 dark:text-slate-400 dark:text-white/60">Loading...</td>
                 </tr>
               ) : transactions.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="px-6 py-8 text-center text-slate-500 dark:text-white/60">No transactions found</td>
+                  <td colSpan="7" className="px-6 py-8 text-center text-slate-500 dark:text-slate-400 dark:text-white/60">No transactions found</td>
                 </tr>
               ) : (
                 transactions.map((t) => (
-                  <tr key={t._id} className="hover:bg-slate-50 dark:hover:bg-temple-100/5 transition-colors">
+                  <tr key={t._id} className="hover:bg-slate-50 dark:bg-slate-800/50 dark:hover:bg-temple-100 dark:bg-slate-800/5 transition-colors">
                     <td className="px-6 py-4">{new Date(t.date).toLocaleDateString()}</td>
                     <td className="px-6 py-4">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${t.transactionType === "Credit" ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}`}>

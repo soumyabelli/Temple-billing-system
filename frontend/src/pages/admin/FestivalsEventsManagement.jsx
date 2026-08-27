@@ -295,7 +295,7 @@ const FestivalsEventsManagement = () => {
           <h1 className="text-[46px] leading-tight font-bold text-[#17151f]">Temple Events</h1>
           <p className="mt-1 text-[20px] text-[#5c6675]">Manage temple events, schedules, cultural programs, and celebrations.</p>
         </div>
-        <div className="inline-flex h-11 items-center gap-2 rounded-xl border border-[#ece8e1] bg-temple-100 px-4 text-[20px] text-[#7b4a1f]">
+        <div className="inline-flex h-11 items-center gap-2 rounded-xl border border-[#ece8e1] dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-4 text-[20px] text-[#7b4a1f]">
           <MdCalendarMonth size={21} />
           21 May 2026, Thursday
         </div>
@@ -305,7 +305,7 @@ const FestivalsEventsManagement = () => {
         {stats.map((card) => {
           const Icon = card.icon;
           return (
-            <div key={card.title} className="rounded-2xl border border-[#ece8e1] bg-temple-100 p-4">
+            <div key={card.title} className="rounded-2xl border border-[#ece8e1] dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-4">
               <div className="flex items-center gap-4">
                 <div className={`flex h-20 w-20 items-center justify-center rounded-full ${card.iconTone}`}>
                   <Icon size={36} />
@@ -322,18 +322,18 @@ const FestivalsEventsManagement = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[2.25fr_1.1fr]">
-        <div className="rounded-2xl border border-[#ece8e1] bg-temple-100 p-4">
+        <div className="rounded-2xl border border-[#ece8e1] dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-4">
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-[40px] font-bold text-[#17151f]">Event Schedule</h2>
             <div className="flex items-center gap-2">
-              <button className="inline-flex h-11 items-center gap-2 rounded-xl border border-[#ece8e1] px-4 text-[18px] text-[#4f5866]">
+              <button className="inline-flex h-11 items-center gap-2 rounded-xl border border-[#ece8e1] dark:border-slate-700 px-4 text-[18px] text-[#4f5866]">
                 <MdOutlineFilterAlt size={18} /> Filter
               </button>
               <button onClick={() => setShowModal(true)} className="inline-flex h-11 items-center gap-2 rounded-xl bg-[#ff8b00] px-4 text-[18px] font-semibold text-white hover:bg-[#ec7f00]" > + Add Event </button>
             </div>
           </div>
 
-          <div className="mb-4 flex h-11 items-center gap-2 rounded-xl border border-[#ece8e1] bg-[#faf9f7] px-3 text-[#8b93a0]">
+          <div className="mb-4 flex h-11 items-center gap-2 rounded-xl border border-[#ece8e1] dark:border-slate-700 bg-[#faf9f7] dark:bg-slate-700/50 px-3 text-[#8b93a0]">
             <MdOutlineSearch size={20} />
             <input className="w-full bg-transparent text-[17px] text-[#202632] outline-none" placeholder="Search event..." />
           </div>
@@ -352,7 +352,7 @@ const FestivalsEventsManagement = () => {
               </thead>
                       <tbody>
           {festivalRows.map((row) => (
-            <tr key={row._id || row.title} className="border-t border-[#f1ede6] text-[#2f3645]">
+            <tr key={row._id || row.title} className="border-t border-[#f1ede6] text-[#2f3645] dark:text-slate-300">
               <td className="px-3 py-3">
                 <div className="flex items-center gap-2">
                   {row.image ? (
@@ -374,7 +374,7 @@ const FestivalsEventsManagement = () => {
 
               <td className="px-3 py-3">
                 <div className="flex items-center gap-2">
-                  <button onClick={() => setViewEvent(row)} className="inline-flex h-8 w-10 items-center justify-center rounded-lg border border-[#ece8e1] bg-[#faf7f2] text-[#7b5324]" title="View Details">
+                  <button onClick={() => setViewEvent(row)} className="inline-flex h-8 w-10 items-center justify-center rounded-lg border border-[#ece8e1] dark:border-slate-700 bg-[#faf7f2] text-[#7b5324]" title="View Details">
                     <MdOutlineRemoveRedEye />
                   </button>
 
@@ -388,7 +388,7 @@ const FestivalsEventsManagement = () => {
                     setImagePreview(row.image || null);
                     setImageUrl(row.image || "");
                     setShowModal(true);
-                  }} className="inline-flex h-8 w-10 items-center justify-center rounded-lg border border-[#ece8e1] bg-[#faf7f2] text-[#7b5324]" title="Edit Event">
+                  }} className="inline-flex h-8 w-10 items-center justify-center rounded-lg border border-[#ece8e1] dark:border-slate-700 bg-[#faf7f2] text-[#7b5324]" title="Edit Event">
                     <MdOutlineEdit />
                   </button>
 
@@ -409,7 +409,7 @@ const FestivalsEventsManagement = () => {
                       }
                     }}
                     title="Postpone Event"
-                    className="inline-flex h-8 px-2 items-center justify-center rounded-lg border border-[#ece8e1] bg-[#faf7f2] text-[#d97706] text-xs font-semibold hover:bg-orange-50"
+                    className="inline-flex h-8 px-2 items-center justify-center rounded-lg border border-[#ece8e1] dark:border-slate-700 bg-[#faf7f2] text-[#d97706] text-xs font-semibold hover:bg-orange-50"
                   >
                     Postpone
                   </button>
@@ -423,7 +423,7 @@ const FestivalsEventsManagement = () => {
         </div>
 
         <div className="space-y-4">
-          <div className="rounded-2xl border border-[#ece8e1] bg-temple-100 p-4">
+          <div className="rounded-2xl border border-[#ece8e1] dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-4">
             <h3 className="text-[40px] font-bold text-[#17151f]">Upcoming Event</h3>
             {upcomingFestival ? (
               <>
@@ -445,7 +445,7 @@ const FestivalsEventsManagement = () => {
             )}
           </div>
 
-          <div className="rounded-2xl border border-[#ece8e1] bg-temple-100 p-4">
+          <div className="rounded-2xl border border-[#ece8e1] dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-4">
             <h3 className="text-[36px] font-bold text-[#17151f]">Quick Actions</h3>
             <div className="mt-3 grid grid-cols-2 gap-2">
               {quickActions.map((action) => {
@@ -474,12 +474,12 @@ const FestivalsEventsManagement = () => {
       {/* Add Event Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="w-full max-w-md rounded-2xl border border-[#ece8e1] bg-temple-100 p-6 shadow-2xl">
+          <div className="w-full max-w-md rounded-2xl border border-[#ece8e1] dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-6 shadow-2xl">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-[28px] font-bold text-[#17151f]">{isEditing ? "Edit Event" : "Add New Event"}</h2>
               <button
                 onClick={() => setShowModal(false)}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[#ece8e1] bg-[#faf7f2] text-[#7b5324] hover:bg-[#f0ebe3]"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[#ece8e1] dark:border-slate-700 bg-[#faf7f2] text-[#7b5324] hover:bg-[#f0ebe3]"
               >
                 <MdClose size={20} />
               </button>
@@ -493,7 +493,7 @@ const FestivalsEventsManagement = () => {
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g., Maha Shivaratri"
-                  className="w-full rounded-xl border border-[#ece8e1] bg-[#faf9f7] px-4 py-2.5 text-[16px] text-[#202632] outline-none focus:border-[#ff8b00] focus:ring-1 focus:ring-[#ff8b00]"
+                  className="w-full rounded-xl border border-[#ece8e1] dark:border-slate-700 bg-[#faf9f7] dark:bg-slate-700/50 px-4 py-2.5 text-[16px] text-[#202632] outline-none focus:border-[#ff8b00] focus:ring-1 focus:ring-[#ff8b00]"
                 />
               </div>
 
@@ -503,7 +503,7 @@ const FestivalsEventsManagement = () => {
                   type="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="w-full rounded-xl border border-[#ece8e1] bg-[#faf9f7] px-4 py-2.5 text-[16px] text-[#202632] outline-none focus:border-[#ff8b00] focus:ring-1 focus:ring-[#ff8b00]"
+                  className="w-full rounded-xl border border-[#ece8e1] dark:border-slate-700 bg-[#faf9f7] dark:bg-slate-700/50 px-4 py-2.5 text-[16px] text-[#202632] outline-none focus:border-[#ff8b00] focus:ring-1 focus:ring-[#ff8b00]"
                 />
               </div>
 
@@ -514,7 +514,7 @@ const FestivalsEventsManagement = () => {
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   placeholder="e.g., Main Temple Hall"
-                  className="w-full rounded-xl border border-[#ece8e1] bg-[#faf9f7] px-4 py-2.5 text-[16px] text-[#202632] outline-none focus:border-[#ff8b00] focus:ring-1 focus:ring-[#ff8b00]"
+                  className="w-full rounded-xl border border-[#ece8e1] dark:border-slate-700 bg-[#faf9f7] dark:bg-slate-700/50 px-4 py-2.5 text-[16px] text-[#202632] outline-none focus:border-[#ff8b00] focus:ring-1 focus:ring-[#ff8b00]"
                 />
               </div>
 
@@ -525,7 +525,7 @@ const FestivalsEventsManagement = () => {
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Enter festival details..."
                   rows="3"
-                  className="w-full rounded-xl border border-[#ece8e1] bg-[#faf9f7] px-4 py-2.5 text-[16px] text-[#202632] outline-none focus:border-[#ff8b00] focus:ring-1 focus:ring-[#ff8b00] resize-none"
+                  className="w-full rounded-xl border border-[#ece8e1] dark:border-slate-700 bg-[#faf9f7] dark:bg-slate-700/50 px-4 py-2.5 text-[16px] text-[#202632] outline-none focus:border-[#ff8b00] focus:ring-1 focus:ring-[#ff8b00] resize-none"
                 />
               </div>
 
@@ -540,7 +540,7 @@ const FestivalsEventsManagement = () => {
               <div className="flex gap-3 pt-4">
                 <button
                   onClick={() => setShowModal(false)}
-                  className="flex-1 rounded-xl border border-[#ece8e1] bg-[#faf9f7] px-4 py-2.5 text-[16px] font-semibold text-[#4f5866] hover:bg-[#f0ebe3]"
+                  className="flex-1 rounded-xl border border-[#ece8e1] dark:border-slate-700 bg-[#faf9f7] dark:bg-slate-700/50 px-4 py-2.5 text-[16px] font-semibold text-[#4f5866] hover:bg-[#f0ebe3]"
                 >
                   Cancel
                 </button>
@@ -560,10 +560,10 @@ const FestivalsEventsManagement = () => {
       {/* View Event Modal */}
       {viewEvent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="w-full max-w-lg rounded-2xl border border-[#ece8e1] bg-temple-100 p-6 shadow-2xl">
+          <div className="w-full max-w-lg rounded-2xl border border-[#ece8e1] dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-6 shadow-2xl">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-[24px] font-bold text-[#17151f]">{viewEvent.title}</h2>
-              <button onClick={() => setViewEvent(null)} className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[#ece8e1] bg-[#faf7f2] text-[#7b5324] hover:bg-[#f0ebe3]">Close</button>
+              <button onClick={() => setViewEvent(null)} className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[#ece8e1] dark:border-slate-700 bg-[#faf7f2] text-[#7b5324] hover:bg-[#f0ebe3]">Close</button>
             </div>
             <div>
               {viewEvent.image && <img src={viewEvent.image} alt={viewEvent.title} className="h-44 w-full rounded-md object-cover" />}
@@ -597,12 +597,12 @@ const FestivalsEventsManagement = () => {
       {/* Send Invitation Modal */}
       {showInvitationModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="w-full max-w-md rounded-2xl border border-[#ece8e1] bg-temple-100 p-6 shadow-2xl">
+          <div className="w-full max-w-md rounded-2xl border border-[#ece8e1] dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-6 shadow-2xl">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-[28px] font-bold text-[#17151f]">Send Invitation</h2>
               <button
                 onClick={() => setShowInvitationModal(false)}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[#ece8e1] bg-[#faf7f2] text-[#7b5324] hover:bg-[#f0ebe3]"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[#ece8e1] dark:border-slate-700 bg-[#faf7f2] text-[#7b5324] hover:bg-[#f0ebe3]"
               >
                 <MdClose size={20} />
               </button>
@@ -616,7 +616,7 @@ const FestivalsEventsManagement = () => {
                   value={invitationTitle}
                   onChange={(e) => setInvitationTitle(e.target.value)}
                   placeholder="e.g., Brahmotsavam Invitation Card"
-                  className="w-full rounded-xl border border-[#ece8e1] bg-[#faf9f7] px-4 py-2.5 text-[16px] text-[#202632] outline-none focus:border-[#ff8b00] focus:ring-1 focus:ring-[#ff8b00]"
+                  className="w-full rounded-xl border border-[#ece8e1] dark:border-slate-700 bg-[#faf9f7] dark:bg-slate-700/50 px-4 py-2.5 text-[16px] text-[#202632] outline-none focus:border-[#ff8b00] focus:ring-1 focus:ring-[#ff8b00]"
                 />
               </div>
 
@@ -627,7 +627,7 @@ const FestivalsEventsManagement = () => {
                   onChange={(e) => setInvitationMessage(e.target.value)}
                   placeholder="Enter details about the event, timings, etc."
                   rows="3"
-                  className="w-full rounded-xl border border-[#ece8e1] bg-[#faf9f7] px-4 py-2.5 text-[16px] text-[#202632] outline-none focus:border-[#ff8b00] focus:ring-1 focus:ring-[#ff8b00] resize-none"
+                  className="w-full rounded-xl border border-[#ece8e1] dark:border-slate-700 bg-[#faf9f7] dark:bg-slate-700/50 px-4 py-2.5 text-[16px] text-[#202632] outline-none focus:border-[#ff8b00] focus:ring-1 focus:ring-[#ff8b00] resize-none"
                 />
               </div>
 
@@ -645,7 +645,7 @@ const FestivalsEventsManagement = () => {
               <div className="flex gap-3 pt-4">
                 <button
                   onClick={() => setShowInvitationModal(false)}
-                  className="flex-1 rounded-xl border border-[#ece8e1] bg-[#faf9f7] px-4 py-2.5 text-[16px] font-semibold text-[#4f5866] hover:bg-[#f0ebe3]"
+                  className="flex-1 rounded-xl border border-[#ece8e1] dark:border-slate-700 bg-[#faf9f7] dark:bg-slate-700/50 px-4 py-2.5 text-[16px] font-semibold text-[#4f5866] hover:bg-[#f0ebe3]"
                 >
                   Cancel
                 </button>

@@ -39,12 +39,12 @@ const DonationSettings = () => {
         </button>
       }
     >
-      <SectionCard title="Donation Categories" subtitle="Create and manage donation types that appear in the Add Donation form." className="bg-temple-100/95 text-slate-950">
+      <SectionCard title="Donation Categories" subtitle="Create and manage donation types that appear in the Add Donation form." className="bg-temple-100 dark:bg-slate-800/95 text-slate-950">
         <div className="grid gap-4 md:grid-cols-[1.3fr_0.7fr]">
           <input
             value={newType}
             onChange={(e) => setNewType(e.target.value)}
-            className="rounded-3xl border border-slate-300 bg-slate-100 px-4 py-3 text-slate-950 outline-none"
+            className="rounded-3xl border border-slate-300 dark:border-slate-600 bg-slate-100 px-4 py-3 text-slate-950 outline-none"
             placeholder="Add a new donation type"
           />
           <button
@@ -57,7 +57,7 @@ const DonationSettings = () => {
 
         <div className="mt-6 grid gap-3">
           {types.map((type) => (
-            <div key={type} className="flex items-center justify-between rounded-3xl border border-slate-200 bg-slate-100 px-4 py-3 text-slate-950">
+            <div key={type} className="flex items-center justify-between rounded-3xl border border-slate-200 dark:border-slate-700 bg-slate-100 px-4 py-3 text-slate-950">
               <span>{type}</span>
               <button onClick={() => handleRemoveType(type)} className="rounded-full bg-rose-500/10 px-3 py-1 text-rose-700 transition hover:bg-rose-500/20">
                 Remove
@@ -70,7 +70,7 @@ const DonationSettings = () => {
           <button onClick={handleSaveSettings} className="rounded-3xl bg-emerald-500 px-5 py-3 font-semibold text-slate-950 transition hover:bg-emerald-400">
             Save Donation Types
           </button>
-          <button onClick={handleResetToDefaults} className="rounded-3xl border border-white/20 bg-temple-100/10 px-5 py-3 text-white transition hover:bg-temple-100/20">
+          <button onClick={handleResetToDefaults} className="rounded-3xl border border-white/20 bg-temple-100 dark:bg-slate-800/10 px-5 py-3 text-white transition hover:bg-temple-100 dark:bg-slate-800/20">
             Reset Defaults
           </button>
         </div>

@@ -63,32 +63,32 @@ const AdminAssetManagement = () => {
   };
 
   const renderAssetsTab = () => {
-    if (loading) return <div className="p-8 text-center text-slate-500">Loading assets...</div>;
+    if (loading) return <div className="p-8 text-center text-slate-500 dark:text-slate-400">Loading assets...</div>;
 
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {assets.map((asset) => {
           const qrUrl = `${window.location.origin}/admin/assets/scan/${asset.assetId}`;
           return (
-            <div key={asset._id} className="bg-temple-100 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow p-6 relative overflow-hidden group">
+            <div key={asset._id} className="bg-temple-100 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow p-6 relative overflow-hidden group">
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h3 className="font-bold text-lg text-slate-800">{asset.name}</h3>
-                  <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">{asset.category}</p>
+                  <h3 className="font-bold text-lg text-slate-800 dark:text-slate-200">{asset.name}</h3>
+                  <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">{asset.category}</p>
                 </div>
                 <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${
                   asset.status === 'Active' ? 'bg-emerald-100 text-emerald-700' :
                   asset.status === 'Under Repair' ? 'bg-amber-100 text-amber-700' :
-                  'bg-slate-100 text-slate-700'
+                  'bg-slate-100 text-slate-700 dark:text-slate-300'
                 }`}>
                   {asset.status}
                 </span>
               </div>
               
-              <div className="space-y-2 text-sm text-slate-600 mb-6">
-                <p><span className="font-medium text-slate-700">Asset ID:</span> {asset.assetId}</p>
-                <p><span className="font-medium text-slate-700">Location:</span> {asset.assignedLocation}</p>
-                {asset.purchaseDate && <p><span className="font-medium text-slate-700">Purchased:</span> {new Date(asset.purchaseDate).toLocaleDateString()}</p>}
+              <div className="space-y-2 text-sm text-slate-600 dark:text-slate-400 mb-6">
+                <p><span className="font-medium text-slate-700 dark:text-slate-300">Asset ID:</span> {asset.assetId}</p>
+                <p><span className="font-medium text-slate-700 dark:text-slate-300">Location:</span> {asset.assignedLocation}</p>
+                {asset.purchaseDate && <p><span className="font-medium text-slate-700 dark:text-slate-300">Purchased:</span> {new Date(asset.purchaseDate).toLocaleDateString()}</p>}
               </div>
 
               <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-100">
@@ -105,7 +105,7 @@ const AdminAssetManagement = () => {
         })}
 
         {assets.length === 0 && !loading && (
-          <div className="col-span-full py-12 text-center text-slate-500 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+          <div className="col-span-full py-12 text-center text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-300 dark:border-slate-600">
             No assets found. Create one to get started.
           </div>
         )}
@@ -113,12 +113,12 @@ const AdminAssetManagement = () => {
         {/* QR Modal */}
         {showQRModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-            <div className="bg-temple-100 rounded-2xl shadow-xl max-w-sm w-full overflow-hidden transform transition-all">
+            <div className="bg-temple-100 dark:bg-slate-800 rounded-2xl shadow-xl max-w-sm w-full overflow-hidden transform transition-all">
               <div className="p-6 text-center">
-                <h3 className="text-xl font-bold text-slate-800 mb-2">{showQRModal.name}</h3>
-                <p className="text-sm text-slate-500 mb-6">Asset ID: {showQRModal.assetId}</p>
+                <h3 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-2">{showQRModal.name}</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">Asset ID: {showQRModal.assetId}</p>
                 
-                <div className="flex justify-center mb-6 p-4 bg-temple-100 rounded-xl border border-slate-100 shadow-sm inline-block">
+                <div className="flex justify-center mb-6 p-4 bg-temple-100 dark:bg-slate-800 rounded-xl border border-slate-100 shadow-sm inline-block">
                   <QRCodeCanvas 
                     id={`qr-code-${showQRModal.assetId}`}
                     value={`${window.location.origin}/admin/assets/scan/${showQRModal.assetId}`} 
@@ -137,7 +137,7 @@ const AdminAssetManagement = () => {
                   </button>
                   <button 
                     onClick={() => setShowQRModal(null)}
-                    className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 rounded-lg font-medium transition-colors"
+                    className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:text-slate-300 py-2.5 rounded-lg font-medium transition-colors"
                   >
                     Close
                   </button>
@@ -151,25 +151,25 @@ const AdminAssetManagement = () => {
   };
 
   return (
-    <div className="p-4 md:p-8 bg-[#faf9f7] min-h-screen">
+    <div className="p-4 md:p-8 bg-[#faf9f7] dark:bg-slate-700/50 min-h-screen">
       <div className="mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Asset Management</h1>
-          <p className="text-sm text-slate-500 mt-1">Manage temple assets, maintenance, and generate QR codes.</p>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Asset Management</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Manage temple assets, maintenance, and generate QR codes.</p>
           <div className="mt-3 h-1 w-16 rounded-full bg-gradient-to-r from-[#ff8b00] to-[#ffaf4d]" />
         </div>
       </div>
       
       {/* Tabs */}
-      <div className="flex space-x-2 border-b border-slate-200 mb-8 overflow-x-auto pb-px">
+      <div className="flex space-x-2 border-b border-slate-200 dark:border-slate-700 mb-8 overflow-x-auto pb-px">
         {tabs.map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={`px-5 py-2.5 text-sm font-medium rounded-t-xl transition-all whitespace-nowrap ${
               activeTab === tab
-                ? "bg-temple-100 text-[#ff8b00] border-t border-l border-r border-slate-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] translate-y-px"
-                : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
+                ? "bg-temple-100 dark:bg-slate-800 text-[#ff8b00] border-t border-l border-r border-slate-200 dark:border-slate-700 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] translate-y-px"
+                : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:bg-slate-800/50"
             }`}
           >
             {tab}
@@ -179,7 +179,7 @@ const AdminAssetManagement = () => {
 
       <div className="min-h-[400px]">
         {activeTab === "Assets" ? renderAssetsTab() : (
-          <div className="bg-temple-100 rounded-2xl border border-slate-200 p-8 text-center text-slate-500 shadow-sm flex items-center justify-center h-64">
+          <div className="bg-temple-100 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-8 text-center text-slate-500 dark:text-slate-400 shadow-sm flex items-center justify-center h-64">
             {activeTab} module under development.
           </div>
         )}

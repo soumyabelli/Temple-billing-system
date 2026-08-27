@@ -138,22 +138,22 @@ const AttendanceSettings = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-slate-900">Attendance Settings</h1>
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Attendance Settings</h1>
         <button onClick={handleSaveSettings} className="flex items-center gap-2 rounded-full bg-slate-900 px-6 py-3 font-semibold text-white transition hover:bg-slate-800">
           <FiSave /> Save Time Settings
         </button>
       </div>
-      {message && <p className="font-semibold text-slate-700 p-3 bg-blue-50 text-blue-700 rounded-xl">{message}</p>}
+      {message && <p className="font-semibold text-slate-700 dark:text-slate-300 p-3 bg-blue-50 text-blue-700 rounded-xl">{message}</p>}
 
       <SectionCard title="Time Thresholds" subtitle="Configure late arrival and early check-in windows.">
         <div className="grid gap-6 md:grid-cols-2">
           <div>
-            <label className="mb-2 block text-sm font-semibold text-slate-700">Late Threshold (minutes)</label>
-            <input type="number" name="lateThreshold" value={settings.lateThreshold} onChange={handleSettingsChange} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 focus:bg-temple-100" />
+            <label className="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-300">Late Threshold (minutes)</label>
+            <input type="number" name="lateThreshold" value={settings.lateThreshold} onChange={handleSettingsChange} className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 outline-none focus:border-amber-400 focus:bg-temple-100 dark:bg-slate-800" />
           </div>
           <div>
-            <label className="mb-2 block text-sm font-semibold text-slate-700">Early Check-in Window (minutes)</label>
-            <input type="number" name="earlyCheckInWindow" value={settings.earlyCheckInWindow} onChange={handleSettingsChange} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-amber-400 focus:bg-temple-100" />
+            <label className="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-300">Early Check-in Window (minutes)</label>
+            <input type="number" name="earlyCheckInWindow" value={settings.earlyCheckInWindow} onChange={handleSettingsChange} className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 outline-none focus:border-amber-400 focus:bg-temple-100 dark:bg-slate-800" />
           </div>
         </div>
       </SectionCard>
@@ -161,12 +161,12 @@ const AttendanceSettings = () => {
       <SectionCard title="Attendance Locations" subtitle="Manage specific GPS coordinates for employee assignments.">
         <div className="grid md:grid-cols-[1fr_2fr] gap-6">
            {/* Form */}
-           <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 h-fit">
-              <h3 className="font-bold text-slate-800 mb-4">{editingLocation ? "Edit Location" : "Add New Location"}</h3>
+           <div className="bg-slate-50 dark:bg-slate-800/50 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 h-fit">
+              <h3 className="font-bold text-slate-800 dark:text-slate-200 mb-4">{editingLocation ? "Edit Location" : "Add New Location"}</h3>
               <form onSubmit={handleSaveLocation} className="space-y-4">
                  <div>
                     <div className="flex items-center justify-between mb-1">
-                      <label className="block text-sm font-semibold text-slate-700">Location Name</label>
+                      <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">Location Name</label>
                       <button 
                         type="button" 
                         onClick={() => {
@@ -193,19 +193,19 @@ const AttendanceSettings = () => {
                         📍 Use My Current Location
                       </button>
                     </div>
-                    <input required type="text" name="locationName" value={locationForm.locationName} onChange={handleLocationChange} className="w-full rounded-xl border border-slate-200 bg-temple-100 px-3 py-2 outline-none focus:border-amber-400" placeholder="e.g. Main Temple" />
+                    <input required type="text" name="locationName" value={locationForm.locationName} onChange={handleLocationChange} className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-3 py-2 outline-none focus:border-amber-400" placeholder="e.g. Main Temple" />
                  </div>
                  <div>
-                    <label className="mb-1 block text-sm font-semibold text-slate-700">Latitude</label>
-                    <input required type="number" step="any" name="latitude" value={locationForm.latitude} onChange={handleLocationChange} className="w-full rounded-xl border border-slate-200 bg-temple-100 px-3 py-2 outline-none focus:border-amber-400" />
+                    <label className="mb-1 block text-sm font-semibold text-slate-700 dark:text-slate-300">Latitude</label>
+                    <input required type="number" step="any" name="latitude" value={locationForm.latitude} onChange={handleLocationChange} className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-3 py-2 outline-none focus:border-amber-400" />
                  </div>
                  <div>
-                    <label className="mb-1 block text-sm font-semibold text-slate-700">Longitude</label>
-                    <input required type="number" step="any" name="longitude" value={locationForm.longitude} onChange={handleLocationChange} className="w-full rounded-xl border border-slate-200 bg-temple-100 px-3 py-2 outline-none focus:border-amber-400" />
+                    <label className="mb-1 block text-sm font-semibold text-slate-700 dark:text-slate-300">Longitude</label>
+                    <input required type="number" step="any" name="longitude" value={locationForm.longitude} onChange={handleLocationChange} className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-3 py-2 outline-none focus:border-amber-400" />
                  </div>
                  <div>
-                    <label className="mb-1 block text-sm font-semibold text-slate-700">Allowed Radius (meters)</label>
-                    <input required type="number" name="allowedRadius" value={locationForm.allowedRadius} onChange={handleLocationChange} className="w-full rounded-xl border border-slate-200 bg-temple-100 px-3 py-2 outline-none focus:border-amber-400" />
+                    <label className="mb-1 block text-sm font-semibold text-slate-700 dark:text-slate-300">Allowed Radius (meters)</label>
+                    <input required type="number" name="allowedRadius" value={locationForm.allowedRadius} onChange={handleLocationChange} className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-3 py-2 outline-none focus:border-amber-400" />
                  </div>
                  
                  <div className="flex gap-2 pt-2">
@@ -213,7 +213,7 @@ const AttendanceSettings = () => {
                        {editingLocation ? "Update" : "Create"}
                     </button>
                     {editingLocation && (
-                       <button type="button" onClick={handleCancelEdit} className="flex-1 bg-slate-200 text-slate-800 py-2 rounded-xl font-semibold hover:bg-slate-300 transition">
+                       <button type="button" onClick={handleCancelEdit} className="flex-1 bg-slate-200 text-slate-800 dark:text-slate-200 py-2 rounded-xl font-semibold hover:bg-slate-300 transition">
                           Cancel
                        </button>
                     )}
@@ -225,14 +225,14 @@ const AttendanceSettings = () => {
            <div>
               <div className="space-y-3">
                  {locations.length === 0 ? (
-                    <p className="text-slate-500 text-sm">No attendance locations found. Add one to assign to employees.</p>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm">No attendance locations found. Add one to assign to employees.</p>
                  ) : (
                     locations.map(loc => (
-                       <div key={loc._id} className="bg-temple-100 border border-slate-200 p-4 rounded-xl flex items-center justify-between hover:shadow-md transition">
+                       <div key={loc._id} className="bg-temple-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-4 rounded-xl flex items-center justify-between hover:shadow-md transition">
                           <div>
-                             <h4 className="font-bold text-slate-900">{loc.locationName}</h4>
-                             <p className="text-xs text-slate-500 mt-0.5">Lat: {loc.latitude} | Lng: {loc.longitude}</p>
-                             <p className="text-xs text-slate-500 mt-0.5">Radius: {loc.allowedRadius}m</p>
+                             <h4 className="font-bold text-slate-900 dark:text-slate-100">{loc.locationName}</h4>
+                             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Lat: {loc.latitude} | Lng: {loc.longitude}</p>
+                             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Radius: {loc.allowedRadius}m</p>
                           </div>
                           <div className="flex items-center gap-2">
                              <button onClick={() => handleEditLocation(loc)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition">

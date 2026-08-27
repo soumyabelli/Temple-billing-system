@@ -427,10 +427,10 @@ const ReportsAnalytics = () => {
 
   return (
       <div className="mt-5 space-y-8">
-        <div className="rounded-3xl border border-[#e5e7eb] bg-temple-100 p-8 shadow-sm">
+        <div className="rounded-3xl border border-[#e5e7eb] bg-temple-100 dark:bg-slate-800 p-8 shadow-sm">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <h1 className="text-[34px] font-bold text-[#111827]">Reports & Analytics</h1>
+              <h1 className="text-[34px] font-bold text-[#111827] dark:text-white">Reports & Analytics</h1>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-[#475569]">
                 Detailed temple performance metrics, finance analytics and report exports for the selected date range.
               </p>
@@ -443,7 +443,7 @@ const ReportsAnalytics = () => {
                     type="date"
                     value={formatDateInput(normalizedStart)}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="mt-2 rounded-2xl border border-[#cbd5e1] bg-temple-100 px-4 py-2 text-sm text-[#0f172a] outline-none"
+                    className="mt-2 rounded-2xl border border-[#cbd5e1] bg-temple-100 dark:bg-slate-800 px-4 py-2 text-sm text-[#0f172a] outline-none"
                   />
                 </label>
                 <label className="flex flex-col text-sm text-[#334155]">
@@ -452,7 +452,7 @@ const ReportsAnalytics = () => {
                     type="date"
                     value={formatDateInput(normalizedEnd)}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="mt-2 rounded-2xl border border-[#cbd5e1] bg-temple-100 px-4 py-2 text-sm text-[#0f172a] outline-none"
+                    className="mt-2 rounded-2xl border border-[#cbd5e1] bg-temple-100 dark:bg-slate-800 px-4 py-2 text-sm text-[#0f172a] outline-none"
                   />
                 </label>
               </div>
@@ -483,24 +483,24 @@ const ReportsAnalytics = () => {
         {error ? (
           <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-700">{error}</div>
         ) : loading ? (
-          <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-slate-600">Loading report data…</div>
+          <div className="rounded-2xl border border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/50 p-8 text-center text-slate-600 dark:text-slate-400">Loading report data…</div>
         ) : (
           <>
             <div className="grid gap-4 xl:grid-cols-3">
               {summaryCards.map((card) => (
-                <div key={card.title} className="rounded-3xl border border-[#e5e7eb] bg-[#f8fafc] p-6 shadow-sm">
+                <div key={card.title} className="rounded-3xl border border-[#e5e7eb] bg-[#f8fafc] dark:bg-slate-700 p-6 shadow-sm">
                   <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#475569]">{card.title}</p>
-                  <p className="mt-5 text-3xl font-bold text-[#111827]">{card.value}</p>
+                  <p className="mt-5 text-3xl font-bold text-[#111827] dark:text-white">{card.value}</p>
                   <p className="mt-3 text-sm text-[#475569]">{card.subtitle}</p>
                 </div>
               ))}
             </div>
 
             <div className="grid gap-4 xl:grid-cols-2">
-              <div className="rounded-3xl border border-[#e5e7eb] bg-temple-100 p-6 shadow-sm">
+              <div className="rounded-3xl border border-[#e5e7eb] bg-temple-100 dark:bg-slate-800 p-6 shadow-sm">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <h2 className="text-xl font-semibold text-[#111827]">Revenue Overview (Monthly)</h2>
+                    <h2 className="text-xl font-semibold text-[#111827] dark:text-white">Revenue Overview (Monthly)</h2>
                     <p className="mt-2 text-sm text-[#64748b]">Donations, bookings and prasadam sales for the selected range.</p>
                   </div>
                 </div>
@@ -517,10 +517,10 @@ const ReportsAnalytics = () => {
                 </div>
               </div>
 
-              <div className="rounded-3xl border border-[#e5e7eb] bg-temple-100 p-6 shadow-sm">
+              <div className="rounded-3xl border border-[#e5e7eb] bg-temple-100 dark:bg-slate-800 p-6 shadow-sm">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <h2 className="text-xl font-semibold text-[#111827]">Donation Sources</h2>
+                    <h2 className="text-xl font-semibold text-[#111827] dark:text-white">Donation Sources</h2>
                     <p className="mt-2 text-sm text-[#64748b]">Breakdown by payment method.</p>
                   </div>
                 </div>
@@ -540,7 +540,7 @@ const ReportsAnalytics = () => {
                   <div className="w-full md:w-1/2">
                     <div className="space-y-3">
                       {donationSources.map((slice) => (
-                        <div key={slice.name} className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3">
+                        <div key={slice.name} className="flex items-center justify-between rounded-2xl bg-slate-50 dark:bg-slate-800/50 px-4 py-3">
                           <span className="flex items-center gap-3 text-sm text-[#334155]">
                             <span className="h-3 w-3 rounded-full" style={{ backgroundColor: slice.color }} />
                             {slice.name}
@@ -555,19 +555,19 @@ const ReportsAnalytics = () => {
             </div>
 
             <div className="grid gap-4 xl:grid-cols-2">
-              <div className="rounded-3xl border border-[#e5e7eb] bg-temple-100 p-6 shadow-sm">
-                <h2 className="text-xl font-semibold text-[#111827]">Pooja Booking Analytics</h2>
+              <div className="rounded-3xl border border-[#e5e7eb] bg-temple-100 dark:bg-slate-800 p-6 shadow-sm">
+                <h2 className="text-xl font-semibold text-[#111827] dark:text-white">Pooja Booking Analytics</h2>
                 <p className="mt-2 text-sm text-[#64748b]">Top booked pooja services in the selected period.</p>
                 <div className="mt-6 space-y-4">
                   {poojaBookingAnalytics.map((item, index) => (
-                    <div key={item.service} className="rounded-3xl border border-[#e5e7eb] bg-[#f8fafc] p-4">
+                    <div key={item.service} className="rounded-3xl border border-[#e5e7eb] bg-[#f8fafc] dark:bg-slate-700 p-4">
                       <div className="flex items-center justify-between gap-3">
                         <div>
-                          <p className="font-semibold text-[#111827]">{item.service}</p>
+                          <p className="font-semibold text-[#111827] dark:text-white">{item.service}</p>
                           <p className="text-sm text-[#475569]">{item.count} bookings</p>
                         </div>
                         <div className="text-right">
-                          <p className="font-semibold text-[#111827]">{formatCurrency(item.revenue)}</p>
+                          <p className="font-semibold text-[#111827] dark:text-white">{formatCurrency(item.revenue)}</p>
                           <p className="text-xs text-[#64748b]">Revenue</p>
                         </div>
                       </div>
@@ -576,10 +576,10 @@ const ReportsAnalytics = () => {
                 </div>
               </div>
 
-              <div className="rounded-3xl border border-[#e5e7eb] bg-temple-100 p-6 shadow-sm">
+              <div className="rounded-3xl border border-[#e5e7eb] bg-temple-100 dark:bg-slate-800 p-6 shadow-sm">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <h2 className="text-xl font-semibold text-[#111827]">Employee Attendance Overview</h2>
+                    <h2 className="text-xl font-semibold text-[#111827] dark:text-white">Employee Attendance Overview</h2>
                     <p className="mt-2 text-sm text-[#64748b]">Current attendance snapshot for the temple staff.</p>
                   </div>
                   <div className="rounded-full bg-[#eff6ff] px-3 py-1 text-sm font-semibold text-[#2563eb]">{attendanceOverview.attendancePercent}%</div>
@@ -599,10 +599,10 @@ const ReportsAnalytics = () => {
                   </div>
                   <div className="w-full md:w-1/2 space-y-3">
                     {attendancePieData.map((item) => (
-                      <div key={item.name} className="flex items-center justify-between rounded-2xl border border-[#e5e7eb] bg-[#f8fafc] px-4 py-4">
+                      <div key={item.name} className="flex items-center justify-between rounded-2xl border border-[#e5e7eb] bg-[#f8fafc] dark:bg-slate-700 px-4 py-4">
                         <div className="flex items-center gap-3">
                           <span className="h-3 w-3 rounded-full" style={{ backgroundColor: item.color }} />
-                          <span className="text-sm font-semibold text-[#111827]">{item.name}</span>
+                          <span className="text-sm font-semibold text-[#111827] dark:text-white">{item.name}</span>
                         </div>
                         <span className="text-sm text-[#475569]">{item.value}</span>
                       </div>
@@ -613,77 +613,77 @@ const ReportsAnalytics = () => {
             </div>
 
             <div className="grid gap-4 xl:grid-cols-2">
-              <div className="rounded-3xl border border-[#e5e7eb] bg-temple-100 p-6 shadow-sm">
-                <h2 className="text-xl font-semibold text-[#111827]">Inventory Analytics</h2>
+              <div className="rounded-3xl border border-[#e5e7eb] bg-temple-100 dark:bg-slate-800 p-6 shadow-sm">
+                <h2 className="text-xl font-semibold text-[#111827] dark:text-white">Inventory Analytics</h2>
                 <p className="mt-2 text-sm text-[#64748b]">Current stock status and low stock alerts.</p>
                 <div className="mt-6 grid gap-3">
                   {inventoryItems.map((item) => (
-                    <div key={item.name} className="grid gap-2 rounded-3xl border border-[#e5e7eb] bg-[#f8fafc] p-4 sm:grid-cols-[1fr_auto] sm:items-center">
+                    <div key={item.name} className="grid gap-2 rounded-3xl border border-[#e5e7eb] bg-[#f8fafc] dark:bg-slate-700 p-4 sm:grid-cols-[1fr_auto] sm:items-center">
                       <div>
-                        <p className="font-semibold text-[#111827]">{item.name}</p>
+                        <p className="font-semibold text-[#111827] dark:text-white">{item.name}</p>
                         <p className="text-sm text-[#475569]">Available stock: {item.stock ?? "N/A"}</p>
                       </div>
-                      <div className={`rounded-full px-3 py-1 text-xs font-semibold ${String(item.status || "").toLowerCase().includes("low") ? "bg-[#fee2e2] text-[#b91c1c]" : "bg-[#e0f2fe] text-[#0369a1]"}`}>{item.status || "Unknown"}</div>
+                      <div className={`rounded-full px-3 py-1 text-xs font-semibold ${String(item.status || "").toLowerCase().includes("low") ? "bg-[#fee2e2] text-[#b91c1c] dark:text-rose-400" : "bg-[#e0f2fe] text-[#0369a1]"}`}>{item.status || "Unknown"}</div>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="rounded-3xl border border-[#e5e7eb] bg-temple-100 p-6 shadow-sm">
-                <h2 className="text-xl font-semibold text-[#111827]">Festival Analytics</h2>
+              <div className="rounded-3xl border border-[#e5e7eb] bg-temple-100 dark:bg-slate-800 p-6 shadow-sm">
+                <h2 className="text-xl font-semibold text-[#111827] dark:text-white">Festival Analytics</h2>
                 <p className="mt-2 text-sm text-[#64748b]">Upcoming and completed festival activity.</p>
                 <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                  <div className="rounded-3xl border border-[#e5e7eb] bg-[#f8fafc] p-5">
+                  <div className="rounded-3xl border border-[#e5e7eb] bg-[#f8fafc] dark:bg-slate-700 p-5">
                     <p className="text-xs uppercase tracking-[0.28em] text-[#475569]">Upcoming Festivals</p>
-                    <p className="mt-4 text-3xl font-bold text-[#111827]">{upcomingFestivals}</p>
+                    <p className="mt-4 text-3xl font-bold text-[#111827] dark:text-white">{upcomingFestivals}</p>
                   </div>
-                  <div className="rounded-3xl border border-[#e5e7eb] bg-[#f8fafc] p-5">
+                  <div className="rounded-3xl border border-[#e5e7eb] bg-[#f8fafc] dark:bg-slate-700 p-5">
                     <p className="text-xs uppercase tracking-[0.28em] text-[#475569]">Completed Festivals</p>
-                    <p className="mt-4 text-3xl font-bold text-[#111827]">{completedFestivals}</p>
+                    <p className="mt-4 text-3xl font-bold text-[#111827] dark:text-white">{completedFestivals}</p>
                   </div>
-                  <div className="rounded-3xl border border-[#e5e7eb] bg-[#f8fafc] p-5">
+                  <div className="rounded-3xl border border-[#e5e7eb] bg-[#f8fafc] dark:bg-slate-700 p-5">
                     <p className="text-xs uppercase tracking-[0.28em] text-[#475569]">Festival Revenue</p>
-                    <p className="mt-4 text-3xl font-bold text-[#111827]">{formatCurrency(eventOverview.festivalRevenue || 0)}</p>
+                    <p className="mt-4 text-3xl font-bold text-[#111827] dark:text-white">{formatCurrency(eventOverview.festivalRevenue || 0)}</p>
                   </div>
-                  <div className="rounded-3xl border border-[#e5e7eb] bg-[#f8fafc] p-5">
+                  <div className="rounded-3xl border border-[#e5e7eb] bg-[#f8fafc] dark:bg-slate-700 p-5">
                     <p className="text-xs uppercase tracking-[0.28em] text-[#475569]">Festival Donations</p>
-                    <p className="mt-4 text-3xl font-bold text-[#111827]">{formatCurrency(festivalDonations)}</p>
+                    <p className="mt-4 text-3xl font-bold text-[#111827] dark:text-white">{formatCurrency(festivalDonations)}</p>
                   </div>
                 </div>
               </div>
             </div>
 
             <div className="grid gap-4 xl:grid-cols-3">
-              <div className="rounded-3xl border border-[#e5e7eb] bg-[#f8fafc] p-6 shadow-sm">
+              <div className="rounded-3xl border border-[#e5e7eb] bg-[#f8fafc] dark:bg-slate-700 p-6 shadow-sm">
                 <p className="text-sm uppercase tracking-[0.24em] text-[#475569]">Total Devotees</p>
-                <p className="mt-4 text-3xl font-bold text-[#111827]">{totalDevotees}</p>
+                <p className="mt-4 text-3xl font-bold text-[#111827] dark:text-white">{totalDevotees}</p>
                 <p className="mt-2 text-sm text-[#475569]">All registered devotees</p>
               </div>
-              <div className="rounded-3xl border border-[#e5e7eb] bg-temple-100 p-6 shadow-sm">
+              <div className="rounded-3xl border border-[#e5e7eb] bg-temple-100 dark:bg-slate-800 p-6 shadow-sm">
                 <p className="text-sm uppercase tracking-[0.24em] text-[#475569]">New This Month</p>
-                <p className="mt-4 text-3xl font-bold text-[#111827]">{newThisMonth}</p>
+                <p className="mt-4 text-3xl font-bold text-[#111827] dark:text-white">{newThisMonth}</p>
                 <p className="mt-2 text-sm text-[#475569]">New devotee registrations</p>
               </div>
-              <div className="rounded-3xl border border-[#e5e7eb] bg-temple-100 p-6 shadow-sm">
+              <div className="rounded-3xl border border-[#e5e7eb] bg-temple-100 dark:bg-slate-800 p-6 shadow-sm">
                 <p className="text-sm uppercase tracking-[0.24em] text-[#475569]">Active Devotees</p>
-                <p className="mt-4 text-3xl font-bold text-[#111827]">{activeDevotees}</p>
+                <p className="mt-4 text-3xl font-bold text-[#111827] dark:text-white">{activeDevotees}</p>
                 <p className="mt-2 text-sm text-[#475569]">Recent donations/bookings</p>
               </div>
             </div>
 
             <div className="grid gap-4 xl:grid-cols-2">
-              <div className="rounded-3xl border border-[#e5e7eb] bg-temple-100 p-6 shadow-sm">
-                <h2 className="text-xl font-semibold text-[#111827]">Recent Transactions</h2>
+              <div className="rounded-3xl border border-[#e5e7eb] bg-temple-100 dark:bg-slate-800 p-6 shadow-sm">
+                <h2 className="text-xl font-semibold text-[#111827] dark:text-white">Recent Transactions</h2>
                 <p className="mt-2 text-sm text-[#64748b]">Most recent donations, pooja payments, and prasadam sales.</p>
                 <div className="mt-6 space-y-3">
                   {recentTransactions.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between rounded-3xl border border-[#e5e7eb] bg-[#f8fafc] px-4 py-3">
+                    <div key={item.id} className="flex items-center justify-between rounded-3xl border border-[#e5e7eb] bg-[#f8fafc] dark:bg-slate-700 px-4 py-3">
                       <div>
-                        <p className="font-semibold text-[#111827]">{item.type}</p>
+                        <p className="font-semibold text-[#111827] dark:text-white">{item.type}</p>
                         <p className="text-sm text-[#475569]">{item.description}</p>
                       </div>
                       <div className="text-right">
-                        <p className="font-semibold text-[#111827]">{formatCurrency(item.amount)}</p>
+                        <p className="font-semibold text-[#111827] dark:text-white">{formatCurrency(item.amount)}</p>
                         <p className="text-xs text-[#64748b]">{item.date ? item.date.toLocaleDateString() : "-"}</p>
                       </div>
                     </div>
@@ -691,13 +691,13 @@ const ReportsAnalytics = () => {
                 </div>
               </div>
 
-              <div className="rounded-3xl border border-[#e5e7eb] bg-temple-100 p-6 shadow-sm">
-                <h2 className="text-xl font-semibold text-[#111827]">Reports Summary</h2>
+              <div className="rounded-3xl border border-[#e5e7eb] bg-temple-100 dark:bg-slate-800 p-6 shadow-sm">
+                <h2 className="text-xl font-semibold text-[#111827] dark:text-white">Reports Summary</h2>
                 <p className="mt-2 text-sm text-[#64748b]">Quick access to downloadable report types.</p>
                 <div className="mt-6 space-y-3">
                   {reportsSummary.map((item) => (
-                    <div key={item.title} className="rounded-3xl border border-[#e5e7eb] bg-[#f8fafc] px-4 py-4">
-                      <p className="font-semibold text-[#111827]">{item.title}</p>
+                    <div key={item.title} className="rounded-3xl border border-[#e5e7eb] bg-[#f8fafc] dark:bg-slate-700 px-4 py-4">
+                      <p className="font-semibold text-[#111827] dark:text-white">{item.title}</p>
                       <p className="mt-1 text-sm text-[#475569]">{item.description}</p>
                     </div>
                   ))}

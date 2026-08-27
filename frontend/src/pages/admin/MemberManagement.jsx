@@ -85,15 +85,15 @@ const MemberManagement = () => {
           <button
             type="button"
             onClick={() => navigate("/admin")}
-            className="rounded-2xl bg-temple-100/90 px-6 py-3 font-semibold text-orange-700 shadow-lg"
+            className="rounded-2xl bg-temple-100 dark:bg-slate-800/90 px-6 py-3 font-semibold text-orange-700 shadow-lg"
           >
             Back to Dashboard
           </button>
         </div>
       </div>
 
-      <div className="rounded-3xl bg-temple-100 shadow-xl p-8 border border-[#ece8e1]">
-        <h2 className="text-2xl font-semibold text-slate-900 mb-4">Add New Member</h2>
+      <div className="rounded-3xl bg-temple-100 dark:bg-slate-800 shadow-xl p-8 border border-[#ece8e1] dark:border-slate-700">
+        <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-4">Add New Member</h2>
 
         {message && (
           <div className={`rounded-2xl p-4 mb-6 ${message.type === "success" ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"}`}>
@@ -103,51 +103,51 @@ const MemberManagement = () => {
 
         <form onSubmit={handleSubmit} className="grid gap-5 md:grid-cols-2">
           <div className="space-y-3">
-            <label className="block text-sm font-medium text-slate-700">Full Name</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Full Name</label>
             <input
               name="name"
               value={formData.name}
               onChange={handleChange}
               placeholder="Enter full name"
-              className="w-full rounded-2xl border border-slate-200 bg-slate-50 p-4 outline-none focus:border-orange-400"
+              className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4 outline-none focus:border-orange-400"
               required
             />
           </div>
 
           <div className="space-y-3">
-            <label className="block text-sm font-medium text-slate-700">Email Address</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Email Address</label>
             <input
               type="email"
               name="email"
               value={formData.email}
               onChange={handleChange}
               placeholder="user@example.com"
-              className="w-full rounded-2xl border border-slate-200 bg-slate-50 p-4 outline-none focus:border-orange-400"
+              className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4 outline-none focus:border-orange-400"
               required
             />
           </div>
 
           <div className="space-y-3 md:col-span-2">
-            <label className="block text-sm font-medium text-slate-700">Password</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Password</label>
             <input
               type="password"
               name="password"
               value={formData.password}
               onChange={handleChange}
               placeholder="Choose a secure password"
-              className="w-full rounded-2xl border border-slate-200 bg-slate-50 p-4 outline-none focus:border-orange-400"
+              className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4 outline-none focus:border-orange-400"
               minLength={6}
               required
             />
           </div>
 
           <div className="space-y-3">
-            <label className="block text-sm font-medium text-slate-700">Role</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Role</label>
             <select
               name="role"
               value={formData.role}
               onChange={handleChange}
-              className="w-full rounded-2xl border border-slate-200 bg-slate-50 p-4 outline-none focus:border-orange-400"
+              className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4 outline-none focus:border-orange-400"
               required
             >
               {roles.map((role) => (
@@ -168,29 +168,29 @@ const MemberManagement = () => {
         </form>
       </div>
 
-      <div className="rounded-3xl bg-temple-100 shadow-xl p-8 border border-[#ece8e1]">
+      <div className="rounded-3xl bg-temple-100 dark:bg-slate-800 shadow-xl p-8 border border-[#ece8e1] dark:border-slate-700">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-5">
           <div>
-            <h2 className="text-2xl font-semibold text-slate-900">Existing Members</h2>
-            <p className="text-sm text-slate-500">View all assigned roles and staff accounts created by admin.</p>
+            <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Existing Members</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400">View all assigned roles and staff accounts created by admin.</p>
           </div>
           <button
             type="button"
             onClick={fetchUsers}
-            className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+            className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 transition hover:bg-slate-100"
           >
             Refresh list
           </button>
         </div>
 
         {loadingUsers ? (
-          <div className="text-slate-600">Loading members...</div>
+          <div className="text-slate-600 dark:text-slate-400">Loading members...</div>
         ) : usersError ? (
           <div className="rounded-2xl bg-rose-100 p-4 text-rose-700">{usersError}</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-slate-200 text-sm">
-              <thead className="bg-slate-50 text-slate-700">
+              <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300">
                 <tr>
                   <th className="px-4 py-3 text-left font-semibold">Name</th>
                   <th className="px-4 py-3 text-left font-semibold">Email</th>
@@ -198,19 +198,19 @@ const MemberManagement = () => {
                   <th className="px-4 py-3 text-left font-semibold">Created</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200 bg-temple-100">
+              <tbody className="divide-y divide-slate-200 bg-temple-100 dark:bg-slate-800">
                 {users.length > 0 ? (
                   users.map((user) => (
                     <tr key={user.id}>
-                      <td className="px-4 py-3 text-slate-900">{user.name}</td>
-                      <td className="px-4 py-3 text-slate-600">{user.email}</td>
-                      <td className="px-4 py-3 text-slate-700 capitalize">{user.role}</td>
-                      <td className="px-4 py-3 text-slate-500">{new Date(user.createdAt || user.updatedAt || Date.now()).toLocaleDateString()}</td>
+                      <td className="px-4 py-3 text-slate-900 dark:text-slate-100">{user.name}</td>
+                      <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{user.email}</td>
+                      <td className="px-4 py-3 text-slate-700 dark:text-slate-300 capitalize">{user.role}</td>
+                      <td className="px-4 py-3 text-slate-500 dark:text-slate-400">{new Date(user.createdAt || user.updatedAt || Date.now()).toLocaleDateString()}</td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={4} className="px-4 py-6 text-center text-slate-500">
+                    <td colSpan={4} className="px-4 py-6 text-center text-slate-500 dark:text-slate-400">
                       No members found yet.
                     </td>
                   </tr>

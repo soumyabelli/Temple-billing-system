@@ -249,7 +249,7 @@ const BillingManagement = () => {
   };
 
   return (
-    <div className="mt-5 space-y-6 text-slate-800">
+    <div className="mt-5 space-y-6 text-slate-800 dark:text-slate-200">
       {/* HERO BANNER */}
       <div className="relative overflow-hidden rounded-[32px] border border-amber-200/60 bg-gradient-to-r from-amber-500/15 via-orange-500/15 to-amber-600/15 p-8 shadow-md backdrop-blur-md">
         <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
@@ -279,33 +279,33 @@ const BillingManagement = () => {
       </div>
 
       {/* DATE RANGE FILTER BAR */}
-      <div className="rounded-[28px] border border-amber-200/60 bg-temple-100 p-6 shadow-sm flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      <div className="rounded-[28px] border border-amber-200/60 bg-temple-100 dark:bg-slate-800 p-6 shadow-sm flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-2">
             <FaCalendarAlt className="text-amber-700" />
-            <label htmlFor="fromDate" className="text-xs font-extrabold uppercase tracking-wider text-slate-700">From</label>
+            <label htmlFor="fromDate" className="text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">From</label>
             <input
               id="fromDate"
               type="date"
               value={fromDate}
               onChange={(e) => setFromDate(e.target.value)}
-              className="rounded-2xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-xs outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
+              className="rounded-2xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2.5 text-sm font-semibold text-slate-800 dark:text-slate-200 shadow-xs outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
             />
           </div>
           <div className="flex items-center gap-2">
-            <label htmlFor="toDate" className="text-xs font-extrabold uppercase tracking-wider text-slate-700">To</label>
+            <label htmlFor="toDate" className="text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">To</label>
             <input
               id="toDate"
               type="date"
               value={toDate}
               onChange={(e) => setToDate(e.target.value)}
-              className="rounded-2xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-xs outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
+              className="rounded-2xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2.5 text-sm font-semibold text-slate-800 dark:text-slate-200 shadow-xs outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
             />
           </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-extrabold text-slate-500 mr-1 uppercase">Quick Presets:</span>
+          <span className="text-xs font-extrabold text-slate-500 dark:text-slate-400 mr-1 uppercase">Quick Presets:</span>
           <button
             onClick={() => handlePresetFilter(0)}
             className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-extrabold text-amber-900 hover:bg-amber-100 transition"
@@ -330,72 +330,72 @@ const BillingManagement = () => {
       {/* TOP METRICS CARDS GRID */}
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {/* TOTAL REVENUE CARD */}
-        <div className="rounded-[28px] border border-amber-200/60 bg-temple-100 p-6 shadow-md transition hover:-translate-y-1">
+        <div className="rounded-[28px] border border-amber-200/60 bg-temple-100 dark:bg-slate-800 p-6 shadow-md transition hover:-translate-y-1">
           <div className="flex items-center justify-between">
             <p className="text-xs font-black uppercase tracking-wider text-amber-800">Total Revenue</p>
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-md">
               <FaRupeeSign size={20} />
             </div>
           </div>
-          <p className="mt-4 text-3xl font-black text-slate-900">{formatCurrency(totalRevenue)}</p>
+          <p className="mt-4 text-3xl font-black text-slate-900 dark:text-slate-100">{formatCurrency(totalRevenue)}</p>
           <p className="mt-2 text-xs font-semibold text-amber-700">Combined temple income</p>
         </div>
 
         {/* DONATION INCOME CARD */}
-        <div className="rounded-[28px] border border-amber-200/60 bg-temple-100 p-6 shadow-md transition hover:-translate-y-1">
+        <div className="rounded-[28px] border border-amber-200/60 bg-temple-100 dark:bg-slate-800 p-6 shadow-md transition hover:-translate-y-1">
           <div className="flex items-center justify-between">
             <p className="text-xs font-black uppercase tracking-wider text-emerald-800">Donations</p>
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-md">
               <FaDonate size={20} />
             </div>
           </div>
-          <p className="mt-4 text-3xl font-black text-slate-900">{formatCurrency(donationRevenue)}</p>
+          <p className="mt-4 text-3xl font-black text-slate-900 dark:text-slate-100">{formatCurrency(donationRevenue)}</p>
           <p className="mt-2 text-xs font-semibold text-emerald-700">{donations.length} entries recorded</p>
         </div>
 
         {/* PRASADAM SALES CARD */}
-        <div className="rounded-[28px] border border-amber-200/60 bg-temple-100 p-6 shadow-md transition hover:-translate-y-1">
+        <div className="rounded-[28px] border border-amber-200/60 bg-temple-100 dark:bg-slate-800 p-6 shadow-md transition hover:-translate-y-1">
           <div className="flex items-center justify-between">
             <p className="text-xs font-black uppercase tracking-wider text-orange-800">Prasadam Sales</p>
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-amber-600 text-white shadow-md">
               <FaBoxes size={20} />
             </div>
           </div>
-          <p className="mt-4 text-3xl font-black text-slate-900">{formatCurrency(prasadamRevenue)}</p>
+          <p className="mt-4 text-3xl font-black text-slate-900 dark:text-slate-100">{formatCurrency(prasadamRevenue)}</p>
           <p className="mt-2 text-xs font-semibold text-orange-700">{prasadamOrders.length} orders completed</p>
         </div>
 
         {/* POOJA BOOKINGS CARD */}
-        <div className="rounded-[28px] border border-amber-200/60 bg-temple-100 p-6 shadow-md transition hover:-translate-y-1">
+        <div className="rounded-[28px] border border-amber-200/60 bg-temple-100 dark:bg-slate-800 p-6 shadow-md transition hover:-translate-y-1">
           <div className="flex items-center justify-between">
             <p className="text-xs font-black uppercase tracking-wider text-purple-800">Pooja Bookings</p>
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 text-white shadow-md">
               <MdTempleBuddhist size={22} />
             </div>
           </div>
-          <p className="mt-4 text-3xl font-black text-slate-900">{formatCurrency(bookingRevenue)}</p>
+          <p className="mt-4 text-3xl font-black text-slate-900 dark:text-slate-100">{formatCurrency(bookingRevenue)}</p>
           <p className="mt-2 text-xs font-semibold text-purple-700">{bookings.length} sevas booked</p>
         </div>
 
         {/* ROOM BOOKINGS CARD */}
-        <div className="rounded-[28px] border border-amber-200/60 bg-temple-100 p-6 shadow-md transition hover:-translate-y-1">
+        <div className="rounded-[28px] border border-amber-200/60 bg-temple-100 dark:bg-slate-800 p-6 shadow-md transition hover:-translate-y-1">
           <div className="flex items-center justify-between">
             <p className="text-xs font-black uppercase tracking-wider text-teal-800">Room Bookings</p>
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-500 to-cyan-600 text-white shadow-md">
               <FaBed size={20} />
             </div>
           </div>
-          <p className="mt-4 text-3xl font-black text-slate-900">{formatCurrency(0)}</p>
+          <p className="mt-4 text-3xl font-black text-slate-900 dark:text-slate-100">{formatCurrency(0)}</p>
           <p className="mt-2 text-xs font-semibold text-teal-700">Room allotment revenue</p>
         </div>
       </div>
 
       {/* FILTERED PERIOD SUMMARY CARD */}
-      <div className="rounded-[32px] border border-amber-200/60 bg-temple-100 p-6 shadow-md">
+      <div className="rounded-[32px] border border-amber-200/60 bg-temple-100 dark:bg-slate-800 p-6 shadow-md">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-2xl font-black text-slate-800">Selected Period Revenue Breakdown</h2>
-            <p className="mt-1 text-sm font-semibold text-slate-500">Filtered financial metrics from {fromDate} to {toDate}.</p>
+            <h2 className="text-2xl font-black text-slate-800 dark:text-slate-200">Selected Period Revenue Breakdown</h2>
+            <p className="mt-1 text-sm font-semibold text-slate-500 dark:text-slate-400">Filtered financial metrics from {fromDate} to {toDate}.</p>
           </div>
           <span className="rounded-full bg-amber-100 border border-amber-300 px-4 py-1.5 text-xs font-extrabold text-amber-900">
             {reportTransactions.length} Total Transactions
@@ -403,20 +403,20 @@ const BillingManagement = () => {
         </div>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-2xl border border-amber-200/60 bg-white p-5 shadow-xs">
-            <p className="text-xs font-extrabold uppercase text-slate-500">Filtered Revenue</p>
+          <div className="rounded-2xl border border-amber-200/60 bg-white dark:bg-slate-800 p-5 shadow-xs">
+            <p className="text-xs font-extrabold uppercase text-slate-500 dark:text-slate-400">Filtered Revenue</p>
             <p className="mt-2 text-2xl font-black text-amber-700">{formatCurrency(reportRevenue)}</p>
           </div>
-          <div className="rounded-2xl border border-amber-200/60 bg-white p-5 shadow-xs">
-            <p className="text-xs font-extrabold uppercase text-slate-500">Booking Revenue</p>
+          <div className="rounded-2xl border border-amber-200/60 bg-white dark:bg-slate-800 p-5 shadow-xs">
+            <p className="text-xs font-extrabold uppercase text-slate-500 dark:text-slate-400">Booking Revenue</p>
             <p className="mt-2 text-2xl font-black text-purple-700">{formatCurrency(reportBookingRevenue)}</p>
           </div>
-          <div className="rounded-2xl border border-amber-200/60 bg-white p-5 shadow-xs">
-            <p className="text-xs font-extrabold uppercase text-slate-500">Donation Revenue</p>
+          <div className="rounded-2xl border border-amber-200/60 bg-white dark:bg-slate-800 p-5 shadow-xs">
+            <p className="text-xs font-extrabold uppercase text-slate-500 dark:text-slate-400">Donation Revenue</p>
             <p className="mt-2 text-2xl font-black text-emerald-700">{formatCurrency(reportDonationRevenue)}</p>
           </div>
-          <div className="rounded-2xl border border-amber-200/60 bg-white p-5 shadow-xs">
-            <p className="text-xs font-extrabold uppercase text-slate-500">Prasadam Revenue</p>
+          <div className="rounded-2xl border border-amber-200/60 bg-white dark:bg-slate-800 p-5 shadow-xs">
+            <p className="text-xs font-extrabold uppercase text-slate-500 dark:text-slate-400">Prasadam Revenue</p>
             <p className="mt-2 text-2xl font-black text-orange-700">{formatCurrency(reportPrasadamRevenue)}</p>
           </div>
         </div>
@@ -425,19 +425,19 @@ const BillingManagement = () => {
       {/* TRANSACTIONS & PAYMENT METHODS GRID */}
       <div className="grid gap-6 xl:grid-cols-[1.4fr_0.6fr]">
         {/* RECENT TRANSACTIONS TABLE CARD */}
-        <div className="rounded-[32px] border border-amber-200/60 bg-temple-100 p-6 shadow-md">
+        <div className="rounded-[32px] border border-amber-200/60 bg-temple-100 dark:bg-slate-800 p-6 shadow-md">
           <div className="flex items-center justify-between mb-5">
             <div>
-              <h2 className="text-2xl font-black text-slate-800">Recent Transactions</h2>
-              <p className="mt-1 text-sm font-semibold text-slate-500">Real-time payment logs across all channels.</p>
+              <h2 className="text-2xl font-black text-slate-800 dark:text-slate-200">Recent Transactions</h2>
+              <p className="mt-1 text-sm font-semibold text-slate-500 dark:text-slate-400">Real-time payment logs across all channels.</p>
             </div>
             <span className="rounded-full bg-amber-100 border border-amber-300 px-3.5 py-1 text-xs font-extrabold text-amber-900">
               {recentTransactions.length} Latest
             </span>
           </div>
 
-          <div className="overflow-x-auto rounded-2xl border border-amber-200/60 bg-white">
-            <table className="min-w-full text-left text-sm text-slate-700">
+          <div className="overflow-x-auto rounded-2xl border border-amber-200/60 bg-white dark:bg-slate-800">
+            <table className="min-w-full text-left text-sm text-slate-700 dark:text-slate-300">
               <thead className="bg-amber-50/70 border-b border-amber-200/80 text-amber-950 font-black">
                 <tr>
                   <th className="px-4 py-3.5">Category</th>
@@ -450,16 +450,16 @@ const BillingManagement = () => {
               </thead>
               <tbody className="divide-y divide-amber-100">
                 {loading ? (
-                  <tr><td colSpan="6" className="px-4 py-8 text-center text-sm font-semibold text-slate-500">Loading live transactions…</td></tr>
+                  <tr><td colSpan="6" className="px-4 py-8 text-center text-sm font-semibold text-slate-500 dark:text-slate-400">Loading live transactions…</td></tr>
                 ) : recentTransactions.length === 0 ? (
-                  <tr><td colSpan="6" className="px-4 py-8 text-center text-sm font-semibold text-slate-500">No transactions recorded yet.</td></tr>
+                  <tr><td colSpan="6" className="px-4 py-8 text-center text-sm font-semibold text-slate-500 dark:text-slate-400">No transactions recorded yet.</td></tr>
                 ) : (
                   recentTransactions.map((item, idx) => (
                     <tr key={`${item.id}-${idx}`} className="hover:bg-amber-50/40 transition">
-                      <td className="px-4 py-3.5 font-bold text-slate-900">{item.category}</td>
-                      <td className="px-4 py-3.5 text-slate-600 max-w-[200px] truncate font-medium">{item.description}</td>
+                      <td className="px-4 py-3.5 font-bold text-slate-900 dark:text-slate-100">{item.category}</td>
+                      <td className="px-4 py-3.5 text-slate-600 dark:text-slate-400 max-w-[200px] truncate font-medium">{item.description}</td>
                       <td className="px-4 py-3.5 font-black text-amber-700">{formatCurrency(item.amount)}</td>
-                      <td className="px-4 py-3.5 font-semibold text-slate-700">{item.paymentMethod}</td>
+                      <td className="px-4 py-3.5 font-semibold text-slate-700 dark:text-slate-300">{item.paymentMethod}</td>
                       <td className="px-4 py-3.5">
                         <span className={`rounded-lg px-2.5 py-1 text-xs font-black border ${
                           item.status === "Completed" || item.status === "Confirmed" 
@@ -471,7 +471,7 @@ const BillingManagement = () => {
                           {item.status}
                         </span>
                       </td>
-                      <td className="px-4 py-3.5 text-xs text-slate-500 font-medium">{item.date ? new Date(item.date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "-"}</td>
+                      <td className="px-4 py-3.5 text-xs text-slate-500 dark:text-slate-400 font-medium">{item.date ? new Date(item.date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "-"}</td>
                     </tr>
                   ))
                 )}
@@ -483,22 +483,22 @@ const BillingManagement = () => {
         {/* PAYMENT METHODS & INSIGHTS WIDGETS */}
         <div className="space-y-6">
           {/* PAYMENT METHODS CARD */}
-          <div className="rounded-[32px] border border-amber-200/60 bg-temple-100 p-6 shadow-md">
-            <div className="flex items-center gap-2 text-2xl font-black text-slate-800 mb-1">
+          <div className="rounded-[32px] border border-amber-200/60 bg-temple-100 dark:bg-slate-800 p-6 shadow-md">
+            <div className="flex items-center gap-2 text-2xl font-black text-slate-800 dark:text-slate-200 mb-1">
               <FaCreditCard className="text-amber-600" /> Payment Methods
             </div>
-            <p className="text-xs font-semibold text-slate-500 mb-5">Channel distribution across transactions.</p>
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-5">Channel distribution across transactions.</p>
             
             <div className="space-y-3">
               {paymentMethods.length > 0 ? paymentMethods.map((method) => (
-                <div key={method.method} className="flex items-center justify-between rounded-2xl border border-amber-200/60 bg-white p-4 shadow-xs">
-                  <span className="font-extrabold text-slate-800">{method.method}</span>
+                <div key={method.method} className="flex items-center justify-between rounded-2xl border border-amber-200/60 bg-white dark:bg-slate-800 p-4 shadow-xs">
+                  <span className="font-extrabold text-slate-800 dark:text-slate-200">{method.method}</span>
                   <span className="rounded-xl bg-amber-100 border border-amber-300 px-3 py-1 text-xs font-black text-amber-900">
                     {method.count} Receipts
                   </span>
                 </div>
               )) : (
-                <div className="p-4 rounded-xl bg-white border border-slate-200 text-center text-xs font-semibold text-slate-400">
+                <div className="p-4 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-center text-xs font-semibold text-slate-400">
                   No payment methods tracked yet.
                 </div>
               )}
@@ -506,23 +506,23 @@ const BillingManagement = () => {
           </div>
 
           {/* SYSTEM INSIGHTS CARD */}
-          <div className="rounded-[32px] border border-amber-200/60 bg-temple-100 p-6 shadow-md">
-            <div className="flex items-center gap-2 text-2xl font-black text-slate-800 mb-1">
+          <div className="rounded-[32px] border border-amber-200/60 bg-temple-100 dark:bg-slate-800 p-6 shadow-md">
+            <div className="flex items-center gap-2 text-2xl font-black text-slate-800 dark:text-slate-200 mb-1">
               <FaChartLine className="text-amber-600" /> Billing Insights
             </div>
-            <p className="text-xs font-semibold text-slate-500 mb-5">Transaction counts by module.</p>
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-5">Transaction counts by module.</p>
             
             <div className="space-y-3">
-              <div className="flex items-center justify-between rounded-2xl border border-amber-200/60 bg-white p-4 shadow-xs">
-                <span className="text-xs font-extrabold text-slate-700 uppercase">Pooja Seva Bookings</span>
+              <div className="flex items-center justify-between rounded-2xl border border-amber-200/60 bg-white dark:bg-slate-800 p-4 shadow-xs">
+                <span className="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase">Pooja Seva Bookings</span>
                 <span className="text-lg font-black text-purple-700">{bookings.length}</span>
               </div>
-              <div className="flex items-center justify-between rounded-2xl border border-amber-200/60 bg-white p-4 shadow-xs">
-                <span className="text-xs font-extrabold text-slate-700 uppercase">Devotee Donations</span>
+              <div className="flex items-center justify-between rounded-2xl border border-amber-200/60 bg-white dark:bg-slate-800 p-4 shadow-xs">
+                <span className="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase">Devotee Donations</span>
                 <span className="text-lg font-black text-emerald-700">{donations.length}</span>
               </div>
-              <div className="flex items-center justify-between rounded-2xl border border-amber-200/60 bg-white p-4 shadow-xs">
-                <span className="text-xs font-extrabold text-slate-700 uppercase">Prasadam Counter Orders</span>
+              <div className="flex items-center justify-between rounded-2xl border border-amber-200/60 bg-white dark:bg-slate-800 p-4 shadow-xs">
+                <span className="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase">Prasadam Counter Orders</span>
                 <span className="text-lg font-black text-orange-700">{prasadamOrders.length}</span>
               </div>
             </div>

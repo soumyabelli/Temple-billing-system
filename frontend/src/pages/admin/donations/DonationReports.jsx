@@ -231,7 +231,7 @@ const DonationReports = () => {
           <button onClick={() => window.location.href = '/admin/donations'} className="rounded-2xl border border-slate-700 bg-slate-800 px-5 py-3 font-semibold text-white transition hover:bg-slate-700">
             Back to Donations
           </button>
-          <button onClick={handleViewReport} className="rounded-2xl bg-temple-100 px-5 py-3 font-semibold text-slate-950 transition hover:bg-slate-200">
+          <button onClick={handleViewReport} className="rounded-2xl bg-temple-100 dark:bg-slate-800 px-5 py-3 font-semibold text-slate-950 transition hover:bg-slate-200">
             View Live Print Preview
           </button>
           <button onClick={handleExportPdf} className="rounded-2xl bg-amber-400 px-5 py-3 font-semibold text-slate-950 transition hover:bg-amber-300">
@@ -288,9 +288,9 @@ const DonationReports = () => {
       {/* Live Table Preview */}
       <SectionCard title="Filtered Donation Activity Log" subtitle="Live view of records matching active filters.">
         <div className="overflow-x-auto">
-          <table className="min-w-full text-left text-sm text-slate-700">
+          <table className="min-w-full text-left text-sm text-slate-700 dark:text-slate-300">
             <thead>
-              <tr className="border-b border-slate-200 text-slate-900">
+              <tr className="border-b border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100">
                 <th className="py-4 px-3">Receipt ID</th>
                 <th className="py-4 px-3">Donor</th>
                 <th className="py-4 px-3">Category</th>
@@ -304,8 +304,8 @@ const DonationReports = () => {
             <tbody>
               {filteredDonations.length > 0 ? (
                 filteredDonations.map((donation) => (
-                  <tr key={donation._id} className="border-b border-slate-200 hover:bg-slate-50 transition">
-                    <td className="py-4 px-3 font-medium text-slate-900">DN-{donation._id?.slice(-6).toUpperCase()}</td>
+                  <tr key={donation._id} className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:bg-slate-800/50 transition">
+                    <td className="py-4 px-3 font-medium text-slate-900 dark:text-slate-100">DN-{donation._id?.slice(-6).toUpperCase()}</td>
                     <td className="py-4 px-3">{donation.donorName}</td>
                     <td className="py-4 px-3">{donation.category}</td>
                     <td className="py-4 px-3 text-amber-600 font-semibold">₹{donation.amount?.toLocaleString("en-IN")}</td>
@@ -324,7 +324,7 @@ const DonationReports = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={8} className="py-8 text-center text-slate-500">
+                  <td colSpan={8} className="py-8 text-center text-slate-500 dark:text-slate-400">
                     No donation records match the selected date range or search keyword.
                   </td>
                 </tr>

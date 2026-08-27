@@ -162,9 +162,9 @@ export default function PoojaTypeSetupModal({ editingPooja, onClose, onSave }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-8 overflow-y-auto">
-      <div className="w-full max-w-4xl rounded-3xl border border-[#f0f0f0] bg-temple-100 p-8 shadow-2xl relative my-auto">
-        <button type="button" onClick={onClose} className="absolute top-4 right-4 text-[#858b96] hover:text-[#15141f] text-3xl font-bold">&times;</button>
-        <h3 className="text-2xl font-bold text-[#15141f] mb-6 border-b pb-4">
+      <div className="w-full max-w-4xl rounded-3xl border border-[#f0f0f0] bg-temple-100 dark:bg-slate-800 p-8 shadow-2xl relative my-auto">
+        <button type="button" onClick={onClose} className="absolute top-4 right-4 text-[#858b96] dark:text-slate-400 hover:text-[#15141f] dark:text-slate-100 text-3xl font-bold">&times;</button>
+        <h3 className="text-2xl font-bold text-[#15141f] dark:text-slate-100 mb-6 border-b pb-4">
           {editingPooja ? "Edit Pooja Setup" : "Create New Pooja"}
         </h3>
 
@@ -173,7 +173,7 @@ export default function PoojaTypeSetupModal({ editingPooja, onClose, onSave }) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Basic Details */}
           <div className="space-y-4">
-            <h4 className="text-lg font-bold text-[#323946]">Basic Details</h4>
+            <h4 className="text-lg font-bold text-[#323946] dark:text-slate-300">Basic Details</h4>
 
             <label className="block text-sm font-semibold text-[#4f4f4f]">
               Pooja Name <span className="text-red-500">*</span>
@@ -202,11 +202,11 @@ export default function PoojaTypeSetupModal({ editingPooja, onClose, onSave }) {
             </label>
 
             <div className="pt-2 border-t mt-2">
-              <h5 className="font-bold text-[#323946] mb-2">Schedule</h5>
+              <h5 className="font-bold text-[#323946] dark:text-slate-300 mb-2">Schedule</h5>
               <label className="block text-sm font-semibold text-[#4f4f4f] mb-1">Available Days</label>
               <div className="flex flex-wrap gap-2 mb-3">
                 {WEEKDAYS.map(day => (
-                  <label key={day} className="flex items-center gap-1 text-sm bg-gray-50 border px-2 py-1 rounded cursor-pointer">
+                  <label key={day} className="flex items-center gap-1 text-sm bg-gray-50 dark:bg-slate-800/50 border px-2 py-1 rounded cursor-pointer">
                     <input
                       type="checkbox"
                       checked={availableDays.includes(day)}
@@ -246,8 +246,8 @@ export default function PoojaTypeSetupModal({ editingPooja, onClose, onSave }) {
                 ))}
               </ul>
 
-              <div className="mt-4 pt-2 border-t border-[#f0ece6]">
-                <h5 className="font-bold text-[#323946] mb-2">Advance Booking Constraints</h5>
+              <div className="mt-4 pt-2 border-t border-[#f0ece6] dark:border-slate-700">
+                <h5 className="font-bold text-[#323946] dark:text-slate-300 mb-2">Advance Booking Constraints</h5>
                 <div className="grid grid-cols-2 gap-4">
                   <label className="block text-sm font-semibold text-[#4f4f4f]">
                     Min. Advance Booking (Days)
@@ -269,7 +269,7 @@ export default function PoojaTypeSetupModal({ editingPooja, onClose, onSave }) {
               </div>
               <ul className="mt-2 space-y-1">
                 {rules.map((r, i) => (
-                  <li key={i} className="flex justify-between rounded-lg bg-gray-50 px-3 py-1 text-sm text-gray-700">
+                  <li key={i} className="flex justify-between rounded-lg bg-gray-50 dark:bg-slate-800/50 px-3 py-1 text-sm text-gray-700 dark:text-slate-300">
                     <span>• {r}</span>
                     <button type="button" onClick={() => setRules(rules.filter((_, idx) => idx !== i))} className="text-red-500 font-bold">&times;</button>
                   </li>
@@ -285,7 +285,7 @@ export default function PoojaTypeSetupModal({ editingPooja, onClose, onSave }) {
               </div>
               <ul className="mt-2 space-y-1">
                 {instructions.map((r, i) => (
-                  <li key={i} className="flex justify-between rounded-lg bg-gray-50 px-3 py-1 text-sm text-gray-700">
+                  <li key={i} className="flex justify-between rounded-lg bg-gray-50 dark:bg-slate-800/50 px-3 py-1 text-sm text-gray-700 dark:text-slate-300">
                     <span>• {r}</span>
                     <button type="button" onClick={() => setInstructions(instructions.filter((_, idx) => idx !== i))} className="text-red-500 font-bold">&times;</button>
                   </li>
@@ -295,10 +295,10 @@ export default function PoojaTypeSetupModal({ editingPooja, onClose, onSave }) {
           </div>
 
           {/* Materials Section */}
-          <div className="space-y-4 border-l pl-6 border-[#f0ece6]">
-            <h4 className="text-lg font-bold text-[#323946]">Required Materials</h4>
+          <div className="space-y-4 border-l pl-6 border-[#f0ece6] dark:border-slate-700">
+            <h4 className="text-lg font-bold text-[#323946] dark:text-slate-300">Required Materials</h4>
 
-            <div className="rounded-xl border border-[#ece8e1] bg-[#faf9f7] p-4 space-y-3">
+            <div className="rounded-xl border border-[#ece8e1] dark:border-slate-700 bg-[#faf9f7] dark:bg-slate-700/50 p-4 space-y-3">
               <label className="block text-sm font-semibold text-[#4f4f4f] mb-3">
                 Material Source
                 <div className="flex gap-4 mt-1">
@@ -324,7 +324,7 @@ export default function PoojaTypeSetupModal({ editingPooja, onClose, onSave }) {
                       const item = inventoryItems.find(i => i._id === id);
                       if (item) setUnit(item.unit || "");
                     }}
-                    className="mt-1 w-full rounded-xl border border-[#ded6c6] px-4 py-2 outline-none focus:border-[#8b5e3c] bg-temple-100"
+                    className="mt-1 w-full rounded-xl border border-[#ded6c6] px-4 py-2 outline-none focus:border-[#8b5e3c] bg-temple-100 dark:bg-slate-800"
                   >
                     <option value="">-- Choose Item --</option>
                     {inventoryItems.map(item => (
@@ -352,7 +352,7 @@ export default function PoojaTypeSetupModal({ editingPooja, onClose, onSave }) {
 
               <label className="block text-sm font-semibold text-[#4f4f4f] mt-3">
                 Responsibility Type
-                <select value={responsibilityType} onChange={(e) => setResponsibilityType(e.target.value)} className="mt-1 w-full rounded-xl border border-[#ded6c6] px-4 py-2 outline-none focus:border-[#8b5e3c] bg-temple-100">
+                <select value={responsibilityType} onChange={(e) => setResponsibilityType(e.target.value)} className="mt-1 w-full rounded-xl border border-[#ded6c6] px-4 py-2 outline-none focus:border-[#8b5e3c] bg-temple-100 dark:bg-slate-800">
                   <option value="TEMPLE_PROVIDES">Temple Provides (No Action from Devotee)</option>
                   <option value="DEVOTEE_MUST_BRING">Devotee Must Bring (On Pooja Day)</option>
                   <option value="DEVOTEE_OR_TEMPLE">Devotee Can Bring or Temple Arranges</option>
@@ -391,32 +391,32 @@ export default function PoojaTypeSetupModal({ editingPooja, onClose, onSave }) {
               )}
 
               <div className="flex gap-4 pt-1 flex-wrap">
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-slate-300 cursor-pointer">
                   <input type="checkbox" checked={mandatory} onChange={(e) => setMandatory(e.target.checked)} className="w-4 h-4 accent-[#1b7f77]" />
                   Mandatory to have
                 </label>
               </div>
 
-              <button type="button" onClick={handleAddMaterial} className="w-full mt-2 rounded-xl bg-[#15141f] py-2 text-sm font-bold text-white hover:bg-black">
+              <button type="button" onClick={handleAddMaterial} className="w-full mt-2 rounded-xl bg-[#15141f] dark:bg-slate-600 py-2 text-sm font-bold text-white hover:bg-black dark:hover:bg-slate-50 dark:bg-slate-800/500">
                 + Add Material to Pooja
               </button>
             </div>
 
             <div className="mt-4 max-h-[300px] overflow-y-auto pr-2">
               {requiredMaterials.length === 0 ? (
-                <p className="text-sm text-gray-500 text-center py-4">No materials added yet.</p>
+                <p className="text-sm text-gray-500 dark:text-slate-400 text-center py-4">No materials added yet.</p>
               ) : (
                 <div className="space-y-2">
                   {requiredMaterials.map((mat, idx) => (
-                    <div key={idx} className="relative rounded-xl border border-[#ece8e1] bg-temple-100 p-3 shadow-sm">
+                    <div key={idx} className="relative rounded-xl border border-[#ece8e1] dark:border-slate-700 bg-temple-100 dark:bg-slate-800 p-3 shadow-sm">
                       <button type="button" onClick={() => setRequiredMaterials(requiredMaterials.filter((_, i) => i !== idx))} className="absolute top-2 right-2 text-red-500 hover:text-red-700 font-bold">&times;</button>
-                      <p className="font-bold text-[#15141f]">{mat.itemName} <span className="text-sm font-normal text-gray-500">({mat.qty} {mat.unit})</span></p>
+                      <p className="font-bold text-[#15141f] dark:text-slate-100">{mat.itemName} <span className="text-sm font-normal text-gray-500 dark:text-slate-400">({mat.qty} {mat.unit})</span></p>
                       <div className="mt-1 flex gap-2 flex-wrap">
                         {mat.responsibilityType === "TEMPLE_PROVIDES" && <span className="rounded bg-teal-100 px-2 py-0.5 text-xs font-semibold text-teal-700">Temple Provides</span>}
                         {mat.responsibilityType === "DEVOTEE_MUST_BRING" && <span className="rounded bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700">Devotee Must Bring</span>}
                         {mat.responsibilityType === "DEVOTEE_OR_TEMPLE" && <span className="rounded bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700">Devotee / Temple Arrange (₹{mat.templeCharge})</span>}
                         {mat.responsibilityType === "DEVOTEE_PREPARATION_REQUIRED" && <span className="rounded bg-orange-100 px-2 py-0.5 text-xs font-semibold text-orange-700">Adv. Prep ({mat.preparationDaysBeforePooja}d)</span>}
-                        {mat.mandatory && <span className="rounded bg-gray-200 px-2 py-0.5 text-xs font-semibold text-gray-700">Mandatory</span>}
+                        {mat.mandatory && <span className="rounded bg-gray-200 px-2 py-0.5 text-xs font-semibold text-gray-700 dark:text-slate-300">Mandatory</span>}
                       </div>
                     </div>
                   ))}
@@ -427,8 +427,8 @@ export default function PoojaTypeSetupModal({ editingPooja, onClose, onSave }) {
           </div>
         </div>
 
-        <div className="mt-8 flex justify-end gap-3 border-t border-[#f0ece6] pt-4">
-          <button type="button" onClick={onClose} className="rounded-xl border border-[#d1d5db] bg-temple-100 px-6 py-2.5 font-bold text-[#374151] hover:bg-gray-50">Cancel</button>
+        <div className="mt-8 flex justify-end gap-3 border-t border-[#f0ece6] dark:border-slate-700 pt-4">
+          <button type="button" onClick={onClose} className="rounded-xl border border-[#d1d5db] bg-temple-100 dark:bg-slate-800 px-6 py-2.5 font-bold text-[#374151] dark:text-slate-300 hover:bg-gray-50 dark:bg-slate-800/50">Cancel</button>
           <button type="button" onClick={handleSave} className="rounded-xl bg-[#1b7f77] px-8 py-2.5 font-bold text-white hover:bg-[#146059]">Save Pooja</button>
         </div>
       </div>

@@ -320,13 +320,13 @@ const InventoryManagement = () => {
   return (
     <div className="space-y-6 mt-5 p-2">
       {/* Header */}
-      <div className="rounded-2xl border bg-temple-100 p-6 shadow-sm">
+      <div className="rounded-2xl border bg-temple-100 dark:bg-slate-800 p-6 shadow-sm">
         <h1 className="text-3xl font-bold">Inventory & Assets</h1>
-        <p className="mt-2 text-slate-500">Manage all temple resources, suppliers, repairs, and requests in one place.</p>
+        <p className="mt-2 text-slate-500 dark:text-slate-400">Manage all temple resources, suppliers, repairs, and requests in one place.</p>
       </div>
 
       {/* Navigation */}
-      <div className="flex flex-wrap gap-2 rounded-2xl border bg-temple-100 p-2 shadow-sm">
+      <div className="flex flex-wrap gap-2 rounded-2xl border bg-temple-100 dark:bg-slate-800 p-2 shadow-sm">
         {[
           { id: "items", label: "📦 Central Inventory" },
           { id: "requests", label: "📋 Issue Requests" },
@@ -340,7 +340,7 @@ const InventoryManagement = () => {
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`px-4 py-2 rounded-xl text-sm font-bold transition-colors ${
-              activeTab === tab.id ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              activeTab === tab.id ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600 dark:text-slate-400 hover:bg-slate-200"
             }`}
           >
             {tab.label}
@@ -349,7 +349,7 @@ const InventoryManagement = () => {
       </div>
 
       {/* Content */}
-      <div className="rounded-2xl border bg-temple-100 p-6 shadow-sm min-h-[60vh]">
+      <div className="rounded-2xl border bg-temple-100 dark:bg-slate-800 p-6 shadow-sm min-h-[60vh]">
         {loading && <p>Loading data...</p>}
 
         {!loading && activeTab === "items" && (
@@ -358,19 +358,19 @@ const InventoryManagement = () => {
             {metrics && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="p-4 border rounded-xl bg-blue-50">
-                  <p className="text-sm text-slate-500 font-bold">Total Items</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 font-bold">Total Items</p>
                   <p className="text-2xl font-black text-blue-700">{metrics.totalItems}</p>
                 </div>
                 <div className="p-4 border rounded-xl bg-emerald-50">
-                  <p className="text-sm text-slate-500 font-bold">Inventory Value</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 font-bold">Inventory Value</p>
                   <p className="text-2xl font-black text-emerald-700">₹{metrics.totalValue.toLocaleString()}</p>
                 </div>
                 <div className="p-4 border rounded-xl bg-amber-50">
-                  <p className="text-sm text-slate-500 font-bold">Low / Out of Stock</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 font-bold">Low / Out of Stock</p>
                   <p className="text-2xl font-black text-amber-700">{metrics.lowStockCount} / {metrics.outOfStockCount}</p>
                 </div>
                 <div className="p-4 border rounded-xl bg-purple-50">
-                  <p className="text-sm text-slate-500 font-bold">Today's Purchases</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 font-bold">Today's Purchases</p>
                   <p className="text-2xl font-black text-purple-700">{metrics.todaysPurchases}</p>
                 </div>
               </div>
@@ -400,9 +400,9 @@ const InventoryManagement = () => {
             
             <div className="overflow-x-auto border rounded-xl">
               <table className="w-full text-left text-sm whitespace-nowrap">
-                <thead className="bg-slate-50 border-b">
+                <thead className="bg-slate-50 dark:bg-slate-800/50 border-b">
                   <tr>
-                    <th className="p-3 sticky left-0 bg-slate-50 z-10">Name</th>
+                    <th className="p-3 sticky left-0 bg-slate-50 dark:bg-slate-800/50 z-10">Name</th>
                     <th className="p-3">Status</th>
                     <th className="p-3">Category</th>
                     <th className="p-3">Avail. Stock</th>
@@ -413,12 +413,12 @@ const InventoryManagement = () => {
                     <th className="p-3">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y bg-temple-100">
+                <tbody className="divide-y bg-temple-100 dark:bg-slate-800">
                   {items
                     .filter(i => (categoryFilter === "All" || i.category === categoryFilter) && i.name.toLowerCase().includes(searchTerm.toLowerCase()))
                     .map(item => (
-                    <tr key={item._id} className="hover:bg-slate-50">
-                      <td className="p-3 font-semibold sticky left-0 bg-temple-100 z-10">
+                    <tr key={item._id} className="hover:bg-slate-50 dark:bg-slate-800/50">
+                      <td className="p-3 font-semibold sticky left-0 bg-temple-100 dark:bg-slate-800 z-10">
                         <button onClick={() => handleViewItemDetails(item._id)} className="text-blue-600 hover:underline">{item.name}</button>
                       </td>
                       <td className="p-3">
@@ -434,7 +434,7 @@ const InventoryManagement = () => {
                       </td>
                       <td className="p-3">{item.category}</td>
                       <td className="p-3 font-bold text-emerald-600">{item.availableStock} {item.unit}</td>
-                      <td className="p-3 text-slate-500">{item.minimumStock} / {item.reorderLevel || item.minimumStock} {item.unit}</td>
+                      <td className="p-3 text-slate-500 dark:text-slate-400">{item.minimumStock} / {item.reorderLevel || item.minimumStock} {item.unit}</td>
                       <td className="p-3">{item.lastSupplier || "-"}</td>
                       <td className="p-3">{item.lastPurchasePrice ? `₹${item.lastPurchasePrice}` : "-"}</td>
                       <td className="p-3 text-amber-600">{item.damagedStock} / {item.expiredStock} {item.unit}</td>
@@ -457,7 +457,7 @@ const InventoryManagement = () => {
             <h2 className="text-xl font-bold mb-6">Issue Requests</h2>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="bg-slate-50 border-b">
+                <thead className="bg-slate-50 dark:bg-slate-800/50 border-b">
                   <tr>
                     <th className="p-3">Date</th>
                     <th className="p-3">User</th>
@@ -499,7 +499,7 @@ const InventoryManagement = () => {
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="bg-slate-50 border-b">
+                <thead className="bg-slate-50 dark:bg-slate-800/50 border-b">
                   <tr>
                     <th className="p-3">Name</th>
                     <th className="p-3">Phone</th>
@@ -530,7 +530,7 @@ const InventoryManagement = () => {
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="bg-slate-50 border-b">
+                <thead className="bg-slate-50 dark:bg-slate-800/50 border-b">
                   <tr>
                     <th className="p-3">ID</th>
                     <th className="p-3">Name</th>
@@ -563,7 +563,7 @@ const InventoryManagement = () => {
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="bg-slate-50 border-b">
+                <thead className="bg-slate-50 dark:bg-slate-800/50 border-b">
                   <tr>
                     <th className="p-3">Asset</th>
                     <th className="p-3">Description</th>
@@ -600,7 +600,7 @@ const InventoryManagement = () => {
             <h2 className="text-xl font-bold mb-6">Consumption Tracking</h2>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="bg-slate-50 border-b">
+                <thead className="bg-slate-50 dark:bg-slate-800/50 border-b">
                   <tr>
                     <th className="p-3">Date</th>
                     <th className="p-3">User</th>
@@ -628,7 +628,7 @@ const InventoryManagement = () => {
         {!loading && activeTab === "settings" && (
           <div>
             <h2 className="text-xl font-bold mb-6">Pooja Material Mappings</h2>
-            <form onSubmit={handleSavePoojaSetting} className="bg-slate-50 p-6 rounded-xl border mb-6 flex flex-col gap-4 max-w-4xl">
+            <form onSubmit={handleSavePoojaSetting} className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-xl border mb-6 flex flex-col gap-4 max-w-4xl">
               <div>
                 <label className="block text-sm font-bold mb-1">Pooja Name</label>
                 <input name="poojaName" required className="w-full border p-2 rounded" placeholder="e.g. Satyanarayana Swamy Vratha" />
@@ -640,7 +640,7 @@ const InventoryManagement = () => {
                 </div>
                 <div className="flex flex-col gap-2">
                   {poojaMaterials.map((mat, idx) => (
-                    <div key={idx} className="flex gap-2 items-center bg-temple-100 p-2 rounded border">
+                    <div key={idx} className="flex gap-2 items-center bg-temple-100 dark:bg-slate-800 p-2 rounded border">
                       <select 
                         className="border p-2 rounded flex-1" 
                         value={mat.item} 
@@ -682,7 +682,7 @@ const InventoryManagement = () => {
                       <button type="button" onClick={() => handleRemovePoojaMaterialRow(idx)} className="text-red-500 font-bold px-2">X</button>
                     </div>
                   ))}
-                  {poojaMaterials.length === 0 && <p className="text-slate-500 text-sm italic">No materials added.</p>}
+                  {poojaMaterials.length === 0 && <p className="text-slate-500 dark:text-slate-400 text-sm italic">No materials added.</p>}
                 </div>
               </div>
               <div className="flex justify-end mt-2">
@@ -691,7 +691,7 @@ const InventoryManagement = () => {
             </form>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="bg-slate-50 border-b">
+                <thead className="bg-slate-50 dark:bg-slate-800/50 border-b">
                   <tr>
                     <th className="p-3">Pooja Name</th>
                     <th className="p-3">Required Materials</th>
@@ -714,7 +714,7 @@ const InventoryManagement = () => {
       {/* Modals for creation (Item, Supplier, Asset, Repair) */}
       {showItemModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-temple-100 p-6 rounded-2xl w-96">
+          <div className="bg-temple-100 dark:bg-slate-800 p-6 rounded-2xl w-96">
             <h3 className="text-lg font-bold mb-4">{editItem ? "Edit Item" : "Add Item"}</h3>
             <form onSubmit={handleSaveItem} className="space-y-3">
               <input name="name" defaultValue={editItem?.name} placeholder="Name" required className="w-full border p-2 rounded" />
@@ -734,15 +734,15 @@ const InventoryManagement = () => {
               </select>
               <div className="flex gap-2">
                 <div className="flex-1">
-                  <label className="block text-xs font-bold text-slate-500 mb-1">Initial Stock (Qty)</label>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Initial Stock (Qty)</label>
                   <input name="availableStock" type="number" defaultValue={editItem?.availableStock || 0} placeholder="Initial Stock" required className="w-full border p-2 rounded" disabled={!!editItem} />
                 </div>
                 <div className="flex-1">
-                  <label className="block text-xs font-bold text-slate-500 mb-1">Min Stock</label>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Min Stock</label>
                   <input name="minimumStock" type="number" defaultValue={editItem?.minimumStock || 0} placeholder="Min Stock" required className="w-full border p-2 rounded" />
                 </div>
                 <div className="flex-1">
-                  <label className="block text-xs font-bold text-slate-500 mb-1">Reorder Level</label>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Reorder Level</label>
                   <input name="reorderLevel" type="number" defaultValue={editItem?.reorderLevel || 0} placeholder="Reorder Level" className="w-full border p-2 rounded" />
                 </div>
               </div>
@@ -765,7 +765,7 @@ const InventoryManagement = () => {
 
       {showSupplierModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-temple-100 p-6 rounded-2xl w-96">
+          <div className="bg-temple-100 dark:bg-slate-800 p-6 rounded-2xl w-96">
             <h3 className="text-lg font-bold mb-4">Add Supplier</h3>
             <form onSubmit={handleSaveSupplier} className="space-y-3">
               <input name="name" placeholder="Name" required className="w-full border p-2 rounded" />
@@ -783,7 +783,7 @@ const InventoryManagement = () => {
 
       {showAssetModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-temple-100 p-6 rounded-2xl w-96">
+          <div className="bg-temple-100 dark:bg-slate-800 p-6 rounded-2xl w-96">
             <h3 className="text-lg font-bold mb-4">Add Asset</h3>
             <form onSubmit={handleSaveAsset} className="space-y-3">
               <input name="assetId" placeholder="Asset ID" required className="w-full border p-2 rounded" />
@@ -805,7 +805,7 @@ const InventoryManagement = () => {
 
       {showRepairModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-temple-100 p-6 rounded-2xl w-96">
+          <div className="bg-temple-100 dark:bg-slate-800 p-6 rounded-2xl w-96">
             <h3 className="text-lg font-bold mb-4">Log Repair</h3>
             <form onSubmit={handleSaveRepair} className="space-y-3">
               <select name="asset" required className="w-full border p-2 rounded">
@@ -826,7 +826,7 @@ const InventoryManagement = () => {
 
       {showCompleteRepairModal && selectedRepair && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-temple-100 p-6 rounded-2xl w-full max-w-md">
+          <div className="bg-temple-100 dark:bg-slate-800 p-6 rounded-2xl w-full max-w-md">
             <h3 className="text-lg font-bold mb-4">Complete Repair: {selectedRepair.asset?.name}</h3>
             <form onSubmit={handleCompleteRepairSubmit} className="space-y-3">
               <input name="cost" type="number" placeholder="Final Cost (₹)" required className="w-full border p-2 rounded" />
@@ -849,7 +849,7 @@ const InventoryManagement = () => {
 
       {showRestockModal && selectedItem && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-temple-100 p-6 rounded-2xl w-full max-w-md">
+          <div className="bg-temple-100 dark:bg-slate-800 p-6 rounded-2xl w-full max-w-md">
             <h3 className="text-lg font-bold mb-4">Restock {selectedItem.name}</h3>
             <form onSubmit={handleRestock} className="space-y-3">
               <input name="quantityAdded" type="number" placeholder="Quantity Added" required className="w-full border p-2 rounded" />
@@ -859,11 +859,11 @@ const InventoryManagement = () => {
               <input name="invoiceUrl" placeholder="Invoice Number" required className="w-full border p-2 rounded" />
               <div className="flex gap-2">
                 <div className="flex-1">
-                  <label className="text-xs font-bold text-slate-500">Purchase Date</label>
+                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400">Purchase Date</label>
                   <input name="purchaseDate" type="date" required className="w-full border p-2 rounded" />
                 </div>
                 <div className="flex-1">
-                  <label className="text-xs font-bold text-slate-500">Expiry Date</label>
+                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400">Expiry Date</label>
                   <input name="expiryDate" type="date" className="w-full border p-2 rounded" />
                 </div>
               </div>
@@ -879,9 +879,9 @@ const InventoryManagement = () => {
 
       {showAdjustModal && selectedItem && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-temple-100 p-6 rounded-2xl w-full max-w-md">
+          <div className="bg-temple-100 dark:bg-slate-800 p-6 rounded-2xl w-full max-w-md">
             <h3 className="text-lg font-bold mb-4">Adjust Stock: {selectedItem.name}</h3>
-            <p className="text-sm text-slate-500 mb-4">Current Available: {selectedItem.availableStock} {selectedItem.unit}</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">Current Available: {selectedItem.availableStock} {selectedItem.unit}</p>
             <form onSubmit={handleAdjustStock} className="space-y-3">
               <select name="type" required className="w-full border p-2 rounded font-bold">
                 <option value="">Select Type...</option>
@@ -903,13 +903,13 @@ const InventoryManagement = () => {
 
       {showItemDetails && itemDetails && (
         <div className="fixed inset-0 bg-black/40 flex justify-end z-50">
-          <div className="bg-temple-100 w-full max-w-2xl h-full shadow-xl overflow-y-auto flex flex-col animate-slide-in-right">
-            <div className="p-6 border-b flex justify-between items-center bg-slate-50">
+          <div className="bg-temple-100 dark:bg-slate-800 w-full max-w-2xl h-full shadow-xl overflow-y-auto flex flex-col animate-slide-in-right">
+            <div className="p-6 border-b flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
               <div>
-                <h3 className="text-2xl font-black text-slate-800">{itemDetails.item.name}</h3>
-                <p className="text-sm font-bold text-slate-500">{itemDetails.item.category}</p>
+                <h3 className="text-2xl font-black text-slate-800 dark:text-slate-200">{itemDetails.item.name}</h3>
+                <p className="text-sm font-bold text-slate-500 dark:text-slate-400">{itemDetails.item.category}</p>
               </div>
-              <button onClick={() => setShowItemDetails(false)} className="text-slate-500 hover:bg-slate-200 p-2 rounded-full">
+              <button onClick={() => setShowItemDetails(false)} className="text-slate-500 dark:text-slate-400 hover:bg-slate-200 p-2 rounded-full">
                 ✕ Close
               </button>
             </div>
@@ -932,10 +932,10 @@ const InventoryManagement = () => {
               
               <div>
                 <h4 className="font-bold text-lg border-b pb-2 mb-4">Recent Purchase History</h4>
-                {itemDetails.purchaseHistory.length === 0 ? <p className="text-sm text-slate-500">No purchase history.</p> : (
+                {itemDetails.purchaseHistory.length === 0 ? <p className="text-sm text-slate-500 dark:text-slate-400">No purchase history.</p> : (
                   <div className="border rounded-xl overflow-hidden">
                     <table className="w-full text-left text-sm">
-                      <thead className="bg-slate-50 border-b">
+                      <thead className="bg-slate-50 dark:bg-slate-800/50 border-b">
                         <tr>
                           <th className="p-2">Date</th>
                           <th className="p-2">Supplier</th>
@@ -962,10 +962,10 @@ const InventoryManagement = () => {
               
               <div>
                 <h4 className="font-bold text-lg border-b pb-2 mb-4">Recent Stock Movement</h4>
-                {itemDetails.stockMovement.length === 0 ? <p className="text-sm text-slate-500">No stock movement.</p> : (
+                {itemDetails.stockMovement.length === 0 ? <p className="text-sm text-slate-500 dark:text-slate-400">No stock movement.</p> : (
                   <div className="border rounded-xl overflow-hidden">
                     <table className="w-full text-left text-sm">
-                      <thead className="bg-slate-50 border-b">
+                      <thead className="bg-slate-50 dark:bg-slate-800/50 border-b">
                         <tr>
                           <th className="p-2">Date</th>
                           <th className="p-2">Action</th>
