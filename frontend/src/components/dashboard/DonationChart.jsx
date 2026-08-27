@@ -11,7 +11,7 @@ const DonationChart = ({ sources = [], showCounts = false }) => {
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-6">
       {donationSources.map((source) => (
-        <div key={source.label} className="flex flex-col p-4 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
+        <div key={source.label} className="flex flex-col p-4 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-[#0f172a] hover:bg-gray-100 dark:hover:bg-slate-800 dark:hover:bg-slate-700 transition-colors">
           <div className="flex items-center gap-2 mb-3">
             <span className={`w-4 h-4 rounded-full ${source.color}`} />
             <span className="text-base font-medium text-gray-700 dark:text-slate-300">{source.label}</span>

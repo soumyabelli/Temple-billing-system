@@ -81,8 +81,8 @@ const CashierPageShell = ({
   accent = "orange",
 }) => {
   return (
-    <div className="space-y-6 text-slate-950">
-      <section className="relative overflow-hidden rounded-[28px] border border-amber-200/80 bg-white/80 backdrop-blur-2xl p-6 md:p-8 lg:p-10 shadow-2xl shadow-amber-950/10 transition-all">
+    <div className="space-y-6 text-slate-950 dark:text-slate-200">
+      <section className="relative overflow-hidden rounded-[28px] border border-amber-200/80 bg-white/80 dark:bg-[#0f172a] backdrop-blur-2xl p-6 md:p-8 lg:p-10 shadow-2xl shadow-amber-950/10 transition-all">
         {/* Ambient background glow */}
         <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-gradient-to-br from-amber-400/20 via-orange-400/10 to-transparent blur-3xl" />
 
@@ -92,13 +92,13 @@ const CashierPageShell = ({
           </div>
           
           {title ? (
-            <h1 className="mt-4 text-[2.35rem] md:text-[3rem] lg:text-[3.6rem] font-black font-serif leading-tight text-slate-900 tracking-tight">
+            <h1 className="mt-4 text-[2.35rem] md:text-[3rem] lg:text-[3.6rem] font-black font-serif leading-tight text-slate-900 dark:text-slate-200 tracking-tight">
               {title}
             </h1>
           ) : null}
           
           {description ? (
-            <p className="mt-3 max-w-3xl text-[1.02rem] md:text-[1.1rem] font-semibold leading-relaxed text-slate-700">
+            <p className="mt-3 max-w-3xl text-[1.02rem] md:text-[1.1rem] font-semibold leading-relaxed text-slate-700 dark:text-slate-200">
               {description}
             </p>
           ) : null}

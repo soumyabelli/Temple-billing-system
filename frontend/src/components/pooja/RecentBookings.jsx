@@ -15,7 +15,7 @@ const RecentBookings = ({ bookings = [] }) => {
   return (
     <div className="mt-6 space-y-4">
       {displayedBookings.map((booking) => (
-        <div key={booking._id || booking.id || `${booking.service}-${booking.datetime}`} className="rounded-2xl border border-[#ece8e1] dark:border-slate-700 p-4 bg-slate-50 dark:bg-slate-800">
+        <div key={booking._id || booking.id || `${booking.service}-${booking.datetime}`} className="rounded-2xl border border-[#ece8e1] dark:border-slate-700 p-4 bg-slate-50 dark:bg-[#0f172a]">
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-lg font-bold text-slate-800 dark:text-slate-100">{booking.service}</p>

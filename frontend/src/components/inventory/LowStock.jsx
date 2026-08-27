@@ -13,7 +13,7 @@ const LowStock = ({ items = [], requests = [] }) => {
 
   if (!lowStockItems.length && !pendingRequests.length) {
     return (
-      <div className="mt-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-center text-sm font-semibold text-slate-400 dark:text-slate-500">
+      <div className="mt-4 p-4 rounded-xl bg-slate-50 dark:bg-[#0f172a]/50 border border-slate-200 dark:border-slate-700 text-center text-sm font-semibold text-slate-400 dark:text-slate-500">
         No low stock alerts or pending inventory requests at the moment.
       </div>
     );
