@@ -104,7 +104,7 @@ const SevaSchedule = ({ darkMode }) => {
  <p className="text-rose-500 font-semibold text-center">{error}</p>
  <button
  onClick={fetchScheduleData}
- className="px-4 py-2 bg-orange-50 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 0 text-white rounded-xl text-xs font-bold hover:bg-orange-600 transition-colors"
+ className="px-4 py-2 bg-orange-500 text-white rounded-xl text-xs font-bold hover:bg-orange-600 transition-colors"
  >
  Retry
  </button>
@@ -132,7 +132,7 @@ const SevaSchedule = ({ darkMode }) => {
  {schedule.map((item) => (
  <div key={item.id} className="relative group">
  {/* Time dot indicator */}
- <div className="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full bg-orange-50 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 0 border-4 border-white dark:border-slate-900 group-hover:scale-125 transition-transform" />
+ <div className="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full bg-orange-500 border-4 border-white dark:border-slate-900 group-hover:scale-125 transition-transform" />
  
  <div
  className={`p-4.5 rounded-xl border transition-colors ${
@@ -218,7 +218,7 @@ const SevaSchedule = ({ darkMode }) => {
  {checklist.map((inv) => (
  <div
  key={inv.id}
- className="flex flex-col gap-2 p-3 border border-slate-100 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 dark:bg-[#0f172a] /20"
+ className="flex flex-col gap-2 p-3 border border-slate-100 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-800/20"
  >
  <div className="flex justify-between items-center">
  <span className="font-extrabold text-sm text-slate-800 dark:text-slate-200 ">

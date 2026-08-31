@@ -144,7 +144,7 @@ const ExpenseCategories = () => {
  <button
  type="submit"
  disabled={loading}
- className="bg-emerald-50 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 hover:bg-emerald-600 text-white font-semibold py-2 px-6 rounded-lg shadow transition-colors disabled:opacity-50 mt-2"
+ className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 px-6 rounded-lg shadow transition-colors disabled:opacity-50 mt-2"
  >
  {loading ? "Adding..." : "Add"}
  </button>

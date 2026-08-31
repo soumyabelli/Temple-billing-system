@@ -326,10 +326,10 @@ const PriestDashboard = () => {
  key={status}
  onClick={() => setFilter(status)}
  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${filter === status
- ? "bg-orange-50 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 0 text-white shadow-md"
+ ? "bg-orange-500 text-white shadow-md"
  : darkMode
  ? "bg-slate-800 text-slate-300 hover:bg-slate-750"
- : "bg-slate-100 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 text-slate-700 hover:bg-slate-200 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 "
+ : "bg-slate-100 text-slate-700 hover:bg-slate-200"
  }`}
  >
  {status}
@@ -442,7 +442,7 @@ const PriestDashboard = () => {
  {sevaDuties.map((duty, idx) => (
  <div key={duty.id} className="relative group">
  {/* Dot */}
- <div className="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full bg-orange-50 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 0 border-4 border-white dark:border-slate-900 group-hover:scale-125 transition-transform" />
+ <div className="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full bg-orange-500 border-4 border-white dark:border-slate-900 group-hover:scale-125 transition-transform" />
 
  <div className={`p-4 rounded-xl border ${darkMode ? "bg-slate-850 border-slate-700" : "bg-slate-50 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 border-slate-100"
  }`}>
@@ -605,7 +605,7 @@ const PriestDashboard = () => {
  </div>
  <button
  onClick={fetchCompleted}
- className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-50 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 0 text-white text-sm font-bold hover:bg-emerald-600 transition-colors shrink-0"
+ className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500 text-white text-sm font-bold hover:bg-emerald-600 transition-colors shrink-0"
  >
  🔄 Refresh
  </button>
@@ -641,7 +641,7 @@ const PriestDashboard = () => {
  </div>
  <button
  type="submit"
- className="px-5 py-2 rounded-xl bg-orange-50 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 0 text-white text-sm font-bold hover:bg-orange-600 transition-colors"
+ className="px-5 py-2 rounded-xl bg-orange-500 text-white text-sm font-bold hover:bg-orange-600 transition-colors"
  >
  Search
  </button>
@@ -655,10 +655,10 @@ const PriestDashboard = () => {
  key={f.id}
  onClick={() => { setFilter(f.id); setPage(1); }}
  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${filter === f.id
- ? "bg-orange-50 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 0 text-white shadow-sm"
+ ? "bg-orange-500 text-white shadow-sm"
  : darkMode
  ? "bg-slate-800 text-slate-300 hover:bg-slate-700"
- : "bg-slate-100 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 text-slate-600 hover:bg-slate-200 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 "
+ : "bg-slate-100 text-slate-600 hover:bg-slate-200"
  }`}
  >
  {f.label}
@@ -715,7 +715,7 @@ const PriestDashboard = () => {
  <p className="text-rose-500 font-semibold text-sm">{fetchError}</p>
  <button
  onClick={fetchCompleted}
- className="px-4 py-2 rounded-xl bg-orange-50 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 0 text-white text-sm font-bold hover:bg-orange-600"
+ className="px-4 py-2 rounded-xl bg-orange-500 text-white text-sm font-bold hover:bg-orange-600"
  >
  Retry
  </button>
@@ -788,12 +788,12 @@ const PriestDashboard = () => {
  onClick={() => typeof p === 'number' && setPage(p)}
  disabled={p === '...'}
  className={`w-8 h-8 rounded-lg text-xs font-bold transition-colors ${p === page
- ? "bg-orange-50 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 0 text-white"
+ ? "bg-orange-500 text-white"
  : p === '...'
  ? "text-slate-400 cursor-default"
  : darkMode
  ? "bg-slate-800 text-slate-300 hover:bg-slate-700"
- : "bg-slate-100 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 text-slate-600 hover:bg-slate-200 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 "
+ : "bg-slate-100 text-slate-600 hover:bg-slate-200"
  }`}
  >
  {p}
@@ -853,7 +853,7 @@ const PriestDashboard = () => {
  <div className="mt-5 pt-3.5 border-t border-dashed border-slate-200 dark:border-slate-700 flex justify-between items-center">
  <span className={`text-xs font-semibold ${darkMode ? "text-slate-400" : "text-slate-500"}`}>Compensation: <b className="text-orange-500">{duty.reward}</b></span>
  {duty.state !== "Accepted" && (
- <button className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-orange-50 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 0 text-white hover:bg-orange-600 transition-colors">
+ <button className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-orange-500 text-white hover:bg-orange-600 transition-colors">
  Accept Duty
  </button>
  )}
@@ -1029,15 +1029,15 @@ const PriestDashboard = () => {
  <div>
  <h3 className="text-lg font-bold border-b pb-2">Mandir Tenure Info</h3>
  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4 text-sm">
- <div className="p-3 bg-slate-50 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 dark:bg-[#0f172a] /50 rounded-xl border border-slate-100 dark:border-slate-800 text-center">
+ <div className="p-3 bg-slate-50/50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-850 text-center">
  <p className="text-slate-400 font-semibold text-xs">Date of Joining</p>
  <p className="font-bold mt-1">12 Feb 2012</p>
  </div>
- <div className="p-3 bg-slate-50 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 dark:bg-[#0f172a] /50 rounded-xl border border-slate-100 dark:border-slate-800 text-center">
+ <div className="p-3 bg-slate-50/50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-850 text-center">
  <p className="text-slate-400 font-semibold text-xs">Monthly Shifts</p>
  <p className="font-bold mt-1">Morning & Evening</p>
  </div>
- <div className="p-3 bg-slate-50 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 dark:bg-[#0f172a] /50 rounded-xl border border-slate-100 dark:border-slate-800 text-center">
+ <div className="p-3 bg-slate-50/50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-850 text-center">
  <p className="text-slate-400 font-semibold text-xs">Agama Certification</p>
  <p className="font-bold mt-1 text-emerald-600">Grade A-1</p>
  </div>
@@ -1068,7 +1068,7 @@ const PriestDashboard = () => {
  <p className="text-rose-500 font-semibold">{error}</p>
  <button
  onClick={fetchDashboardData}
- className="px-4 py-2 bg-orange-50 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 0 text-white rounded-xl text-sm font-bold shadow hover:bg-orange-600 transition-colors"
+ className="px-4 py-2 bg-orange-500 text-white rounded-xl text-sm font-bold shadow hover:bg-orange-600 transition-colors"
  >
  Retry
  </button>

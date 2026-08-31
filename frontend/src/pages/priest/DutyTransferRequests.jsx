@@ -225,7 +225,7 @@ const DutyTransferRequests = ({ darkMode }) => {
  <button
  onClick={() => handleRespond(rejectRequestId, "Rejected", rejectReason)}
  disabled={!rejectReason.trim()}
- className="px-4 py-2 rounded-xl text-sm font-bold bg-rose-50 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 0 text-white hover:bg-rose-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+ className="px-4 py-2 rounded-xl text-sm font-bold bg-rose-500 text-white hover:bg-rose-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
  >
  Confirm Reject
  </button>

@@ -112,14 +112,14 @@ const CashierAccounts = () => {
  <div className="flex gap-4 mb-6 border-b border-slate-200 pb-4 overflow-x-auto whitespace-nowrap">
  <button
  onClick={() => setActiveTab("daily-cash-book")}
- className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === "daily-cash-book" ? "bg-amber-50 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 0 text-white" : "text-slate-600 hover:bg-slate-100 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 hover:text-slate-900"
+ className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === "daily-cash-book" ? "bg-amber-500 text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
  }`}
  >
  Daily Collection Summary
  </button>
  <button
  onClick={() => setActiveTab("cash-closing")}
- className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === "cash-closing" ? "bg-amber-50 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 0 text-white" : "text-slate-600 hover:bg-slate-100 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 hover:text-slate-900"
+ className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === "cash-closing" ? "bg-amber-500 text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
  }`}
  >
  Shift Closing
@@ -228,7 +228,7 @@ const CashierAccounts = () => {
 
  <button
  type="submit"
- className="w-full bg-amber-50 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 0 hover:bg-amber-600 text-white font-medium py-2 rounded-lg transition-colors"
+ className="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium py-2 rounded-lg transition-colors"
  >
  Submit Cash Closing
  </button>

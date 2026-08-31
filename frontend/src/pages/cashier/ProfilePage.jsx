@@ -502,7 +502,7 @@ const ProfilePage = () => {
  <button
  type="button"
  onClick={() => handleFieldChange("photo", "")}
- className="absolute -top-2 -right-2 rounded-full bg-rose-50 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 0 p-1 text-white shadow-sm hover:bg-rose-600 transition"
+ className="absolute -top-2 -right-2 rounded-full bg-rose-500 p-1 text-white shadow-sm hover:bg-rose-600 transition"
  title="Remove photo"
  >
  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

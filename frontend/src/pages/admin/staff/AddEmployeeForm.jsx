@@ -91,7 +91,7 @@ const AddEmployeeForm = () => {
  <button
  className="
  mt-5
- bg-orange-50 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 text-white
+  bg-orange-500 hover:bg-orange-600 text-white transition-colors
  px-6
  py-3
  rounded-xl

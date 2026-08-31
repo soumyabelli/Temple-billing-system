@@ -3698,7 +3698,7 @@ const DevoteeDashboard = () => {
  <button
  type="button"
  onClick={() => setViewingReceipt(item)}
- className="rounded-xl bg-amber-50 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 0 hover:bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white transition shadow-sm"
+ className="rounded-xl bg-amber-500 hover:bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white transition shadow-sm"
  >
  View
  </button>
