@@ -6,9 +6,13 @@ import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 import templeImage from "../../assets/temple.jpg.png";
 import { useAuth } from "../../context/AuthContext";
+import { useTheme } from "../../context/ThemeContext";
+import LogoutModal from "../../components/LogoutModal";
 import BookingReceipt from "../../components/common/BookingReceipt";
 import { getDonationTypes } from "../../services/donationTypeService";
 import { getPoojaTypes } from "../../services/poojaTypeService";
+import { FaBell, FaSignOutAlt } from "react-icons/fa";
+import { MdLightMode, MdDarkMode, MdMenu, MdKeyboardArrowDown } from "react-icons/md";
 import {
  getDevoteeBookings,
  getDevoteeDonations,
@@ -243,17 +247,17 @@ const canCancelPrasadamOrder = (status) => {
 };
 
 const glassCard =
- "rounded-[28px] border border-amber-200/50 bg-white/70 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 p-6 sm:p-8 shadow-[0_15px_35px_rgba(184,94,0,0.06)] backdrop-blur-xl hover:shadow-[0_20px_40px_rgba(184,94,0,0.12)] transition-all duration-300";
+ "rounded-[28px] border border-amber-200/50 bg-white/75 dark:bg-slate-900/90 dark:border-slate-800 dark:text-slate-100 p-6 sm:p-8 shadow-[0_15px_35px_rgba(184,94,0,0.06)] dark:shadow-none backdrop-blur-xl hover:shadow-[0_20px_40px_rgba(184,94,0,0.12)] transition-all duration-300";
 const glassSection =
- "rounded-[28px] border border-amber-100/60 bg-white/60 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 p-6 sm:p-8 shadow-[0_12px_30px_rgba(184,94,0,0.04)] backdrop-blur-xl";
+ "rounded-[28px] border border-amber-100/60 bg-white/65 dark:bg-slate-900/80 dark:border-slate-800 dark:text-slate-100 p-6 sm:p-8 shadow-[0_12px_30px_rgba(184,94,0,0.04)] dark:shadow-none backdrop-blur-xl";
 const glassInput =
- "w-full rounded-[18px] border border-amber-200/70 bg-white/80 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 px-5 py-3.5 text-base font-semibold text-[#1f1914] outline-none shadow-sm backdrop-blur-md focus:border-[#d97706] focus:ring-4 focus:ring-[#d97706]/15 transition-all";
+ "w-full rounded-[18px] border border-amber-200/70 bg-white/80 dark:bg-slate-800/90 dark:border-slate-700 text-[#1f1914] dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 px-5 py-3.5 text-base font-semibold outline-none shadow-sm backdrop-blur-md focus:border-[#d97706] dark:focus:border-amber-500 focus:ring-4 focus:ring-[#d97706]/15 dark:focus:ring-amber-500/20 transition-all";
 const glassButton =
  "rounded-[24px] bg-gradient-to-r from-[#b46a13] via-[#f29f41] to-[#ffbc6e] px-7 py-4 text-base font-bold text-white shadow-[0_16px_35px_rgba(184,122,57,0.25)] transition hover:scale-[1.02] hover:shadow-[0_20px_42px_rgba(184,122,57,0.3)]";
 const glassButtonSoft =
- "rounded-[24px] border border-white/60 bg-temple-100/65 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 px-7 py-4 text-base font-bold text-[#7f470a] shadow-md transition hover:bg-temple-100/85 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 hover:scale-[1.02]";
+ "rounded-[24px] border border-white/60 bg-temple-100/65 dark:bg-slate-800 dark:border-slate-700 text-[#7f470a] dark:text-amber-300 px-7 py-4 text-base font-bold shadow-md transition hover:bg-temple-100/85 dark:hover:bg-slate-700 hover:scale-[1.02]";
 const glassItem =
- "rounded-[26px] border border-white/60 bg-temple-100/70 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 p-5 text-base shadow-sm backdrop-blur-md hover:shadow-md transition-shadow";
+ "rounded-[26px] border border-white/60 bg-temple-100/70 dark:bg-slate-800/75 dark:border-slate-700 dark:text-slate-200 p-5 text-base shadow-sm backdrop-blur-md hover:shadow-md transition-shadow";
 
 const AppIcon = ({ name, className = "h-5 w-5" }) => {
  const base = "fill-none stroke-current stroke-2";
@@ -362,7 +366,7 @@ const SidebarItem = ({ label, icon, active, onClick }) => (
  className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[18px] font-semibold transition ${
  active
  ? "bg-gradient-to-r from-[#ff9f2f] to-[#ff6a00] text-white shadow-[0_8px_24px_rgba(255,106,0,0.38)]"
- : "text-[#2d1608] border border-white/35 bg-temple-100/35 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 backdrop-blur-sm hover:bg-temple-100/60 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 "
+ : "text-[#2d1608] border border-white/35 bg-temple-100/35 dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-300 backdrop-blur-sm hover:bg-temple-100/60 dark:hover:bg-slate-800 dark:hover:text-amber-300"
  }`}
  >
  <AppIcon name={icon} className="h-[21px] w-[21px]" />
@@ -383,6 +387,9 @@ const loadRazorpayScript = () =>
 const DevoteeDashboard = () => {
  const navigate = useNavigate();
  const { user, logoutUser, updateUser } = useAuth();
+ const { darkMode, toggleDarkMode } = useTheme();
+ const [showLogout, setShowLogout] = useState(false);
+ const [mobileOpen, setMobileOpen] = useState(false);
  const [activePage, setActivePage] = useState("Dashboard");
  const [bookingsData, setBookingsData] = useState([]);
  const [donationsData, setDonationsData] = useState([]);
@@ -740,8 +747,8 @@ const DevoteeDashboard = () => {
  value: `${upcomingBookings.length}`,
  action: "View Details",
  tone: "bg-purple-100 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 text-purple-600 group-hover:scale-110 transition-transform duration-300",
- cardStyle: "border-purple-100 bg-gradient-to-b from-purple-50/50 via-white to-white hover:border-purple-300 hover:shadow-lg hover:shadow-purple-500/10",
- valueColor: "text-purple-950",
+ cardStyle: "border-purple-100 dark:border-purple-900/40 bg-gradient-to-b from-purple-50/50 via-white to-white dark:from-purple-950/30 dark:via-slate-900 dark:to-slate-900 hover:border-purple-300 dark:hover:border-purple-700 hover:shadow-lg hover:shadow-purple-500/10",
+ valueColor: "text-purple-950 dark:text-purple-100",
  badgeBg: "bg-purple-50 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 text-purple-700 border-purple-200/50",
  icon: "calendar",
  },
@@ -750,8 +757,8 @@ const DevoteeDashboard = () => {
  value: `${bookingsData.length}`,
  action: "View Bookings",
  tone: "bg-blue-100 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 text-blue-600 group-hover:scale-110 transition-transform duration-300",
- cardStyle: "border-blue-100 bg-gradient-to-b from-blue-50/50 via-white to-white hover:border-blue-300 hover:shadow-lg hover:shadow-blue-500/10",
- valueColor: "text-blue-950",
+ cardStyle: "border-blue-100 dark:border-blue-900/40 bg-gradient-to-b from-blue-50/50 via-white to-white dark:from-blue-950/30 dark:via-slate-900 dark:to-slate-900 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-lg hover:shadow-blue-500/10",
+ valueColor: "text-blue-950 dark:text-blue-100",
  badgeBg: "bg-blue-50 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 text-blue-700 border-blue-200/50",
  icon: "calendar",
  },
@@ -760,8 +767,8 @@ const DevoteeDashboard = () => {
  value: formatCurrency(totalDonations),
  action: "View History",
  tone: "bg-emerald-100 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 text-emerald-600 group-hover:scale-110 transition-transform duration-300",
- cardStyle: "border-emerald-100 bg-gradient-to-b from-emerald-50/50 via-white to-white hover:border-emerald-300 hover:shadow-lg hover:shadow-emerald-500/10",
- valueColor: "text-emerald-950",
+ cardStyle: "border-emerald-100 dark:border-emerald-900/40 bg-gradient-to-b from-emerald-50/50 via-white to-white dark:from-emerald-950/30 dark:via-slate-900 dark:to-slate-900 hover:border-emerald-300 dark:hover:border-emerald-700 hover:shadow-lg hover:shadow-emerald-500/10",
+ valueColor: "text-emerald-950 dark:text-emerald-100",
  badgeBg: "bg-emerald-50 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 text-emerald-700 border-emerald-200/50",
  icon: "heart",
  },
@@ -770,8 +777,8 @@ const DevoteeDashboard = () => {
  value: `${prasadamOrdersCount}`,
  action: "View Orders",
  tone: "bg-amber-100 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 text-amber-600 group-hover:scale-110 transition-transform duration-300",
- cardStyle: "border-amber-100 bg-gradient-to-b from-amber-50/50 via-white to-white hover:border-amber-300 hover:shadow-lg hover:shadow-amber-500/10",
- valueColor: "text-amber-950",
+ cardStyle: "border-amber-100 dark:border-amber-900/40 bg-gradient-to-b from-amber-50/50 via-white to-white dark:from-amber-950/30 dark:via-slate-900 dark:to-slate-900 hover:border-amber-300 dark:hover:border-amber-700 hover:shadow-lg hover:shadow-amber-500/10",
+ valueColor: "text-amber-950 dark:text-amber-100",
  badgeBg: "bg-amber-50 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 text-amber-700 border-amber-200/50",
  icon: "bag",
  },
@@ -987,7 +994,8 @@ const DevoteeDashboard = () => {
 
  const handleLogout = () => {
  logoutUser();
- navigate("/");
+ setShowLogout(false);
+ navigate("/login");
  };
 
  const quickDonate = async (eventItem) => {
@@ -2168,8 +2176,8 @@ const DevoteeDashboard = () => {
  const renderDashboard = () => (
  <>
  <section className="mb-6 mt-4">
- <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl">Welcome back, {devoteeName}!</h1>
- <p className="mt-1.5 text-lg font-medium text-amber-800/80">May your visit be blessed with joy and peace.</p>
+ <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 dark:text-slate-100 sm:text-5xl">Welcome back, {devoteeName}!</h1>
+ <p className="mt-1.5 text-lg font-medium text-amber-800/80 dark:text-amber-300/80">May your visit be blessed with joy and peace.</p>
  </section>
 
  <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
@@ -2180,7 +2188,7 @@ const DevoteeDashboard = () => {
  >
  <div className="flex items-start justify-between">
  <div>
- <p className="text-sm font-extrabold tracking-wider text-gray-500 uppercase">{item.title}</p>
+ <p className="text-sm font-extrabold tracking-wider text-gray-500 dark:text-slate-400 uppercase">{item.title}</p>
  <p className={`mt-3 text-4xl sm:text-5xl font-black tracking-tight ${item.valueColor || "text-gray-900"}`}>{item.value}</p>
  </div>
  <IconCircle className={`${item.tone} h-16 w-16 shadow-sm`} icon={item.icon} />
@@ -2215,14 +2223,14 @@ const DevoteeDashboard = () => {
 
  <section className="mt-6 grid gap-6 xl:grid-cols-3">
  {/* Upcoming Bookings Card */}
- <article className="flex flex-col justify-between rounded-3xl border border-gray-100 bg-temple-100 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 p-6 shadow-sm hover:shadow-md transition-shadow">
+ <article className="flex flex-col justify-between rounded-3xl border border-gray-100 dark:border-slate-800 bg-white/75 dark:bg-slate-900/90 dark:text-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow">
  <div>
  <div className="mb-5 flex items-center justify-between">
  <div className="flex items-center gap-2.5">
- <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-100 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 text-purple-700">
+ <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300">
  <svg viewBox="0 0 24 24" className="h-5 w-5 fill-none stroke-current stroke-2"><rect x="3.5" y="5" width="17" height="15.5" rx="2" /><path d="M7 3v4M17 3v4M3.5 9h17M8.5 13h3v3h-3z" /></svg>
  </span>
- <h2 className="text-xl font-bold text-gray-900">Upcoming Bookings</h2>
+ <h2 className="text-xl font-bold text-gray-900 dark:text-slate-100">Upcoming Bookings</h2>
  </div>
  <button type="button" onClick={() => setActivePage("My Bookings")} className="text-xs font-bold text-amber-700 hover:text-amber-900">
  View All
@@ -2232,16 +2240,16 @@ const DevoteeDashboard = () => {
  <div className="space-y-3">
  {upcomingBookings.length > 0 ? (
  upcomingBookings.slice(0, 3).map((item) => (
- <div key={`${item.service}-${item.datetime}-${item._id || Math.random()}`} className="rounded-2xl border border-gray-100 bg-purple-50/30 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 p-4 transition-colors hover:bg-purple-50/60 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 ">
+ <div key={`${item.service}-${item.datetime}-${item._id || Math.random()}`} className="rounded-2xl border border-gray-100 dark:border-slate-800 bg-purple-50/30 dark:bg-purple-950/20 p-4 transition-colors hover:bg-purple-50/60 dark:hover:bg-purple-950/30">
  <div className="flex items-center justify-between gap-3">
- <p className="text-base font-bold text-gray-900">{item.service}</p>
+ <p className="text-base font-bold text-gray-900 dark:text-slate-100">{item.service}</p>
  <span className="rounded-full bg-emerald-100 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 px-2.5 py-0.5 text-xs font-bold text-emerald-800">Confirmed</span>
  </div>
- <p className="mt-1.5 text-xs font-medium text-gray-600">{formatDateTimeDisplay(item.datetime)}</p>
+ <p className="mt-1.5 text-xs font-medium text-gray-600 dark:text-slate-400">{formatDateTimeDisplay(item.datetime)}</p>
  </div>
  ))
  ) : (
- <div className="rounded-2xl border border-dashed border-gray-200 p-6 text-center text-sm font-medium text-gray-500">
+ <div className="rounded-2xl border border-dashed border-gray-200 dark:border-slate-800 p-6 text-center text-sm font-medium text-gray-500 dark:text-slate-400">
  No upcoming bookings found yet.
  </div>
  )}
@@ -2256,14 +2264,14 @@ const DevoteeDashboard = () => {
  </article>
 
  {/* Recent Donations Card */}
- <article className="flex flex-col justify-between rounded-3xl border border-gray-100 bg-temple-100 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 p-6 shadow-sm hover:shadow-md transition-shadow">
+ <article className="flex flex-col justify-between rounded-3xl border border-gray-100 dark:border-slate-800 bg-white/75 dark:bg-slate-900/90 dark:text-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow">
  <div>
  <div className="mb-5 flex items-center justify-between">
  <div className="flex items-center gap-2.5">
- <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 text-emerald-700">
+ <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">
  <svg viewBox="0 0 24 24" className="h-5 w-5 fill-none stroke-current stroke-2"><path d="M12 20s-6.5-4.2-8.5-8.2a5 5 0 0 1 8.1-5.6l.4.4.4-.4a5 5 0 0 1 8.1 5.6C18.5 15.8 12 20 12 20z" /></svg>
  </span>
- <h2 className="text-xl font-bold text-gray-900">Recent Donations</h2>
+ <h2 className="text-xl font-bold text-gray-900 dark:text-slate-100">Recent Donations</h2>
  </div>
  <button type="button" onClick={() => setActivePage("Receipts")} className="text-xs font-bold text-amber-700 hover:text-amber-900">
  View All
@@ -2273,12 +2281,12 @@ const DevoteeDashboard = () => {
  <div className="space-y-3">
  {donationsData.length > 0 ? (
  donationsData.slice(0, 3).map((item) => (
- <div key={`${item.type}-${item.date}-${item._id || Math.random()}`} className="flex items-center justify-between rounded-2xl border border-gray-100 bg-emerald-50/30 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 p-4 transition-colors hover:bg-emerald-50/60 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 ">
+ <div key={`${item.type}-${item.date}-${item._id || Math.random()}`} className="flex items-center justify-between rounded-2xl border border-gray-100 dark:border-slate-800 bg-emerald-50/30 dark:bg-emerald-950/20 p-4 transition-colors hover:bg-emerald-50/60 dark:hover:bg-emerald-950/30">
  <div>
- <p className="text-base font-bold text-gray-900">{item.type}</p>
- <p className="mt-0.5 text-xs text-gray-500">{item.date}</p>
+ <p className="text-base font-bold text-gray-900 dark:text-slate-100">{item.type}</p>
+ <p className="mt-0.5 text-xs text-gray-500 dark:text-slate-400">{item.date}</p>
  </div>
- <p className="text-base font-extrabold text-emerald-700">{formatCurrency(item.amount)}</p>
+ <p className="text-base font-extrabold text-emerald-700 dark:text-emerald-400">{formatCurrency(item.amount)}</p>
  </div>
  ))
  ) : (
@@ -2297,14 +2305,14 @@ const DevoteeDashboard = () => {
  </article>
 
  {/* Notifications Card */}
- <article className="flex flex-col justify-between rounded-3xl border border-gray-100 bg-temple-100 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 p-6 shadow-sm hover:shadow-md transition-shadow">
+ <article className="flex flex-col justify-between rounded-3xl border border-gray-100 dark:border-slate-800 bg-white/75 dark:bg-slate-900/90 dark:text-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow">
  <div>
  <div className="mb-5 flex items-center justify-between">
  <div className="flex items-center gap-2.5">
- <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 text-amber-700">
+ <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300">
  <svg viewBox="0 0 24 24" className="h-5 w-5 fill-none stroke-current stroke-2"><path d="M15 18h5l-1.3-1.3a1 1 0 0 1-.3-.7V11a6.4 6.4 0 1 0-12.8 0v5a1 1 0 0 1-.3.7L4 18h5" /><path d="M10 18a2 2 0 1 0 4 0" /></svg>
  </span>
- <h2 className="text-xl font-bold text-gray-900">Notifications</h2>
+ <h2 className="text-xl font-bold text-gray-900 dark:text-slate-100">Notifications</h2>
  </div>
  <button type="button" onClick={() => setActivePage("Notifications")} className="text-xs font-bold text-amber-700 hover:text-amber-900">
  View All
@@ -2314,10 +2322,10 @@ const DevoteeDashboard = () => {
  <div className="space-y-3">
  {notificationsData.length > 0 ? (
  notificationsData.slice(0, 3).map((item) => (
- <div key={`${item.title}-${item.date}-${item._id || Math.random()}`} className="rounded-2xl border border-gray-100 bg-amber-50/30 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 p-4 transition-colors hover:bg-amber-50/60 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 ">
- <p className="text-sm font-bold text-gray-900">{item.title}</p>
+ <div key={`${item.title}-${item.date}-${item._id || Math.random()}`} className="rounded-2xl border border-gray-100 dark:border-slate-800 bg-amber-50/30 dark:bg-amber-950/20 p-4 transition-colors hover:bg-amber-50/60 dark:hover:bg-amber-950/30">
+ <p className="text-sm font-bold text-gray-900 dark:text-slate-100">{item.title}</p>
  <p className="mt-0.5 text-xs text-gray-500">{item.date}</p>
- {item.message && <p className="mt-1.5 text-xs text-gray-600 line-clamp-2">{item.message}</p>}
+ {item.message && <p className="mt-1.5 text-xs text-gray-600 dark:text-slate-300 line-clamp-2">{item.message}</p>}
  </div>
  ))
  ) : (
@@ -2374,7 +2382,7 @@ const DevoteeDashboard = () => {
  className={`flex-1 py-3 px-3 text-[14px] font-extrabold rounded-[20px] transition-all duration-300 ${
  bookingTab === "Pooja" || bookingTab === "MultiCart"
  ? "bg-gradient-to-r from-[#d97706] to-[#f59e0b] text-white shadow-lg shadow-amber-600/30 scale-[1.02]"
- : "bg-transparent text-[#78350f] hover:bg-temple-100/50 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 hover:shadow-sm"
+ : "bg-transparent text-[#78350f] dark:text-amber-200 hover:bg-temple-100/50 dark:hover:bg-slate-800 hover:shadow-sm"
  }`}
  >
  🌸 Book Pooja
@@ -2385,7 +2393,7 @@ const DevoteeDashboard = () => {
  className={`flex-1 py-3 px-3 text-[14px] font-extrabold rounded-[20px] transition-all duration-300 ${
  bookingTab === "Prasadam"
  ? "bg-gradient-to-r from-[#d97706] to-[#f59e0b] text-white shadow-lg shadow-amber-600/30 scale-[1.02]"
- : "bg-transparent text-[#78350f] hover:bg-temple-100/50 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 hover:shadow-sm"
+ : "bg-transparent text-[#78350f] dark:text-amber-200 hover:bg-temple-100/50 dark:hover:bg-slate-800 hover:shadow-sm"
  }`}
  >
  📦 Order Prasada
@@ -2396,7 +2404,7 @@ const DevoteeDashboard = () => {
  className={`flex-1 py-3 px-3 text-[14px] font-extrabold rounded-[20px] transition-all duration-300 ${
  bookingTab === "Room"
  ? "bg-gradient-to-r from-[#d97706] to-[#f59e0b] text-white shadow-lg shadow-amber-600/30 scale-[1.02]"
- : "bg-transparent text-[#78350f] hover:bg-temple-100/50 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 hover:shadow-sm"
+ : "bg-transparent text-[#78350f] dark:text-amber-200 hover:bg-temple-100/50 dark:hover:bg-slate-800 hover:shadow-sm"
  }`}
  >
  🏨 Book Room
@@ -2406,11 +2414,11 @@ const DevoteeDashboard = () => {
  {bookingTab !== "Room" && (
  <>
  {/* Top Header */}
- <div className="rounded-3xl border border-amber-200/60 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-600/10 p-6 sm:p-8 backdrop-blur-md shadow-sm text-center">
- <h2 className="text-3xl sm:text-4xl font-black text-[#4a2b0f]">
+ <div className="rounded-3xl border border-amber-200/60 dark:border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-600/10 dark:from-amber-950/40 dark:via-slate-900 dark:to-amber-950/30 p-6 sm:p-8 backdrop-blur-md shadow-sm text-center">
+ <h2 className="text-3xl sm:text-4xl font-black text-[#4a2b0f] dark:text-amber-100">
  Book Sacred Services & Order Prasadam
  </h2>
- <p className="mt-2 text-base font-semibold text-[#7a4918]">
+ <p className="mt-2 text-base font-semibold text-[#7a4918] dark:text-amber-200/80">
  Select your Poojas or Prasadam items on the left side. As soon as you select, they immediately appear on the right side. Confirm all selections and pay in 1 single combined bill!
  </p>
  </div>
@@ -2419,16 +2427,16 @@ const DevoteeDashboard = () => {
  <div className="grid gap-8 lg:grid-cols-12">
  {/* LEFT SIDE: ITEM SELECTOR FORM */}
  <div className="lg:col-span-6 space-y-6">
- <div className="rounded-3xl border border-amber-200/80 bg-temple-100/90 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 p-6 sm:p-8 shadow-xl backdrop-blur-xl">
+ <div className="rounded-3xl border border-amber-200/80 dark:border-slate-800 bg-temple-100/90 dark:bg-slate-900/90 p-6 sm:p-8 shadow-xl backdrop-blur-xl">
  {/* TOGGLE SELECTOR: POOJA vs PRASADAM */}
- <div className="flex gap-2 rounded-2xl bg-amber-100/60 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 p-1.5 border border-amber-200 mb-6">
+ <div className="flex gap-2 rounded-2xl bg-amber-100/60 dark:bg-slate-800/80 p-1.5 border border-amber-200 dark:border-slate-700 mb-6">
  <button
  type="button"
  onClick={() => setBookingTab("Pooja")}
  className={`flex-1 py-3 px-4 text-sm font-extrabold rounded-xl transition ${
  bookingTab !== "Prasadam"
  ? "bg-amber-600 text-white shadow-md"
- : "bg-transparent text-amber-900 hover:bg-amber-200/50"
+ : "bg-transparent text-amber-900 dark:text-amber-200 hover:bg-amber-200/50 dark:hover:bg-slate-700"
  }`}
  >
  🌸 Select Pooja
@@ -2439,7 +2447,7 @@ const DevoteeDashboard = () => {
  className={`flex-1 py-3 px-4 text-sm font-extrabold rounded-xl transition ${
  bookingTab === "Prasadam"
  ? "bg-amber-600 text-white shadow-md"
- : "bg-transparent text-amber-900 hover:bg-amber-200/50"
+ : "bg-transparent text-amber-900 dark:text-amber-200 hover:bg-amber-200/50 dark:hover:bg-slate-700"
  }`}
  >
  📦 Select Prasadam
@@ -2449,12 +2457,12 @@ const DevoteeDashboard = () => {
  {bookingTab !== "Prasadam" ? (
  /* POOJA SELECTION FORM */
  <div className="space-y-5">
- <h3 className="text-xl font-black text-amber-950 flex items-center gap-2">
+ <h3 className="text-xl font-black text-amber-950 dark:text-amber-100 flex items-center gap-2">
  🌸 Add Sacred Pooja
  </h3>
 
  <div>
- <label className="block text-xs font-extrabold uppercase tracking-wider text-amber-900 mb-1">
+ <label className="block text-xs font-extrabold uppercase tracking-wider text-amber-900 dark:text-amber-200 mb-1">
  Choose Service
  </label>
  <select
@@ -2467,7 +2475,7 @@ const DevoteeDashboard = () => {
  setSelectedTempleMaterials([]);
  setPrepAcknowledged(false);
  }}
- className="w-full rounded-2xl border border-amber-200 bg-amber-50/50 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 px-4 py-3.5 text-base font-bold text-slate-900 outline-none focus:border-amber-500 focus:bg-temple-100 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 "
+ className="w-full rounded-2xl border border-amber-200 dark:border-slate-700 bg-amber-50/50 dark:bg-slate-800 px-4 py-3.5 text-base font-bold text-slate-900 dark:text-slate-100 outline-none focus:border-amber-500 focus:bg-temple-100 dark:focus:bg-slate-800"
  >
  {poojaTypes.map((service) => (
  <option key={service.name} value={service.name}>
@@ -2488,12 +2496,12 @@ const DevoteeDashboard = () => {
  const orTemple = reqMats.filter(m => m.responsibilityType === "DEVOTEE_OR_TEMPLE");
  
  return (
- <div className="mt-3 rounded-2xl bg-amber-50 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 p-4 border border-amber-200 text-sm font-semibold text-amber-900">
- <div className="mb-3 text-amber-950 font-black">🌸 Pooja Materials Requirement</div>
+ <div className="mt-3 rounded-2xl bg-amber-50 dark:bg-slate-800/90 p-4 border border-amber-200 dark:border-slate-700 text-sm font-semibold text-amber-900 dark:text-amber-200">
+ <div className="mb-3 text-amber-950 dark:text-amber-100 font-black">🌸 Pooja Materials Requirement</div>
  
  {templeProvides.length > 0 && (
  <div className="mb-4">
- <div className="text-teal-800 font-bold mb-1 border-b border-teal-200 pb-1">Temple Will Provide</div>
+ <div className="text-teal-800 dark:text-teal-300 font-bold mb-1 border-b border-teal-200 dark:border-teal-800/60 pb-1">Temple Will Provide</div>
  {templeProvides.map((rm, idx) => {
  const item = typeof rm.item === 'object' ? rm.item : { _id: rm.item, name: rm.itemName || "Item" };
  return (
@@ -2508,7 +2516,7 @@ const DevoteeDashboard = () => {
 
  {devoteeMustBring.length > 0 && (
  <div className="mb-4">
- <div className="text-blue-800 font-bold mb-1 border-b border-blue-200 pb-1">You Must Bring on Pooja Day</div>
+ <div className="text-blue-800 dark:text-blue-300 font-bold mb-1 border-b border-blue-200 dark:border-blue-800/60 pb-1">You Must Bring on Pooja Day</div>
  {devoteeMustBring.map((rm, idx) => {
  const item = typeof rm.item === 'object' ? rm.item : { _id: rm.item, name: rm.itemName || "Item" };
  return (
@@ -2775,25 +2783,25 @@ const DevoteeDashboard = () => {
 
  {/* RIGHT SIDE: LIVE SELECTED ITEMS SUMMARY & BILLING PANEL */}
  <div className="lg:col-span-6">
- <div className="sticky top-6 rounded-3xl border border-amber-300 bg-gradient-to-b from-white via-amber-50/40 to-amber-100/50 p-6 sm:p-8 shadow-xl backdrop-blur-xl">
- <div className="mb-5 flex items-center justify-between border-b border-amber-200/80 pb-4">
+ <div className="sticky top-6 rounded-3xl border border-amber-300 dark:border-amber-500/30 bg-gradient-to-b from-white via-amber-50/40 to-amber-100/50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 p-6 sm:p-8 shadow-xl backdrop-blur-xl">
+ <div className="mb-5 flex items-center justify-between border-b border-amber-200/80 dark:border-slate-700 pb-4">
  <div>
- <h3 className="text-xl font-black text-slate-900 flex items-center gap-2">
+ <h3 className="text-xl font-black text-slate-900 dark:text-slate-100 flex items-center gap-2">
  🛒 You Have Selected These:
  </h3>
- <p className="text-xs font-bold text-amber-800">
+ <p className="text-xs font-bold text-amber-800 dark:text-amber-300">
  Live reflection of all your chosen Poojas & Prasadam items
  </p>
  </div>
- <span className="rounded-full bg-amber-200 px-3.5 py-1 text-xs font-extrabold text-amber-950">
+ <span className="rounded-full bg-amber-200 dark:bg-amber-950 dark:border dark:border-amber-800 px-3.5 py-1 text-xs font-extrabold text-amber-950 dark:text-amber-200">
  {cartItems.length} Item(s)
  </span>
  </div>
 
  {cartItems.length === 0 ? (
- <div className="py-14 text-center border-2 border-dashed border-amber-200 rounded-3xl bg-temple-100/60 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 p-6">
+ <div className="py-14 text-center border-2 border-dashed border-amber-200 dark:border-slate-700 rounded-3xl bg-temple-100/60 dark:bg-slate-800/60 p-6">
  <span className="text-4xl">🙏</span>
- <p className="mt-3 text-base font-bold text-slate-800">No items selected yet.</p>
+ <p className="mt-3 text-base font-bold text-slate-800 dark:text-slate-200">No items selected yet.</p>
  <p className="mt-1 text-xs font-semibold text-slate-500">
  Select a Pooja or Prasadam on the left side and click "+ Add to Bill". It will immediately appear right here!
  </p>
@@ -2805,16 +2813,16 @@ const DevoteeDashboard = () => {
  {cartItems.map((item) => (
  <div
  key={item.id}
- className="flex items-center justify-between rounded-2xl bg-temple-100 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 p-4 border border-amber-200/80 shadow-xs transition hover:border-amber-400"
+ className="flex items-center justify-between rounded-2xl bg-white/70 dark:bg-slate-800/90 dark:text-slate-200 p-4 border border-amber-200/80 dark:border-slate-700 shadow-xs transition hover:border-amber-400"
  >
  <div className="flex-1 pr-2">
  <div className="flex items-center gap-2">
  <span className="text-sm font-extrabold">
  {item.type === "pooja" ? "🌸" : "📦"}
  </span>
- <p className="text-base font-bold text-slate-900">{item.name}</p>
+ <p className="text-base font-bold text-slate-900 dark:text-slate-100">{item.name}</p>
  </div>
- <p className="text-xs font-semibold text-slate-500 mt-0.5">
+ <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
  Qty: {item.quantity} | {formatCurrency(item.price)} each
  {item.date && ` | Date: ${item.date}`}
  </p>
@@ -2875,11 +2883,11 @@ const DevoteeDashboard = () => {
  </div>
 
  {/* GRAND TOTAL */}
- <div className="flex items-center justify-between rounded-2xl bg-amber-200/80 p-4 border border-amber-300">
- <span className="text-base font-extrabold text-amber-950">
+ <div className="flex items-center justify-between rounded-2xl bg-amber-200/80 dark:bg-amber-950/60 p-4 border border-amber-300 dark:border-amber-800">
+ <span className="text-base font-extrabold text-amber-950 dark:text-amber-200">
  Grand Total Amount (1 Bill):
  </span>
- <span className="text-2xl font-black text-amber-950">{formatCurrency(cartTotal)}</span>
+ <span className="text-2xl font-black text-amber-950 dark:text-amber-100">{formatCurrency(cartTotal)}</span>
  </div>
 
  {/* CHECKOUT BUTTON */}
@@ -2902,12 +2910,12 @@ const DevoteeDashboard = () => {
  <div className="space-y-8">
  <div className={`${glassCard}`}>
  <h2 className="text-[2rem] font-bold">Book Guest Room</h2>
- <p className="mt-2 text-[#4f4f4f]">Rent a comfortable guest room at the temple premises for your visit.</p>
+ <p className="mt-2 text-[#4f4f4f] dark:text-slate-300">Rent a comfortable guest room at the temple premises for your visit.</p>
 
  <div className="mt-8 grid gap-8 lg:grid-cols-3">
  {/* LEFT: ROOM CARD LISTING */}
  <div className="lg:col-span-2 space-y-4">
- <h3 className="text-xl font-bold text-slate-800 mb-2">Available Rooms</h3>
+ <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">Available Rooms</h3>
  <div className="grid gap-4 sm:grid-cols-2">
  {availableRooms
  .filter((room) => room.status === "Available")
@@ -2936,16 +2944,16 @@ const DevoteeDashboard = () => {
  {formatCurrency(room.price)} / day
  </span>
  </div>
- <p className="mt-3 text-xl font-extrabold text-slate-900">Room {room.number} ({room.type})</p>
- <p className="text-xs text-slate-500 mt-1">Bed Type: {room.bedType || "Double"} | Capacity: {room.capacity || 2} Persons</p>
+ <p className="mt-3 text-xl font-extrabold text-slate-900 dark:text-slate-100">Room {room.number} ({room.type})</p>
+ <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Bed Type: {room.bedType || "Double"} | Capacity: {room.capacity || 2} Persons</p>
 
  <div className="mt-4 border-t border-slate-200/50 pt-3">
- <p className="text-xs font-bold text-slate-700">Amenities Included:</p>
+ <p className="text-xs font-bold text-slate-700 dark:text-slate-300">Amenities Included:</p>
  <div className="mt-1 flex flex-wrap gap-1">
  {(room.amenities || []).slice(0, 4).map((amenity) => (
  <span
  key={amenity}
- className="rounded-full bg-slate-100 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 px-2 py-0.5 text-[10px] text-slate-600 font-medium"
+ className="rounded-full bg-slate-100 dark:bg-slate-800 dark:text-slate-300 px-2 py-0.5 text-[10px] text-slate-600 font-medium"
  >
  {amenity}
  </span>
@@ -3064,11 +3072,11 @@ const DevoteeDashboard = () => {
 
  {/* MY ROOM BOOKING HISTORY */}
  <div className={`${glassCard}`}>
- <h3 className="text-xl font-bold text-slate-800 mb-4">My Room Booking History</h3>
+ <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-4">My Room Booking History</h3>
  <div className="overflow-x-auto">
- <table className="min-w-full text-left text-sm text-[#4f3f26]">
+ <table className="min-w-full text-left text-sm text-[#4f3f26] dark:text-slate-200">
  <thead>
- <tr className="border-b border-white/20 text-slate-600">
+ <tr className="border-b border-white/20 dark:border-slate-800 text-slate-600 dark:text-slate-400">
  <th className="py-3 px-3">Booking ID</th>
  <th className="py-3 px-3">Room No</th>
  <th className="py-3 px-3">Room Type</th>
@@ -3185,9 +3193,9 @@ const DevoteeDashboard = () => {
  </div>
  </div>
  <div className="mt-6 overflow-x-auto">
- <table className="w-full min-w-[700px] text-left text-sm text-[#3f3f3f] border-collapse">
- <thead className="bg-[#fafafa] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 text-[#575757]">
- <tr className="border-b border-[#ececec]">
+ <table className="w-full min-w-[700px] text-left text-sm text-[#3f3f3f] dark:text-slate-200 border-collapse">
+ <thead className="bg-[#fafafa] dark:bg-slate-800 text-[#575757] dark:text-slate-300">
+ <tr className="border-b border-[#ececec] dark:border-slate-700">
  <th className="px-4 py-3">Booking/Order No</th>
  <th className="px-4 py-3">Item/Service</th>
  <th className="px-4 py-3">Date & Time</th>
@@ -3201,9 +3209,9 @@ const DevoteeDashboard = () => {
  const itemNo = row.bookingNumber || buildReceiptId(row.isPrasadam ? "PO" : "PB", row);
  
  return (
- <tr key={row._id || `${row.service}-${row.datetime}`} className="border-t border-[#f0f0f0] hover:bg-black/5 transition-colors">
- <td className="px-4 py-2.5 font-mono text-xs font-semibold text-[#6b6b6b]">{itemNo}</td>
- <td className="px-4 py-2.5 font-semibold text-[#1a1a1a]">
+ <tr key={row._id || `${row.service}-${row.datetime}`} className="border-t border-[#f0f0f0] dark:border-slate-800 hover:bg-black/5 dark:hover:bg-slate-800/50 transition-colors">
+ <td className="px-4 py-2.5 font-mono text-xs font-semibold text-[#6b6b6b] dark:text-slate-400">{itemNo}</td>
+ <td className="px-4 py-2.5 font-semibold text-[#1a1a1a] dark:text-slate-100">
  {row.isRoom ? (
  <span className="flex items-center gap-1.5">
  <span>🏨</span> {row.service}
@@ -3218,7 +3226,7 @@ const DevoteeDashboard = () => {
  </span>
  )}
  </td>
- <td className="px-4 py-2.5 text-[#4f4f4f]">{formatDateTimeDisplay(row.datetime)}</td>
+ <td className="px-4 py-2.5 text-[#4f4f4f] dark:text-slate-300">{formatDateTimeDisplay(row.datetime)}</td>
  <td className="px-4 py-2.5 font-bold text-[#1b7f77]">{formatCurrency(row.amount)}</td>
  <td className="px-4 py-2.5">
  <div className="flex justify-center">
@@ -3255,13 +3263,13 @@ const DevoteeDashboard = () => {
  <div className="flex flex-wrap items-center justify-between gap-3">
  <div>
  <h2 className="text-[2rem] font-bold">Donate</h2>
- <p className="mt-2 text-[#4f4f4f]">Give any amount and see your donation reflected in history, payment records, and receipts.</p>
+ <p className="mt-2 text-[#4f4f4f] dark:text-slate-300">Give any amount and see your donation reflected in history, payment records, and receipts.</p>
  </div>
  <div className="flex items-center gap-3">
- <div className="rounded-2xl bg-[#f4f7f3] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 px-4 py-3 text-sm font-semibold text-[#1b7f77]">
+ <div className="rounded-2xl bg-[#f4f7f3] dark:bg-teal-950/40 dark:border dark:border-teal-800/50 px-4 py-3 text-sm font-semibold text-[#1b7f77] dark:text-teal-300">
  Total Donations: {formatCurrency(totalDonations)}
  </div>
- <div className="rounded-xl border border-[#ececec] bg-temple-100 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 px-3 py-1 text-sm">
+ <div className="rounded-xl border border-[#ececec] dark:border-slate-700 bg-temple-100 dark:bg-slate-800 px-3 py-1 text-sm">
  <button
  type="button"
  onClick={() => setDonationView("All")}
@@ -3298,7 +3306,7 @@ const DevoteeDashboard = () => {
  )}
  <div className="grid gap-4">
  <div>
- <label className="block text-sm font-semibold text-[#5d5d5d]">Donation Category</label>
+ <label className="block text-sm font-semibold text-[#5d5d5d] dark:text-slate-300">Donation Category</label>
  <select
  value={donationCategory}
  onChange={(e) => setDonationCategory(e.target.value)}
@@ -3313,7 +3321,7 @@ const DevoteeDashboard = () => {
  </div>
 
  <div>
- <label className="block text-sm font-semibold text-[#5d5d5d]">Amount</label>
+ <label className="block text-sm font-semibold text-[#5d5d5d] dark:text-slate-300">Amount</label>
  <input
  type="number"
  min="1"
@@ -3325,7 +3333,7 @@ const DevoteeDashboard = () => {
  </div>
 
  <div>
- <label className="block text-sm font-semibold text-[#5d5d5d]">Payment Method</label>
+ <label className="block text-sm font-semibold text-[#5d5d5d] dark:text-slate-300">Payment Method</label>
  <select
  value={donationMethod}
  onChange={(e) => setDonationMethod(e.target.value)}
@@ -3340,7 +3348,7 @@ const DevoteeDashboard = () => {
  </div>
 
  <div>
- <label className="block text-sm font-semibold text-[#5d5d5d]">Contact Number</label>
+ <label className="block text-sm font-semibold text-[#5d5d5d] dark:text-slate-300">Contact Number</label>
  <input
  type="tel"
  value={donationContact}
@@ -3486,7 +3494,7 @@ const DevoteeDashboard = () => {
 
  return (
  <div className="mt-6 overflow-x-auto">
- <table className="w-full min-w-[650px] text-left text-sm text-[#3f3f3f]">
+ <table className="w-full min-w-[650px] text-left text-sm text-[#3f3f3f] dark:text-slate-200">
  <thead className="bg-[#fafafa] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 text-[#575757]">
  <tr>
  <th className="px-5 py-3">Type</th>
@@ -3533,7 +3541,7 @@ const DevoteeDashboard = () => {
 
  return (
  <div className="mt-6 overflow-x-auto">
- <table className="w-full min-w-[650px] text-left text-sm text-[#3f3f3f]">
+ <table className="w-full min-w-[650px] text-left text-sm text-[#3f3f3f] dark:text-slate-200">
  <thead className="bg-[#fafafa] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 text-[#575757]">
  <tr>
  <th className="px-5 py-3">Item</th>
@@ -3587,7 +3595,7 @@ const DevoteeDashboard = () => {
  <div className="flex flex-wrap items-center justify-between gap-3">
  <h2 className="text-[2rem] font-bold">Payment History</h2>
 
- <div className="flex items-center gap-2 rounded-2xl bg-[#f7f7f7] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 p-2">
+ <div className="flex items-center gap-2 rounded-2xl bg-[#f7f7f7] dark:bg-slate-800 dark:border-slate-700 p-2">
  <button
  type="button"
  onClick={() => setHistoryTab("Donations")}
@@ -3685,12 +3693,12 @@ const DevoteeDashboard = () => {
  <div key={item._id || idx} className={`${glassItem} p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4`}>
  <div className="flex-1 min-w-0">
  <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
- <span className="text-base font-semibold text-amber-950 truncate">{item.oneLineSummary}</span>
- <span className="text-xs text-amber-700 bg-amber-100/50 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 px-2 py-0.5 rounded-md font-medium">
+ <span className="text-base font-semibold text-amber-950 dark:text-amber-200 truncate">{item.oneLineSummary}</span>
+ <span className="text-xs text-amber-700 dark:text-amber-300 bg-amber-100/50 dark:bg-amber-950/60 dark:border dark:border-amber-800/50 px-2 py-0.5 rounded-md font-medium">
  {item.dateDisplay}
  </span>
  </div>
- <p className="mt-1 text-xs text-[#6b6b6b]">Receipt ID: {item.receiptId}</p>
+ <p className="mt-1 text-xs text-[#6b6b6b] dark:text-slate-400">Receipt ID: {item.receiptId}</p>
  </div>
  <div className="flex items-center justify-between sm:justify-end gap-4">
  <span className="text-lg font-bold text-[#1b7f77]">{formatCurrency(item.amount)}</span>
@@ -3870,13 +3878,13 @@ const DevoteeDashboard = () => {
  >
  <div className="flex items-start justify-between gap-2">
  <div className="flex-1">
- <p className="text-lg font-semibold text-[#17151f]">{item.title}</p>
- <p className="mt-2 flex items-center gap-2 text-sm text-[#5d5d5d]">
+ <p className="text-lg font-semibold text-[#17151f] dark:text-slate-100">{item.title}</p>
+ <p className="mt-2 flex items-center gap-2 text-sm text-[#5d5d5d] dark:text-slate-400">
  <span className="text-base">📅</span>
  {item.formattedDate || item.date}
  </p>
  {item.location && (
- <p className="mt-1 flex items-center gap-2 text-sm text-[#5d5d5d]">
+ <p className="mt-1 flex items-center gap-2 text-sm text-[#5d5d5d] dark:text-slate-400">
  <span className="text-base">📍</span>
  {item.location}
  </p>
@@ -3973,8 +3981,8 @@ const DevoteeDashboard = () => {
  <div className={`${glassCard}`}>
  <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#f3ebde]/80 pb-4">
  <div>
- <h2 className="text-[2.2rem] font-bold text-[#2d1b08]">Notifications</h2>
- <p className="mt-1 text-sm text-[#665e55]">Stay updated with your temple activities, bookings, and donations.</p>
+ <h2 className="text-[2.2rem] font-bold text-[#2d1b08] dark:text-slate-100">Notifications</h2>
+ <p className="mt-1 text-sm text-[#665e55] dark:text-slate-400">Stay updated with your temple activities, bookings, and donations.</p>
  </div>
  {unread.length > 0 && (
  <button
@@ -4009,8 +4017,8 @@ const DevoteeDashboard = () => {
  }}
  className={`group relative flex items-start gap-4 rounded-2xl border p-5 transition-all duration-300 cursor-pointer ${
  !item.read
- ? "border-[#fecdd3] bg-[#fff0f3] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 shadow-[0_8px_20px_rgba(244,63,94,0.06)]"
- : "border-[#e5e7eb] bg-temple-100 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 hover:bg-[#fafafa] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 "
+ ? "border-[#fecdd3] dark:border-rose-900/50 bg-[#fff0f3] dark:bg-rose-950/25 shadow-[0_8px_20px_rgba(244,63,94,0.06)]"
+ : "border-[#e5e7eb] dark:border-slate-800 bg-white/70 dark:bg-slate-800/60 hover:bg-[#fafafa] dark:hover:bg-slate-800"
  }`}
  >
  <div className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl shadow-sm ${style.color}`}>
@@ -4019,13 +4027,13 @@ const DevoteeDashboard = () => {
 
  <div className="flex-1">
  <div className="flex flex-wrap items-center justify-between gap-2">
- <p className={`text-base font-bold transition group-hover:text-[#bc6c10] ${!item.read ? "text-[#3f2711]" : "text-[#5c564f]"}`}>
+ <p className={`text-base font-bold transition group-hover:text-[#bc6c10] dark:group-hover:text-amber-400 ${!item.read ? "text-[#3f2711] dark:text-slate-100" : "text-[#5c564f] dark:text-slate-300"}`}>
  {item.title}
  </p>
  <span className="text-xs text-[#8c857b] font-medium">{item.date}</span>
  </div>
  {item.message && (
- <p className={`mt-2 text-sm leading-relaxed ${!item.read ? "text-[#5d4f3f]" : "text-[#797268]"}`}>
+ <p className={`mt-2 text-sm leading-relaxed ${!item.read ? "text-[#5d4f3f] dark:text-slate-300" : "text-[#797268] dark:text-slate-400"}`}>
  {item.message}
  </p>
  )}
@@ -4080,7 +4088,7 @@ const DevoteeDashboard = () => {
  <div className="flex flex-wrap items-center justify-between gap-4">
  <div>
  <h2 className="text-[2rem] font-bold">Profile</h2>
- <p className="mt-2 text-[#5d5d5d]">Manage your devotee profile and contact information.</p>
+ <p className="mt-2 text-[#5d5d5d] dark:text-slate-300">Manage your devotee profile and contact information.</p>
  </div>
  <button
  type="button"
@@ -4093,25 +4101,25 @@ const DevoteeDashboard = () => {
  {profileMessage && <div className="mt-4 rounded-xl bg-[#e8f7ef] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 p-3 text-sm text-[#1c6f3d]">{profileMessage}</div>}
  {profileError && <div className="mt-4 rounded-xl bg-[#fde8e8] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 p-3 text-sm text-[#a12525]">{profileError}</div>}
  {profileEditMode && (
- <div className="mt-4 grid gap-3 rounded-2xl border border-[#f0f0f0] bg-[#fbfaf8] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 p-4">
+ <div className="mt-4 grid gap-3 rounded-2xl border border-[#f0f0f0] dark:border-slate-700 bg-[#fbfaf8] dark:bg-slate-800/80 p-4">
  <div>
- <label className="block text-sm font-medium text-[#5d5d5d] mb-2">Full Name *</label>
+ <label className="block text-sm font-medium text-[#5d5d5d] dark:text-slate-300 mb-2">Full Name *</label>
  <input className={glassInput} value={profileForm.name} onChange={(e) => setProfileForm((prev) => ({ ...prev, name: e.target.value }))} placeholder="Enter full name" />
  </div>
  <div>
- <label className="block text-sm font-medium text-[#5d5d5d] mb-2">Email Address *</label>
+ <label className="block text-sm font-medium text-[#5d5d5d] dark:text-slate-300 mb-2">Email Address *</label>
  <input className={glassInput} value={profileForm.email} onChange={(e) => setProfileForm((prev) => ({ ...prev, email: e.target.value }))} placeholder="Enter email" />
  </div>
  <div>
- <label className="block text-sm font-medium text-[#5d5d5d] mb-2">Phone Number *</label>
+ <label className="block text-sm font-medium text-[#5d5d5d] dark:text-slate-300 mb-2">Phone Number *</label>
  <input className={glassInput} value={profileForm.phone} onChange={(e) => setProfileForm((prev) => ({ ...prev, phone: e.target.value }))} placeholder="Enter 10-digit phone number" />
  </div>
  <div>
- <label className="block text-sm font-medium text-[#5d5d5d] mb-2">Place/City *</label>
+ <label className="block text-sm font-medium text-[#5d5d5d] dark:text-slate-300 mb-2">Place/City *</label>
  <input className={glassInput} value={profileForm.place} onChange={(e) => setProfileForm((prev) => ({ ...prev, place: e.target.value }))} placeholder="Enter place or city" />
  </div>
  <div>
- <label className="block text-sm font-medium text-[#5d5d5d] mb-2">Address *</label>
+ <label className="block text-sm font-medium text-[#5d5d5d] dark:text-slate-300 mb-2">Address *</label>
  <textarea rows="3" className={glassInput} value={profileForm.address} onChange={(e) => setProfileForm((prev) => ({ ...prev, address: e.target.value }))} placeholder="Enter complete address" />
  </div>
  <button type="button" onClick={handleProfileSave} className={`${glassButton} col-span-full mt-4`}>💾 Save Changes</button>
@@ -4119,32 +4127,32 @@ const DevoteeDashboard = () => {
  )}
  <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
  <div className={glassItem}>
- <p className="text-sm text-[#7a6f5d]">Full Name</p>
- <p className="mt-2 text-lg font-semibold text-[#1f1f1f]">{profileData.name || devoteeName}</p>
+ <p className="text-sm text-[#7a6f5d] dark:text-slate-400">Full Name</p>
+ <p className="mt-2 text-lg font-semibold text-[#1f1f1f] dark:text-slate-100">{profileData.name || devoteeName}</p>
  </div>
  <div className={glassItem}>
- <p className="text-sm text-[#7a6f5d]">Email Address</p>
- <p className="mt-2 text-lg font-semibold text-[#1f1f1f]">{profileData.email}</p>
+ <p className="text-sm text-[#7a6f5d] dark:text-slate-400">Email Address</p>
+ <p className="mt-2 text-lg font-semibold text-[#1f1f1f] dark:text-slate-100">{profileData.email}</p>
  </div>
  <div className={glassItem}>
- <p className="text-sm text-[#7a6f5d]">Phone Number</p>
- <p className="mt-2 text-lg font-semibold text-[#1f1f1f]">{displayValue(profileData.phone)}</p>
+ <p className="text-sm text-[#7a6f5d] dark:text-slate-400">Phone Number</p>
+ <p className="mt-2 text-lg font-semibold text-[#1f1f1f] dark:text-slate-100">{displayValue(profileData.phone)}</p>
  </div>
  <div className={glassItem}>
- <p className="text-sm text-[#7a6f5d]">Place/City</p>
- <p className="mt-2 text-lg font-semibold text-[#1f1f1f]">{displayValue(profileData.place)}</p>
+ <p className="text-sm text-[#7a6f5d] dark:text-slate-400">Place/City</p>
+ <p className="mt-2 text-lg font-semibold text-[#1f1f1f] dark:text-slate-100">{displayValue(profileData.place)}</p>
  </div>
  <div className={`${glassItem} sm:col-span-2 lg:col-span-1`}>
- <p className="text-sm text-[#7a6f5d]">Role</p>
- <p className="mt-2 text-lg font-semibold text-[#1f1f1f]">{profileData.role || "devotee"}</p>
+ <p className="text-sm text-[#7a6f5d] dark:text-slate-400">Role</p>
+ <p className="mt-2 text-lg font-semibold text-[#1f1f1f] dark:text-slate-100">{profileData.role || "devotee"}</p>
  </div>
  <div className={glassItem}>
- <p className="text-sm text-[#7a6f5d]">Member Since</p>
- <p className="mt-2 text-lg font-semibold text-[#1f1f1f]">{profileData.memberSince || "2026"}</p>
+ <p className="text-sm text-[#7a6f5d] dark:text-slate-400">Member Since</p>
+ <p className="mt-2 text-lg font-semibold text-[#1f1f1f] dark:text-slate-100">{profileData.memberSince || "2026"}</p>
  </div>
  <div className={`${glassItem} lg:col-span-2`}>
- <p className="text-sm text-[#7a6f5d]">Address</p>
- <p className="mt-2 text-sm text-[#1f1f1f] leading-relaxed">{displayValue(profileData.address)}</p>
+ <p className="text-sm text-[#7a6f5d] dark:text-slate-400">Address</p>
+ <p className="mt-2 text-sm text-[#1f1f1f] dark:text-slate-100 leading-relaxed">{displayValue(profileData.address)}</p>
  </div>
  </div>
  </div>
@@ -4156,9 +4164,9 @@ const DevoteeDashboard = () => {
  <div className="space-y-6">
  <div className={`${glassCard}`}>
  <h2 className="text-[2rem] font-bold">Support</h2>
- <p className="mt-2 text-[#5d5d5d]">Raise an issue or get help with your bookings and donations.</p>
+ <p className="mt-2 text-[#5d5d5d] dark:text-slate-300">Raise an issue or get help with your bookings and donations.</p>
  <div className="mt-6 grid gap-4 md:grid-cols-2">
- <label className="block space-y-2 text-sm text-[#5d5d5d]">
+ <label className="block space-y-2 text-sm text-[#5d5d5d] dark:text-slate-300">
  Subject
  <input
  type="text"
@@ -4168,7 +4176,7 @@ const DevoteeDashboard = () => {
  className={glassInput}
  />
  </label>
- <label className="block space-y-2 text-sm text-[#5d5d5d] md:col-span-2">
+ <label className="block space-y-2 text-sm text-[#5d5d5d] dark:text-slate-300 md:col-span-2">
  Message
  <textarea
  rows={5}
@@ -4198,13 +4206,13 @@ const DevoteeDashboard = () => {
  <div className="flex flex-wrap items-center justify-between gap-3">
  <div>
  <p className="font-semibold">{request.subject}</p>
- <p className="text-sm text-[#6b7280]">{new Date(request.createdAt).toLocaleString()}</p>
+ <p className="text-sm text-[#6b7280] dark:text-slate-400">{new Date(request.createdAt).toLocaleString()}</p>
  </div>
  <span className={`rounded-full px-3 py-1 text-sm font-semibold ${request.status === "Closed" ? "bg-[#def5e5] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 text-[#166534]" : "bg-[#fef3c7] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 text-[#92400e]"}`}>{request.status || "Open"}</span>
  </div>
- <p className="mt-3 text-sm text-[#374151]">{request.message}</p>
+ <p className="mt-3 text-sm text-[#374151] dark:text-slate-200">{request.message}</p>
  {request.reply && (
- <div className="mt-4 rounded-[26px] border border-white/35 bg-temple-100/70 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 p-3 text-sm text-[#1f2937] shadow-sm backdrop-blur-sm">
+ <div className="mt-4 rounded-[26px] border border-white/35 dark:border-slate-700 bg-temple-100/70 dark:bg-slate-800/80 p-3 text-sm text-[#1f2937] dark:text-slate-200 shadow-sm backdrop-blur-sm">
  <p className="font-semibold">Admin Reply</p>
  <p className="mt-2">{request.reply}</p>
  </div>
@@ -4212,7 +4220,7 @@ const DevoteeDashboard = () => {
  </div>
  ))
  ) : (
- <p className="text-sm text-[#5d5d5d]">You have not submitted any feedback yet.</p>
+ <p className="text-sm text-[#5d5d5d] dark:text-slate-400">You have not submitted any feedback yet.</p>
  )}
  </div>
  </div>
@@ -4247,17 +4255,79 @@ const DevoteeDashboard = () => {
  };
 
  return (
- <div className="min-h-screen w-full bg-gradient-to-br from-[#fff7ed] via-[#fff1d4] to-[#ffe2aa] text-[#2c1d12]">
+ <div className={`min-h-screen w-full transition-colors duration-300 ${
+ darkMode 
+ ? "dark bg-[#0f172a] text-slate-100" 
+ : "bg-gradient-to-br from-[#fff7ed] via-[#fff1d4] to-[#ffe2aa] text-[#2c1d12]"
+ }`}>
+ {/* Mobile Sidebar Drawer */}
+ {mobileOpen && (
+ <div className="fixed inset-0 z-50 flex lg:hidden">
+ <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
+ <aside className={`relative z-10 w-[280px] h-full overflow-y-auto p-5 shadow-2xl flex flex-col justify-between ${
+ darkMode ? "bg-[#0b1120] border-r border-slate-800 text-slate-100" : "bg-gradient-to-b from-[#ffecce] to-[#ffd6a6] border-r border-amber-200 text-[#2c1d12]"
+ }`}>
+ <div>
+ <div className="flex items-center justify-between pb-6 pt-2 border-b border-amber-200/40 dark:border-slate-800">
+ <div>
+ <p className="text-2xl font-black text-[#bc6c10] dark:text-amber-400">Sri Shanti</p>
+ <p className="text-xl font-black text-[#2c1d12] dark:text-slate-100">Mahadev Mandir</p>
+ </div>
+ <button
+ type="button"
+ onClick={() => setMobileOpen(false)}
+ className="rounded-xl p-2 text-slate-500 hover:bg-black/5 dark:text-slate-400 dark:hover:bg-slate-800 text-lg font-bold"
+ >
+ ✕
+ </button>
+ </div>
+ <div className="mt-4 space-y-2">
+ {menuItems.map((item) => (
+ <SidebarItem
+ key={item.label}
+ label={item.label}
+ icon={item.icon}
+ active={activePage === item.label}
+ onClick={() => {
+ setActivePage(item.label);
+ setMobileOpen(false);
+ }}
+ />
+ ))}
+ </div>
+ </div>
+ <div className="pt-4 border-t border-amber-200/40 dark:border-slate-800">
+ <button
+ type="button"
+ onClick={() => {
+ setMobileOpen(false);
+ setShowLogout(true);
+ }}
+ className="w-full rounded-xl border border-rose-200 bg-rose-50/80 dark:bg-rose-950/40 dark:border-rose-900/50 px-3 py-2.5 text-left text-base font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/40 transition flex items-center gap-3"
+ >
+ <FaSignOutAlt size={18} />
+ Logout
+ </button>
+ </div>
+ </aside>
+ </div>
+ )}
+
  <div className="flex w-full">
- <aside className="relative hidden min-h-screen w-[320px] overflow-hidden border-r border-white/35 bg-[radial-gradient(circle_at_top_left,_rgba(255,220,146,0.36),_transparent_28%)] bg-gradient-to-b from-[#ffecce]/70 to-[#ffd6a6]/40 shadow-[0_0_42px_rgba(153,90,31,0.22)] backdrop-blur-md lg:block">
+ {/* Desktop Sidebar */}
+ <aside className={`relative hidden min-h-screen w-[320px] overflow-hidden border-r backdrop-blur-md lg:block transition-colors duration-300 ${
+ darkMode 
+ ? "bg-[#0b1120] border-slate-800/80 shadow-[0_0_42px_rgba(0,0,0,0.5)]" 
+ : "border-white/35 bg-[radial-gradient(circle_at_top_left,_rgba(255,220,146,0.36),_transparent_28%)] bg-gradient-to-b from-[#ffecce]/70 to-[#ffd6a6]/40 shadow-[0_0_42px_rgba(153,90,31,0.22)]"
+ }`}>
  <div className="pointer-events-none absolute inset-0">
- <img src={templeImage} alt="Temple background" className="h-full w-full object-cover object-[56%_center]" />
- <div className="absolute inset-0 bg-[#fff0dc]/22 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 "></div>
- <div className="absolute inset-0 bg-gradient-to-b from-[#fff4df]/68 via-[#ffdcb1]/24 to-[#ff9f44]/20"></div>
+ <img src={templeImage} alt="Temple background" className={`h-full w-full object-cover object-[56%_center] transition-opacity duration-300 ${darkMode ? "opacity-15" : "opacity-100"}`} />
+ <div className={`absolute inset-0 transition-colors duration-300 ${darkMode ? "bg-[#0b1120]/85" : "bg-[#fff0dc]/22"}`}></div>
+ <div className={`absolute inset-0 bg-gradient-to-b transition-colors duration-300 ${darkMode ? "from-[#0b1120]/90 via-[#0b1120]/75 to-[#0f172a]/90" : "from-[#fff4df]/68 via-[#ffdcb1]/24 to-[#ff9f44]/20"}`}></div>
  </div>
  <div className="relative z-10 px-5 pb-5 pt-8">
- <p className="text-[2.55rem] font-black leading-[1.03] text-[#bc6c10]">Sri Shanti</p>
- <p className="text-[2.1rem] font-black leading-[1.03]">Mahadev Mandir</p>
+ <p className="text-[2.55rem] font-black leading-[1.03] text-[#bc6c10] dark:text-amber-400">Sri Shanti</p>
+ <p className={`text-[2.1rem] font-black leading-[1.03] transition-colors duration-300 ${darkMode ? "text-slate-100" : "text-[#2c1d12]"}`}>Mahadev Mandir</p>
  </div>
  <div className="relative z-10 space-y-2 px-4">
  {menuItems.map((item) => (
@@ -4271,52 +4341,126 @@ const DevoteeDashboard = () => {
  ))}
  <button
  type="button"
- onClick={handleLogout}
- className="mt-1 w-full rounded-xl border border-white/40 bg-temple-100/45 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 px-3 py-3 text-left text-[18px] font-semibold text-[#7f470a] hover:bg-temple-100/80 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 "
+ onClick={() => setShowLogout(true)}
+ className={`mt-3 w-full rounded-xl border px-3 py-3 text-left text-[18px] font-semibold transition flex items-center justify-between ${
+ darkMode 
+ ? "border-rose-900/40 bg-rose-950/30 text-rose-400 hover:bg-rose-950/60" 
+ : "border-white/40 bg-temple-100/45 text-[#7f470a] hover:bg-temple-100/80"
+ }`}
  >
  <span className="inline-flex items-center gap-3">
- <AppIcon name="gear" className="h-[21px] w-[21px]" />
+ <FaSignOutAlt size={18} />
  Logout
  </span>
  </button>
  </div>
  </aside>
 
- <main className="flex-1 px-4 py-4 sm:px-6 sm:py-6 lg:px-10">
- <header className="rounded-2xl border border-white/60 bg-temple-100/50 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 px-6 py-5 shadow-[0_12px_30px_rgba(80,40,10,0.06)] backdrop-blur-md">
- <div className="flex flex-wrap items-center justify-between gap-4">
- <div className="flex min-w-[360px] flex-1 items-center gap-4">
- <button type="button" className="hidden text-[#8d551f] lg:block">
- <svg viewBox="0 0 24 24" className="h-8 w-8 fill-current">
- <path d="M3 6h18v2H3zM3 11h18v2H3zM3 16h18v2H3z"></path>
- </svg>
+ <main className="flex-1 px-4 py-4 sm:px-6 sm:py-6 lg:px-10 min-w-0">
+ {/* Top Navigation Header */}
+ <header className={`rounded-2xl border px-5 py-4 transition-all duration-300 backdrop-blur-xl sticky top-4 z-20 shadow-md ${
+ darkMode 
+ ? "bg-slate-900/85 border-slate-800/90 text-slate-100 shadow-black/20" 
+ : "bg-temple-100/70 border-white/60 text-[#2c1d12] shadow-[0_10px_30px_rgba(80,40,10,0.06)]"
+ }`}>
+ <div className="flex flex-wrap items-center justify-between gap-3">
+ {/* Left side: Mobile Menu Hamburger & Search */}
+ <div className="flex flex-1 min-w-[240px] max-w-[500px] items-center gap-3">
+ <button
+ type="button"
+ onClick={() => setMobileOpen(true)}
+ className={`lg:hidden h-10 w-10 rounded-xl border flex items-center justify-center transition-colors ${
+ darkMode 
+ ? "border-slate-700 bg-slate-800 text-slate-100 hover:bg-slate-700" 
+ : "border-amber-200 bg-temple-100 text-[#8d551f] hover:bg-amber-100"
+ }`}
+ aria-label="Open navigation menu"
+ >
+ <MdMenu size={22} />
  </button>
- <div className="relative w-full max-w-[560px]">
- <input
- type="text"
- placeholder="Search here..."
- className="w-full rounded-xl border border-[#e8d8c2] bg-temple-100/90 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 py-3.5 pl-12 pr-4 text-base text-[#3d3d3d] outline-none placeholder:text-[#9a9a9a]"
- />
- <svg viewBox="0 0 24 24" className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 fill-none stroke-[#8d551f] stroke-2">
+
+ <div className={`relative flex-1 flex items-center rounded-xl border transition-colors ${
+ darkMode 
+ ? "border-slate-700/80 bg-slate-800/80 text-slate-100 focus-within:border-amber-500/60" 
+ : "border-[#e8d8c2] bg-temple-100/90 text-[#3d3d3d] focus-within:border-amber-400"
+ }`}>
+ <svg viewBox="0 0 24 24" className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 fill-none stroke-current opacity-60 stroke-2">
  <circle cx="11" cy="11" r="7"></circle>
  <path d="m20 20-3.5-3.5"></path>
  </svg>
+ <input
+ type="text"
+ placeholder="Search sacred services, poojas, bookings..."
+ className="w-full bg-transparent py-2.5 pl-10 pr-3 text-sm outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500"
+ />
  </div>
  </div>
- <div className="flex items-center gap-4">
- <button type="button" onClick={() => setActivePage("Notifications")} className="relative mr-1 hidden rounded-xl bg-temple-100/80 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 p-2.5 shadow-sm transition hover:scale-105 lg:block">
- <AppIcon name="bell" className="h-7 w-7 text-[#302d2b]" />
+
+ {/* Right side: DateTime, Theme Toggle, Notifications, Profile, Logout */}
+ <div className="flex items-center gap-2.5 sm:gap-3.5">
+ {/* Date / Time */}
+ <div className={`hidden xl:flex items-center rounded-xl border px-3.5 py-2 text-xs font-bold transition-colors ${
+ darkMode 
+ ? "border-slate-700 bg-slate-800/80 text-amber-300" 
+ : "border-[#ead6c0] bg-temple-100/80 text-[#7e4310]"
+ }`}>
+ {currentDateTime.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })} {currentDateTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+ </div>
+
+ {/* Dark / Light Mode Switcher */}
+ <button
+ type="button"
+ onClick={toggleDarkMode}
+ className={`h-10 w-10 rounded-xl border flex items-center justify-center transition-all duration-300 hover:scale-105 ${
+ darkMode 
+ ? "border-slate-700 bg-slate-800 text-amber-300 hover:bg-slate-700 hover:text-amber-200" 
+ : "border-amber-200/80 bg-temple-100 text-amber-600 hover:bg-white shadow-xs"
+ }`}
+ aria-label="Toggle dark / light mode"
+ title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+ >
+ {darkMode ? <MdLightMode size={20} /> : <MdDarkMode size={20} />}
+ </button>
+
+ {/* Notifications Bell */}
+ <button
+ type="button"
+ onClick={() => setActivePage("Notifications")}
+ className={`relative h-10 w-10 rounded-xl border flex items-center justify-center transition-all duration-300 hover:scale-105 ${
+ darkMode 
+ ? "border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700" 
+ : "border-amber-200/80 bg-temple-100 text-[#633a11] hover:bg-white shadow-xs"
+ }`}
+ aria-label="Open notifications"
+ title="Notifications"
+ >
+ <FaBell size={17} />
  {unreadNotificationsCount > 0 && (
- <span className="absolute -right-1 -top-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#e4262c] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 text-xs font-extrabold text-white">
- {unreadNotificationsCount}
+ <span className="absolute -right-1.5 -top-1.5 flex min-w-[19px] h-[19px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-black text-white border-2 border-white dark:border-slate-900 shadow-sm animate-pulse">
+ {unreadNotificationsCount > 9 ? "9+" : unreadNotificationsCount}
  </span>
  )}
  </button>
- <div className="rounded-xl border border-[#ead6c0] bg-temple-100/80 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 px-5 py-2.5 text-base font-bold text-[#7e4310]">
- {currentDateTime.toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "short", day: "numeric" })} {currentDateTime.toLocaleTimeString()}
- </div>
- <div className="flex items-center gap-3.5 rounded-full px-1">
- <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#e2ccb2] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 text-base font-extrabold text-[#5d3310]">
+
+ {/* Direct to Profile Card */}
+ <div
+ onClick={() => setActivePage("Profile")}
+ className={`flex items-center gap-2.5 p-1.5 pr-3 rounded-xl border cursor-pointer transition-all duration-300 hover:scale-[1.02] ${
+ activePage === "Profile"
+ ? darkMode
+ ? "border-amber-500/60 bg-amber-500/15 text-amber-300"
+ : "border-amber-400 bg-amber-100 text-[#422006]"
+ : darkMode
+ ? "border-slate-700 bg-slate-800/80 text-slate-100 hover:bg-slate-700 hover:border-slate-600"
+ : "border-amber-200/80 bg-temple-100/90 text-[#2c1d12] hover:bg-white shadow-xs"
+ }`}
+ title="Go to Profile"
+ >
+ <div className={`flex h-8 w-8 items-center justify-center rounded-lg font-black text-xs shadow-xs ${
+ darkMode 
+ ? "bg-gradient-to-br from-amber-500 to-amber-600 text-slate-950" 
+ : "bg-gradient-to-br from-[#ff9f2f] to-[#ff6a00] text-white"
+ }`}>
  {devoteeName
  .split(" ")
  .slice(0, 2)
@@ -4324,16 +4468,32 @@ const DevoteeDashboard = () => {
  .join("")
  .toUpperCase()}
  </div>
- <div className="hidden leading-tight sm:block">
- <p className="text-lg font-bold text-gray-900">{devoteeName}</p>
- <p className="text-xs font-semibold text-[#565656]">Devotee</p>
+ <div className="hidden sm:block text-left leading-none">
+ <p className="text-xs font-bold truncate max-w-[110px]">{devoteeName}</p>
+ <p className={`text-[10px] font-semibold mt-0.5 ${darkMode ? "text-amber-400" : "text-amber-700"}`}>Devotee</p>
  </div>
+ <MdKeyboardArrowDown size={17} className={`opacity-60 ${darkMode ? "text-slate-300" : "text-[#2c1d12]"}`} />
  </div>
+
+ {/* Logout Option Button */}
+ <button
+ type="button"
+ onClick={() => setShowLogout(true)}
+ className={`h-10 w-10 rounded-xl border flex items-center justify-center transition-all duration-300 hover:scale-105 ${
+ darkMode 
+ ? "border-slate-700 bg-slate-800 text-rose-400 hover:bg-rose-950/50 hover:border-rose-800" 
+ : "border-amber-200/80 bg-temple-100 text-rose-500 hover:bg-rose-50 hover:border-rose-200 shadow-xs"
+ }`}
+ aria-label="Logout"
+ title="Logout"
+ >
+ <FaSignOutAlt size={17} />
+ </button>
  </div>
  </div>
  </header>
  
- <div className="mt-6 rounded-3xl border border-white/70 bg-temple-100/40 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 p-5 shadow-[0_14px_40px_rgba(80,40,10,0.05)] backdrop-blur-lg sm:p-7 lg:p-9">
+ <div className="mt-6 rounded-3xl border border-white/70 bg-temple-100/40 dark:bg-slate-900/60 dark:border-slate-800/80 p-5 shadow-[0_14px_40px_rgba(80,40,10,0.05)] dark:shadow-none backdrop-blur-lg sm:p-7 lg:p-9">
  {renderContent()}
  </div>
  </main>
@@ -4379,6 +4539,14 @@ const DevoteeDashboard = () => {
  
  </div>
  </div>
+ )}
+
+ {/* Logout Confirmation Modal */}
+ {showLogout && (
+ <LogoutModal
+ onClose={() => setShowLogout(false)}
+ onLogout={handleLogout}
+ />
  )}
  </div>
  );
