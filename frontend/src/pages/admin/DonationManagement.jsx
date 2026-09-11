@@ -132,8 +132,8 @@ const DonationManagement = () => {
  <DonationTable donations={filteredDonations} onRefresh={fetchDonations} />
 
  <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
- <RecentDonations donations={filteredDonations} />
- <TopDonors donations={filteredDonations} />
+ <RecentDonations donations={donations} />
+ <TopDonors donations={donations} />
  </div>
  </div>
  );

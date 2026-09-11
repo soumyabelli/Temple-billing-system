@@ -39,8 +39,7 @@ const DonationTable = ({ donations = [], onRefresh }) => {
         category: donation.category || "General",
         amount: formatCurrency(donation.amount),
         date: donation.createdAt ? new Date(donation.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : donation.date || "-",
-        status: donation.status || "Not Collected",
-        verifiedBy: donation.verifiedBy || donation.verifiedBy || "Admin",
+        status: (donation.status === "Collected" || donation.status === "Completed") ? "Collected" : "Not Collected",
       })),
     [donations]
   );
@@ -50,7 +49,7 @@ const DonationTable = ({ donations = [], onRefresh }) => {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
         <div>
           <h2 className="text-2xl font-black text-slate-800 dark:text-slate-200">Donation Activity Log</h2>
-          <p className="mt-1 text-sm font-semibold text-slate-500">Live donation entries and verification status from the temple backend.</p>
+          <p className="mt-1 text-sm font-semibold text-slate-500">Live donation entries and collection status from the temple backend.</p>
         </div>
         <div className="flex gap-3">
           {donations.length > 8 && (
@@ -79,7 +78,7 @@ const DonationTable = ({ donations = [], onRefresh }) => {
               <th className="py-3.5 px-4">Category</th>
               <th className="py-3.5 px-4">Amount</th>
               <th className="py-3.5 px-4">Date</th>
-              <th className="py-3.5 px-4">Verified By</th>
+              <th className="py-3.5 px-4">Status</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-amber-100">
@@ -90,7 +89,15 @@ const DonationTable = ({ donations = [], onRefresh }) => {
                 <td className="py-3.5 px-4">{row.category}</td>
                 <td className="py-3.5 px-4 text-amber-700 font-extrabold">{row.amount}</td>
                 <td className="py-3.5 px-4 text-slate-500 font-medium">{row.date}</td>
-                <td className="py-3.5 px-4 text-slate-600 font-medium">{row.verifiedBy}</td>
+                <td className="py-3.5 px-4">
+                  <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-bold border ${
+                    row.status === "Collected"
+                      ? "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800"
+                      : "bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800"
+                  }`}>
+                    {row.status}
+                  </span>
+                </td>
               </tr>
             ))}
           </tbody>

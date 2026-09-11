@@ -7,12 +7,14 @@ const formatAmount = (value) => {
 };
 
 const TopDonors = ({ donations = [] }) => {
-  const totals = donations.reduce((acc, donation) => {
-    const name = donation.donorName || donation.donor || "Unknown";
-    const amount = Number(donation.amount) || 0;
-    acc[name] = (acc[name] || 0) + amount;
-    return acc;
-  }, {});
+  const totals = donations
+    .filter((d) => d.status === "Collected" || d.status === "Completed")
+    .reduce((acc, donation) => {
+      const name = donation.donorName || donation.donor || "Unknown";
+      const amount = Number(donation.amount) || 0;
+      acc[name] = (acc[name] || 0) + amount;
+      return acc;
+    }, {});
 
   const topDonors = Object.entries(totals)
     .map(([name, amount]) => ({ name, amount }))

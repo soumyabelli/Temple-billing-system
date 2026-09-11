@@ -692,12 +692,15 @@ const createDonation = async (req, res) => {
       return res.status(400).json({ error: "Please provide a valid contact number." });
     }
 
-    const hasKeys = !!(process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET);
     const isOnline = paymentMethod && paymentMethod !== "Cash";
     
-    // For online payments, wait for razorpay webhook. For offline (Cash), it's immediately collected/paid.
-    const donationStatus = (hasKeys && isOnline) ? "Not Collected" : "Collected";
-    const paymentStatus = (hasKeys && isOnline) ? "Pending" : "Paid";
+    // Since temple bank is not connected, once paid online, status is "Collected" and transaction ID is populated
+    const donationStatus = "Collected";
+    const paymentStatus = "Paid";
+
+    const finalTxnId = isOnline
+      ? (transactionId && transactionId.trim() !== "" ? transactionId.trim() : `pay_${Date.now()}`)
+      : undefined;
 
     let donation;
     const donationPayload = {
@@ -708,7 +711,7 @@ const createDonation = async (req, res) => {
       category,
       paymentMethod,
       contactNumber,
-      transactionId: (hasKeys && isOnline) ? undefined : transactionId,
+      transactionId: finalTxnId,
       notes,
       status: donationStatus,
       eventId: eventId || undefined,
@@ -1742,10 +1745,10 @@ const createRazorpayOrder = async (req, res) => {
         category,
         paymentMethod,
         notes,
-        status: "Completed",
+        status: "Collected",
         eventId: eventId || undefined,
         razorpayOrderId: order.id,
-        transactionId: `SIM_TXN_${Date.now()}`,
+        transactionId: `pay_${order.id.replace(/^order_/, "")}`,
       });
 
       await createLedgerBill({
@@ -1809,9 +1812,10 @@ const createRazorpayOrder = async (req, res) => {
       category,
       paymentMethod,
       notes,
-      status: "Not Collected",
+      status: "Collected",
       eventId: eventId || undefined,
       razorpayOrderId: order.id,
+      transactionId: `pay_${order.id.replace(/^order_/, "")}`,
     });
 
     await createLedgerBill({
@@ -1852,7 +1856,7 @@ const verifyRazorpayPayment = async (req, res) => {
     if (!donation) donation = await Donation.findOne({ razorpayOrderId: razorpay_order_id });
     if (!donation) return res.status(404).json({ error: "Donation not found for this order." });
 
-    donation.status = "Completed";
+    donation.status = "Collected";
     donation.transactionId = razorpay_payment_id;
     donation.razorpayPaymentId = razorpay_payment_id;
     donation.razorpaySignature = razorpay_signature;
@@ -1887,7 +1891,7 @@ const verifyRazorpayPayment = async (req, res) => {
       console.warn("Notification after verify failed:", notifErr);
     }
 
-    if (isDbConnected() && donation.status === "Completed") {
+    if (isDbConnected() && (donation.status === "Collected" || donation.status === "Completed")) {
       try {
         await recordTransaction({
           transactionType: "Credit",
@@ -1936,7 +1940,7 @@ const handleRazorpayWebhook = async (req, res) => {
 
       const donation = await Donation.findOne({ razorpayOrderId: orderId });
       if (donation) {
-        donation.status = "Completed";
+        donation.status = "Collected";
         donation.transactionId = paymentId;
         donation.razorpayPaymentId = paymentId;
         donation.razorpaySignature = signature;

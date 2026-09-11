@@ -13,7 +13,7 @@ const createDonation = async (req, res) => {
       contactNumber,
       transactionId,
       notes,
-      status = "Completed",
+      status = "Collected",
     } = req.body;
 
     if (!donorName || !amount) {
@@ -39,6 +39,12 @@ const createDonation = async (req, res) => {
       });
     }
 
+    const isOnline = paymentMethod && paymentMethod !== "Cash";
+    const finalTxnId = isOnline
+      ? (transactionId && transactionId.trim() !== "" ? transactionId.trim() : `pay_${Date.now()}`)
+      : undefined;
+    const finalStatus = (status === "Completed" || status === "Collected") ? "Collected" : status;
+
     const donation = await Donation.create({
       donorName: donorName.trim(),
       donorEmail: donorEmail ? String(donorEmail).trim().toLowerCase() : undefined,
@@ -46,9 +52,9 @@ const createDonation = async (req, res) => {
       amount: numericAmount,
       category,
       paymentMethod,
-      transactionId,
+      transactionId: finalTxnId,
       notes,
-      status,
+      status: finalStatus,
     });
 
     await Bill.create({
@@ -60,7 +66,7 @@ const createDonation = async (req, res) => {
       referenceNo: `DN-${String(donation._id).slice(-6).toUpperCase()}`,
       sourceId: donation._id.toString(),
       notes: notes || "",
-      status: status === "Completed" || status === "Collected" ? "Paid" : "Pending",
+      status: finalStatus === "Collected" ? "Paid" : "Pending",
       billDate: new Date(),
     });
 
@@ -107,7 +113,29 @@ const createDonation = async (req, res) => {
 // GET ALL DONATIONS
 const getAllDonations = async (req, res) => {
   try {
-    const donations = await Donation.find().sort({ createdAt: -1 });
+    const rawDonations = await Donation.find().sort({ createdAt: -1 });
+
+    const donations = rawDonations.map((d) => {
+      const item = d.toObject ? d.toObject() : { ...d };
+      const isOnline = item.paymentMethod && item.paymentMethod !== "Cash";
+      
+      // Normalize Completed -> Collected
+      if (item.status === "Completed") {
+        item.status = "Collected";
+      }
+
+      // Ensure online payments have a transactionId
+      if (isOnline && (!item.transactionId || item.transactionId.trim() === "" || item.transactionId === "—")) {
+        item.transactionId = item.razorpayPaymentId || (item.razorpayOrderId ? item.razorpayOrderId.replace(/^order_/, "pay_") : `pay_${String(item._id).slice(-14)}`);
+      }
+
+      // Cash payments don't have online transaction IDs
+      if (!isOnline) {
+        item.transactionId = undefined;
+      }
+
+      return item;
+    });
 
     res.status(200).json({
       success: true,
@@ -122,30 +150,31 @@ const getAllDonations = async (req, res) => {
   }
 };
 
-
-
 // GET DASHBOARD STATS
 const getDonationStats = async (req, res) => {
   try {
     const donations = await Donation.find();
 
-    const totalAmount = donations.reduce(
+    const collectedDonations = donations.filter((d) => d.status === "Collected" || d.status === "Completed");
+    const totalAmount = collectedDonations.reduce(
       (acc, item) => acc + (Number(item.amount) || 0),
       0
     );
 
     const totalDonors = donations.length;
 
-    const completed = donations.filter((d) => d.status === "Completed").length;
-    const pending = donations.filter((d) => d.status === "Pending").length;
+    const collected = collectedDonations.length;
+    const notCollected = donations.filter((d) => d.status === "Not Collected" || d.status === "Pending").length;
 
     res.status(200).json({
       success: true,
       stats: {
         totalAmount,
         totalDonors,
-        completed,
-        pending,
+        completed: collected,
+        collected,
+        pending: notCollected,
+        notCollected,
       },
     });
   } catch (error) {
@@ -155,8 +184,6 @@ const getDonationStats = async (req, res) => {
     });
   }
 };
-
-
 
 // DELETE DONATION
 const deleteDonation = async (req, res) => {
@@ -198,16 +225,17 @@ const updateDonationStatus = async (req, res) => {
     }
 
     const previousStatus = donation.status;
-    donation.status = status;
+    const normalizedStatus = (status === "Collected" || status === "Completed") ? "Collected" : "Not Collected";
+    donation.status = normalizedStatus;
     await donation.save();
 
     // Sync bill ledger status as well
     await Bill.updateMany(
       { sourceId: donation._id.toString() },
-      { $set: { status: (status === "Collected" || status === "Completed") ? "Paid" : "Pending" } }
+      { $set: { status: normalizedStatus === "Collected" ? "Paid" : "Pending" } }
     );
 
-    if (previousStatus !== status && (status === "Collected" || status === "Completed")) {
+    if (previousStatus !== normalizedStatus && normalizedStatus === "Collected") {
       const { recordTransaction } = require("../services/accountingService");
 
       // Determine Fund based on category
