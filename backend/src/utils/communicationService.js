@@ -77,7 +77,13 @@ const sendEmail = async ({ to, bcc, subject, html, text, attachments }) => {
 
     return { success: true, type: "email", recipient: to };
   } catch (error) {
-    console.error("Email error:", error.message);
+    if (error.message && (error.message.includes("550-5.4.5") || error.message.includes("Daily user sending limit exceeded"))) {
+      console.error(`\n⚠️  [Google SMTP Notice] Account ${process.env.EMAIL_USER} is currently under Google's 24-hour block.`);
+      console.error(`👉 This block will lift automatically around 1:00 PM - 2:00 PM today.`);
+      console.error(`👉 To send emails right now without waiting, update EMAIL_USER and EMAIL_PASS in backend/.env with your own Gmail App Password.\n`);
+    } else {
+      console.error("Email error:", error.message);
+    }
     return { success: false, type: "email", error: error.message };
   }
 };

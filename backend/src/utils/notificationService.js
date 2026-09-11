@@ -62,16 +62,77 @@ const createStaffNotification = (payload) =>
     audienceRole: payload.audienceRole,
   });
 
+/**
+ * Filter out dummy/mock test emails created during earlier tests so Google SMTP never bounces
+ * and never exceeds the daily sending quota.
+ */
+const isRealEmail = (email) => {
+  if (!email || typeof email !== "string") return false;
+  const clean = normalizeEmail(email);
+
+  // Allow explicit test emails configured in .env
+  const envLive = (process.env.LIVE_DEVOTEE_EMAILS || "")
+    .split(",")
+    .map((e) => normalizeEmail(e))
+    .filter(Boolean);
+  if (envLive.includes(clean)) return true;
+
+  // Real user and devotee email whitelist
+  const knownRealEmails = [
+    "deepthiskulal@gmail.com",
+    "deepthi.mca.2024@pim.ac.in",
+    "naikashwitha08@gmail.com",
+    "sonu.mca2026@gmail.com",
+    "bellisoumya@gmail.com",
+    "soumya2880@gmail.com",
+    "dskulal04@gmail.com",
+    "kualaveda23@gmail.com",
+    "kulalshiva3.sk@gmail.com",
+    "divyaacharya2003@gmail.com",
+    "deepa21@gmail.com",
+    "maanushree@gmail.com",
+  ];
+  if (knownRealEmails.includes(clean)) return true;
+
+  // Reject obvious fake domains & placeholder addresses
+  if (clean.includes("@example.com") || clean.includes("@test.com")) return false;
+  if (/^(saa|saasa|tata|milt|devo|devos|devote|testdevotee|dummy)/i.test(clean)) return false;
+  if (/^(account|accountant|admin|cashier|priest|staff)@/i.test(clean)) return false;
+
+  // Generic single names generated during testing
+  const dummyPrefixes = [
+    "anish", "anusha", "asha", "ashok", "banu", "chandana", "deepa",
+    "deepthi", "giri", "kanaka", "kavya", "kirthi", "kumar", "maahe",
+    "mahi", "manoj", "manu", "mayur", "nani", "pooja", "prathap",
+    "priya", "rakshi", "rama", "ramesh", "ravi", "reena", "reshma",
+    "sagarl", "sakshi", "sanvi", "sarala", "shama", "sonakshi",
+    "soumya", "uma", "usha",
+  ];
+  const [prefix, domain] = clean.split("@");
+  if (domain === "gmail.com" && dummyPrefixes.includes(prefix)) {
+    return false;
+  }
+
+  return true;
+};
+
 const sendBroadcastEmail = async ({ title, message, category, attachment, bccEmails, isEmployee = false }) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const cleanedBcc = [
+  const filteredRecipients = [
     ...new Set(
       (bccEmails || [])
-        .map((e) => String(e || "").trim().toLowerCase())
-        .filter((e) => emailRegex.test(e))
+        .map((e) => normalizeEmail(e))
+        .filter((e) => emailRegex.test(e) && isRealEmail(e))
     ),
   ];
-  if (!cleanedBcc.length) return;
+
+  if (!filteredRecipients.length) {
+    console.log(`ℹ️ [Email Skipped] Skipped ${bccEmails?.length || 0} dummy test emails. Only real registered emails receive notifications.`);
+    return;
+  }
+
+  const primaryRecipient = filteredRecipients[0];
+  const remainingRecipients = filteredRecipients.slice(1);
 
   const attachments = [];
   const attachmentDetails = {
@@ -204,8 +265,8 @@ const sendBroadcastEmail = async ({ title, message, category, attachment, bccEma
   `;
 
   return sendEmail({
-    to: process.env.EMAIL_USER || "ganga.mca2002@gmail.com",
-    bcc: cleanedBcc,
+    to: primaryRecipient,
+    bcc: remainingRecipients.length > 0 ? remainingRecipients : undefined,
     subject: `[Sri Shanti Mahadev Mandir] ${title}`,
     html: emailHtml,
     text: `${title}\n\n${message}\n\nSri Shanti Mahadev Mandir`,
