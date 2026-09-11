@@ -53,7 +53,7 @@ const RecentDonations = ({ donations = [] }) => {
                     {donation.paymentMethod || "UPI"}
                   </span>
                 </div>
-                <span>{new Date(donation.createdAt || donation.date).toLocaleString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+                <span>{(donation.createdAt || donation.date) ? new Date(donation.createdAt || donation.date).toLocaleString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "Recently"}</span>
               </div>
             </div>
           );

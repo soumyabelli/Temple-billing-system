@@ -1,5 +1,6 @@
 const PrasadamOrder = require("../models/PrasadamOrder");
 const Prasadam = require("../models/Prasadam");
+const Booking = require("../models/Booking");
 const Bill = require("../models/Bill");
 const { createStaffNotification } = require("../utils/notificationService");
 
@@ -84,60 +85,167 @@ exports.getAdminPrasadamOrders = async (req, res) => {
     const {
       search = "",
       status = "",
+      bookingMode = "",
       startDate = "",
       endDate = "",
       page = "1",
-      limit = "10",
+      limit = "50",
     } = req.query;
 
     const p = Math.max(1, parseInt(page, 10) || 1);
-    const l = Math.min(50, Math.max(1, parseInt(limit, 10) || 10));
+    const l = Math.min(500, Math.max(1, parseInt(limit, 10) || 50));
     const skip = (p - 1) * l;
 
     const q = clean(search).toLowerCase();
-
-    let statusFilter = [];
     const normalizedStatus = clean(status);
-    if (normalizedStatus) {
-      statusFilter = mapToModelStatuses(normalizedStatus);
-    }
+    const normalizedMode = clean(bookingMode).toLowerCase();
 
-    const dateFilter = {};
     const sd = startDate ? new Date(startDate) : null;
     const ed = endDate ? new Date(endDate) : null;
-    if (sd && !Number.isNaN(sd.getTime())) dateFilter.$gte = sd;
     if (ed && !Number.isNaN(ed.getTime())) {
       ed.setHours(23, 59, 59, 999);
-      dateFilter.$lte = ed;
     }
 
-    const mongoQuery = { $and: [{ $or: [{ channel: "devotee" }, { channel: { $exists: false } }] }] };
-    if (statusFilter.length) {
-      mongoQuery.$and.push(statusFilter.length === 1 ? { status: statusFilter[0] } : { status: { $in: statusFilter } });
-    }
-    if (Object.keys(dateFilter).length) mongoQuery.$and.push({ createdAt: dateFilter });
+    // 1. Standalone Prasadam Orders (from PrasadamOrder collection)
+    const rawOrders = await PrasadamOrder.find().sort({ createdAt: -1 });
+    const standalone = rawOrders.map((o) => {
+      const obj = o.toObject ? o.toObject() : { ...o };
+      const isCash = obj.paymentMethod === "Cash" || obj.paymentMethod === "Offline Payment";
+      const isCashier = obj.channel === "cashier";
+      const mode = (isCash || isCashier) ? "Offline" : "Online";
+      const display = mapFromModelStatus(obj.status);
+      return {
+        ...obj,
+        _id: String(obj._id),
+        orderId: `PR-${String(obj._id).slice(-6).toUpperCase()}`,
+        orderStatusDisplay: display,
+        status: display,
+        bookingSource: "Prasada Only",
+        bookingMode: mode,
+        channel: isCashier ? "cashier" : "devotee",
+        isCombinedOrder: false,
+      };
+    });
 
+    // 2. Bookings with Prasadam (from Booking collection: Pooja + Prasada or Cart Bookings)
+    const rawBookings = await Booking.find({
+      $or: [
+        { isCombined: true },
+        { "items.0": { $exists: true } },
+        { service: /prasada/i },
+      ],
+    }).sort({ createdAt: -1 });
+
+    const combined = [];
+    rawBookings.forEach((b) => {
+      const pItems = (b.items || []).filter(
+        (i) => (i.type && i.type.toLowerCase() === "prasadam") || (i.name && /prasada/i.test(i.name))
+      );
+      const poojaNames = (b.items || [])
+        .filter((i) => i.type && i.type.toLowerCase() === "pooja")
+        .map((i) => i.name)
+        .join(", ");
+      const hasPooja = poojaNames.length > 0;
+      const isCash = b.paymentMethod === "Cash" || b.paymentMethod === "Offline Payment";
+      const mode = isCash ? "Offline" : "Online";
+      const orderStatus = (b.paymentStatus === "Paid" || b.status === "Completed" || b.status === "Confirmed")
+        ? "Collected"
+        : "Not Collected";
+
+      if (pItems.length > 0) {
+        pItems.forEach((pi, idx) => {
+          combined.push({
+            _id: `${b._id}_${idx}`,
+            bookingId: b._id,
+            orderId: b.bookingNumber || `CB-${String(b._id).slice(-6).toUpperCase()}`,
+            bookingNumber: b.bookingNumber,
+            devoteeName: b.devoteeName || "Devotee",
+            email: b.devoteeEmail || "",
+            phone: b.devoteePhone || b.contactNumber || "",
+            itemName: pi.name || "Prasadam",
+            quantity: pi.quantity || pi.qty || 1,
+            unitPrice: pi.price || (pi.amount ? Math.round(pi.amount / (pi.quantity || pi.qty || 1)) : 0),
+            amount: pi.amount || Number(pi.price || 0) * (pi.quantity || pi.qty || 1),
+            paymentMethod: b.paymentMethod || "UPI",
+            status: orderStatus,
+            orderStatusDisplay: orderStatus,
+            bookingSource: hasPooja ? (poojaNames ? `With Pooja (${poojaNames})` : "Along with Pooja") : "Prasada Only",
+            bookingMode: mode,
+            channel: isCash ? "cashier" : "devotee",
+            createdAt: b.createdAt || b.date,
+            isCombinedOrder: true,
+            poojaName: poojaNames,
+          });
+        });
+      } else if (/prasada/i.test(b.service)) {
+        combined.push({
+          _id: String(b._id),
+          bookingId: b._id,
+          orderId: b.bookingNumber || `PB-${String(b._id).slice(-6).toUpperCase()}`,
+          bookingNumber: b.bookingNumber,
+          devoteeName: b.devoteeName || "Devotee",
+          email: b.devoteeEmail || "",
+          phone: b.devoteePhone || b.contactNumber || "",
+          itemName: b.service,
+          quantity: 1,
+          unitPrice: b.amount,
+          amount: b.amount,
+          paymentMethod: b.paymentMethod || "UPI",
+          status: orderStatus,
+          orderStatusDisplay: orderStatus,
+          bookingSource: "Prasada Only",
+          bookingMode: mode,
+          channel: isCash ? "cashier" : "devotee",
+          createdAt: b.createdAt || b.date,
+          isCombinedOrder: false,
+        });
+      }
+    });
+
+    let merged = [...standalone, ...combined].sort(
+      (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+    );
+
+    // Apply date filter
+    if (sd && !Number.isNaN(sd.getTime())) {
+      merged = merged.filter((o) => new Date(o.createdAt) >= sd);
+    }
+    if (ed && !Number.isNaN(ed.getTime())) {
+      merged = merged.filter((o) => new Date(o.createdAt) <= ed);
+    }
+
+    // Apply status filter
+    if (normalizedStatus) {
+      merged = merged.filter(
+        (o) => o.orderStatusDisplay === normalizedStatus || o.status === normalizedStatus
+      );
+    }
+
+    // Apply booking mode filter (Online / Offline)
+    if (normalizedMode) {
+      merged = merged.filter((o) => (o.bookingMode || "").toLowerCase() === normalizedMode);
+    }
+
+    // Apply search query
     if (q) {
-      mongoQuery.$or = [
-        { devoteeName: { $regex: q, $options: "i" } },
-        { email: { $regex: q, $options: "i" } },
-        { phone: { $regex: q, $options: "i" } },
-        { itemName: { $regex: q, $options: "i" } },
-        { amount: { $regex: q } },
-        { cashierName: { $regex: q, $options: "i" } },
-      ];
+      merged = merged.filter(
+        (o) =>
+          String(o.devoteeName || "").toLowerCase().includes(q) ||
+          String(o.email || "").toLowerCase().includes(q) ||
+          String(o.phone || "").includes(q) ||
+          String(o.itemName || "").toLowerCase().includes(q) ||
+          String(o.orderId || "").toLowerCase().includes(q) ||
+          String(o.bookingSource || "").toLowerCase().includes(q) ||
+          String(o.paymentMethod || "").toLowerCase().includes(q) ||
+          String(o.bookingMode || "").toLowerCase().includes(q)
+      );
     }
 
-    const [total, orders] = await Promise.all([
-      PrasadamOrder.countDocuments(mongoQuery),
-      PrasadamOrder.find(mongoQuery)
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(l),
-    ]);
+    const total = merged.length;
+    const paginated = merged.slice(skip, skip + l);
 
     return res.json({
-      orders: buildOrderList(orders),
+      orders: paginated,
       total,
       page: p,
       limit: l,

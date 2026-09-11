@@ -102,12 +102,14 @@ const employeeSchema = new mongoose.Schema({
 
   bankName: {
     type: String,
-    required: true,
+    required: false,
+    default: "",
   },
 
   accountNumber: {
     type: String,
-    required: true,
+    required: false,
+    default: "",
   },
 
   employmentType: {

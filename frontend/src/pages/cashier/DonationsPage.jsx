@@ -537,7 +537,7 @@ export default function DonationsPage() {
  <td className="px-4 py-3 font-bold text-slate-950">{bill?.referenceNo || `DN-${String(donation._id).slice(-6).toUpperCase()}`}</td>
  <td className="px-4 py-3 font-semibold text-slate-800">{donation.donorName}</td>
  <td className="px-4 py-3">{donation.category}</td>
- <td className="px-4 py-3 text-slate-700">{festival?.title || "Normal"}</td>
+ <td className="px-4 py-3 text-slate-700">{festival?.title || (donation.eventId ? donation.category || "Festival" : "Normal")}</td>
  <td className="px-4 py-3 font-bold text-slate-950">{formatCurrency(donation.amount)}</td>
  <td className="px-4 py-3">{donation.paymentMethod || "UPI"}</td>
  <td className="px-4 py-3 text-slate-700">{formatDateTime(donation.createdAt)}</td>

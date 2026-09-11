@@ -14,21 +14,11 @@ const AllDonations = () => {
 
  const fetchDonations = async () => {
  setLoading(true);
- try {
- const res = await axios.get("http://localhost:5000/api/donations");
- let fetchedDonations = Array.isArray(res.data?.donations) ? res.data.donations : [];
- 
- // Exclude non-donation categories
- fetchedDonations = fetchedDonations.filter((donation) => {
- const cat = donation.category?.toLowerCase() || "";
- if (cat.includes("pooja") || cat.includes("prasada") || cat.includes("room") || cat.includes("abhishekam")) {
- return false;
- }
- return true;
- });
-
- setDonations(fetchedDonations);
- } catch (error) {
+    try {
+      const res = await axios.get("http://localhost:5000/api/donations");
+      const fetchedDonations = Array.isArray(res.data?.donations) ? res.data.donations : [];
+      setDonations(fetchedDonations);
+    } catch (error) {
  console.error("Unable to fetch donations:", error);
  } finally {
  setLoading(false);

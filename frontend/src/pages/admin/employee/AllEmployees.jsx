@@ -172,6 +172,17 @@ const AllEmployees = () => {
  }
  };
 
+  const handleEditEmployee = async (employee) => {
+    try {
+      const latestEmployee = await getEmployee(employee._id);
+      setSelectedEmployee(latestEmployee);
+    } catch (error) {
+      console.error("Failed to load employee for editing", error);
+      setSelectedEmployee(employee);
+    }
+    setIsEditModalOpen(true);
+  };
+
  const handleExport = () => {
  if (user?.role !== "admin") {
  alert("Only Admin can export employee reports.");
@@ -502,7 +513,13 @@ const AllEmployees = () => {
  </div>
  </div>
  )}
- <EmployeeTable employees={filteredEmployees} onView={handleViewEmployee} onDelete={handleDeleteEmployee} loading={loading} />
+  <EmployeeTable 
+    employees={filteredEmployees} 
+    onView={handleViewEmployee} 
+    onEdit={handleEditEmployee}
+    onDelete={handleDeleteEmployee} 
+    loading={loading} 
+  />
  </SectionCard>
 
  {selectedEmployee && (
@@ -804,17 +821,24 @@ const AllEmployees = () => {
  </SectionCard>
  </div>
  </div>
- {selectedEmployee && isEditModalOpen && (
- <EditEmployeeModal
- employee={selectedEmployee}
- onClose={() => setIsEditModalOpen(false)}
- onSave={() => {
- setIsEditModalOpen(false);
- fetchEmployees();
- setSelectedEmployee(null); // Deselect so they can see the updated list, or we could just fetch and re-select
- }}
- />
- )}
+  {selectedEmployee && isEditModalOpen && (
+    <EditEmployeeModal
+      employee={selectedEmployee}
+      onClose={() => setIsEditModalOpen(false)}
+      onSave={async () => {
+        setIsEditModalOpen(false);
+        await fetchEmployees();
+        if (selectedEmployee?._id) {
+          try {
+            const updated = await getEmployee(selectedEmployee._id);
+            setSelectedEmployee(updated);
+          } catch (e) {
+            console.error("Failed to refresh selected employee profile", e);
+          }
+        }
+      }}
+    />
+  )}
  </div>
  );
 };

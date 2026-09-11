@@ -76,7 +76,7 @@ export const growthTrend = [
 export const roleDepartmentMap = {
   priest: ["Priest Services", "Festival Services", "Special Pooja Services"],
   accountant: ["Accounts", "Finance", "Billing"],
-  cashier: ["Donation Counter", "Billing Counter", "Prasadam Counter"],
+  cashier: ["Donation Counter", "Billing Counter", "Billing & Counters", "Billing", "Prasadam Counter"],
   staff: [
     "Pooja Services",
     "Prasadam",
@@ -104,6 +104,8 @@ export const departmentDutyMap = {
   // Cashier
   "Donation Counter": ["Cash Collection", "Receipt Issuing", "Donation Recording", "Counter Management"],
   "Billing Counter": ["Bill Generation", "Cash Handling", "Counter Support", "Payment Processing"],
+  "Billing & Counters": ["Counter Management", "Cash Collection", "Bill Generation", "Receipt Issuing", "Payment Processing"],
+  "Billing": ["Invoice Generation", "Payment Collection", "Receipt Management", "Billing Support"],
   "Prasadam Counter": ["Prasadam Sales", "Cash Handling", "Stock Monitoring", "Counter Management"],
   // Staff - Cooking
   "Cooking": [
@@ -229,8 +231,10 @@ export const departmentLocationMap = {
   "Finance": ["Accounts Office", "Office"],
   "Billing": ["Accounts Office", "Office"],
   // Cashier
-  "Donation Counter": ["Donation Counter", "Main Temple Hall"],
+  "Donation Counter": ["Donation Counter", "Main Temple Hall", "Office"],
   "Billing Counter": ["Donation Counter", "Office"],
+  "Billing & Counters": ["Donation Counter", "Office", "Main Temple Hall"],
+  "Billing": ["Accounts Office", "Office", "Donation Counter"],
   "Prasadam Counter": ["Prasadam Hall", "Prasadam Store"],
   // Staff
   "Cooking": ["Temple Kitchen"],

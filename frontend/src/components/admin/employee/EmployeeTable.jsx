@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { FiTrash2, FiEye } from "react-icons/fi";
+import { FiTrash2, FiEye, FiEdit } from "react-icons/fi";
 
 const statusStyles = {
  Active: "bg-emerald-100 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 text-emerald-700",
@@ -10,7 +10,7 @@ const statusStyles = {
  Retired: "bg-indigo-100 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 text-indigo-700",
 };
 
-const EmployeeTable = ({ employees, onView, onDelete, loading }) => {
+const EmployeeTable = ({ employees, onView, onEdit, onDelete, loading }) => {
  return (
  <div className="overflow-hidden rounded-[28px] border border-slate-200 dark:border-slate-700 bg-slate-50/80 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 dark:bg-[#0f172a] shadow-sm">
  <div className="flex flex-wrap items-center gap-3 border-b border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 dark:bg-[#0f172a] p-4">
@@ -79,14 +79,32 @@ const EmployeeTable = ({ employees, onView, onDelete, loading }) => {
  </td>
  <td className="px-5 py-4 text-slate-700 dark:text-slate-200 ">{joiningDate}</td>
  <td className="px-5 py-4 text-slate-700 dark:text-slate-200 ">{salary}</td>
- <td className="px-5 py-4 text-slate-700 dark:text-slate-200 space-x-2">
- <button onClick={() => onView?.(employee)} className="inline-flex items-center rounded-full border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 dark:bg-[#0f172a] px-3 py-2 text-slate-500 transition hover:border-slate-400 hover:text-slate-900">
- <FiEye size={16} />
- </button>
- <button onClick={() => onDelete?.(employee._id)} className="inline-flex items-center rounded-full border border-rose-200 bg-rose-50 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 dark:bg-[#0f172a] px-3 py-2 text-rose-600 transition hover:bg-rose-100 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-800">
- <FiTrash2 size={16} />
- </button>
- </td>
+  <td className="px-5 py-4 text-slate-700 dark:text-slate-200 space-x-2 whitespace-nowrap">
+    <button
+      type="button"
+      onClick={() => onView?.(employee)}
+      title="View Employee Profile"
+      className="inline-flex items-center rounded-full border border-slate-200 dark:border-slate-700 bg-temple-100 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 px-3 py-2 text-slate-500 transition hover:border-slate-400 hover:text-slate-900"
+    >
+      <FiEye size={16} />
+    </button>
+    <button
+      type="button"
+      onClick={() => onEdit?.(employee)}
+      title="Edit Employee Profile"
+      className="inline-flex items-center rounded-full border border-violet-200 bg-violet-50 text-violet-700 dark:bg-[#0f172a] dark:text-violet-400 dark:border-violet-800 px-3 py-2 transition hover:bg-violet-100 dark:hover:bg-slate-800"
+    >
+      <FiEdit size={16} />
+    </button>
+    <button
+      type="button"
+      onClick={() => onDelete?.(employee._id)}
+      title="Delete Employee"
+      className="inline-flex items-center rounded-full border border-rose-200 bg-rose-50 text-rose-600 dark:bg-[#0f172a] dark:text-rose-400 dark:border-rose-800 px-3 py-2 transition hover:bg-rose-100 dark:hover:bg-slate-800"
+    >
+      <FiTrash2 size={16} />
+    </button>
+  </td>
  </motion.tr>
  );
  })}

@@ -8,6 +8,7 @@ const Attendance = require("../models/Attendance");
 const Leave = require("../models/Leave");
 const Task = require("../models/Task");
 const Notification = require("../models/Notification");
+const PayrollRecord = require("../models/PayrollRecord");
 const { canLoginForStatus, getRoleAccess } = require("../utils/employeeAccess");
 const { sendEmail } = require("../utils/communicationService");
 
@@ -113,7 +114,7 @@ const validateCoreEmployee = (payload, existingEmployee = null) => {
   if (payload.photo !== undefined && !isValidPhoto(payload.photo)) {
     return "Profile photo must be a JPG, PNG, or WebP image up to 5 MB.";
   }
-  if (payload.aadhaar && !/^[0-9]{12}$/.test(String(payload.aadhaar))) {
+  if (payload.aadhaar && !/^[0-9]{12}$/.test(String(payload.aadhaar).trim())) {
     return "Aadhaar number must be exactly 12 digits.";
   }
   if (payload.phone && !/^\+?[0-9]{10,15}$/.test(String(payload.phone).replace(/[\s-]/g, ""))) {
@@ -129,9 +130,9 @@ const validateCoreEmployee = (payload, existingEmployee = null) => {
     return "Date of birth must be a valid past date.";
   }
   if (payload.joiningDate && !isValidDate(payload.joiningDate)) return "Joining date is invalid.";
-  if (payload.salary !== undefined && Number(payload.salary) <= 0) return "Salary must be greater than 0.";
+  if (payload.salary !== undefined && Number(payload.salary) < 0) return "Salary cannot be negative.";
 
-  const dob = payload.dob || existingEmployee?.dob;
+  const dob = payload.dob;
   const joiningDate = payload.joiningDate || existingEmployee?.joiningDate;
   if (dob && joiningDate) {
     const eighteenthBirthday = new Date(dob);
@@ -408,6 +409,19 @@ exports.updateEmployee = async (req, res) => {
       "employeeId", "username", "userId",
       "createdAt", "createdBy", "deletedAt", "deletedBy",
     ].forEach((field) => delete updateData[field]);
+
+    // Admin should not edit password through this profile edit flow
+    delete updateData.password;
+
+    // Handle optional aadhaar
+    let unsetFields = null;
+    if (!updateData.aadhaar || String(updateData.aadhaar).trim() === "") {
+      delete updateData.aadhaar;
+      unsetFields = { aadhaar: 1 };
+    } else {
+      updateData.aadhaar = String(updateData.aadhaar).trim();
+    }
+
     const validationError = validateCoreEmployee(updateData, employee);
     if (validationError) return res.status(400).json({ message: validationError });
 
@@ -430,13 +444,18 @@ exports.updateEmployee = async (req, res) => {
     ) {
       updateData.currentDuty = buildCurrentDuty(updateData, employee);
     }
-    if (updateData.password) updateData.password = await bcrypt.hash(updateData.password, 10);
     updateData.updatedBy = await getActorName(req);
 
-    const updatedEmployee = await Employee.findByIdAndUpdate(employee._id, updateData, {
+    const mongoUpdate = { $set: updateData };
+    if (unsetFields) {
+      mongoUpdate.$unset = unsetFields;
+    }
+
+    const updatedEmployee = await Employee.findByIdAndUpdate(employee._id, mongoUpdate, {
       new: true,
       runValidators: true,
     });
+
     const access = getRoleAccess(updatedEmployee.role);
     const userUpdate = {
       name: updatedEmployee.name,
@@ -450,12 +469,77 @@ exports.updateEmployee = async (req, res) => {
       permissions: access.permissions,
       menuAccess: access.menuAccess,
     };
-    if (updateData.password) userUpdate.password = updateData.password;
-    await User.findOneAndUpdate(
+
+    const linkedUser = await User.findOneAndUpdate(
       { $or: [{ _id: employee.userId }, { employeeId: employee.employeeId }, { email: employee.email }] },
       userUpdate,
       { new: true, runValidators: true }
     );
+
+    if (linkedUser && !updatedEmployee.userId) {
+      updatedEmployee.userId = linkedUser._id;
+      await updatedEmployee.save();
+    }
+
+    // Synchronize related records so updated staff details reflect across all modules
+    try {
+      const identifiers = [
+        employee._id.toString(),
+        employee.employeeId,
+        linkedUser?._id?.toString(),
+      ].filter(Boolean);
+
+      await Attendance.updateMany(
+        {
+          $or: [
+            { employeeId: { $in: identifiers } },
+            { staffId: { $in: identifiers } },
+            { staffEmail: employee.email },
+          ],
+        },
+        {
+          $set: {
+            staffName: updatedEmployee.name,
+            staffEmail: updatedEmployee.email,
+          },
+        }
+      );
+
+      await Leave.updateMany(
+        { staffId: { $in: identifiers } },
+        { $set: { staffName: updatedEmployee.name } }
+      );
+
+      await Task.updateMany(
+        {
+          $or: [
+            { employeeId: { $in: identifiers } },
+            { staffId: { $in: identifiers } },
+            { staffEmail: employee.email },
+          ],
+        },
+        {
+          $set: {
+            staffName: updatedEmployee.name,
+            staffEmail: updatedEmployee.email,
+          },
+        }
+      );
+
+      await PayrollRecord.updateMany(
+        { employeeId: employee._id, status: "Pending" },
+        {
+          $set: {
+            employeeName: updatedEmployee.name,
+            department: updatedEmployee.department,
+            role: updatedEmployee.role,
+          },
+        }
+      );
+    } catch (syncErr) {
+      console.error("Non-critical sync error following employee update:", syncErr);
+    }
+
     return res.json({ message: "Employee updated successfully.", employee: sanitizeEmployee(updatedEmployee) });
   } catch (error) {
     if (error?.code === 11000) return res.status(409).json({ message: "Email or Aadhaar already exists." });

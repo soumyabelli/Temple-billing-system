@@ -380,9 +380,7 @@ exports.updateEmployee = async (req, res) => {
     }
 
 
-    if (updateData.password) {
-      updateData.password = await bcrypt.hash(updateData.password, 10);
-    }
+    delete updateData.password;
 
     const employee = await Employee.findByIdAndUpdate(id, updateData, { new: true });
 
@@ -390,9 +388,15 @@ exports.updateEmployee = async (req, res) => {
     if (updateData.name) userUpdate.name = updateData.name;
     if (updateData.email) userUpdate.email = updateData.email;
     if (updateData.role) userUpdate.role = updateData.role;
-    if (updateData.password) userUpdate.password = updateData.password;
+    if (updateData.phone) userUpdate.phone = updateData.phone;
+    if (updateData.status) userUpdate.status = updateData.status;
+    if (updateData.address) userUpdate.address = updateData.address;
     if (Object.keys(userUpdate).length > 0) {
-      await User.findOneAndUpdate({ email: existingEmployee.email }, userUpdate, { new: true });
+      await User.findOneAndUpdate(
+        { $or: [{ _id: existingEmployee.userId }, { email: existingEmployee.email }] },
+        userUpdate,
+        { new: true }
+      );
     }
 
     res.json({ message: "Employee updated successfully", employee: sanitizeEmployee(employee) });

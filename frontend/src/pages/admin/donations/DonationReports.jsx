@@ -76,13 +76,6 @@ const DonationReports = () => {
  if (!matchesName && !matchesCategory && !matchesTxId && !matchesId) return false;
  }
 
- // Exclude non-donation categories
- const validTypes = getDonationTypes().map(t => t.toLowerCase());
- const cat = donation.category?.toLowerCase() || "";
- if (cat.includes("pooja") || cat.includes("prasada") || cat.includes("room") || cat.includes("abhishekam")) {
- return false;
- }
-
  return true;
  });
  }, [donations, startDate, endDate, searchTerm]);
