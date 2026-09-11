@@ -12,9 +12,17 @@ let currentEmailUser = null;
 let currentEmailPass = null;
 
 const initTransporter = () => {
-  const emailUser = process.env.EMAIL_USER || "ganga.mca2002@gmail.com";
-  const emailPass = process.env.EMAIL_PASS || "qawd ofst qnve vhjj";
-  const emailService = process.env.EMAIL_SERVICE || "gmail";
+  // Dynamically reload .env so changes are applied immediately without restarting the server
+  try {
+    const path = require("path");
+    require("dotenv").config({ path: path.resolve(__dirname, "../../.env"), override: true });
+  } catch (_) {}
+
+  const emailUser = (process.env.EMAIL_USER || "ganga.mca2002@gmail.com").trim();
+  const rawPass = process.env.EMAIL_PASS || "qawd ofst qnve vhjj";
+  // Remove any spaces that Google App Passwords display by default (e.g. 'abcd efgh ijkl mnop' -> 'abcdefghijklmnop')
+  const emailPass = String(rawPass).replace(/\s+/g, "").trim();
+  const emailService = (process.env.EMAIL_SERVICE || "gmail").trim();
 
   if (transporter && currentEmailUser === emailUser && currentEmailPass === emailPass) {
     return transporter;
@@ -35,7 +43,7 @@ const initTransporter = () => {
       });
       currentEmailUser = emailUser;
       currentEmailPass = emailPass;
-      console.log(`Real NodeMailer SMTP transporter initialized for ${emailUser}`);
+      console.log(`\n📧 Email transporter active for: ${emailUser}`);
     }
   } catch (error) {
     console.error("Failed to initialize real email transporter:", error.message);
@@ -47,7 +55,7 @@ const sendEmail = async ({ to, bcc, subject, html, text, attachments }) => {
   try {
     const mailTransporter = initTransporter();
     if (mailTransporter) {
-      const fromEmail = process.env.EMAIL_USER || "ganga.mca2002@gmail.com";
+      const fromEmail = currentEmailUser || process.env.EMAIL_USER || "ganga.mca2002@gmail.com";
       await mailTransporter.sendMail({
         from: `"Sri Shanti Mahadev Mandir" <${fromEmail}>`,
         to: to || fromEmail,
@@ -57,7 +65,7 @@ const sendEmail = async ({ to, bcc, subject, html, text, attachments }) => {
         text,
         attachments,
       });
-      console.log(`📧 Real Email sent to ${to || "BCC list"}${bcc ? ` (${bcc.length} BCC recipients)` : ""}`);
+      console.log(`📧 Real Email sent successfully using [${fromEmail}] to ${to || "BCC list"}${bcc ? ` (${bcc.length} BCC recipients)` : ""}`);
     } else {
       console.log(`📧 (Mock) Email sent to ${to || "BCC recipients"}`);
       console.log(`Subject: ${subject}`);
@@ -77,10 +85,14 @@ const sendEmail = async ({ to, bcc, subject, html, text, attachments }) => {
 
     return { success: true, type: "email", recipient: to };
   } catch (error) {
-    if (error.message && (error.message.includes("550-5.4.5") || error.message.includes("Daily user sending limit exceeded"))) {
-      console.error(`\n⚠️  [Google SMTP Notice] Account ${process.env.EMAIL_USER} is currently under Google's 24-hour block.`);
-      console.error(`👉 This block will lift automatically around 1:00 PM - 2:00 PM today.`);
-      console.error(`👉 To send emails right now without waiting, update EMAIL_USER and EMAIL_PASS in backend/.env with your own Gmail App Password.\n`);
+    const isQuotaError = error.message && (
+      error.message.includes("550-5.4.5") ||
+      error.message.includes("Daily user sending limit exceeded") ||
+      error.message.includes("ECONNRESET")
+    );
+    if (isQuotaError) {
+      console.error(`\n⚠️  [Google SMTP Notice] Account ${process.env.EMAIL_USER} is currently under Google's daily sending limit block.`);
+      console.error(`👉 To send emails right now, update EMAIL_USER and EMAIL_PASS in backend/.env with your Gmail and 16-character App Password (it reloads automatically now).\n`);
     } else {
       console.error("Email error:", error.message);
     }
