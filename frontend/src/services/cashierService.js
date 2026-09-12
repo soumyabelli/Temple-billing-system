@@ -175,8 +175,10 @@ export const fetchInventoryItems = async () => {
   return response.data?.items || [];
 };
 
-export const fetchNotifications = async (userId) => {
-  const response = await axios.get(`${API_BASE}/notifications/cashier/${userId || "cashier"}`);
+export const fetchNotifications = async (userId, email) => {
+  const response = await axios.get(`${API_BASE}/notifications/cashier/${userId || "cashier"}`, {
+    params: email ? { email } : {}
+  });
   const data = response.data;
   return Array.isArray(data) ? data : data?.notifications || [];
 };
@@ -188,6 +190,11 @@ export const createCashierNotification = async (payload) => {
 
 export const markNotificationRead = async (notificationId) => {
   const response = await axios.put(`${API_BASE}/notifications/read/${notificationId}`);
+  return response.data || null;
+};
+
+export const markAllNotificationsRead = async (userId, email) => {
+  const response = await axios.put(`${API_BASE}/notifications/cashier/${userId || "cashier"}/read-all`, { email });
   return response.data || null;
 };
 

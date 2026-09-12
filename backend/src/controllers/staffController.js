@@ -216,7 +216,10 @@ exports.getStaffNotifications = async (req, res) => {
   try {
     const { staffId } = req.params;
     const query = await buildStaffNotificationQuery(staffId);
-    const notifications = await Notification.find(query).sort({ date: -1, createdAt: -1 });
+    const notifications = await Notification.find(query)
+      .sort({ createdAt: -1 })
+      .allowDiskUse(true)
+      .lean();
 
     return res.json({
       success: true,

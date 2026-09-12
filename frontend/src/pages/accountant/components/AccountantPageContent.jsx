@@ -1392,8 +1392,10 @@ const NotificationsView = ({ user }) => {
       setLoading(true);
       setError("");
       const userId = user?.id || user?._id || "accountant";
-      const { data } = await axios.get(`http://localhost:5000/api/notifications/accountant/${userId}`);
-      setNotifications(data?.notifications || data || []);
+      const { data } = await axios.get(`http://localhost:5000/api/notifications/accountant/${userId}`, {
+        params: user?.email ? { email: user.email } : {}
+      });
+      setNotifications(Array.isArray(data) ? data : data?.notifications || []);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to load notifications");
     } finally {
@@ -1410,19 +1412,33 @@ const NotificationsView = ({ user }) => {
       await axios.put(`http://localhost:5000/api/notifications/read/${id}`);
       setNotifications(notifications.map(n => n._id === id || n.id === id ? { ...n, read: true, isRead: true } : n));
     } catch (err) {
-      alert("Failed to mark as read");
+      console.warn("Failed to mark as read", err);
+    }
+  };
+
+  const handleReadAll = async () => {
+    try {
+      const userId = user?.id || user?._id || "accountant";
+      await axios.put(`http://localhost:5000/api/notifications/accountant/${userId}/read-all`, {
+        email: user?.email
+      });
+      setNotifications(notifications.map(n => ({ ...n, read: true, isRead: true })));
+    } catch (err) {
+      console.warn("Failed to mark all as read", err);
     }
   };
 
   return (
     <div className="accountant-view">
       <EmailNotificationsView
-        title="Notifications"
-        subtitle="View all recent system alerts and notifications."
+        title="Accountant Notifications & Email Inbox"
+        subtitle=""
+        userEmail={user?.email}
         notifications={notifications}
         loading={loading}
         error={error}
         onMarkRead={handleRead}
+        onMarkAllRead={handleReadAll}
         onRefresh={loadNotifications}
       />
     </div>

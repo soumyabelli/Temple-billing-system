@@ -25,6 +25,7 @@ notificationSchema.index({ createdAt: -1 });
 notificationSchema.index({ date: -1 });
 notificationSchema.index({ audienceEmail: 1, createdAt: -1 });
 notificationSchema.index({ audienceRole: 1, createdAt: -1 });
+notificationSchema.index({ audienceId: 1, createdAt: -1 });
 
 // Helper to generate a temple-branded email HTML
 const buildTempleNotificationEmail = (

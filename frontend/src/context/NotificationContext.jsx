@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useAuth } from "./AuthContext";
-import { fetchNotifications, markNotificationRead } from "../services/cashierService";
+import { fetchNotifications, markNotificationRead, markAllNotificationsRead } from "../services/cashierService";
 
 const NotificationContext = createContext(null);
 
@@ -19,14 +19,14 @@ export const NotificationProvider = ({ children }) => {
     if (!isCashier) return;
     setLoading(true);
     try {
-      const rows = await fetchNotifications(userId);
+      const rows = await fetchNotifications(userId, user?.email);
       setNotifications(rows);
     } catch (_) {
       // silently fail — we don't want the polling to crash the app
     } finally {
       setLoading(false);
     }
-  }, [userId, isCashier]);
+  }, [userId, isCashier, user?.email]);
 
   // Initial load + polling
   useEffect(() => {
@@ -41,17 +41,28 @@ export const NotificationProvider = ({ children }) => {
       await markNotificationRead(notificationId);
       setNotifications((prev) =>
         prev.map((n) =>
-          n._id === notificationId ? { ...n, read: true, readAt: new Date() } : n
+          n._id === notificationId || n.id === notificationId
+            ? { ...n, read: true, viewed: true, readAt: new Date() }
+            : n
         )
       );
     } catch (_) {}
   }, []);
 
+  const markAllRead = useCallback(async () => {
+    try {
+      await markAllNotificationsRead(userId, user?.email);
+      setNotifications((prev) =>
+        prev.map((n) => ({ ...n, read: true, viewed: true, readAt: new Date() }))
+      );
+    } catch (_) {}
+  }, [userId, user?.email]);
+
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
     <NotificationContext.Provider
-      value={{ notifications, unreadCount, loading, loadNotifications, markRead }}
+      value={{ notifications, unreadCount, loading, loadNotifications, markRead, markAllRead }}
     >
       {children}
     </NotificationContext.Provider>

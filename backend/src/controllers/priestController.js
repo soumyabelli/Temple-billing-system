@@ -937,22 +937,34 @@ exports.getNotifications = async (req, res) => {
   try {
     const priestId = req.user.id;
     const user = await User.findById(priestId);
-    
+
+    const queryFilters = [
+      { audienceId: priestId },
+      { audienceRole: { $in: ["priest", "staff", "employee", "all"] } }
+    ];
+    if (user?.email) {
+      queryFilters.push({ audienceEmail: user.email.toLowerCase().trim() });
+    }
+
     const notifications = await Notification.find({
-      $or: [
-        { audienceId: priestId },
-        { audienceEmail: user?.email },
-        { audienceRole: "priest" }
-      ]
-    }).sort({ createdAt: -1 });
+      $or: queryFilters
+    })
+      .sort({ createdAt: -1 })
+      .allowDiskUse(true)
+      .lean();
 
     const formatted = notifications.map(n => ({
+      _id: n._id,
       id: n._id,
       title: n.title,
       message: n.message,
       category: n.category || "General Notice",
-      date: n.createdAt,
+      date: n.date || n.createdAt,
+      createdAt: n.createdAt,
       read: n.read || n.viewed,
+      attachment: n.attachment || null,
+      audienceEmail: n.audienceEmail,
+      emailSent: n.emailSent,
     }));
 
     return res.status(200).json(formatted);
@@ -974,7 +986,7 @@ exports.readNotification = async (req, res) => {
     notification.viewedAt = new Date();
     await notification.save();
 
-    return res.status(200).json({ message: "Notification marked as read" });
+    return res.status(200).json({ message: "Notification marked as read", notification });
   } catch (error) {
     console.error("Error reading notification:", error);
     return res.status(500).json({ message: "Failed to mark notification as read" });
@@ -986,12 +998,16 @@ exports.readAllNotifications = async (req, res) => {
     const priestId = req.user.id;
     const user = await User.findById(priestId);
 
+    const queryFilters = [
+      { audienceId: priestId },
+      { audienceRole: { $in: ["priest", "staff", "employee", "all"] } }
+    ];
+    if (user?.email) {
+      queryFilters.push({ audienceEmail: user.email.toLowerCase().trim() });
+    }
+
     await Notification.updateMany({
-      $or: [
-        { audienceId: priestId },
-        { audienceEmail: user?.email },
-        { audienceRole: "priest" }
-      ],
+      $or: queryFilters,
       read: false
     }, {
       read: true,

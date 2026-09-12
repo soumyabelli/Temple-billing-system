@@ -63,15 +63,33 @@ const Notifications = ({ staffId, onUnreadCountChange, onQuickAction }) => {
     }
   };
 
+  const handleMarkAllAsRead = async () => {
+    if (!staffId) return;
+    try {
+      setError("");
+      await axios.patch(`${API_BASE}/staff/notifications/${staffId}/read-all`);
+      setNotifications((current) =>
+        current.map((notification) => ({
+          ...notification,
+          read: true,
+          readAt: notification.readAt || new Date().toISOString(),
+        }))
+      );
+    } catch (apiError) {
+      setError(apiError.response?.data?.message || "Failed to mark all notifications as read");
+    }
+  };
+
   return (
     <div className="p-6">
       <EmailNotificationsView
-        title="Staff Notifications"
-        subtitle="Temple duty updates, leave decisions, and staff announcements."
+        title="Staff Notifications & Email Inbox"
+        subtitle=""
         notifications={notifications}
         loading={loading}
         error={error}
         onMarkRead={handleMarkAsRead}
+        onMarkAllRead={handleMarkAllAsRead}
         onRefresh={loadNotifications}
       />
     </div>

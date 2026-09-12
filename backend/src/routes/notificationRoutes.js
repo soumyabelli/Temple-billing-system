@@ -4,17 +4,13 @@ const router = express.Router();
 
 const {
   getNotifications,
-  markNotificationRead
+  markNotificationRead,
+  markAllNotificationsRead,
 } = require("../controllers/notificationController");
 
-router.get(
-  "/:role/:userId",
-  getNotifications
-);
-
-router.put(
-  "/read/:id",
-  markNotificationRead
-);
+router.get("/:role/:userId", getNotifications);
+router.put("/:role/:userId/read-all", markAllNotificationsRead);
+router.put("/read-all", markAllNotificationsRead);
+router.put("/read/:id", markNotificationRead);
 
 module.exports = router;
