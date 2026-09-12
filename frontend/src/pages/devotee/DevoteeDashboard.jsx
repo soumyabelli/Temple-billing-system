@@ -2507,10 +2507,11 @@ const DevoteeDashboard = () => {
  <div className="mb-4">
  <div className="text-teal-800 dark:text-teal-300 font-bold mb-1 border-b border-teal-200 dark:border-teal-800/60 pb-1">Temple Will Provide</div>
  {templeProvides.map((rm, idx) => {
- const item = typeof rm.item === 'object' ? rm.item : { _id: rm.item, name: rm.itemName || "Item" };
+ const item = (rm.item && typeof rm.item === 'object') ? rm.item : { _id: rm.item || rm._id, name: rm.itemName || "Item" };
+ const itemName = item?.name || rm.itemName || "Item";
  return (
  <div key={idx} className="flex justify-between py-1 text-xs">
- <span>{rm.qty} {rm.unit} {item.name}</span>
+ <span>{rm.qty} {rm.unit} {itemName}</span>
  <span className="text-teal-600">No action required</span>
  </div>
  );
@@ -2522,10 +2523,11 @@ const DevoteeDashboard = () => {
  <div className="mb-4">
  <div className="text-blue-800 dark:text-blue-300 font-bold mb-1 border-b border-blue-200 dark:border-blue-800/60 pb-1">You Must Bring on Pooja Day</div>
  {devoteeMustBring.map((rm, idx) => {
- const item = typeof rm.item === 'object' ? rm.item : { _id: rm.item, name: rm.itemName || "Item" };
+ const item = (rm.item && typeof rm.item === 'object') ? rm.item : { _id: rm.item || rm._id, name: rm.itemName || "Item" };
+ const itemName = item?.name || rm.itemName || "Item";
  return (
  <div key={idx} className="flex justify-between py-1 text-xs">
- <span>{rm.qty} {rm.unit} {item.name} {rm.mandatory && <span className="text-red-500">*</span>}</span>
+ <span>{rm.qty} {rm.unit} {itemName} {rm.mandatory && <span className="text-red-500">*</span>}</span>
  </div>
  );
  })}
@@ -2536,20 +2538,22 @@ const DevoteeDashboard = () => {
  <div className="mb-4">
  <div className="text-green-800 font-bold mb-1 border-b border-green-200 pb-1">You Can Bring OR Temple Can Arrange</div>
  {orTemple.map((rm, idx) => {
- const item = typeof rm.item === 'object' ? rm.item : { _id: rm.item, name: rm.itemName || "Item" };
+ const item = (rm.item && typeof rm.item === 'object') ? rm.item : { _id: rm.item || rm._id, name: rm.itemName || "Item" };
+ const itemName = item?.name || rm.itemName || "Item";
+ const itemId = item?._id || rm.item || rm._id;
  return (
  <div key={idx} className="flex items-center justify-between py-1.5 text-xs">
- <span>{rm.qty} {rm.unit} {item.name} {rm.mandatory && <span className="text-red-500">*</span>}</span>
+ <span>{rm.qty} {rm.unit} {itemName} {rm.mandatory && <span className="text-red-500">*</span>}</span>
  <label className="flex items-center gap-2 cursor-pointer bg-temple-100 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 border border-green-200 hover:bg-green-50 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 px-2 py-1 rounded-lg transition-colors">
  <input 
  type="checkbox"
- checked={selectedTempleMaterials.includes(item._id)}
+ checked={selectedTempleMaterials.includes(itemId)}
  onChange={(e) => {
  if (e.target.checked) {
- setSelectedTempleMaterials(prev => [...prev, item._id]);
+ setSelectedTempleMaterials(prev => [...prev, itemId]);
  setBookingAmount(prev => prev + Number(rm.templeCharge));
  } else {
- setSelectedTempleMaterials(prev => prev.filter(id => id !== item._id));
+ setSelectedTempleMaterials(prev => prev.filter(id => id !== itemId));
  setBookingAmount(prev => prev - Number(rm.templeCharge));
  }
  }}
@@ -2567,7 +2571,8 @@ const DevoteeDashboard = () => {
  <div className="mb-4">
  <div className="text-orange-800 font-bold mb-1 border-b border-orange-200 pb-1">Advance Preparation Required</div>
  {prepRequired.map((rm, idx) => {
- const item = typeof rm.item === 'object' ? rm.item : { _id: rm.item, name: rm.itemName || "Item" };
+ const item = (rm.item && typeof rm.item === 'object') ? rm.item : { _id: rm.item || rm._id, name: rm.itemName || "Item" };
+ const itemName = item?.name || rm.itemName || "Item";
  
  let startDateStr = "Select a date";
  if (bookingDatetime) {
@@ -2579,7 +2584,7 @@ const DevoteeDashboard = () => {
  return (
  <div key={idx} className="py-2 text-xs bg-orange-100/50 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 rounded-lg p-2 mb-2">
  <div className="flex justify-between font-bold text-orange-950 mb-1">
- <span>{rm.qty} {rm.unit} {item.name} {rm.mandatory && <span className="text-red-500">*</span>}</span>
+ <span>{rm.qty} {rm.unit} {itemName} {rm.mandatory && <span className="text-red-500">*</span>}</span>
  <span className="text-orange-700">{rm.preparationDaysBeforePooja} Days Prep</span>
  </div>
  <div className="mb-1"><span className="font-semibold text-orange-800">Start Date:</span> {startDateStr}</div>
