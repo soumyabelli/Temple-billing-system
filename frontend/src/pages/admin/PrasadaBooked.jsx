@@ -226,20 +226,19 @@ const PrasadaBooked = () => {
                 <th className="px-4 py-3.5">Qty</th>
                 <th className="px-4 py-3.5">Amount</th>
                 <th className="px-4 py-3.5">Payment</th>
-                <th className="px-4 py-3.5">Status</th>
                 <th className="px-4 py-3.5">Booked On</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {loading ? (
                 <tr>
-                  <td colSpan="11" className="px-4 py-8 text-center text-slate-500">
+                  <td colSpan="10" className="px-4 py-8 text-center text-slate-500">
                     Loading prasada bookings…
                   </td>
                 </tr>
               ) : filteredOrders.length === 0 ? (
                 <tr>
-                  <td colSpan="11" className="px-4 py-8 text-center text-slate-500">
+                  <td colSpan="10" className="px-4 py-8 text-center text-slate-500">
                     No prasada bookings found.
                   </td>
                 </tr>
@@ -298,11 +297,6 @@ const PrasadaBooked = () => {
                       <td className="px-4 py-4">
                         <span className="rounded-md bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-xs font-semibold text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                           {order.paymentMethod || "UPI"}
-                        </span>
-                      </td>
-                      <td className="px-4 py-4">
-                        <span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${statusClassMap[status] || "bg-slate-100 text-slate-800"}`}>
-                          {status}
                         </span>
                       </td>
                       <td className="px-4 py-4 text-xs text-slate-500 font-medium">

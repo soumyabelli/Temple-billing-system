@@ -4,7 +4,12 @@ require("dotenv").config();
 
 async function testNotification() {
   try {
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://soumya:soumya%402002@ac-6rcywmh-shard-00-00.3add7qv.mongodb.net:27017,ac-6rcywmh-shard-00-01.3add7qv.mongodb.net:27017,ac-6rcywmh-shard-00-02.3add7qv.mongodb.net:27017/templebilling?ssl=true&replicaSet=atlas-12p46k-shard-0&authSource=admin&retryWrites=true&w=majority');
+    const mongoUri = process.env.MONGODB_URI;
+    if (!mongoUri) {
+      console.error("❌ MONGODB_URI is missing in environment variables!");
+      process.exit(1);
+    }
+    await mongoose.connect(mongoUri);
     console.log("Connected to MongoDB.");
 
     const res = await createNotification({

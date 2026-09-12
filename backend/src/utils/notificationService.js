@@ -318,7 +318,7 @@ const createEmployeeBroadcastNotifications = async ({ title, message, category, 
 
   const validEmails = [...new Set([...recipients.values()].map((r) => r.audienceEmail).filter(Boolean))];
   if (validEmails.length > 0) {
-    sendBroadcastEmail({
+    await sendBroadcastEmail({
       title,
       message,
       category,
@@ -379,7 +379,7 @@ const createBroadcastNotifications = async ({ title, message, category, role = "
 
   const validEmails = [...new Set([...recipients.values()].map((r) => r.audienceEmail).filter(Boolean))];
   if (validEmails.length > 0) {
-    sendBroadcastEmail({
+    await sendBroadcastEmail({
       title,
       message,
       category,

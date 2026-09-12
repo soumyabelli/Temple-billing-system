@@ -161,16 +161,20 @@ notificationSchema.post("save", async function (doc) {
 
     // If audienceEmail not directly provided, check audienceId
     if (!recipientEmail && doc.audienceId) {
-      const user = await User.findById(doc.audienceId).select("email role").lean();
-      if (user?.email) {
-        recipientEmail = String(user.email).trim().toLowerCase();
-        if (!recipientRole) recipientRole = user.role;
-      } else {
-        const emp = await Employee.findById(doc.audienceId).select("email role").lean();
-        if (emp?.email) {
-          recipientEmail = String(emp.email).trim().toLowerCase();
-          if (!recipientRole) recipientRole = emp.role;
+      if (mongoose.Types.ObjectId.isValid(doc.audienceId)) {
+        const user = await User.findById(doc.audienceId).select("email role").lean();
+        if (user?.email) {
+          recipientEmail = String(user.email).trim().toLowerCase();
+          if (!recipientRole) recipientRole = user.role;
+        } else {
+          const emp = await Employee.findById(doc.audienceId).select("email role").lean();
+          if (emp?.email) {
+            recipientEmail = String(emp.email).trim().toLowerCase();
+            if (!recipientRole) recipientRole = emp.role;
+          }
         }
+      } else if (typeof doc.audienceId === "string" && doc.audienceId.includes("@")) {
+        recipientEmail = String(doc.audienceId).trim().toLowerCase();
       }
     }
 

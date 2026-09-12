@@ -18,8 +18,8 @@ const initTransporter = () => {
     require("dotenv").config({ path: path.resolve(__dirname, "../../.env"), override: true });
   } catch (_) {}
 
-  const emailUser = (process.env.EMAIL_USER || "ganga.mca2002@gmail.com").trim();
-  const rawPass = process.env.EMAIL_PASS || "qawd ofst qnve vhjj";
+  const emailUser = (process.env.EMAIL_USER || "").trim();
+  const rawPass = (process.env.EMAIL_PASS || "").trim();
   // Remove any spaces that Google App Passwords display by default (e.g. 'abcd efgh ijkl mnop' -> 'abcdefghijklmnop')
   const emailPass = String(rawPass).replace(/\s+/g, "").trim();
   const emailService = (process.env.EMAIL_SERVICE || "gmail").trim();
@@ -55,7 +55,7 @@ const sendEmail = async ({ to, bcc, subject, html, text, attachments }) => {
   try {
     const mailTransporter = initTransporter();
     if (mailTransporter) {
-      const fromEmail = currentEmailUser || process.env.EMAIL_USER || "ganga.mca2002@gmail.com";
+      const fromEmail = currentEmailUser || process.env.EMAIL_USER || "";
       await mailTransporter.sendMail({
         from: `"Sri Shanti Mahadev Mandir" <${fromEmail}>`,
         to: to || fromEmail,

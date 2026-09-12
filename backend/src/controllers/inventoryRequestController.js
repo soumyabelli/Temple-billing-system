@@ -245,15 +245,49 @@ exports.issueInventoryRequest = async (req, res) => {
         throw new Error("Inventory item not found.");
       }
 
-      const parsedQty = parseFloat(request.quantity);
-      let inventoryItem = inventoryItems.find(item => item.availableStock >= parsedQty);
+      const { checkStockWithConversion, formatQuantity } = require("../utils/unitConverter");
 
-      if (!inventoryItem) {
-        throw new Error(`Insufficient inventory stock for ${request.itemName}. Needed: ${parsedQty}.`);
+      let selectedItem = null;
+      let stockCheckResult = null;
+
+      // Find an inventory item that has sufficient stock after unit conversion
+      for (const item of inventoryItems) {
+        const check = checkStockWithConversion({
+          availableStock: item.availableStock,
+          inventoryUnit: item.unit,
+          requestedQuantity: request.quantity,
+          requestedUnit: request.unit,
+        });
+
+        if (check.isSufficient) {
+          selectedItem = item;
+          stockCheckResult = check;
+          break;
+        } else {
+          stockCheckResult = check;
+        }
       }
 
-      inventoryItem.availableStock -= parsedQty;
-      inventoryItem.issuedStock = (inventoryItem.issuedStock || 0) + parsedQty;
+      if (!selectedItem) {
+        const firstItem = inventoryItems[0];
+        const lastCheck = stockCheckResult || checkStockWithConversion({
+          availableStock: firstItem.availableStock,
+          inventoryUnit: firstItem.unit,
+          requestedQuantity: request.quantity,
+          requestedUnit: request.unit,
+        });
+
+        throw new Error(
+          lastCheck.details ||
+          `Insufficient inventory stock for ${request.itemName}. Needed: ${formatQuantity(request.quantity, request.unit)}, Available in Central Inventory: ${formatQuantity(firstItem.availableStock, firstItem.unit)}.`
+        );
+      }
+
+      const inventoryItem = selectedItem;
+      const qtyToDeduct = stockCheckResult.neededInInventoryUnit;
+
+      inventoryItem.availableStock = stockCheckResult.newStockAfterDeduction;
+      inventoryItem.issuedStock = (inventoryItem.issuedStock || 0) + qtyToDeduct;
       await inventoryItem.save({ session });
 
       request.status = "Issued";
@@ -267,7 +301,7 @@ exports.issueInventoryRequest = async (req, res) => {
         userId: request.userId,
         userName: request.userName,
         role: request.role,
-        issuedQuantity: parsedQty,
+        issuedQuantity: qtyToDeduct,
         unit: inventoryItem.unit,
         issuedBy: req.user ? req.user.name || req.user.id : "Admin",
         purpose: request.purpose || request.reason,
@@ -275,7 +309,7 @@ exports.issueInventoryRequest = async (req, res) => {
 
       await createStaffNotification({
         title: "📦 Items Issued",
-        message: `Your approved request for ${request.itemName} (${request.quantity} ${request.unit}) has been issued.`,
+        message: `Your approved request for ${request.itemName} (${formatQuantity(request.quantity, request.unit)}) has been issued from inventory (${formatQuantity(qtyToDeduct, inventoryItem.unit)} deducted).`,
         audienceId: request.userId,
         category: "inventory",
       });

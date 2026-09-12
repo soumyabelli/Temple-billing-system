@@ -55,15 +55,25 @@ const generateInventoryRequestsForBooking = async (booking) => {
           const isAdvanceCollection = reqMat.responsibilityType === "DEVOTEE_PREPARATION_REQUIRED" && reqMat.requiresAdvanceCollection;
           
           if (isTempleProvides || isDevoteeSelected || isAdvanceCollection) {
-            // Check stock availability
+            // Check stock availability with unit conversion
             const invItem = await InventoryItem.findById(reqMat.item._id);
-            if (invItem && invItem.availableStock < reqMat.qty) {
-              await createStaffNotification({
-                title: `Low Stock Alert: ${invItem.name}`,
-                message: `Insufficient stock for upcoming Pooja Booking (${booking.service}). Required: ${reqMat.qty}, Available: ${invItem.availableStock}`,
-                audienceRole: "admin",
-                category: "inventory",
-              }).catch(() => {});
+            if (invItem) {
+              const { checkStockWithConversion, formatQuantity } = require("../utils/unitConverter");
+              const stockCheck = checkStockWithConversion({
+                availableStock: invItem.availableStock,
+                inventoryUnit: invItem.unit,
+                requestedQuantity: reqMat.qty,
+                requestedUnit: reqMat.unit,
+              });
+
+              if (!stockCheck.isSufficient) {
+                await createStaffNotification({
+                  title: `Low Stock Alert: ${invItem.name}`,
+                  message: `Insufficient stock for upcoming Pooja Booking (${booking.service}). Required: ${formatQuantity(reqMat.qty, reqMat.unit)}, Available: ${formatQuantity(invItem.availableStock, invItem.unit)}`,
+                  audienceRole: "admin",
+                  category: "inventory",
+                }).catch(() => {});
+              }
             }
 
             // Check if this material is already in templeMaterialRequests
