@@ -70,7 +70,7 @@ const ExpenseCategories = () => {
  <div className="p-6 space-y-8">
  <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200 ">Accounts Dashboard & Heads</h2>
 
- <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+ <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
  <div className="bg-temple-100 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 dark:bg-[#0f172a] backdrop-blur-md border border-slate-200 dark:border-slate-700 p-6 rounded-2xl shadow-xl">
  <div className="flex items-center justify-between mb-4">
  <h3 className="text-slate-600 dark:text-slate-200 font-medium">Today's Income</h3>
@@ -109,16 +109,6 @@ const ExpenseCategories = () => {
  </div>
  </div>
  <p className="text-3xl font-bold text-slate-800 dark:text-slate-200 ">{formatCurrency(metrics.cashInHand)}</p>
- </div>
-
- <div className="bg-temple-100 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 dark:bg-[#0f172a] backdrop-blur-md border border-slate-200 dark:border-slate-700 p-6 rounded-2xl shadow-xl">
- <div className="flex items-center justify-between mb-4">
- <h3 className="text-slate-600 dark:text-slate-200 font-medium">Pending Approvals</h3>
- <div className="w-10 h-10 rounded-full bg-orange-50 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 flex items-center justify-center text-orange-400">
- <FiAlertCircle className="text-xl" />
- </div>
- </div>
- <p className="text-3xl font-bold text-slate-800 dark:text-slate-200 ">{metrics.pendingPayments}</p>
  </div>
  </div>
 

@@ -154,7 +154,7 @@ const AuditLogs = () => {
             {/* Accounts Dashboard Section */}
             <div className="mb-10">
                 <h2 className="text-2xl font-bold text-[#1d1b19] dark:text-slate-200 mb-6">Accounts Dashboard</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <div className="bg-temple-100 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 dark:bg-[#0f172a] p-6 rounded-2xl shadow-sm border border-slate-100">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-slate-500 dark:text-slate-200 text-sm font-medium">Today's Income</h3>
@@ -193,16 +193,6 @@ const AuditLogs = () => {
                             </div>
                         </div>
                         <p className="text-2xl font-bold text-slate-800 dark:text-slate-200 ">{formatCurrency(metrics.cashInHand)}</p>
-                    </div>
-
-                    <div className="bg-temple-100 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 dark:bg-[#0f172a] p-6 rounded-2xl shadow-sm border border-slate-100">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-slate-500 dark:text-slate-200 text-sm font-medium">Pending Approvals</h3>
-                            <div className="w-8 h-8 rounded-full bg-orange-50 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 dark:bg-[#0f172a] flex items-center justify-center text-orange-500">
-                                <FiAlertCircle className="text-sm" />
-                            </div>
-                        </div>
-                        <p className="text-2xl font-bold text-slate-800 dark:text-slate-200 ">{metrics.pendingPayments}</p>
                     </div>
                 </div>
             </div>
@@ -329,17 +319,16 @@ const AuditLogs = () => {
                                 <th className="px-6 py-4">Action</th>
                                 <th className="px-6 py-4">Module</th>
                                 <th className="px-6 py-4">Details</th>
-                                <th className="px-6 py-4">IP Address</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
                             {loading ? (
                                 <tr>
-                                    <td colSpan="6" className="px-6 py-8 text-center text-slate-400">Loading audit logs...</td>
+                                    <td colSpan="5" className="px-6 py-8 text-center text-slate-400">Loading audit logs...</td>
                                 </tr>
                             ) : paginatedLogs.length === 0 ? (
                                 <tr>
-                                    <td colSpan="6" className="px-6 py-8 text-center text-slate-400">No logs found</td>
+                                    <td colSpan="5" className="px-6 py-8 text-center text-slate-400">No logs found</td>
                                 </tr>
                             ) : (
                                 paginatedLogs.map((log) => (
@@ -351,7 +340,6 @@ const AuditLogs = () => {
                                         <td className="px-6 py-4 text-slate-700 dark:text-slate-200 ">{log.action}</td>
                                         <td className="px-6 py-4">{log.module}</td>
                                         <td className="px-6 py-4 text-slate-500 dark:text-slate-200 max-w-md truncate" title={log.details}>{log.details}</td>
-                                        <td className="px-6 py-4 font-mono text-xs text-slate-400">{log.ipAddress}</td>
                                     </tr>
                                 ))
                             )}
