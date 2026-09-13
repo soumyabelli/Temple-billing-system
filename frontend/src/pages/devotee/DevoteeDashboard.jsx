@@ -3638,229 +3638,295 @@ const DevoteeDashboard = () => {
  </div>
  </div>
  );
- const renderReceipts = () => {
- const bookingItems = bookingsData.map(b => ({
- ...b,
- type: "Pooja Booking",
- dateKey: b.createdAt || b.datetime,
- dateDisplay: formatDateDisplay(b.datetime || b.createdAt),
- oneLineSummary: `Pooja Booking: ${b.service || "Booking"}`,
- receiptId: buildReceiptId("PB", b),
- downloadType: "booking",
- amount: b.amount,
- }));
- 
- const donationItems = donationsData.map(d => ({
- ...d,
- type: "Donation",
- dateKey: d.createdAt || d.date,
- dateDisplay: formatDateDisplay(d.date || d.createdAt),
- oneLineSummary: `Donation: ${d.category || d.type || "General"}`,
- receiptId: buildReceiptId("DN", d),
- downloadType: "donation",
- amount: d.amount,
- }));
- 
- const prasadamItems = prasadamOrders.map(p => ({
- ...p,
- type: "Prasadam Order",
- dateKey: p.createdAt || p.date,
- dateDisplay: formatDateDisplay(p.createdAt || p.date),
- oneLineSummary: `Prasadam: ${p.itemName} (Qty: ${p.quantity || 1})`,
- receiptId: p.orderNumber || buildReceiptId("PR", p),
- downloadType: "prasadam",
- amount: p.amount,
- }));
- 
- const allReceipts = [...bookingItems, ...donationItems, ...prasadamItems].sort((a, b) => {
- const timeB = b.dateKey ? new Date(b.dateKey).getTime() : 0;
- const timeA = a.dateKey ? new Date(a.dateKey).getTime() : 0;
- return timeB - timeA;
- });
+  const renderReceipts = () => {
+    const bookingItems = (bookingsData || []).map((b) => ({
+      ...b,
+      type: "Pooja Booking",
+      dateKey: b.createdAt || b.datetime || b.bookingDate,
+      dateDisplay: formatDateDisplay(b.datetime || b.bookingDate || b.createdAt),
+      oneLineSummary: `Pooja Booking: ${b.poojaName || b.service || "Pooja Seva"}`,
+      receiptId: b.receiptNumber || buildReceiptId("PB", b),
+      downloadType: "booking",
+      amount: b.amount,
+      status: b.status,
+      contactNumber: b.contactNumber,
+      service: b.poojaName || b.service,
+      paymentMethod: b.paymentMethod || "Online / UPI",
+      notes: b.notes,
+    }));
 
- const displayedReceipts = showAllReceipts ? allReceipts : allReceipts.slice(0, 5);
+    const donationItems = (donationsData || []).map((d) => ({
+      ...d,
+      type: "Donation",
+      dateKey: d.createdAt || d.date,
+      dateDisplay: formatDateDisplay(d.date || d.createdAt),
+      oneLineSummary: `Donation: ${d.category || d.type || "General"}`,
+      receiptId: d.receiptNumber || buildReceiptId("DN", d),
+      downloadType: "donation",
+      amount: d.amount,
+      transactionId: d.transactionId,
+      donorName: d.donorName,
+      category: d.category,
+      paymentMethod: d.paymentMode || "Online",
+    }));
 
- return (
- <div className="space-y-6">
- <div className={`${glassCard}`}>
- <div className="flex items-center justify-between">
- <h2 className="text-[2rem] font-bold">Receipts</h2>
- {allReceipts.length > 5 && (
- <button
- type="button"
- onClick={() => setShowAllReceipts(!showAllReceipts)}
- className="rounded-xl bg-[#1b7f77]/10 hover:bg-[#1b7f77]/20 text-[#1b7f77] px-4 py-2 text-sm font-semibold transition"
- >
- {showAllReceipts ? "Show Recent 5" : "View All"}
- </button>
- )}
- </div>
- 
- <div className="mt-6 space-y-3">
- {displayedReceipts.length > 0 ? (
- displayedReceipts.map((item, idx) => (
- <div key={item._id || idx} className={`${glassItem} p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4`}>
- <div className="flex-1 min-w-0">
- <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
- <span className="text-base font-semibold text-amber-950 dark:text-amber-200 truncate">{item.oneLineSummary}</span>
- <span className="text-xs text-amber-700 dark:text-amber-300 bg-amber-100/50 dark:bg-amber-950/60 dark:border dark:border-amber-800/50 px-2 py-0.5 rounded-md font-medium">
- {item.dateDisplay}
- </span>
- </div>
- <p className="mt-1 text-xs text-[#6b6b6b] dark:text-slate-400">Receipt ID: {item.receiptId}</p>
- </div>
- <div className="flex items-center justify-between sm:justify-end gap-4">
- <span className="text-lg font-bold text-[#1b7f77]">{formatCurrency(item.amount)}</span>
- <div className="flex gap-2">
- <button
- type="button"
- onClick={() => setViewingReceipt(item)}
- className="rounded-xl bg-amber-500 hover:bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white transition shadow-sm"
- >
- View
- </button>
- <button
- type="button"
- onClick={() => handleReceiptDownload(item, item.downloadType)}
- className="rounded-xl bg-[#1b7f77] hover:bg-[#1b7f77]/90 px-3 py-1.5 text-xs font-semibold text-white transition shadow-sm"
- >
- Download PDF
- </button>
- </div>
- </div>
- </div>
- ))
- ) : (
- <div className={`${glassItem} text-[#5d5d5d] p-6 text-center`}>No receipts available.</div>
- )}
- </div>
- </div>
+    const prasadamItems = (prasadamOrders || []).map((p) => ({
+      ...p,
+      type: "Prasadam Order",
+      dateKey: p.createdAt || p.date,
+      dateDisplay: formatDateDisplay(p.createdAt || p.date),
+      oneLineSummary: `Prasadam Order: ${p.itemName || "Prasadam"} (x${p.quantity || 1})`,
+      receiptId: p.orderNumber || buildReceiptId("PR", p),
+      downloadType: "prasadam",
+      amount: p.amount,
+      quantity: p.quantity,
+      status: p.orderStatus || p.status,
+      itemName: p.itemName,
+      paymentMethod: p.paymentMode || "Online",
+    }));
 
- {/* Modal/Popup for Details */}
- {viewingReceipt && (
- <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
- <div className="w-full max-w-lg bg-[#fffdfa] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 rounded-3xl border border-amber-200/50 shadow-2xl p-6 md:p-8 relative max-h-[90vh] overflow-y-auto">
- <div className="flex justify-between items-start mb-6">
- <div>
- <span className="text-xs font-bold uppercase tracking-wider text-amber-700 bg-amber-100 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 px-2.5 py-1 rounded-full">
- {viewingReceipt.type}
- </span>
- <h3 className="text-2xl font-bold mt-2 text-amber-950">Receipt Details</h3>
- </div>
- <button
- type="button"
- onClick={() => setViewingReceipt(null)}
- className="text-amber-900 hover:text-amber-700 font-bold text-xl p-1"
- >
- ✕
- </button>
- </div>
+    const allReceipts = [...bookingItems, ...donationItems, ...prasadamItems].sort((a, b) => {
+      const timeB = b.dateKey ? new Date(b.dateKey).getTime() : 0;
+      const timeA = a.dateKey ? new Date(a.dateKey).getTime() : 0;
+      return timeB - timeA;
+    });
 
- <div className="space-y-4 border-t border-b border-amber-100 py-6 my-4">
- <div className="flex justify-between text-sm">
- <span className="text-amber-800/80 font-medium">Receipt ID</span>
- <span className="font-semibold text-amber-950">{viewingReceipt.receiptId}</span>
- </div>
- <div className="flex justify-between text-sm">
- <span className="text-amber-800/80 font-medium">Date</span>
- <span className="font-semibold text-amber-950">{viewingReceipt.dateDisplay}</span>
- </div>
- <div className="flex justify-between text-sm">
- <span className="text-amber-800/80 font-medium">Service / Category</span>
- <span className="font-semibold text-amber-950">
- {viewingReceipt.service || viewingReceipt.category || viewingReceipt.itemName || "N/A"}
- </span>
- </div>
+    const displayedReceipts = showAllReceipts ? allReceipts : allReceipts.slice(0, 5);
 
- {viewingReceipt.type === "Pooja Booking" && (
- <>
- <div className="flex justify-between text-sm">
- <span className="text-amber-800/80 font-medium">Booking Status</span>
- <span className="font-semibold text-[#1b7f77]">{viewingReceipt.status || "Confirmed"}</span>
- </div>
- {viewingReceipt.contactNumber && (
- <div className="flex justify-between text-sm">
- <span className="text-amber-800/80 font-medium">Contact Number</span>
- <span className="font-semibold text-amber-950">{viewingReceipt.contactNumber}</span>
- </div>
- )}
- </>
- )}
+    return (
+      <div className="space-y-6">
+        <div className={`${glassCard}`}>
+          {/* Decorative ambient glowing circles */}
+          <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-amber-400/15 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-teal-500/15 blur-3xl" />
 
- {viewingReceipt.type === "Donation" && (
- <>
- <div className="flex justify-between text-sm">
- <span className="text-amber-800/80 font-medium">Transaction ID</span>
- <span className="font-semibold text-amber-950 truncate max-w-[200px]" title={viewingReceipt.transactionId}>
- {viewingReceipt.transactionId || "N/A"}
- </span>
- </div>
- {viewingReceipt.donorName && (
- <div className="flex justify-between text-sm">
- <span className="text-amber-800/80 font-medium">Donor Name</span>
- <span className="font-semibold text-amber-950">{viewingReceipt.donorName}</span>
- </div>
- )}
- </>
- )}
+          {/* Header */}
+          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-amber-200/40 dark:border-slate-800/60 pb-5">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-600 text-white shadow-lg shadow-amber-500/30 text-xl">
+                🧾
+              </div>
+              <div>
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-800 dark:text-white tracking-tight">
+                  Receipts
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                  Official vouchers for poojas, donations & prasadam
+                </p>
+              </div>
+            </div>
 
- {viewingReceipt.type === "Prasadam Order" && (
- <>
- <div className="flex justify-between text-sm">
- <span className="text-amber-800/80 font-medium">Quantity</span>
- <span className="font-semibold text-amber-950">{viewingReceipt.quantity || 1}</span>
- </div>
- <div className="flex justify-between text-sm">
- <span className="text-amber-800/80 font-medium">Order Status</span>
- <span className="font-semibold text-amber-950">{viewingReceipt.status || "Placed"}</span>
- </div>
- </>
- )}
+            {allReceipts.length > 5 && (
+              <button
+                type="button"
+                onClick={() => setShowAllReceipts(!showAllReceipts)}
+                className="self-start sm:self-auto rounded-full bg-white/60 dark:bg-slate-800/60 border border-amber-500/20 dark:border-amber-400/20 text-amber-700 dark:text-amber-300 hover:bg-amber-500/10 px-4 py-2 text-xs font-bold transition-all shadow-sm backdrop-blur-md cursor-pointer flex items-center gap-1.5"
+              >
+                <span>{showAllReceipts ? "Show Recent 5" : `View All (${allReceipts.length})`}</span>
+              </button>
+            )}
+          </div>
 
- {viewingReceipt.paymentMethod && (
- <div className="flex justify-between text-sm">
- <span className="text-amber-800/80 font-medium">Payment Method</span>
- <span className="font-semibold text-amber-950">{viewingReceipt.paymentMethod}</span>
- </div>
- )}
+          {/* Receipts Grid / List */}
+          <div className="mt-6 space-y-3.5 relative z-10">
+            {displayedReceipts.length > 0 ? (
+              displayedReceipts.map((item, idx) => {
+                const getIcon = (type) => {
+                  if (type === "Pooja Booking") return "🎫";
+                  if (type === "Donation") return "🪔";
+                  return "🍱";
+                };
 
- {viewingReceipt.notes && (
- <div className="pt-2 border-t border-amber-50">
- <span className="text-xs text-amber-800/60 font-medium block mb-1">Notes</span>
- <p className="text-xs text-amber-900 bg-amber-50/50 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 p-2.5 rounded-lg border border-amber-100/50 leading-relaxed">
- {viewingReceipt.notes}
- </p>
- </div>
- )}
+                return (
+                  <div
+                    key={item._id || idx}
+                    className="rounded-2xl border border-white/90 dark:border-slate-700/60 bg-gradient-to-r from-white/90 via-white/60 to-amber-50/40 dark:from-slate-800/90 dark:via-slate-800/60 dark:to-slate-900/40 backdrop-blur-xl p-4 sm:p-5 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_30px_rgba(245,158,11,0.18)] hover:-translate-y-0.5 transition-all duration-300 flex flex-col sm:flex-row sm:items-center justify-between gap-4 group"
+                  >
+                    <div className="flex-1 min-w-0 flex items-start gap-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-700 dark:bg-amber-400/15 dark:text-amber-300 text-lg border border-amber-500/20 shadow-inner">
+                        {getIcon(item.type)}
+                      </div>
 
- <div className="flex justify-between items-center pt-4 border-t border-amber-100">
- <span className="text-base font-bold text-amber-950">Total Amount</span>
- <span className="text-2xl font-extrabold text-[#1b7f77]">{formatCurrency(viewingReceipt.amount)}</span>
- </div>
- </div>
+                      <div className="space-y-1 min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-base font-bold text-slate-800 dark:text-slate-100 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors truncate">
+                            {item.oneLineSummary}
+                          </span>
+                          {item.dateDisplay && (
+                            <span className="shrink-0 rounded-full bg-amber-500/10 dark:bg-amber-400/15 text-amber-700 dark:text-amber-300 border border-amber-500/20 px-2.5 py-0.5 text-[11px] font-bold backdrop-blur-md">
+                              {item.dateDisplay}
+                            </span>
+                          )}
+                        </div>
 
- <div className="flex gap-3 mt-6">
- <button
- type="button"
- onClick={() => handleReceiptDownload(viewingReceipt, viewingReceipt.downloadType)}
- className="flex-1 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-md transition-all text-sm"
- >
- Download Receipt PDF
- </button>
- <button
- type="button"
- onClick={() => setViewingReceipt(null)}
- className="flex-1 bg-amber-100 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 hover:bg-amber-200 text-amber-900 font-bold py-3.5 px-4 rounded-xl transition-all text-sm"
- >
- Close
- </button>
- </div>
- </div>
- </div>
- )}
- </div>
- );
- };
+                        <p className="font-mono text-xs text-slate-500 dark:text-slate-400 font-medium">
+                          Receipt ID: <span className="text-slate-700 dark:text-slate-300 font-semibold">{item.receiptId}</span>
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between sm:justify-end gap-4 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-amber-200/30 dark:border-slate-700/40">
+                      <span className="text-lg font-extrabold bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-500 dark:from-teal-400 dark:to-emerald-300 bg-clip-text text-transparent">
+                        {formatCurrency(item.amount)}
+                      </span>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setViewingReceipt(item)}
+                          className="rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 px-3.5 py-2 text-xs font-bold text-white shadow-md shadow-amber-500/20 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center gap-1"
+                        >
+                          <span>View</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleReceiptDownload(item, item.downloadType)}
+                          className="rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 px-3.5 py-2 text-xs font-bold text-white shadow-md shadow-teal-600/20 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center gap-1"
+                        >
+                          <span>Download PDF</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className={`${glassItem} text-slate-500 dark:text-slate-400 p-8 text-center space-y-2`}>
+                <div className="text-3xl">🧾</div>
+                <p className="text-base font-bold text-slate-700 dark:text-slate-300">No receipts available.</p>
+                <p className="text-xs">Your booking & donation receipts will appear here once issued.</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Glassy Modal/Popup for Details */}
+        {viewingReceipt && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-md">
+            <div className="w-full max-w-lg bg-white/90 dark:bg-slate-900/90 text-slate-800 dark:text-slate-100 rounded-3xl border border-white/80 dark:border-slate-700/80 shadow-[0_25px_60px_rgba(0,0,0,0.3)] p-6 md:p-8 relative max-h-[90vh] overflow-y-auto backdrop-blur-2xl">
+              <div className="flex justify-between items-start mb-5 pb-4 border-b border-amber-200/40 dark:border-slate-800">
+                <div>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300 bg-amber-500/15 border border-amber-500/20 px-3 py-1 rounded-full">
+                    {viewingReceipt.type}
+                  </span>
+                  <h3 className="text-2xl font-extrabold mt-2 text-slate-800 dark:text-white">Receipt Details</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setViewingReceipt(null)}
+                  className="rounded-full h-8 w-8 flex items-center justify-center bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold text-sm transition"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="space-y-3.5 py-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-500 dark:text-slate-400 font-medium">Receipt ID</span>
+                  <span className="font-mono font-bold text-slate-800 dark:text-slate-100">{viewingReceipt.receiptId}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-500 dark:text-slate-400 font-medium">Date</span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-100">{viewingReceipt.dateDisplay}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-500 dark:text-slate-400 font-medium">Service / Category</span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-100">
+                    {viewingReceipt.service || viewingReceipt.category || viewingReceipt.itemName || "N/A"}
+                  </span>
+                </div>
+
+                {viewingReceipt.type === "Pooja Booking" && (
+                  <>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-500 dark:text-slate-400 font-medium">Booking Status</span>
+                      <span className="font-semibold text-emerald-600 dark:text-emerald-400">{viewingReceipt.status || "Confirmed"}</span>
+                    </div>
+                    {viewingReceipt.contactNumber && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-slate-500 dark:text-slate-400 font-medium">Contact Number</span>
+                        <span className="font-semibold text-slate-800 dark:text-slate-100">{viewingReceipt.contactNumber}</span>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {viewingReceipt.type === "Donation" && (
+                  <>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-500 dark:text-slate-400 font-medium">Transaction ID</span>
+                      <span className="font-mono font-semibold text-slate-800 dark:text-slate-100 truncate max-w-[200px]" title={viewingReceipt.transactionId}>
+                        {viewingReceipt.transactionId || "N/A"}
+                      </span>
+                    </div>
+                    {viewingReceipt.donorName && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-slate-500 dark:text-slate-400 font-medium">Donor Name</span>
+                        <span className="font-semibold text-slate-800 dark:text-slate-100">{viewingReceipt.donorName}</span>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {viewingReceipt.type === "Prasadam Order" && (
+                  <>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-500 dark:text-slate-400 font-medium">Quantity</span>
+                      <span className="font-semibold text-slate-800 dark:text-slate-100">{viewingReceipt.quantity || 1}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-500 dark:text-slate-400 font-medium">Order Status</span>
+                      <span className="font-semibold text-slate-800 dark:text-slate-100">{viewingReceipt.status || "Placed"}</span>
+                    </div>
+                  </>
+                )}
+
+                {viewingReceipt.paymentMethod && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">Payment Method</span>
+                    <span className="font-semibold text-slate-800 dark:text-slate-100">{viewingReceipt.paymentMethod}</span>
+                  </div>
+                )}
+
+                {viewingReceipt.notes && (
+                  <div className="pt-2 border-t border-slate-200/60 dark:border-slate-800">
+                    <span className="text-xs text-slate-500 dark:text-slate-400 font-medium block mb-1">Notes</span>
+                    <p className="text-xs text-slate-700 dark:text-slate-300 bg-amber-50/50 dark:bg-slate-800/50 p-2.5 rounded-xl border border-amber-200/40 dark:border-slate-700/50 leading-relaxed">
+                      {viewingReceipt.notes}
+                    </p>
+                  </div>
+                )}
+
+                <div className="flex justify-between items-center pt-4 border-t border-amber-200/40 dark:border-slate-800">
+                  <span className="text-base font-bold text-slate-800 dark:text-white">Total Amount</span>
+                  <span className="text-2xl font-extrabold bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-500 dark:from-teal-400 dark:to-emerald-300 bg-clip-text text-transparent">
+                    {formatCurrency(viewingReceipt.amount)}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6 pt-3 border-t border-slate-200/60 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => handleReceiptDownload(viewingReceipt, viewingReceipt.downloadType)}
+                  className="flex-1 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-600 text-white font-bold py-3.5 px-4 rounded-xl shadow-md shadow-amber-500/20 hover:scale-[1.02] active:scale-95 transition-all text-sm cursor-pointer"
+                >
+                  Download Receipt PDF
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewingReceipt(null)}
+                  className="bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold py-3.5 px-5 rounded-xl transition text-sm cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const renderFestivalEvents = () => {
     const getMyDonationTotalForEvent = (eventId) => {
