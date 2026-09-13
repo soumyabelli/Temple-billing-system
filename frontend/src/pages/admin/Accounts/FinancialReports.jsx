@@ -53,11 +53,90 @@ const FinancialReports = () => {
       setLoading(true);
       const params = { fromDate, toDate };
       const [monthlyRes, annualRes] = await Promise.all([
-        getMonthlyReport(params),
-        getAnnualReport(params)
+        getMonthlyReport(params).catch(() => []),
+        getAnnualReport(params).catch(() => null)
       ]);
-      setMonthlyData(monthlyRes || []);
-      setAnnualData(annualRes || null);
+
+      // Load saved manual entries from localStorage
+      const savedManual = localStorage.getItem("templeManualEntries_v1");
+      const manualEntries = savedManual ? JSON.parse(savedManual) : [];
+      
+      // Filter manual entries by date range
+      const filteredManual = manualEntries.filter((item) => {
+        if (!item.date) return true;
+        const itemDate = new Date(item.date);
+        if (isNaN(itemDate.getTime())) return true;
+        if (fromDate && itemDate < new Date(fromDate)) return false;
+        if (toDate) {
+          const end = new Date(toDate);
+          end.setHours(23, 59, 59, 999);
+          if (itemDate > end) return false;
+        }
+        return true;
+      });
+
+      let manualExpenseTotal = 0;
+      let manualIncomeTotal = 0;
+      const manualExpenseByCategory = {};
+
+      filteredManual.forEach((item) => {
+        const amt = Number(item.amount) || 0;
+        const isDebit = !item.entryType || item.entryType === "Debit";
+        if (isDebit) {
+          manualExpenseTotal += amt;
+          const cat = item.category || item.whereSpent || "Manual Expense";
+          manualExpenseByCategory[cat] = (manualExpenseByCategory[cat] || 0) + amt;
+        } else {
+          manualIncomeTotal += amt;
+        }
+      });
+
+      // Update annual report totals
+      const baseAnnual = annualRes || {
+        totalIncome: 0,
+        totalExpense: 0,
+        netProfit: 0,
+        incomeBySource: {},
+        expenseByCategory: {}
+      };
+
+      const combinedAnnual = {
+        ...baseAnnual,
+        totalIncome: (baseAnnual.totalIncome || 0) + manualIncomeTotal,
+        totalExpense: (baseAnnual.totalExpense || 0) + manualExpenseTotal,
+        netProfit: ((baseAnnual.totalIncome || 0) + manualIncomeTotal) - ((baseAnnual.totalExpense || 0) + manualExpenseTotal),
+        expenseByCategory: {
+          ...(baseAnnual.expenseByCategory || {}),
+        }
+      };
+
+      Object.entries(manualExpenseByCategory).forEach(([cat, val]) => {
+        combinedAnnual.expenseByCategory[cat] = (combinedAnnual.expenseByCategory[cat] || 0) + val;
+      });
+
+      // Update monthly chart data if applicable
+      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      let combinedMonthly = Array.isArray(monthlyRes) && monthlyRes.length === 12
+        ? monthlyRes.map(m => ({ ...m }))
+        : monthNames.map(m => ({ month: m, income: 0, expense: 0, netBalance: 0 }));
+
+      filteredManual.forEach((item) => {
+        const amt = Number(item.amount) || 0;
+        const itemDate = new Date(item.date);
+        if (!isNaN(itemDate.getTime())) {
+          const mIdx = itemDate.getMonth();
+          const isDebit = !item.entryType || item.entryType === "Debit";
+          if (isDebit) {
+            combinedMonthly[mIdx].expense += amt;
+          } else {
+            combinedMonthly[mIdx].income += amt;
+          }
+          combinedMonthly[mIdx].netBalance = combinedMonthly[mIdx].income - combinedMonthly[mIdx].expense;
+        }
+      });
+
+      setMonthlyData(combinedMonthly);
+      setAnnualData(combinedAnnual);
     } catch (error) {
       toast.error("Failed to load report data");
     } finally {

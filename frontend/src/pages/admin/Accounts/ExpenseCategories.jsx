@@ -31,14 +31,39 @@ const ExpenseCategories = () => {
  }
  };
 
- const fetchMetrics = async () => {
- try {
- const data = await getDashboardMetrics();
- setMetrics(data);
- } catch (error) {
- console.error("Failed to fetch dashboard metrics", error);
- }
- };
+  const fetchMetrics = async () => {
+    try {
+      const data = await getDashboardMetrics().catch(() => ({
+        todayIncome: 0,
+        todayExpense: 0,
+        todayProfit: 0,
+        cashInHand: 0,
+        pendingPayments: 0,
+      }));
+
+      // Account for local manual entry debits
+      const savedManual = localStorage.getItem("templeManualEntries_v1");
+      const manualEntries = savedManual ? JSON.parse(savedManual) : [];
+      const manualDebitTotal = manualEntries
+        .filter((item) => !item.entryType || item.entryType === "Debit")
+        .reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+
+      const updatedExpense = (data.todayExpense || 0) + manualDebitTotal;
+      const updatedIncome = data.todayIncome || 0;
+      const updatedProfit = updatedIncome - updatedExpense;
+      const updatedCash = (data.cashInHand || 0) - manualDebitTotal;
+
+      setMetrics({
+        todayIncome: updatedIncome,
+        todayExpense: updatedExpense,
+        todayProfit: updatedProfit,
+        cashInHand: updatedCash,
+        pendingPayments: data.pendingPayments || 0,
+      });
+    } catch (error) {
+      console.error("Failed to fetch dashboard metrics", error);
+    }
+  };
 
  const handleSubmit = async (e) => {
  e.preventDefault();
