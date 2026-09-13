@@ -247,17 +247,17 @@ const canCancelPrasadamOrder = (status) => {
 };
 
 const glassCard =
- "rounded-[28px] border border-amber-200/50 bg-white/75 dark:bg-slate-900/90 dark:border-slate-800 dark:text-slate-100 p-6 sm:p-8 shadow-[0_15px_35px_rgba(184,94,0,0.06)] dark:shadow-none backdrop-blur-xl hover:shadow-[0_20px_40px_rgba(184,94,0,0.12)] transition-all duration-300";
+  "rounded-[32px] border border-white/80 dark:border-white/10 bg-white/60 dark:bg-slate-900/60 text-slate-900 dark:text-slate-100 p-6 sm:p-8 shadow-[0_8px_32px_0_rgba(217,119,6,0.08)] dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] backdrop-blur-2xl transition-all duration-300 relative overflow-hidden";
 const glassSection =
- "rounded-[28px] border border-amber-100/60 bg-white/65 dark:bg-slate-900/80 dark:border-slate-800 dark:text-slate-100 p-6 sm:p-8 shadow-[0_12px_30px_rgba(184,94,0,0.04)] dark:shadow-none backdrop-blur-xl";
+  "rounded-[32px] border border-white/70 dark:border-slate-800/80 bg-white/50 dark:bg-slate-900/50 dark:text-slate-100 p-6 sm:p-8 shadow-[0_8px_25px_rgba(0,0,0,0.05)] backdrop-blur-xl relative overflow-hidden";
 const glassInput =
- "w-full rounded-[18px] border border-amber-200/70 bg-white/80 dark:bg-slate-800/90 dark:border-slate-700 text-[#1f1914] dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 px-5 py-3.5 text-base font-semibold outline-none shadow-sm backdrop-blur-md focus:border-[#d97706] dark:focus:border-amber-500 focus:ring-4 focus:ring-[#d97706]/15 dark:focus:ring-amber-500/20 transition-all";
+  "w-full rounded-[18px] border border-amber-200/70 bg-white/80 dark:bg-slate-800/90 dark:border-slate-700 text-[#1f1914] dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 px-5 py-3.5 text-base font-semibold outline-none shadow-sm backdrop-blur-md focus:border-[#d97706] dark:focus:border-amber-500 focus:ring-4 focus:ring-[#d97706]/15 dark:focus:ring-amber-500/20 transition-all";
 const glassButton =
- "rounded-[24px] bg-gradient-to-r from-[#b46a13] via-[#f29f41] to-[#ffbc6e] px-7 py-4 text-base font-bold text-white shadow-[0_16px_35px_rgba(184,122,57,0.25)] transition hover:scale-[1.02] hover:shadow-[0_20px_42px_rgba(184,122,57,0.3)]";
+  "rounded-[24px] bg-gradient-to-r from-[#b46a13] via-[#f29f41] to-[#ffbc6e] px-7 py-4 text-base font-bold text-white shadow-[0_16px_35px_rgba(184,122,57,0.25)] transition hover:scale-[1.02] hover:shadow-[0_20px_42px_rgba(184,122,57,0.3)]";
 const glassButtonSoft =
- "rounded-[24px] border border-white/60 bg-temple-100/65 dark:bg-slate-800 dark:border-slate-700 text-[#7f470a] dark:text-amber-300 px-7 py-4 text-base font-bold shadow-md transition hover:bg-temple-100/85 dark:hover:bg-slate-700 hover:scale-[1.02]";
+  "rounded-[24px] border border-white/60 bg-white/50 dark:bg-slate-800 dark:border-slate-700 text-[#7f470a] dark:text-amber-300 px-7 py-4 text-base font-bold shadow-md transition hover:bg-white/75 dark:hover:bg-slate-700 hover:scale-[1.02]";
 const glassItem =
- "rounded-[26px] border border-white/60 bg-temple-100/70 dark:bg-slate-800/75 dark:border-slate-700 dark:text-slate-200 p-5 text-base shadow-sm backdrop-blur-md hover:shadow-md transition-shadow";
+  "rounded-[28px] border border-white/90 dark:border-slate-700/60 bg-gradient-to-br from-white/85 via-amber-50/40 to-amber-500/10 dark:from-slate-800/85 dark:via-slate-900/60 dark:to-amber-500/15 text-slate-800 dark:text-slate-100 p-5 backdrop-blur-xl shadow-[0_8px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_16px_35px_rgba(245,158,11,0.22)] hover:-translate-y-1.5 transition-all duration-300 relative group overflow-hidden cursor-pointer";
 
 const AppIcon = ({ name, className = "h-5 w-5" }) => {
  const base = "fill-none stroke-current stroke-2";
@@ -3862,86 +3862,144 @@ const DevoteeDashboard = () => {
  );
  };
 
- const renderFestivalEvents = () => {
- const getMyDonationTotalForEvent = (eventId) => {
- if (!eventId) return 0;
- return (donationsData || [])
- .filter((d) => d && d.eventId != null && String(d.eventId) === String(eventId))
- .reduce((sum, d) => sum + (typeof d.amount === "number" ? d.amount : Number(d.amount) || 0), 0);
- };
+  const renderFestivalEvents = () => {
+    const getMyDonationTotalForEvent = (eventId) => {
+      if (!eventId) return 0;
+      return (donationsData || [])
+        .filter((d) => d && d.eventId != null && String(d.eventId) === String(eventId))
+        .reduce((sum, d) => sum + (typeof d.amount === "number" ? d.amount : Number(d.amount) || 0), 0);
+    };
 
- return (
- <div className="space-y-6">
- <div className={`${glassCard}`}>
- <h2 className="text-[2rem] font-bold">Festival Events</h2>
- <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
- {eventsData.length > 0 ? (
- eventsData.map((item) => {
- const isSelected = selectedEventId === item._id;
- const myTotal = getMyDonationTotalForEvent(item._id);
- return (
- <div
- key={`${item.title}-${item.formattedDate || item._id}`}
- onClick={() => setSelectedEventId(item._id)}
- className={`${glassItem} p-4 cursor-pointer ${isSelected ? "ring-2 ring-offset-2 ring-[#ff8b00]" : ""}`}
- >
- <div className="flex items-start justify-between gap-2">
- <div className="flex-1">
- <p className="text-lg font-semibold text-[#17151f] dark:text-slate-100">{item.title}</p>
- <p className="mt-2 flex items-center gap-2 text-sm text-[#5d5d5d] dark:text-slate-400">
- <span className="text-base">📅</span>
- {item.formattedDate || item.date}
- </p>
- {item.location && (
- <p className="mt-1 flex items-center gap-2 text-sm text-[#5d5d5d] dark:text-slate-400">
- <span className="text-base">📍</span>
- {item.location}
- </p>
- )}
- {item.description && (
- <p className="mt-2 text-xs text-[#6b6b6b]">{item.description.substring(0, 60)}...</p>
- )}
- </div>
- <div className="ml-4 flex flex-col items-end gap-2">
- <div className="text-sm text-[#6b6b6b]">{item.registrations || 0} regs</div>
- <div className="text-lg font-bold text-[#1b7f77]">{formatCurrency(myTotal || 0)}</div>
- <button
- type="button"
- onClick={(e) => {
- e.stopPropagation();
- // switch to donations page and preselect this event
- setSelectedEventId(item._id);
- setActivePage("Donations");
- // after navigation/render, scroll to form and focus amount
- setTimeout(() => {
- const form = document.getElementById("donation-form");
- if (form) {
- form.scrollIntoView({ behavior: "smooth" });
- const amt = document.getElementById("donation-amount-input");
- if (amt) amt.focus();
- }
- }, 250);
- }}
- className="mt-2 rounded-xl bg-[#ff8b00] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 px-3 py-1 text-sm font-semibold text-white"
- >
- Donate
- </button>
- </div>
- </div>
- </div>
- );
- })
- ) : (
- <div className={`${glassItem} col-span-full text-center text-[#5d5d5d] py-8`}>
- <p className="text-lg">No festival events available.</p>
- <p className="mt-1 text-sm">Check back later for upcoming festivals!</p>
- </div>
- )}
- </div>
- </div>
- </div>
- );
- };
+    return (
+      <div className="space-y-6">
+        <div className={`${glassCard}`}>
+          {/* Ambient Glow background decorative elements */}
+          <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-amber-400/20 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-orange-500/15 blur-3xl" />
+
+          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-amber-200/40 dark:border-slate-800/60 pb-5">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-400 text-white shadow-lg shadow-amber-500/30 text-xl">
+                🛕
+              </div>
+              <div>
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-800 dark:text-white tracking-tight">
+                  Festival Events
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                  Participate & contribute to sacred temple festivals
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="rounded-full bg-amber-500/10 dark:bg-amber-400/15 px-3.5 py-1.5 text-xs font-semibold text-amber-700 dark:text-amber-300 border border-amber-500/20 backdrop-blur-md">
+                ✨ {eventsData.length} Upcoming Festivals
+              </span>
+            </div>
+          </div>
+
+          <div className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3 relative z-10">
+            {eventsData.length > 0 ? (
+              eventsData.map((item) => {
+                const isSelected = selectedEventId === item._id;
+                const myTotal = getMyDonationTotalForEvent(item._id);
+                return (
+                  <div
+                    key={`${item.title}-${item.formattedDate || item._id}`}
+                    onClick={() => setSelectedEventId(item._id)}
+                    className={`${glassItem} ${
+                      isSelected
+                        ? "ring-2 ring-amber-500 ring-offset-2 ring-offset-amber-50/50 dark:ring-offset-slate-900 shadow-[0_0_25px_rgba(245,158,11,0.35)] scale-[1.01]"
+                        : ""
+                    }`}
+                  >
+                    {/* Top glass highlight bar on hover */}
+                    <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-amber-400/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                    <div className="flex flex-col justify-between h-full gap-4">
+                      {/* Card Content Header */}
+                      <div>
+                        <div className="flex items-start justify-between gap-2">
+                          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors leading-snug">
+                            {item.title}
+                          </h3>
+                          <span className="shrink-0 rounded-full bg-amber-500/10 dark:bg-amber-400/15 px-2.5 py-1 text-[11px] font-bold text-amber-700 dark:text-amber-300 border border-amber-500/20 shadow-inner">
+                            👥 {item.registrations || 0} regs
+                          </span>
+                        </div>
+
+                        {/* Date & Location tags */}
+                        <div className="mt-3 space-y-2">
+                          <p className="flex items-center gap-2 text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-300">
+                            <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 text-xs shadow-sm">
+                              📅
+                            </span>
+                            <span>{item.formattedDate || item.date}</span>
+                          </p>
+                          {item.location && (
+                            <p className="flex items-center gap-2 text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">
+                              <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-rose-500/15 text-rose-600 dark:text-rose-400 text-xs shadow-sm">
+                                📍
+                              </span>
+                              <span className="truncate">{item.location}</span>
+                            </p>
+                          )}
+                        </div>
+
+                        {item.description && (
+                          <p className="mt-3 text-xs text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed bg-white/50 dark:bg-slate-800/50 p-2.5 rounded-xl border border-white/60 dark:border-slate-700/50 backdrop-blur-sm">
+                            {item.description}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Card Footer */}
+                      <div className="pt-3 border-t border-amber-200/40 dark:border-slate-700/50 flex items-end justify-between gap-2">
+                        <div>
+                          <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-400">
+                            My Total
+                          </p>
+                          <p className="text-lg font-extrabold bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 dark:from-emerald-400 dark:to-teal-300 bg-clip-text text-transparent">
+                            {formatCurrency(myTotal || 0)}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedEventId(item._id);
+                            setActivePage("Donations");
+                            setTimeout(() => {
+                              const form = document.getElementById("donation-form");
+                              if (form) {
+                                form.scrollIntoView({ behavior: "smooth" });
+                                const amt = document.getElementById("donation-amount-input");
+                                if (amt) amt.focus();
+                              }
+                            }, 250);
+                          }}
+                          className="rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 px-4 py-2 text-xs sm:text-sm font-bold text-white shadow-md shadow-amber-500/30 hover:shadow-lg hover:shadow-amber-500/50 hover:scale-105 active:scale-95 transition-all duration-200 flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <span>Donate</span>
+                          <span className="text-xs">🙏</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className={`${glassItem} col-span-full text-center text-slate-500 dark:text-slate-400 py-10 space-y-2`}>
+                <div className="text-4xl">🛕</div>
+                <p className="text-lg font-bold text-slate-700 dark:text-slate-200">No festival events available.</p>
+                <p className="text-sm">Check back later for upcoming sacred festival celebrations!</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
 
  const handleMarkAllRead = async () => {
  const unread = notificationsData.filter((n) => !n.read && n._id);
