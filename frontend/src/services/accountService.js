@@ -47,20 +47,31 @@ export const getDashboardMetrics = async () => {
   return res.data;
 };
 
-export const getProfitLoss = async (financialYear) => {
-  const query = financialYear ? `?financialYear=${financialYear}` : "";
+const buildReportQuery = (params) => {
+  if (!params) return "";
+  if (typeof params === "string") return `?financialYear=${encodeURIComponent(params)}`;
+  const searchParams = new URLSearchParams();
+  if (params.financialYear) searchParams.append("financialYear", params.financialYear);
+  if (params.fromDate) searchParams.append("fromDate", params.fromDate);
+  if (params.toDate) searchParams.append("toDate", params.toDate);
+  const str = searchParams.toString();
+  return str ? `?${str}` : "";
+};
+
+export const getProfitLoss = async (params) => {
+  const query = buildReportQuery(params);
   const res = await axios.get(`${API_URL}/profit-loss${query}`, getAuthHeaders());
   return res.data;
 };
 
-export const getMonthlyReport = async (financialYear) => {
-  const query = financialYear ? `?financialYear=${financialYear}` : "";
+export const getMonthlyReport = async (params) => {
+  const query = buildReportQuery(params);
   const res = await axios.get(`${API_URL}/monthly-report${query}`, getAuthHeaders());
   return res.data;
 };
 
-export const getAnnualReport = async (financialYear) => {
-  const query = financialYear ? `?financialYear=${financialYear}` : "";
+export const getAnnualReport = async (params) => {
+  const query = buildReportQuery(params);
   const res = await axios.get(`${API_URL}/annual-report${query}`, getAuthHeaders());
   return res.data;
 };

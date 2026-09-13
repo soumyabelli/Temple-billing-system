@@ -1431,7 +1431,7 @@ const NotificationsView = ({ user }) => {
   return (
     <div className="accountant-view">
       <EmailNotificationsView
-        title="Accountant Notifications & Email Inbox"
+        title="Accountant Notifications"
         subtitle=""
         userEmail={user?.email}
         notifications={notifications}

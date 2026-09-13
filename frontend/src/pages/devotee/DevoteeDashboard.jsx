@@ -253,9 +253,9 @@ const glassSection =
 const glassInput =
   "w-full rounded-[18px] border border-amber-200/70 bg-white/80 dark:bg-slate-800/90 dark:border-slate-700 text-[#1f1914] dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 px-5 py-3.5 text-base font-semibold outline-none shadow-sm backdrop-blur-md focus:border-[#d97706] dark:focus:border-amber-500 focus:ring-4 focus:ring-[#d97706]/15 dark:focus:ring-amber-500/20 transition-all";
 const glassButton =
-  "rounded-[24px] bg-gradient-to-r from-[#b46a13] via-[#f29f41] to-[#ffbc6e] px-7 py-4 text-base font-bold text-white shadow-[0_16px_35px_rgba(184,122,57,0.25)] transition hover:scale-[1.02] hover:shadow-[0_20px_42px_rgba(184,122,57,0.3)]";
+  "relative inline-flex items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 px-6 sm:px-8 py-3.5 sm:py-4 text-base font-bold text-white shadow-[0_10px_25px_rgba(245,158,11,0.3)] hover:shadow-[0_15px_35px_rgba(245,158,11,0.5)] hover:scale-[1.03] active:scale-95 transition-all duration-200 cursor-pointer border border-white/20 backdrop-blur-md";
 const glassButtonSoft =
-  "rounded-[24px] border border-white/60 bg-white/50 dark:bg-slate-800 dark:border-slate-700 text-[#7f470a] dark:text-amber-300 px-7 py-4 text-base font-bold shadow-md transition hover:bg-white/75 dark:hover:bg-slate-700 hover:scale-[1.02]";
+  "relative inline-flex items-center justify-center overflow-hidden rounded-2xl border border-amber-500/30 dark:border-amber-400/30 bg-white/70 dark:bg-slate-800/80 text-amber-900 dark:text-amber-300 hover:bg-amber-500/15 hover:border-amber-500/50 px-6 sm:px-8 py-3.5 sm:py-4 text-base font-bold shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-95 transition-all duration-200 cursor-pointer backdrop-blur-md";
 const glassItem =
   "rounded-[28px] border border-white/90 dark:border-slate-700/60 bg-gradient-to-br from-white/85 via-amber-50/40 to-amber-500/10 dark:from-slate-800/85 dark:via-slate-900/60 dark:to-amber-500/15 text-slate-800 dark:text-slate-100 p-5 backdrop-blur-xl shadow-[0_8px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_16px_35px_rgba(245,158,11,0.22)] hover:-translate-y-1.5 transition-all duration-300 relative group overflow-hidden cursor-pointer";
 

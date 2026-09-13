@@ -188,9 +188,19 @@ exports.getDashboardMetrics = async (req, res) => {
 
 exports.getProfitLoss = async (req, res) => {
   try {
-    const { financialYear } = req.query;
+    const { financialYear, fromDate, toDate } = req.query;
     let query = { status: "Completed" };
     if (financialYear) query.financialYear = financialYear;
+
+    if (fromDate || toDate) {
+      query.date = {};
+      if (fromDate) query.date.$gte = new Date(fromDate);
+      if (toDate) {
+        const end = new Date(toDate);
+        end.setHours(23, 59, 59, 999);
+        query.date.$lte = end;
+      }
+    }
 
     const transactions = await AccountTransaction.find(query);
     
@@ -203,15 +213,19 @@ exports.getProfitLoss = async (req, res) => {
       const amt = Number(t.amount) || 0;
       if (t.transactionType === "Credit") {
         income += amt;
-        incomeBySource[t.source] = (incomeBySource[t.source] || 0) + amt;
+        const src = t.source || "General";
+        incomeBySource[src] = (incomeBySource[src] || 0) + amt;
       } else if (t.transactionType === "Debit") {
         expense += amt;
-        expenseByCategory[t.category] = (expenseByCategory[t.category] || 0) + amt;
+        const cat = t.category || "General";
+        expenseByCategory[cat] = (expenseByCategory[cat] || 0) + amt;
       }
     });
 
     res.status(200).json({
       financialYear,
+      fromDate,
+      toDate,
       totalIncome: income,
       totalExpense: expense,
       netProfit: income - expense,
@@ -225,13 +239,23 @@ exports.getProfitLoss = async (req, res) => {
 
 exports.getMonthlyReport = async (req, res) => {
   try {
-    const { financialYear } = req.query;
+    const { financialYear, fromDate, toDate } = req.query;
     let query = { status: "Completed" };
     if (financialYear) query.financialYear = financialYear;
 
+    if (fromDate || toDate) {
+      query.date = {};
+      if (fromDate) query.date.$gte = new Date(fromDate);
+      if (toDate) {
+        const end = new Date(toDate);
+        end.setHours(23, 59, 59, 999);
+        query.date.$lte = end;
+      }
+    }
+
     const transactions = await AccountTransaction.find(query);
     
-    const monthlyData = Array.from({ length: 12 }, () => ({ income: 0, expense: 0 }));
+    const monthlyData = Array.from({ length: 12 }, () => ({ income: 0, expense: 0, netBalance: 0 }));
 
     transactions.forEach(t => {
       const amt = Number(t.amount) || 0;
@@ -241,6 +265,7 @@ exports.getMonthlyReport = async (req, res) => {
       } else if (t.transactionType === "Debit") {
         monthlyData[monthIndex].expense += amt;
       }
+      monthlyData[monthIndex].netBalance = monthlyData[monthIndex].income - monthlyData[monthIndex].expense;
     });
 
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -256,7 +281,7 @@ exports.getMonthlyReport = async (req, res) => {
 };
 
 exports.getAnnualReport = async (req, res) => {
-  // Can be implemented similarly or just defer to P&L
+  // Defer to getProfitLoss
   this.getProfitLoss(req, res);
 };
 
