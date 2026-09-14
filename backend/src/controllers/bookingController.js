@@ -72,6 +72,36 @@ const getDashboardBookings = async (req, res) => {
       totalRevenue: 0, todays: 0, upcoming: 0,
     };
 
+    // Calculate upcoming poojas: active bookings scheduled for future dates (next days)
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
+
+    const activeBookings = await Booking.find({
+      status: { $nin: ["Completed", "Cancelled", "Rejected"] },
+    }).select("datetime");
+
+    let upcomingCount = activeBookings.filter((b) => {
+      if (!b.datetime) return false;
+      const m = String(b.datetime).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      const d = m
+        ? new Date(parseInt(m[1], 10), parseInt(m[2], 10) - 1, parseInt(m[3], 10), 23, 59, 59, 999)
+        : new Date(b.datetime);
+      return !isNaN(d.getTime()) && d.getTime() > todayEnd.getTime();
+    }).length;
+
+    try {
+      const PoojaBooking = require("../models/PoojaBooking");
+      const upcomingPoojaBookings = await PoojaBooking.countDocuments({
+        status: { $nin: ["Completed", "Cancelled", "Rejected"] },
+        bookingDate: { $gt: todayEnd },
+      });
+      upcomingCount += upcomingPoojaBookings;
+    } catch (e) {
+      // PoojaBooking check fallback
+    }
+
+    stats.upcoming = upcomingCount;
+
     res.status(200).json({ latestBookings, stats });
   } catch (error) {
     console.error("getDashboardBookings error:", error);

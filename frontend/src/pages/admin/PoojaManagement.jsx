@@ -5,7 +5,6 @@ import {
  MdCalendarMonth,
  MdOutlineCalendarToday,
  MdOutlineTaskAlt,
- MdOutlineVerified,
  MdOutlineCurrencyRupee,
  MdOutlineSearch,
  MdOutlineClose,
@@ -189,13 +188,11 @@ const PoojaManagement = () => {
 
  const todays = statsData?.todays || 0;
  const upcoming = statsData?.upcoming || 0;
- const completed = statsData?.completed || 0;
  const revenue = statsData?.totalRevenue || 0;
 
  const stats = [
  { title: "Today's Bookings", value: todays, icon: MdOutlineCalendarToday, iconBg: "bg-[#fff1e2] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 ", iconText: "text-[#f97316]" },
  { title: "Upcoming Poojas", value: upcoming, icon: MdOutlineTaskAlt, iconBg: "bg-[#eaf6e8] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 ", iconText: "text-[#15803d]" },
- { title: "Completed Services", value: completed, icon: MdOutlineVerified, iconBg: "bg-[#efe9ff] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 ", iconText: "text-[#6d28d9]" },
  { title: "Booking Revenue", value: formatCurrency(revenue), icon: MdOutlineCurrencyRupee, iconBg: "bg-[#fff3db] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 ", iconText: "text-[#ea580c]" },
  ];
 
@@ -223,7 +220,7 @@ const PoojaManagement = () => {
  </div>
  </div>
 
- <div className="grid grid-cols-1 gap-4 xl:grid-cols-4">
+ <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
  {stats.map((card) => {
  const Icon = card.icon;
  return (
