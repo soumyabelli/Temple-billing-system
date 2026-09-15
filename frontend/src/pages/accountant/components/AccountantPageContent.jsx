@@ -35,7 +35,7 @@ import {
   FaClock,
 } from "react-icons/fa";
 import { MdTempleBuddhist, MdOutlineVolunteerActivism } from "react-icons/md";
-import AccountantDonutCard from "./AccountantDonutCard";
+
 import AccountantRevenueChart from "./AccountantRevenueChart";
 import Attendance from "../../staff/Attendance";
 import LeaveHistory from "../../staff/LeaveHistory";
@@ -894,15 +894,7 @@ const PaymentsView = ({ bills, loading }) => {
           />
         </section>
 
-        <aside className="accountant-sideRail accountant-sideRail--chart">
-          <AccountantDonutCard
-            title="Payment Method Distribution"
-            subtitle="Charts"
-            segments={paymentSegments.length ? paymentSegments : [{ name: "No Data", value: 1 }]}
-            centerValue={`Rs ${totalAmount.toLocaleString("en-IN")}`}
-            centerLabel="Total payments"
-          />
-        </aside>
+
       </div>
     </div>
   );
@@ -1168,15 +1160,7 @@ const PoojaRevenueView = ({ bills, loading }) => {
           />
         </section>
 
-        <aside className="accountant-sideRail accountant-sideRail--chart">
-          <AccountantDonutCard
-            title="Revenue by Pooja Type"
-            subtitle="Charts"
-            segments={poojaSegments.length ? poojaSegments : [{ name: "No Data", value: 1 }]}
-            centerValue={`Rs ${totalAmount.toLocaleString("en-IN")}`}
-            centerLabel="Total revenue"
-          />
-        </aside>
+
       </div>
     </div>
   );
@@ -1245,15 +1229,7 @@ const PrasadamSalesView = ({ bills, loading }) => {
           />
         </section>
 
-        <aside className="accountant-sideRail accountant-sideRail--chart">
-          <AccountantDonutCard
-            title="Item-wise Revenue"
-            subtitle="Revenue split"
-            segments={itemSegments.length ? itemSegments : [{ name: "No Data", value: 1 }]}
-            centerValue={`Rs ${totalAmount.toLocaleString("en-IN")}`}
-            centerLabel="Sales total"
-          />
-        </aside>
+
       </div>
     </div>
   );
@@ -1355,29 +1331,7 @@ const ReportsAnalyticsView = () => (
         trendLabel="+16.5% from last year"
       />
 
-      <AccountantDonutCard
-        title="Donation Trends"
-        subtitle="Reports"
-        segments={reportDonationSegments}
-        centerValue="45%"
-        centerLabel="Donation share"
-      />
 
-      <AccountantDonutCard
-        title="Collection Analysis"
-        subtitle="Reports"
-        segments={categorySegments}
-        centerValue="Rs 25,000"
-        centerLabel="Daily collection"
-      />
-
-      <AccountantDonutCard
-        title="Expense Analysis"
-        subtitle="Reports"
-        segments={reportExpenseSegments}
-        centerValue="20%"
-        centerLabel="Utilities share"
-      />
     </section>
   </div>
 );

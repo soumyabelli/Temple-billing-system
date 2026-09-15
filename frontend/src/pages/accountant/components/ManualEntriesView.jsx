@@ -271,27 +271,7 @@ const ManualEntriesView = () => {
               />
             </div>
 
-            {/* ACCOUNT HEAD / CATEGORY (COMBOBOX: ENTER OR SELECT) */}
-            <div>
-              <label className="block text-sm font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
-                Account Head / Expense Category <span className="text-xs font-normal text-amber-600 dark:text-amber-400">(Select or Type Custom)</span>
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  list="expense-categories-list"
-                  value={form.category}
-                  onChange={(e) => setForm({ ...form, category: e.target.value })}
-                  placeholder="Select or enter expense category..."
-                  className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/80 dark:bg-slate-800 px-5 py-4 text-base font-bold text-slate-900 dark:text-slate-100 outline-none transition focus:border-amber-500 focus:bg-temple-100 focus:ring-4 focus:ring-amber-500/15 shadow-inner"
-                />
-                <datalist id="expense-categories-list">
-                  {categories.map((c) => (
-                    <option key={c} value={c} />
-                  ))}
-                </datalist>
-              </div>
-            </div>
+
 
             {/* ENTRY TYPE */}
             <div>
