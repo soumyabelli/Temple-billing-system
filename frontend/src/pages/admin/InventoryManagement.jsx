@@ -472,7 +472,17 @@ const InventoryManagement = () => {
  <td className="p-3">{req.userName} ({req.role})</td>
  <td className="p-3">{req.itemName}</td>
  <td className="p-3">{req.quantity} {req.unit}</td>
- <td className="p-3">{req.status}</td>
+                      <td className="p-3">
+                        <span className={`px-2.5 py-1 rounded-full text-xs font-extrabold ${
+                          req.status === "Approved" || req.status === "Issued"
+                            ? "bg-emerald-100 text-emerald-800"
+                            : req.status === "Pending"
+                            ? "bg-amber-100 text-amber-800"
+                            : "bg-rose-100 text-rose-800"
+                        }`}>
+                          {req.status === "Issued" ? "Approved" : req.status}
+                        </span>
+                      </td>
  <td className="p-3">
  {req.status === "Pending" && (
  <button onClick={() => handleApproveRequest(req._id)} className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded-md text-xs font-bold shadow-xs transition-colors">Approve</button>

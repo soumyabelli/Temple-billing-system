@@ -11,6 +11,7 @@ const statusClassMap = {
   "In Progress": "progress",
   Completed: "completed",
   Approved: "approved",
+  Issued: "approved",
   Rejected: "rejected",
 };
 
@@ -93,7 +94,11 @@ const StaffInventory = () => {
   const filteredRequests = useMemo(() => {
     return requests
       .filter((req) => {
-        const matchesStatus = filter === "all" || req.status === filter;
+        const isApproved = req.status === "Approved" || req.status === "Issued";
+        const matchesStatus =
+          filter === "all" ||
+          req.status === filter ||
+          (filter === "Approved" && isApproved);
         const query = search.trim().toLowerCase();
         const matchesSearch = !query || req.itemName.toLowerCase().includes(query);
         return matchesStatus && matchesSearch;
@@ -106,7 +111,7 @@ const StaffInventory = () => {
       (acc, r) => {
         acc.total++;
         if (r.status === "Pending") acc.pending++;
-        if (r.status === "Approved") acc.approved++;
+        if (r.status === "Approved" || r.status === "Issued") acc.approved++;
         if (r.status === "Rejected") acc.rejected++;
         return acc;
       },
@@ -443,7 +448,7 @@ const StaffInventory = () => {
                           <td>{request.itemName}</td>
                           <td>{request.quantity} {request.unit}</td>
                           <td style={{ maxWidth: "150px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={request.reason}>{request.reason}</td>
-                          <td><span className={`status-chip ${statusClassMap[request.status] || ""}`}>{request.status}</span></td>
+                          <td><span className={`status-chip ${statusClassMap[request.status] || ""}`}>{request.status === "Issued" || request.status === "Approved" ? "Approved" : request.status}</span></td>
                           <td>{request.adminReason || "-"}</td>
                         </tr>
                       ))

@@ -13,7 +13,7 @@ const buildInventorySummary = (requests) => {
     (summary, request) => {
       summary.total += 1;
       if (request.status === "Pending") summary.pending += 1;
-      if (request.status === "Approved") summary.approved += 1;
+      if (request.status === "Approved" || request.status === "Issued") summary.approved += 1;
       if (request.status === "Rejected") summary.rejected += 1;
       return summary;
     },

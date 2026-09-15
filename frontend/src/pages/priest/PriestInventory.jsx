@@ -7,11 +7,12 @@ import "../staff/StaffDashboard.css"; // Reuse existing styles
 const API_BASE = "http://localhost:5000/api";
 
 const statusClassMap = {
- Pending: "pending",
- "In Progress": "progress",
- Completed: "completed",
- Approved: "approved",
- Rejected: "rejected",
+  Pending: "pending",
+  "In Progress": "progress",
+  Completed: "completed",
+  Approved: "approved",
+  Issued: "approved",
+  Rejected: "rejected",
 };
 
 const formatDateTime = (value) => {
@@ -90,29 +91,33 @@ const PriestInventory = () => {
  }, [activeTab, fetchRequestsData, fetchIssuesData]);
 
  // Computed Values
- const filteredRequests = useMemo(() => {
- return requests
- .filter((req) => {
- const matchesStatus = filter === "all" || req.status === filter;
- const query = search.trim().toLowerCase();
- const matchesSearch = !query || req.itemName.toLowerCase().includes(query);
- return matchesStatus && matchesSearch;
- })
- .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
- }, [requests, filter, search]);
+  const filteredRequests = useMemo(() => {
+    return requests
+      .filter((req) => {
+        const isApproved = req.status === "Approved" || req.status === "Issued";
+        const matchesStatus =
+          filter === "all" ||
+          req.status === filter ||
+          (filter === "Approved" && isApproved);
+        const query = search.trim().toLowerCase();
+        const matchesSearch = !query || req.itemName.toLowerCase().includes(query);
+        return matchesStatus && matchesSearch;
+      })
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  }, [requests, filter, search]);
 
- const summary = useMemo(() => {
- return requests.reduce(
- (acc, r) => {
- acc.total++;
- if (r.status === "Pending") acc.pending++;
- if (r.status === "Approved") acc.approved++;
- if (r.status === "Rejected") acc.rejected++;
- return acc;
- },
- { total: 0, pending: 0, approved: 0, rejected: 0 }
- );
- }, [requests]);
+  const summary = useMemo(() => {
+    return requests.reduce(
+      (acc, r) => {
+        acc.total++;
+        if (r.status === "Pending") acc.pending++;
+        if (r.status === "Approved" || r.status === "Issued") acc.approved++;
+        if (r.status === "Rejected") acc.rejected++;
+        return acc;
+      },
+      { total: 0, pending: 0, approved: 0, rejected: 0 }
+    );
+  }, [requests]);
 
  const pendingIssues = useMemo(() => issues.filter((iss) => iss.status === "Issued"), [issues]);
  const completedIssues = useMemo(() => issues.filter((iss) => iss.status === "Consumed"), [issues]);
@@ -443,7 +448,7 @@ const PriestInventory = () => {
  <td>{request.itemName}</td>
  <td>{request.quantity} {request.unit}</td>
  <td style={{ maxWidth: "150px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={request.reason}>{request.reason}</td>
- <td><span className={`status-chip ${statusClassMap[request.status] || ""}`}>{request.status}</span></td>
+ <td><span className={`status-chip ${statusClassMap[request.status] || ""}`}>{request.status === "Issued" || request.status === "Approved" ? "Approved" : request.status}</span></td>
  <td>{request.adminReason || "-"}</td>
  </tr>
  ))
