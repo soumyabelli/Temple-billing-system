@@ -1720,3 +1720,27 @@ To: kualalveda23@gmail.com
 Subject: Verify Your Temple Devotee Registration
 Please click the following link to verify your email and complete devotee registration: http://localhost:5000/api/auth/verify-registration?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiVmVkYXZhdGhpIiwiZW1haWwiOiJrdWFsYWx2ZWRhMjNAZ21haWwuY29tIiwicGhvbmUiOiI5NDQ5OTEzOTc4IiwiYWRkcmVzcyI6IkFsZXZvb3IsIFVkdXBpIiwicGxhY2UiOiJVZHVwaSIsInBhc3N3b3JkIjoiJDJiJDEwJHRWZFh6RjVjTWVyc3FFSlkya2gvS09VZlhhL1hlLk5nUldPOTQ0ZzR1TjJnb1JrRVFEc0ZDIiwicm9sZSI6ImRldm90ZWUiLCJpYXQiOjE3ODk0Mzg4MzUsImV4cCI6MTc4OTQzOTczNX0.yOSw0xm6zkllxPP_G_mpLZesOPj34j5c1uidaNe0gBM
 
+[2026-09-15T03:29:55.652Z] EMAIL
+To: reena@gmail.com
+Subject: [Sri Shanti Mahadev Mandir] Booking Confirmed
+Booking Confirmed
+
+Your Combined Order: Gana Homa (x1) booking has been confirmed successfully.
+
+Sri Shanti Mahadev Mandir
+
+[2026-09-15T03:29:56.190Z] EMAIL
+To: reena@gmail.com
+Subject: Pooja Booking Confirmation
+Pooja Booking Confirmation
+Service: Combined Order: Gana Homa (x1)
+Date & Time: 2026-09-15T04:29:25.054Z
+Amount: ₹750
+
+Please bring the receipt at the time of visiting the temple to perform the pooja.
+Thank you!
+
+[2026-09-15T03:29:56.203Z] SMS
+To: 9945650664
+Message: Pooja booking confirmed! Service: Combined Order: Gana Homa (x1) on 2026-09-15T04:29:25.054Z. Amount: ₹750. Please bring receipt at temple. -Temple
+

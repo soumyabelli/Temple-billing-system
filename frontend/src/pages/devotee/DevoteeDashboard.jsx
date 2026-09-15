@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 import html2canvas from "html2canvas";
 import templeImage from "../../assets/temple.jpg.png";
 import { useAuth } from "../../context/AuthContext";
@@ -497,6 +498,9 @@ const DevoteeDashboard = () => {
  const [bookingSuccess, setBookingSuccess] = useState("");
  const [bookingPaymentMethod, setBookingPaymentMethod] = useState("UPI");
  const [showAllReceipts, setShowAllReceipts] = useState(false);
+ const [receiptStartDate, setReceiptStartDate] = useState("");
+ const [receiptEndDate, setReceiptEndDate] = useState("");
+ const [receiptDatePreset, setReceiptDatePreset] = useState("all");
  const [showAllBookings, setShowAllBookings] = useState(false);
  const [showAllDonations, setShowAllDonations] = useState(false);
  const [viewingReceipt, setViewingReceipt] = useState(null);
@@ -2023,6 +2027,187 @@ const DevoteeDashboard = () => {
  } catch (err) {
  console.error("Failed to generate PDF", err);
  alert("Failed to download receipt.");
+ }
+ };
+
+ const applyReceiptPreset = (preset) => {
+ setReceiptDatePreset(preset);
+ const now = new Date();
+ if (preset === "all") {
+ setReceiptStartDate("");
+ setReceiptEndDate("");
+ } else if (preset === "today") {
+ const todayStr = now.toISOString().split("T")[0];
+ setReceiptStartDate(todayStr);
+ setReceiptEndDate(todayStr);
+ } else if (preset === "yesterday") {
+ const yest = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+ const yestStr = yest.toISOString().split("T")[0];
+ setReceiptStartDate(yestStr);
+ setReceiptEndDate(yestStr);
+ } else if (preset === "7days") {
+ const d7 = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+ setReceiptStartDate(d7.toISOString().split("T")[0]);
+ setReceiptEndDate(now.toISOString().split("T")[0]);
+ } else if (preset === "30days") {
+ const d30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+ setReceiptStartDate(d30.toISOString().split("T")[0]);
+ setReceiptEndDate(now.toISOString().split("T")[0]);
+ }
+ };
+
+ const handleDownloadCombinedDateReceipts = (items, start, end) => {
+ if (!items || items.length === 0) {
+ toast.info("No receipts found for the selected date filter.");
+ return;
+ }
+
+ try {
+ const doc = new jsPDF({ unit: "mm", format: "a4" });
+ const pageWidth = doc.internal.pageSize.getWidth();
+ const pageHeight = doc.internal.pageSize.getHeight();
+ const margin = 14;
+
+ // Top Saffron Banner
+ doc.setFillColor(180, 106, 19);
+ doc.rect(0, 0, pageWidth, 34, "F");
+
+ doc.setTextColor(255, 255, 255);
+ doc.setFont("helvetica", "bold");
+ doc.setFontSize(16);
+ doc.text("SRI SHANTI MAHADEV MANDIR", margin, 12);
+
+ doc.setFont("helvetica", "normal");
+ doc.setFontSize(9);
+ doc.text("Main Road, Udupi - 576101, Karnataka | Ph: 0824-1234567", margin, 18);
+ doc.text("|| Om Namah Shivaya ||  - Official Consolidated Date Receipts PDF", margin, 24);
+
+ let dateRangeText = "All Available Receipts";
+ if (start && end) {
+ dateRangeText = start === end ? `Date: ${formatDateDisplay(start)}` : `Period: ${formatDateDisplay(start)} to ${formatDateDisplay(end)}`;
+ } else if (start) {
+ dateRangeText = `From: ${formatDateDisplay(start)}`;
+ } else if (end) {
+ dateRangeText = `To: ${formatDateDisplay(end)}`;
+ }
+
+ doc.setFont("helvetica", "bold");
+ doc.setFontSize(10);
+ doc.text(dateRangeText, pageWidth - margin, 14, { align: "right" });
+ doc.setFontSize(8);
+ doc.setFont("helvetica", "normal");
+ doc.text(`Generated: ${new Date().toLocaleDateString("en-IN")}`, pageWidth - margin, 20, { align: "right" });
+
+ let y = 40;
+
+ // Devotee details box
+ doc.setFillColor(248, 246, 240);
+ doc.roundedRect(margin, y, pageWidth - margin * 2, 22, 2, 2, "F");
+
+ doc.setTextColor(50, 45, 40);
+ doc.setFontSize(9.5);
+ doc.setFont("helvetica", "bold");
+ const devoteeName = profileData?.name || items[0]?.devoteeName || items[0]?.donorName || "Devotee";
+ const devoteePhone = profileData?.phone || items[0]?.contactNumber || items[0]?.phone || "-";
+ const devoteeEmail = profileData?.email || items[0]?.email || "-";
+
+ doc.text(`Devotee Name: ${devoteeName}`, margin + 4, y + 7);
+ doc.setFont("helvetica", "normal");
+ doc.setFontSize(9);
+ doc.text(`Phone: ${devoteePhone}  |  Email: ${devoteeEmail}`, margin + 4, y + 14);
+
+ const totalAmount = items.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
+ doc.setFont("helvetica", "bold");
+ doc.setTextColor(180, 106, 19);
+ doc.text(`Total Receipts: ${items.length}   Grand Total: Rs. ${totalAmount.toLocaleString("en-IN")}`, pageWidth - margin - 4, y + 7, { align: "right" });
+
+ y += 28;
+
+ // Combined Receipts Table
+ const tableHead = [["#", "Receipt ID", "Category / Item Summary", "Date", "Payment", "Status", "Amount (Rs.)"]];
+ const tableRows = items.map((item, idx) => [
+ idx + 1,
+ item.receiptId || "-",
+ item.oneLineSummary || item.type || "Receipt",
+ item.dateDisplay || "-",
+ item.paymentMethod || item.paymentMode || "Online / UPI",
+ item.status || "Completed",
+ `Rs. ${(parseFloat(item.amount) || 0).toLocaleString("en-IN")}`
+ ]);
+
+ autoTable(doc, {
+ head: tableHead,
+ body: tableRows,
+ startY: y,
+ theme: "striped",
+ headStyles: {
+ fillColor: [180, 106, 19],
+ textColor: [255, 255, 255],
+ fontStyle: "bold",
+ fontSize: 9,
+ },
+ bodyStyles: {
+ fontSize: 8.5,
+ textColor: [40, 40, 40],
+ },
+ columnStyles: {
+ 0: { cellWidth: 10 },
+ 1: { cellWidth: 32 },
+ 2: { cellWidth: 58 },
+ 3: { cellWidth: 26 },
+ 4: { cellWidth: 22 },
+ 5: { cellWidth: 18 },
+ 6: { cellWidth: 24, halign: "right" },
+ },
+ margin: { left: margin, right: margin },
+ });
+
+ let finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 8 : y + 40;
+
+ if (finalY > pageHeight - 45) {
+ doc.addPage();
+ finalY = 20;
+ }
+
+ // Financial Summary Box
+ doc.setFillColor(242, 247, 244);
+ doc.setDrawColor(34, 139, 34);
+ doc.roundedRect(margin, finalY, pageWidth - margin * 2, 20, 2, 2, "FD");
+
+ doc.setTextColor(20, 80, 35);
+ doc.setFontSize(10);
+ doc.setFont("helvetica", "bold");
+ doc.text(`Total Amount Paid across ${items.length} receipt(s): Rs. ${totalAmount.toLocaleString("en-IN")}/-`, margin + 5, finalY + 8);
+ doc.setFontSize(8.5);
+ doc.setFont("helvetica", "normal");
+ doc.text(`Combines Pooja Bookings, Room Bookings, Prasadam Orders & Donations into 1 Single PDF.`, margin + 5, finalY + 14);
+
+ finalY += 28;
+
+ // Mandir Policy & Footer
+ doc.setFontSize(8);
+ doc.setTextColor(120, 120, 120);
+ doc.text("Note: Official computer-generated consolidated receipt voucher issued by Sri Shanti Mahadev Mandir online portal.", margin, finalY);
+ doc.text("All pooja offerings, prasadam, & room bookings are non-refundable. Thank you for your devotion.", margin, finalY + 5);
+
+ doc.setDrawColor(200, 200, 200);
+ doc.line(margin, pageHeight - 16, pageWidth - margin, pageHeight - 16);
+ doc.setFontSize(8);
+ doc.setTextColor(100, 100, 100);
+ doc.text("Sri Shanti Mahadev Mandir - Devotee Services", margin, pageHeight - 10);
+ doc.text("Page 1 of 1", pageWidth - margin, pageHeight - 10, { align: "right" });
+
+ const filename = start && end 
+ ? `temple-receipts-${start}-to-${end}.pdf`
+ : start 
+ ? `temple-receipts-${start}.pdf`
+ : `temple-receipts-combined.pdf`;
+
+ doc.save(filename);
+ toast.success("Combined PDF downloaded successfully!");
+ } catch (err) {
+ console.error("Combined PDF export error:", err);
+ toast.error("Failed to generate combined PDF.");
  }
  };
 
@@ -3639,21 +3824,24 @@ const DevoteeDashboard = () => {
  </div>
  );
   const renderReceipts = () => {
-    const bookingItems = (bookingsData || []).map((b) => ({
-      ...b,
-      type: "Pooja Booking",
-      dateKey: b.createdAt || b.datetime || b.bookingDate,
-      dateDisplay: formatDateDisplay(b.datetime || b.bookingDate || b.createdAt),
-      oneLineSummary: `Pooja Booking: ${b.poojaName || b.service || "Pooja Seva"}`,
-      receiptId: b.receiptNumber || buildReceiptId("PB", b),
-      downloadType: "booking",
-      amount: b.amount,
-      status: b.status,
-      contactNumber: b.contactNumber,
-      service: b.poojaName || b.service,
-      paymentMethod: b.paymentMethod || "Online / UPI",
-      notes: b.notes,
-    }));
+    const bookingItems = (bookingsData || []).map((b) => {
+      const isRoom = b.service && b.service.toLowerCase().includes("room");
+      return {
+        ...b,
+        type: isRoom ? "Room Booking" : "Pooja Booking",
+        dateKey: b.createdAt || b.datetime || b.bookingDate,
+        dateDisplay: formatDateDisplay(b.datetime || b.bookingDate || b.createdAt),
+        oneLineSummary: isRoom ? `Room Booking: ${b.service}` : `Pooja Booking: ${b.poojaName || b.service || "Pooja Seva"}`,
+        receiptId: b.receiptNumber || b.bookingNumber || buildReceiptId(isRoom ? "RB" : "PB", b),
+        downloadType: "booking",
+        amount: b.amount,
+        status: b.status,
+        contactNumber: b.contactNumber,
+        service: b.poojaName || b.service,
+        paymentMethod: b.paymentMethod || "Online / UPI",
+        notes: b.notes,
+      };
+    });
 
     const donationItems = (donationsData || []).map((d) => ({
       ...d,
@@ -3691,7 +3879,27 @@ const DevoteeDashboard = () => {
       return timeB - timeA;
     });
 
-    const displayedReceipts = showAllReceipts ? allReceipts : allReceipts.slice(0, 5);
+    const filteredReceipts = allReceipts.filter((item) => {
+      if (!item.dateKey) return true;
+      const itemDate = new Date(item.dateKey);
+      if (isNaN(itemDate.getTime())) return true;
+
+      if (receiptStartDate) {
+        const start = new Date(receiptStartDate);
+        start.setHours(0, 0, 0, 0);
+        if (itemDate < start) return false;
+      }
+
+      if (receiptEndDate) {
+        const end = new Date(receiptEndDate);
+        end.setHours(23, 59, 59, 999);
+        if (itemDate > end) return false;
+      }
+
+      return true;
+    });
+
+    const displayedReceipts = showAllReceipts ? filteredReceipts : filteredReceipts.slice(0, 5);
 
     return (
       <div className="space-y-6">
@@ -3701,7 +3909,7 @@ const DevoteeDashboard = () => {
           <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-teal-500/15 blur-3xl" />
 
           {/* Header */}
-          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-amber-200/40 dark:border-slate-800/60 pb-5">
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-amber-200/40 dark:border-slate-800/60 pb-5">
             <div className="flex items-center gap-3">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-600 text-white shadow-lg shadow-amber-500/30 text-xl">
                 🧾
@@ -3711,20 +3919,102 @@ const DevoteeDashboard = () => {
                   Receipts
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-                  Official vouchers for poojas, donations & prasadam
+                  Official vouchers for poojas, room bookings, donations & prasadam
                 </p>
               </div>
             </div>
 
-            {allReceipts.length > 5 && (
-              <button
-                type="button"
-                onClick={() => setShowAllReceipts(!showAllReceipts)}
-                className="self-start sm:self-auto rounded-full bg-white/60 dark:bg-slate-800/60 border border-amber-500/20 dark:border-amber-400/20 text-amber-700 dark:text-amber-300 hover:bg-amber-500/10 px-4 py-2 text-xs font-bold transition-all shadow-sm backdrop-blur-md cursor-pointer flex items-center gap-1.5"
-              >
-                <span>{showAllReceipts ? "Show Recent 5" : `View All (${allReceipts.length})`}</span>
-              </button>
-            )}
+            <div className="flex flex-wrap items-center gap-2">
+              {filteredReceipts.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => handleDownloadCombinedDateReceipts(filteredReceipts, receiptStartDate, receiptEndDate)}
+                  className="rounded-xl bg-gradient-to-r from-amber-600 via-amber-700 to-amber-800 hover:from-amber-700 hover:to-amber-900 text-white font-bold text-xs px-4 py-2 shadow-lg shadow-amber-600/30 flex items-center gap-2 transition-all cursor-pointer hover:scale-105 active:scale-95"
+                  title="Download all receipts for selected date/range in 1 PDF"
+                >
+                  <span className="text-base">📄</span>
+                  <span>Download All in 1 PDF ({filteredReceipts.length})</span>
+                </button>
+              )}
+
+              {filteredReceipts.length > 5 && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllReceipts(!showAllReceipts)}
+                  className="rounded-full bg-white/60 dark:bg-slate-800/60 border border-amber-500/20 dark:border-amber-400/20 text-amber-700 dark:text-amber-300 hover:bg-amber-500/10 px-4 py-2 text-xs font-bold transition-all shadow-sm backdrop-blur-md cursor-pointer flex items-center gap-1.5"
+                >
+                  <span>{showAllReceipts ? "Show Recent 5" : `View All (${filteredReceipts.length})`}</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Date Range Selection Bar */}
+          <div className="relative z-10 mt-4 p-4 rounded-2xl bg-amber-500/5 dark:bg-slate-800/40 border border-amber-200/50 dark:border-slate-700/50 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1 mr-1">
+                <span>📅</span> Select Date:
+              </span>
+              {[
+                { id: "all", label: "All Time" },
+                { id: "today", label: "Today" },
+                { id: "yesterday", label: "Yesterday" },
+                { id: "7days", label: "Last 7 Days" },
+                { id: "30days", label: "Last 30 Days" }
+              ].map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => applyReceiptPreset(p.id)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                    receiptDatePreset === p.id && !receiptStartDate && !receiptEndDate
+                      ? "bg-amber-500 text-white shadow-md shadow-amber-500/20"
+                      : "bg-white/80 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-amber-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700"
+                  }`}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2.5">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-medium text-slate-500 dark:text-slate-400">From:</span>
+                <input
+                  type="date"
+                  value={receiptStartDate}
+                  onChange={(e) => {
+                    setReceiptStartDate(e.target.value);
+                    setReceiptDatePreset("custom");
+                  }}
+                  className="rounded-xl border border-amber-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs px-3 py-1.5 text-slate-800 dark:text-slate-100 shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-medium text-slate-500 dark:text-slate-400">To:</span>
+                <input
+                  type="date"
+                  value={receiptEndDate}
+                  onChange={(e) => {
+                    setReceiptEndDate(e.target.value);
+                    setReceiptDatePreset("custom");
+                  }}
+                  className="rounded-xl border border-amber-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs px-3 py-1.5 text-slate-800 dark:text-slate-100 shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+
+              {(receiptStartDate || receiptEndDate) && (
+                <button
+                  type="button"
+                  onClick={() => applyReceiptPreset("all")}
+                  className="px-2.5 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 text-xs font-bold transition-all cursor-pointer"
+                  title="Clear Date Filter"
+                >
+                  Clear Filter
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Receipts Grid / List */}
@@ -3733,6 +4023,7 @@ const DevoteeDashboard = () => {
               displayedReceipts.map((item, idx) => {
                 const getIcon = (type) => {
                   if (type === "Pooja Booking") return "🎫";
+                  if (type === "Room Booking") return "🏨";
                   if (type === "Donation") return "🪔";
                   return "🍱";
                 };
