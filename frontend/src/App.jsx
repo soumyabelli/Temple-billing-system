@@ -1,4 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 import ProtectedRoute from "./components/common/ProtectedRoute";
 
@@ -96,7 +98,9 @@ import AssetScanResult from "./pages/public/AssetScanResult";
 
 function App() {
   return (
-    <Routes>
+    <>
+      <ToastContainer position="top-right" autoClose={3000} theme="colored" />
+      <Routes>
 
       {/* PUBLIC ROUTES */}
 
@@ -805,7 +809,8 @@ function App() {
         }
       />
       <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+      </Routes>
+    </>
   );
 }
 

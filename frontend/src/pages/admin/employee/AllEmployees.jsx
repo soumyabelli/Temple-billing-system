@@ -825,8 +825,16 @@ const AllEmployees = () => {
     <EditEmployeeModal
       employee={selectedEmployee}
       onClose={() => setIsEditModalOpen(false)}
-      onSave={async () => {
+      onSave={async (updatedEmp) => {
         setIsEditModalOpen(false);
+        if (updatedEmp) {
+          setEmployees((prev) =>
+            prev.map((e) => (e._id === updatedEmp._id ? { ...e, ...updatedEmp } : e))
+          );
+          setSelectedEmployee((prev) =>
+            prev?._id === updatedEmp._id ? { ...prev, ...updatedEmp } : prev
+          );
+        }
         await fetchEmployees();
         if (selectedEmployee?._id) {
           try {

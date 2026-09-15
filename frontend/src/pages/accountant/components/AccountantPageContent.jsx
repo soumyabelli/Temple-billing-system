@@ -1488,7 +1488,19 @@ const ProfileView = ({ user }) => {
           dob: data.profile.dob ? new Date(data.profile.dob).toISOString().split('T')[0] : "",
           bloodGroup: data.profile.bloodGroup || "",
           emergencyContact: data.profile.emergencyContact || "",
+          bankName: data.profile.bankName || "",
+          accountNumber: data.profile.accountNumber || "",
+          photo: data.profile.photo || "",
         });
+        if (updateUser) {
+          updateUser({
+            ...user,
+            name: data.profile.name || data.authUser?.name || user?.name,
+            email: data.profile.email || data.authUser?.email || user?.email,
+            phone: data.profile.phone || data.authUser?.phone || user?.phone,
+            photo: data.profile.photo || data.authUser?.photo || user?.photo,
+          });
+        }
       }
     } catch (err) {
       console.error("Failed to load profile details", err);
@@ -1497,6 +1509,22 @@ const ProfileView = ({ user }) => {
       setLoading(false);
     }
   };
+
+  const adminManagedDetails = useMemo(() => {
+    if (!profile) return [];
+    const details = [
+      { label: "Employee ID", value: profile.employeeId || "-" },
+      { label: "Role", value: profile.role ? profile.role.toUpperCase() : "-" },
+      { label: "Department", value: profile.department || "-" },
+      { label: "Status", value: profile.status || "-" },
+      { label: "Employment Type", value: profile.employmentType || "-" },
+      { label: "Joining Date", value: profile.joiningDate ? new Date(profile.joiningDate).toLocaleDateString("en-IN") : "-" },
+      { label: "Shift", value: profile.currentDuty?.shift || profile.defaultShift || profile.shift || "-" },
+      { label: "Duty Location", value: profile.dutyLocation || profile.currentDuty?.dutyLocation || "-" },
+      { label: "Salary", value: profile.salary ? `₹${Number(profile.salary).toLocaleString("en-IN")}` : "-" },
+    ];
+    return details.filter((d) => d.value !== "-" && d.value !== "");
+  }, [profile]);
 
   useEffect(() => {
     loadProfile();
@@ -1602,7 +1630,7 @@ const ProfileView = ({ user }) => {
           onPasswordChange={(field, value) => setPasswordForm(prev => ({ ...prev, [field]: value }))}
           onSaveProfile={handleProfileSubmit}
           onChangePassword={handlePasswordSubmit}
-          adminManagedDetails={[]}
+          adminManagedDetails={adminManagedDetails}
         />
       </div>
     </div>

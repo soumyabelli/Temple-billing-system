@@ -10,6 +10,7 @@ import {
   shiftOptions,
 } from "../../../pages/admin/employee/employeeData";
 import { updateEmployee } from "../../../services/employeeService";
+import { toast } from "react-toastify";
 
 const bankOptions = [
   "",
@@ -265,8 +266,9 @@ const EditEmployeeModal = ({ employee, onClose, onSave }) => {
         eligiblePoojas: form.role === "priest" ? form.eligiblePoojas : [],
       };
 
-      await updateEmployee(employee._id, payload);
-      onSave();
+      const response = await updateEmployee(employee._id, payload);
+      toast.success("Employee profile updated successfully!");
+      onSave(response?.employee);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to update employee.");
     } finally {

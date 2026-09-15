@@ -1680,3 +1680,43 @@ Your leave request has been approved.
 
 Sri Shanti Mahadev Mandir
 
+[2026-09-15T01:49:01.905Z] EMAIL
+To: radha@gmail.com
+Subject: Welcome to Sri Shanti Mahadev Mandir - Your Account Details
+Hello Radha,
+
+Your employee profile has been successfully created.
+
+Here are your login credentials:
+Employee ID: EMP-2026-0009
+Username (Email): radha@gmail.com
+Temporary Password: Temp@8155f8
+
+Please login using these credentials. You will be required to change your password upon your first login.
+
+Best regards,
+Temple Admin
+
+[2026-09-15T02:07:38.626Z] EMAIL
+To: maanushree@gmail.com
+Subject: [Sri Shanti Mahadev Mandir] New Event: frgtg
+New Event: frgtg
+
+A new temple event "frgtg" has been scheduled on 17 Sept 2026 at templev.
+
+Sri Shanti Mahadev Mandir
+
+[2026-09-15T02:08:21.154Z] EMAIL
+To: deepthiskulal@gmail.com
+Subject: [Sri Shanti Mahadev Mandir] New Event: frgtg
+New Event: frgtg
+
+A new temple event "frgtg" has been scheduled on 17 Sept 2026 at templev.
+
+Sri Shanti Mahadev Mandir
+
+[2026-09-15T02:20:39.089Z] EMAIL
+To: kualalveda23@gmail.com
+Subject: Verify Your Temple Devotee Registration
+Please click the following link to verify your email and complete devotee registration: http://localhost:5000/api/auth/verify-registration?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiVmVkYXZhdGhpIiwiZW1haWwiOiJrdWFsYWx2ZWRhMjNAZ21haWwuY29tIiwicGhvbmUiOiI5NDQ5OTEzOTc4IiwiYWRkcmVzcyI6IkFsZXZvb3IsIFVkdXBpIiwicGxhY2UiOiJVZHVwaSIsInBhc3N3b3JkIjoiJDJiJDEwJHRWZFh6RjVjTWVyc3FFSlkya2gvS09VZlhhL1hlLk5nUldPOTQ0ZzR1TjJnb1JrRVFEc0ZDIiwicm9sZSI6ImRldm90ZWUiLCJpYXQiOjE3ODk0Mzg4MzUsImV4cCI6MTc4OTQzOTczNX0.yOSw0xm6zkllxPP_G_mpLZesOPj34j5c1uidaNe0gBM
+

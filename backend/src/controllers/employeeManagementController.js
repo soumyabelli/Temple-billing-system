@@ -64,15 +64,42 @@ const findUserAndEmployeeByUserId = async (userId) => {
   if (!user) {
     const employee = mongoose.Types.ObjectId.isValid(userId) ? await Employee.findById(userId) : null;
     if (!employee) return {};
-    const linkedUser = employee.userId
-      ? await User.findById(employee.userId)
-      : await User.findOne({ email: employee.email });
+    let linkedUser = null;
+    if (employee.userId) {
+      linkedUser = await User.findById(employee.userId);
+    }
+    if (!linkedUser && employee.employeeId) {
+      linkedUser = await User.findOne({ employeeId: employee.employeeId });
+    }
+    if (!linkedUser && employee.email) {
+      linkedUser = await User.findOne({ email: String(employee.email).toLowerCase().trim() });
+    }
+    if (linkedUser && (!employee.userId || String(employee.userId) !== String(linkedUser._id))) {
+      employee.userId = linkedUser._id;
+      await employee.save().catch(() => {});
+    }
     return { user: linkedUser, employee };
   }
 
   const employee =
     (user.employeeId && await Employee.findOne({ employeeId: user.employeeId })) ||
     await Employee.findOne({ $or: [{ userId: user._id }, { email: user.email }] });
+
+  if (user && employee) {
+    let changedEmp = false;
+    let changedUser = false;
+    if (!employee.userId || String(employee.userId) !== String(user._id)) {
+      employee.userId = user._id;
+      changedEmp = true;
+    }
+    if (employee.employeeId && (!user.employeeId || user.employeeId !== employee.employeeId)) {
+      user.employeeId = employee.employeeId;
+      changedUser = true;
+    }
+    if (changedEmp) await employee.save().catch(() => {});
+    if (changedUser) await user.save().catch(() => {});
+  }
+
   return { user, employee };
 };
 
@@ -425,15 +452,53 @@ exports.updateEmployee = async (req, res) => {
     const validationError = validateCoreEmployee(updateData, employee);
     if (validationError) return res.status(400).json({ message: validationError });
 
+    // Resolve linked user account for this employee (by userId, employeeId, or email)
+    let linkedUserAccount = null;
+    if (employee.userId) {
+      linkedUserAccount = await User.findById(employee.userId);
+    }
+    if (!linkedUserAccount && employee.employeeId) {
+      linkedUserAccount = await User.findOne({ employeeId: employee.employeeId });
+    }
+    if (!linkedUserAccount && employee.email) {
+      linkedUserAccount = await User.findOne({ email: String(employee.email).toLowerCase().trim() });
+    }
+    const currentLinkedUserId = linkedUserAccount?._id || employee.userId;
+
     if (updateData.email) {
       updateData.email = String(updateData.email).toLowerCase().trim();
-      if (await Employee.exists({ email: updateData.email, _id: { $ne: employee._id } })) {
-        return res.status(409).json({ message: "Email is already used by another employee." });
+      const currentEmployeeEmail = String(employee.email || "").toLowerCase().trim();
+
+      // Check Employee email conflict only if changing to a different email
+      if (updateData.email !== currentEmployeeEmail) {
+        if (await Employee.exists({ email: updateData.email, _id: { $ne: employee._id } })) {
+          return res.status(409).json({ message: "Email is already used by another employee." });
+        }
       }
-      if (await User.exists({ email: updateData.email, _id: { $ne: employee.userId || null } })) {
-        return res.status(409).json({ message: "Email is already used by another login account." });
+
+      // Check User table conflict
+      if (updateData.email !== currentEmployeeEmail) {
+        const userExcludeId = currentLinkedUserId || null;
+        const userConflictQuery = userExcludeId
+          ? { email: updateData.email, _id: { $ne: userExcludeId } }
+          : { email: updateData.email };
+        if (await User.exists(userConflictQuery)) {
+          return res.status(409).json({ message: "Email is already used by another login account." });
+        }
+      } else if (currentLinkedUserId) {
+        if (await User.exists({ email: updateData.email, _id: { $ne: currentLinkedUserId } })) {
+          return res.status(409).json({ message: "Email is already used by another login account." });
+        }
       }
     }
+
+    // Check Aadhaar conflict if provided and changed
+    if (updateData.aadhaar && updateData.aadhaar !== employee.aadhaar) {
+      if (await Employee.exists({ aadhaar: updateData.aadhaar, _id: { $ne: employee._id } })) {
+        return res.status(409).json({ message: "Aadhaar number is already used by another employee." });
+      }
+    }
+
     if (updateData.role) updateData.role = String(updateData.role).toLowerCase().trim();
     if (updateData.status) updateData.status = normalizeStatus(updateData.status, employee.status);
     if (
@@ -445,6 +510,16 @@ exports.updateEmployee = async (req, res) => {
       updateData.currentDuty = buildCurrentDuty(updateData, employee);
     }
     updateData.updatedBy = await getActorName(req);
+
+    // If employee doesn't have an employeeId yet, generate and assign one now
+    if (!employee.employeeId) {
+      try {
+        const { employeeId: newEmpId } = await generateEmployeeIdentity();
+        updateData.employeeId = newEmpId;
+      } catch (idErr) {
+        console.warn("Could not auto-generate employeeId during update:", idErr);
+      }
+    }
 
     const mongoUpdate = { $set: updateData };
     if (unsetFields) {
@@ -469,16 +544,61 @@ exports.updateEmployee = async (req, res) => {
       permissions: access.permissions,
       menuAccess: access.menuAccess,
     };
+    if (updatedEmployee.employeeId) {
+      userUpdate.employeeId = updatedEmployee.employeeId;
+    }
+    if (updateData.email) {
+      userUpdate.username = updatedEmployee.email;
+    }
 
-    const linkedUser = await User.findOneAndUpdate(
-      { $or: [{ _id: employee.userId }, { employeeId: employee.employeeId }, { email: employee.email }] },
-      userUpdate,
-      { new: true, runValidators: true }
-    );
+    let linkedUser = null;
+    if (linkedUserAccount?._id) {
+      linkedUser = await User.findByIdAndUpdate(
+        linkedUserAccount._id,
+        { $set: userUpdate },
+        { new: true, runValidators: true }
+      );
+    } else {
+      const userConditions = [];
+      if (employee.userId) userConditions.push({ _id: employee.userId });
+      if (employee.employeeId) userConditions.push({ employeeId: employee.employeeId });
+      if (employee.email) userConditions.push({ email: employee.email });
+      if (userConditions.length > 0) {
+        linkedUser = await User.findOneAndUpdate(
+          { $or: userConditions },
+          { $set: userUpdate },
+          { new: true, runValidators: true }
+        );
+      }
+    }
 
-    if (linkedUser && !updatedEmployee.userId) {
+    // If still no linked user found, create corresponding User record so they can log in
+    if (!linkedUser) {
+      const temporaryPassword = generateTemporaryPassword();
+      const hashedPassword = await bcrypt.hash(temporaryPassword, 10);
+      linkedUser = await User.create({
+        ...userUpdate,
+        username: updatedEmployee.email,
+        employeeId: updatedEmployee.employeeId,
+        password: hashedPassword,
+        provider: "local",
+      });
+    }
+
+    // Ensure employee.userId is linked
+    let employeeDocChanged = false;
+    if (linkedUser && (!updatedEmployee.userId || String(updatedEmployee.userId) !== String(linkedUser._id))) {
       updatedEmployee.userId = linkedUser._id;
+      employeeDocChanged = true;
+    }
+    if (employeeDocChanged) {
       await updatedEmployee.save();
+    }
+
+    // Ensure linkedUser.employeeId is linked
+    if (linkedUser && updatedEmployee.employeeId && (!linkedUser.employeeId || linkedUser.employeeId !== updatedEmployee.employeeId)) {
+      linkedUser.employeeId = updatedEmployee.employeeId;
+      await linkedUser.save().catch(() => {});
     }
 
     // Synchronize related records so updated staff details reflect across all modules
@@ -486,6 +606,7 @@ exports.updateEmployee = async (req, res) => {
       const identifiers = [
         employee._id.toString(),
         employee.employeeId,
+        updatedEmployee.employeeId,
         linkedUser?._id?.toString(),
       ].filter(Boolean);
 
