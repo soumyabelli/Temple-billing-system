@@ -23,14 +23,23 @@ const normalizeDate = (item) => {
 
 const DonationCharts = ({ donations = [] }) => {
   const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const now = new Date();
+  const currentMonthIdx = now.getMonth();
+  const currentMonthShort = monthNames[currentMonthIdx];
+  const currentMonthFull = now.toLocaleString("en-IN", { month: "long", year: "numeric" });
 
+  const monthlyCounts = {};
   const monthlyMap = donations.reduce((acc, donation) => {
     const date = normalizeDate(donation);
     if (!date) return acc;
     const month = monthNames[date.getMonth()];
     acc[month] = (acc[month] || 0) + (Number(donation.amount) || 0);
+    monthlyCounts[month] = (monthlyCounts[month] || 0) + 1;
     return acc;
   }, {});
+
+  const currentMonthCollected = monthlyMap[currentMonthShort] || 0;
+  const currentMonthDonors = monthlyCounts[currentMonthShort] || 0;
 
   const monthlyData = monthNames.map((month) => {
     const collected = monthlyMap[month] || 0;
@@ -52,10 +61,24 @@ const DonationCharts = ({ donations = [] }) => {
   return (
     <div className="grid grid-cols-1 gap-6">
       <div className="rounded-[32px] border border-amber-200/60 bg-temple-100 dark:bg-[#0f172a] p-6 shadow-md backdrop-blur-lg">
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h2 className="text-2xl font-extrabold text-slate-800 dark:text-slate-200">Monthly Donation Progress</h2>
             <p className="mt-1 text-sm font-semibold text-slate-500">Live donation collection trends from the temple database.</p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="rounded-2xl border border-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 dark:border-emerald-700/60 px-4 py-2 text-left sm:text-right shadow-sm">
+              <p className="text-[11px] font-extrabold uppercase tracking-wider text-emerald-800 dark:text-emerald-300">
+                This Month ({currentMonthShort} {now.getFullYear()})
+              </p>
+              <p className="text-xl font-black text-emerald-950 dark:text-emerald-200">
+                ₹{currentMonthCollected.toLocaleString("en-IN")}
+              </p>
+              <p className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400">
+                {currentMonthDonors} {currentMonthDonors === 1 ? "donation" : "donations"} recorded
+              </p>
+            </div>
           </div>
         </div>
         <div className="mt-6 h-[300px]">
@@ -78,9 +101,32 @@ const DonationCharts = ({ donations = [] }) => {
                 if (value >= 1000) return (value / 1000).toFixed(1) + 'k';
                 return value;
               }} />
-              <Tooltip contentStyle={{ backgroundColor: "#ffffff", borderRadius: "14px", border: "1px solid #fcd34d", boxShadow: "0 4px 12px rgba(0,0,0,0.08)", color: "#1e293b", fontWeight: "700" }} />
-              <Area type="monotone" dataKey="collected" stroke="#d97706" strokeWidth={3} fillOpacity={1} fill="url(#colCollected)" name="Collected (₹)" />
-              <Area type="monotone" dataKey="target" stroke="#059669" strokeWidth={2} strokeDasharray="4 4" fillOpacity={1} fill="url(#colTarget)" name="Target (₹)" />
+              <Tooltip 
+                formatter={(value, name) => [`₹${Number(value).toLocaleString("en-IN")}`, name]}
+                contentStyle={{ backgroundColor: "#ffffff", borderRadius: "14px", border: "1px solid #fcd34d", boxShadow: "0 4px 12px rgba(0,0,0,0.08)", color: "#1e293b", fontWeight: "700" }} 
+              />
+              <Area 
+                type="monotone" 
+                dataKey="collected" 
+                stroke="#d97706" 
+                strokeWidth={3} 
+                dot={{ r: 4, fill: "#d97706", strokeWidth: 1, stroke: "#fff" }}
+                activeDot={{ r: 7, stroke: "#b45309", strokeWidth: 2, fill: "#f59e0b" }}
+                fillOpacity={1} 
+                fill="url(#colCollected)" 
+                name="Collected (₹)" 
+              />
+              <Area 
+                type="monotone" 
+                dataKey="target" 
+                stroke="#059669" 
+                strokeWidth={2} 
+                strokeDasharray="4 4" 
+                dot={false}
+                fillOpacity={1} 
+                fill="url(#colTarget)" 
+                name="Target (₹)" 
+              />
             </AreaChart>
           </ResponsiveContainer>
         </div>

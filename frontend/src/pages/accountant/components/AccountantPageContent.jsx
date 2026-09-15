@@ -447,7 +447,6 @@ const DashboardView = ({ user, currentDate, currentWeekday }) => {
   const statCards = [
     { title: "Today's Income", value: `Rs ${dashMetrics.todayIncome?.toLocaleString("en-IN") || '0'}`, icon: FaRupeeSign },
     { title: "Today's Expense", value: `Rs ${dashMetrics.todayExpense?.toLocaleString("en-IN") || '0'}`, icon: FaFileInvoice },
-    { title: "Cash In Hand", value: `Rs ${dashMetrics.cashInHand?.toLocaleString("en-IN") || '0'}`, icon: FaWallet },
     { title: "Total Revenue", value: `Rs ${metrics.globalTotalRevenue.toLocaleString("en-IN")}`, icon: FaWallet },
     { title: "Pooja Revenue", value: `Rs ${metrics.globalPoojaRevenue.toLocaleString("en-IN")}`, icon: MdTempleBuddhist },
     { title: "Total Donations", value: `Rs ${metrics.globalTotalDonations.toLocaleString("en-IN")}`, icon: FaDonate },

@@ -16,6 +16,8 @@ import {
  sumBy,
 } from "../../services/cashierService";
 import { getDonationTypes } from "../../services/donationTypeService";
+import { downloadReceiptPDF } from "../../utils/receiptGenerator";
+import { useAuth } from "../../context/AuthContext";
 import { useNotifications } from "../../context/NotificationContext";
 
 const emptyForm = {
@@ -41,6 +43,7 @@ const statusStyles = {
 export default function DonationsPage() {
  const navigate = useNavigate();
  const { loadNotifications } = useNotifications();
+ const { user } = useAuth();
  const [donationTypes, setDonationTypes] = useState(getDonationTypes());
  const [events, setEvents] = useState([]);
  const [donations, setDonations] = useState([]);
@@ -175,108 +178,121 @@ export default function DonationsPage() {
  return;
  }
 
- if (form.donationMode === "Festival" && !selectedFestival) {
- setMessage("Please choose a festival event for a festival donation.");
- return;
- }
-
- const category = form.donationMode === "Festival" && selectedFestival ? selectedFestival.title : form.category;
- const notes = [
- form.donationMode === "Festival" ? `Festival donation for ${selectedFestival?.title || "festival"}` : "Normal donation",
- form.category ? `Base type: ${form.category}` : "",
- form.notes.trim(),
- ]
- .filter(Boolean)
- .join(" | ");
+ const category = form.category || "General";
+ const notes = form.notes.trim();
 
  setSaving(true);
  try {
- const donationRes = await createDonation({
- donorName: form.donorName.trim(),
- donorEmail: form.donorEmail.trim() || undefined,
- contactNumber: form.contactNumber.trim() || undefined,
- amount: Number(form.amount),
- category,
- paymentMethod: form.paymentMethod,
- eventId: form.donationMode === "Festival" ? selectedFestival?._id : undefined,
- notes,
- });
+  const donationRes = await createDonation({
+  donorName: form.donorName.trim(),
+  donorEmail: form.donorEmail.trim() || undefined,
+  contactNumber: form.contactNumber.trim() || undefined,
+  amount: Number(form.amount),
+  category,
+  paymentMethod: form.paymentMethod,
+  source: "Counter",
+  isCashier: true,
+  notes,
+  });
 
- const { donation, order, key, simulated } = donationRes;
+  const { donation, order, key, simulated } = donationRes;
 
- if (!simulated && order) {
- const loadRazorpayScript = () =>
- new Promise((resolve) => {
- if (window.Razorpay) return resolve(true);
- const script = document.createElement("script");
- script.src = "https://checkout.razorpay.com/v1/checkout.js";
- script.onload = () => resolve(true);
- script.onerror = () => resolve(false);
- document.body.appendChild(script);
- });
+  if (!simulated && order) {
+  const loadRazorpayScript = () =>
+  new Promise((resolve) => {
+  if (window.Razorpay) return resolve(true);
+  const script = document.createElement("script");
+  script.src = "https://checkout.razorpay.com/v1/checkout.js";
+  script.onload = () => resolve(true);
+  script.onerror = () => resolve(false);
+  document.body.appendChild(script);
+  });
 
- const loaded = await loadRazorpayScript();
- if (!loaded) {
- setMessage("Unable to load payment gateway. Try again later.");
- setSaving(false);
- return;
- }
+  const loaded = await loadRazorpayScript();
+  if (!loaded) {
+  setMessage("Unable to load payment gateway. Try again later.");
+  setSaving(false);
+  return;
+  }
 
- const options = {
- key: key || "",
- amount: order.amount,
- currency: order.currency,
- name: "Temple Donation",
- description: donation.category,
- order_id: order.id,
- prefill: {
- name: form.donorName.trim(),
- email: form.donorEmail.trim(),
- contact: form.contactNumber.trim(),
- },
- handler: async function (resp) {
- try {
- setSaving(true);
- await verifyDonationPayment({
- razorpay_order_id: resp.razorpay_order_id,
- razorpay_payment_id: resp.razorpay_payment_id,
- razorpay_signature: resp.razorpay_signature,
- donationId: donation._id,
- });
+  const options = {
+  key: key || "",
+  amount: order.amount,
+  currency: order.currency,
+  name: "Temple Donation",
+  description: donation.category,
+  order_id: order.id,
+  prefill: {
+  name: form.donorName.trim(),
+  email: form.donorEmail.trim(),
+  contact: form.contactNumber.trim(),
+  },
+  handler: async function (resp) {
+  try {
+  setSaving(true);
+  await verifyDonationPayment({
+  razorpay_order_id: resp.razorpay_order_id,
+  razorpay_payment_id: resp.razorpay_payment_id,
+  razorpay_signature: resp.razorpay_signature,
+  donationId: donation._id,
+  });
 
- setForm({
- ...emptyForm,
- category: donationTypes[0] || "General",
- });
- setMessage("Donation saved successfully and paid.");
- await loadData();
- loadNotifications().catch(() => {});
- } catch (err) {
- setMessage("Payment verification failed.");
- console.warn("verify donation payment handler error", err);
- } finally {
- setSaving(false);
- }
- },
- modal: {
- ondismiss: function () {
- setSaving(false);
- },
- },
- };
+  setForm({
+  ...emptyForm,
+  category: donationTypes[0] || "General",
+  });
+  setMessage("Donation saved successfully and paid.");
+  await loadData();
+  loadNotifications().catch(() => {});
+  } catch (err) {
+  setMessage("Payment verification failed.");
+  console.warn("verify donation payment handler error", err);
+  } finally {
+  setSaving(false);
+  }
+  },
+  modal: {
+  ondismiss: function () {
+  setSaving(false);
+  },
+  },
+  };
 
- const rzp = new window.Razorpay(options);
- rzp.open();
- return;
- }
+  const rzp = new window.Razorpay(options);
+  rzp.open();
+  return;
+  }
 
- setForm({
- ...emptyForm,
- category: donationTypes[0] || "General",
- });
- setMessage("Donation saved successfully. The bill ledger and admin reports were updated.");
- await loadData();
- loadNotifications().catch(() => {});
+  setForm({
+  ...emptyForm,
+  category: donationTypes[0] || "General",
+  });
+  setMessage("Donation saved successfully. The bill ledger and admin reports were updated.");
+  await loadData();
+  loadNotifications().catch(() => {});
+
+  if (donation) {
+  const receiptData = {
+  isOnline: false,
+  receiptNo: donation.receiptNo || donation.referenceNo || `DN-${Date.now().toString().slice(-6)}`,
+  bookingDate: formatDateTime(donation.createdAt || new Date()),
+  paymentMode: donation.paymentMethod || form.paymentMethod,
+  transactionId: donation.transactionId || "-",
+  cashierName: user?.name || "Cashier",
+  devoteeName: donation.donorName || form.donorName,
+  mobile: donation.donorPhone || donation.contactNumber || form.contactNumber || "-",
+  email: donation.donorEmail || form.donorEmail || "-",
+  address: "-",
+  poojaBookings: [],
+  prasadamOrders: [],
+  subTotal: donation.amount || Number(form.amount),
+  templeCharges: 0,
+  grandTotal: donation.amount || Number(form.amount),
+  amountInWords: `Rs. ${donation.amount || Number(form.amount)}`,
+  notes: [donation.notes || form.notes].filter(Boolean),
+  };
+  downloadReceiptPDF(receiptData, `receipt-${receiptData.receiptNo}.pdf`).catch((err) => console.error("Receipt generation failed", err));
+  }
  } catch (error) {
  setMessage(error.response?.data?.error || error.response?.data?.message || "Failed to save donation.");
  } finally {
@@ -356,59 +372,20 @@ export default function DonationsPage() {
  placeholder="+91 98765 43210"
  />
  </label>
- <label className="block">
- <span className="mb-2 block text-sm font-bold text-slate-800">Donation mode</span>
- <select
- value={form.donationMode}
- onChange={(e) =>
- setForm((prev) => ({
- ...prev,
- donationMode: e.target.value,
- eventId: e.target.value === "Festival" ? prev.eventId : "",
- }))
- }
- className="w-full rounded-2xl border border-[#ead7bb] bg-[#fffaf4] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 px-4 py-3 text-base outline-none focus:border-[#f28c18]"
- >
- <option value="Normal">Normal</option>
- <option value="Festival">Festival</option>
- </select>
- </label>
- <label className="block">
- <span className="mb-2 block text-sm font-bold text-slate-800">Donation type</span>
- <select
- value={form.category}
- onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value }))}
- className="w-full rounded-2xl border border-[#ead7bb] bg-[#fffaf4] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 px-4 py-3 text-base outline-none focus:border-[#f28c18]"
- >
- {donationTypes.map((type) => (
- <option key={type} value={type}>
- {type}
- </option>
- ))}
- </select>
- </label>
- {form.donationMode === "Festival" ? (
- <label className="block">
- <span className="mb-2 block text-sm font-bold text-slate-800">Festival event</span>
- <select
- value={form.eventId}
- onChange={(e) => setForm((prev) => ({ ...prev, eventId: e.target.value }))}
- className="w-full rounded-2xl border border-[#ead7bb] bg-[#fffaf4] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 px-4 py-3 text-base outline-none focus:border-[#f28c18]"
- >
- <option value="">Select festival event</option>
- {events.map((event) => (
- <option key={event._id} value={event._id}>
- {event.title}
- </option>
- ))}
- </select>
- </label>
- ) : (
- <div className="rounded-2xl border border-[#f1dfc0] bg-[#fffaf4] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 px-4 py-3">
- <p className="text-sm font-bold text-slate-800">Festival link</p>
- <p className="mt-2 text-sm text-slate-600">Use the festival mode toggle if this donation should be linked to an event.</p>
- </div>
- )}
+  <label className="block">
+  <span className="mb-2 block text-sm font-bold text-slate-800">Donation type</span>
+  <select
+  value={form.category}
+  onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value }))}
+  className="w-full rounded-2xl border border-[#ead7bb] bg-[#fffaf4] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 px-4 py-3 text-base outline-none focus:border-[#f28c18]"
+  >
+  {donationTypes.map((type) => (
+  <option key={type} value={type}>
+  {type}
+  </option>
+  ))}
+  </select>
+  </label>
  <label className="block">
  <span className="mb-2 block text-sm font-bold text-slate-800">Amount</span>
  <input
