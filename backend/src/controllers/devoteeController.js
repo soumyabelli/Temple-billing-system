@@ -309,9 +309,9 @@ const createBooking = async (req, res) => {
             const diffDays = Math.ceil(Math.abs(selectedDate - today) / (1000 * 60 * 60 * 24));
             
             if (diffDays < effectiveMinDays) {
-              if (pooja.strictAdvancePreparation) {
+              if (pooja.strictAdvancePreparation && !isCounter) {
                 return res.status(400).json({ error: `This Pooja requires at least ${effectiveMinDays} days of advance notice/preparation.` });
-              } else {
+              } else if (!isCounter) {
                 templeApprovalRequired = true;
               }
             }
