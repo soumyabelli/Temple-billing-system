@@ -34,7 +34,16 @@ exports.getTransactions = async (req, res) => {
     if (transactionType) query.transactionType = transactionType;
     if (status) query.status = status;
     if (startDate && endDate) {
-      query.date = { $gte: new Date(startDate), $lte: new Date(endDate) };
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      query.date = { $gte: start, $lte: end };
+    } else if (startDate) {
+      query.date = { $gte: new Date(startDate) };
+    } else if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      query.date = { $lte: end };
     }
     
     const transactions = await AccountTransaction.find(query).sort({ date: -1 }).populate("recordedBy", "name email");
@@ -52,7 +61,16 @@ exports.getRegister = async (req, res) => {
     if (source) query.source = source;
     if (status) query.status = status;
     if (startDate && endDate) {
-      query.date = { $gte: new Date(startDate), $lte: new Date(endDate) };
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      query.date = { $gte: start, $lte: end };
+    } else if (startDate) {
+      query.date = { $gte: new Date(startDate) };
+    } else if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      query.date = { $lte: end };
     }
     
     const skip = (parseInt(page) - 1) * parseInt(limit);

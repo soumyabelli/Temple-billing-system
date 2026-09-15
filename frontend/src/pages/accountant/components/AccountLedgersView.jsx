@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { getTransactions } from "../../../services/accountService";
 import { toast } from "react-toastify";
 import { jsPDF } from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 import {
   FaSearch,
   FaFilter,
@@ -97,13 +97,15 @@ const AccountLedgersView = () => {
   const loadLedgers = async () => {
     setLoading(true);
     let backendData = [];
+    let backendSucceeded = false;
     try {
-      const data = await getTransactions(filters);
-      if (Array.isArray(data) && data.length > 0) {
+      const data = await getTransactions({});
+      if (Array.isArray(data)) {
         backendData = data;
+        backendSucceeded = true;
       }
     } catch (error) {
-      // Graceful fallback if backend is idle
+      console.warn("Backend transactions fetch error:", error);
     }
 
     // Retrieve manual entries from localStorage
@@ -116,7 +118,7 @@ const AccountLedgersView = () => {
       return {
         _id: m.id,
         date: parseableDate,
-        displayDate: m.date || new Date().toLocaleDateString(),
+        displayDate: m.date || new Date().toLocaleDateString("en-IN"),
         referenceId: m.id,
         description: `[${m.whereSpent}] ${m.description || ""}`,
         source: "Manual Entry",
@@ -130,7 +132,7 @@ const AccountLedgersView = () => {
       };
     });
 
-    const baseList = backendData.length > 0 ? backendData : SAMPLE_SYSTEM_TRANSACTIONS;
+    const baseList = backendSucceeded ? backendData : (backendData.length > 0 ? backendData : SAMPLE_SYSTEM_TRANSACTIONS);
     const combined = [...formattedManualTransactions, ...baseList];
 
     // Sort by date descending
@@ -141,49 +143,61 @@ const AccountLedgersView = () => {
 
   useEffect(() => {
     loadLedgers();
-  }, [filters]);
+  }, []);
 
   const handleFilterChange = (e) => {
     setFilters({ ...filters, [e.target.name]: e.target.value });
   };
 
   // Filter transactions based on UI controls, Active Tab, and search query
-  const filteredTransactions = transactions.filter((t) => {
-    // Separate Tab Views: All, Debit, Credit
-    if (activeTab === "Debit" && t.transactionType !== "Debit") return false;
-    if (activeTab === "Credit" && t.transactionType !== "Credit") return false;
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter((t) => {
+      // Separate Tab Views: All, Debit, Credit
+      if (activeTab === "Debit" && t.transactionType !== "Debit") return false;
+      if (activeTab === "Credit" && t.transactionType !== "Credit") return false;
 
-    // Dropdown Type Filter
-    if (filters.transactionType && t.transactionType !== filters.transactionType) {
-      return false;
-    }
-    // Source / Module Filter
-    if (filters.source && t.source !== filters.source) {
-      return false;
-    }
-    // Start Date Filter
-    if (filters.startDate) {
-      const txDate = new Date(t.date).setHours(0, 0, 0, 0);
-      const filterStart = new Date(filters.startDate).setHours(0, 0, 0, 0);
-      if (txDate < filterStart) return false;
-    }
-    // End Date Filter
-    if (filters.endDate) {
-      const txDate = new Date(t.date).setHours(23, 59, 59, 999);
-      const filterEnd = new Date(filters.endDate).setHours(23, 59, 59, 999);
-      if (txDate > filterEnd) return false;
-    }
-    // Search Query Filter
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      const matchRef = t.referenceId?.toLowerCase().includes(q);
-      const matchDesc = t.description?.toLowerCase().includes(q);
-      const matchSource = t.source?.toLowerCase().includes(q);
-      const matchCategory = t.category?.toLowerCase().includes(q);
-      if (!matchRef && !matchDesc && !matchSource && !matchCategory) return false;
-    }
-    return true;
-  });
+      // Dropdown Type Filter
+      if (filters.transactionType && filters.transactionType !== "All" && t.transactionType !== filters.transactionType) {
+        return false;
+      }
+      // Source / Module Filter
+      if (filters.source && t.source !== filters.source) {
+        return false;
+      }
+      // Start Date Filter
+      if (filters.startDate) {
+        const txDate = new Date(t.date).setHours(0, 0, 0, 0);
+        const filterStart = new Date(filters.startDate).setHours(0, 0, 0, 0);
+        if (txDate < filterStart) return false;
+      }
+      // End Date Filter
+      if (filters.endDate) {
+        const txDate = new Date(t.date).setHours(23, 59, 59, 999);
+        const filterEnd = new Date(filters.endDate).setHours(23, 59, 59, 999);
+        if (txDate > filterEnd) return false;
+      }
+      // Search Query Filter
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        const matchRef = t.referenceId?.toLowerCase().includes(q);
+        const matchDesc = t.description?.toLowerCase().includes(q);
+        const matchSource = t.source?.toLowerCase().includes(q);
+        const matchCategory = t.category?.toLowerCase().includes(q);
+        if (!matchRef && !matchDesc && !matchSource && !matchCategory) return false;
+      }
+      return true;
+    });
+  }, [transactions, activeTab, filters, searchQuery]);
+
+  // Check if any filter is currently applied
+  const hasActiveFilters = Boolean(
+    (activeTab && activeTab !== "All") ||
+    filters.startDate ||
+    filters.endDate ||
+    (filters.transactionType && filters.transactionType !== "All" && filters.transactionType !== "") ||
+    filters.source ||
+    searchQuery.trim()
+  );
 
   // Display subset based on showAllRows: 5 rows or All
   const displayedTransactions = showAllRows ? filteredTransactions : filteredTransactions.slice(0, 5);
@@ -219,73 +233,141 @@ const AccountLedgersView = () => {
   const netBalance = totalCredits - totalDebits;
 
   // PDF DOWNLOAD REPORT HANDLER
+  // Downloads statement based on applied filters; if no filter applied, downloads complete statement
   const handleDownloadPDF = () => {
     try {
+      const recordsToDownload = hasActiveFilters ? filteredTransactions : transactions;
+
+      if (recordsToDownload.length === 0) {
+        toast.warning("No transactions found to generate statement. Please adjust your filters.");
+        return;
+      }
+
       const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
 
-      // Header Banner
+      // Mandir Header Banner
       doc.setFont("helvetica", "bold");
       doc.setFontSize(18);
-      doc.setTextColor(188, 108, 16);
+      doc.setTextColor(180, 83, 9); // Amber 700 / Temple Gold
       doc.text("Sri Shanti Mahadev Mandir", 14, 15);
 
       doc.setFontSize(12);
-      doc.setTextColor(50, 50, 50);
-      doc.text("General Ledger & Debits Statement", 14, 22);
+      doc.setTextColor(51, 65, 85); // Slate 700
+      const titleText = hasActiveFilters
+        ? "Account Ledger Statement (Filtered Report)"
+        : "Complete Account Ledger Statement (All Entries)";
+      doc.text(titleText, 14, 22);
 
-      doc.setFontSize(9);
+      doc.setFontSize(8.5);
       doc.setFont("helvetica", "normal");
+      doc.setTextColor(100, 116, 139); // Slate 500
       doc.text(`Generated on: ${new Date().toLocaleString("en-IN")}`, 14, 27);
-      doc.text(`Active View: ${activeTab === "All" ? "All Entries" : activeTab + "s Only"} | Records: ${filteredTransactions.length}`, 14, 32);
+
+      // Active filters summary
+      const filterDetails = [];
+      if (activeTab !== "All") filterDetails.push(`View: ${activeTab === "Debit" ? "Debits Only (Expenses)" : "Credits Only (Income)"}`);
+      if (filters.startDate || filters.endDate) {
+        filterDetails.push(`Date: ${filters.startDate || "Inception"} to ${filters.endDate || "Present"}`);
+      }
+      if (filters.source) filterDetails.push(`Source: ${filters.source}`);
+      if (filters.transactionType && filters.transactionType !== "All") filterDetails.push(`Type: ${filters.transactionType}`);
+      if (searchQuery.trim()) filterDetails.push(`Search: "${searchQuery.trim()}"`);
+
+      const scopeText = hasActiveFilters
+        ? `Scope: Filtered (${filterDetails.join(" | ")}) | Records: ${recordsToDownload.length}`
+        : `Scope: Complete Statement (All Entries) | Total Records: ${recordsToDownload.length}`;
+
+      doc.text(scopeText, 14, 32);
+
+      // Financial Metrics for the exported records
+      const exportCredits = recordsToDownload
+        .filter((t) => t.transactionType === "Credit")
+        .reduce((sum, t) => sum + Number(t.amount || 0), 0);
+
+      const exportDebits = recordsToDownload
+        .filter((t) => t.transactionType === "Debit")
+        .reduce((sum, t) => sum + Number(t.amount || 0), 0);
+
+      const exportNet = exportCredits - exportDebits;
 
       // Summary Box
-      doc.setFillColor(250, 247, 242);
-      doc.roundedRect(14, 36, 182, 18, 3, 3, "F");
+      doc.setFillColor(254, 243, 199); // Light Amber
+      doc.setDrawColor(245, 158, 11);
+      doc.roundedRect(14, 36, 182, 16, 2, 2, "FD");
 
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(9.5);
-      doc.setTextColor(22, 101, 52);
-      doc.text(`Total Credits: Rs ${totalCredits.toLocaleString()}`, 20, 47);
+      doc.setFontSize(9);
+      doc.setTextColor(22, 101, 52); // Emerald
+      doc.text(`Total Credits: Rs ${exportCredits.toLocaleString("en-IN")}`, 18, 46);
 
-      doc.setTextColor(153, 27, 27);
-      doc.text(`Total Debits: Rs ${totalDebits.toLocaleString()}`, 80, 47);
+      doc.setTextColor(153, 27, 27); // Ruby Red
+      doc.text(`Total Debits: Rs ${exportDebits.toLocaleString("en-IN")}`, 78, 46);
 
-      doc.setTextColor(180, 83, 9);
-      doc.text(`Net Balance: Rs ${netBalance.toLocaleString()}`, 140, 47);
+      doc.setTextColor(180, 83, 9); // Amber
+      doc.text(`Net Balance: Rs ${exportNet.toLocaleString("en-IN")}`, 138, 46);
 
       // Table Data
-      const tableRows = filteredTransactions.map((t) => [
-        t.displayDate || new Date(t.date).toLocaleDateString(),
-        t.referenceId || "N/A",
-        t.description || "",
-        t.category || t.source || "",
-        t.paymentMethod || "Cash",
-        t.transactionType || "Debit",
-        `Rs ${Number(t.amount || 0).toLocaleString()}`,
-      ]);
+      const tableRows = recordsToDownload.map((t, index) => {
+        const d = t.date ? new Date(t.date) : null;
+        const dateStr = d && !isNaN(d.getTime())
+          ? d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+          : (t.displayDate || "N/A");
 
-      doc.autoTable({
-        startY: 58,
-        head: [["Date", "Ref ID", "Description / Purpose", "Category", "Mode", "Type", "Amount"]],
-        body: tableRows,
-        theme: "striped",
-        headStyles: { fillColor: [188, 108, 16], textColor: 255, fontStyle: "bold" },
-        styles: { fontSize: 8, cellPadding: 2.5 },
-        columnStyles: {
-          0: { cellWidth: 24 },
-          1: { cellWidth: 28 },
-          2: { cellWidth: 50 },
-          3: { cellWidth: 26 },
-          4: { cellWidth: 18 },
-          5: { cellWidth: 16 },
-          6: { cellWidth: 20, fontStyle: "bold" },
-        },
+        return [
+          dateStr,
+          t.referenceId || `TXN-${index + 1}`,
+          t.description || "—",
+          t.category || t.source || "General",
+          t.paymentMethod || "Cash",
+          t.transactionType || "Debit",
+          `Rs ${Number(t.amount || 0).toLocaleString("en-IN")}`,
+        ];
       });
 
-      doc.save(`Temple_Ledger_Report_${new Date().toISOString().split("T")[0]}.pdf`);
-      toast.success("Ledger statement PDF downloaded successfully!");
+      const tableConfig = {
+        startY: 56,
+        head: [["Date", "Ref ID", "Description / Purpose", "Category / Source", "Mode", "Type", "Amount"]],
+        body: tableRows,
+        theme: "striped",
+        headStyles: { fillColor: [180, 83, 9], textColor: [255, 255, 255], fontStyle: "bold", fontSize: 8.5 },
+        styles: { fontSize: 8, cellPadding: 2.5, overflow: "linebreak" },
+        columnStyles: {
+          0: { cellWidth: 24 },
+          1: { cellWidth: 26 },
+          2: { cellWidth: 50 },
+          3: { cellWidth: 28 },
+          4: { cellWidth: 16 },
+          5: { cellWidth: 16 },
+          6: { cellWidth: 22, halign: "right", fontStyle: "bold" },
+        },
+        didDrawPage: (data) => {
+          const pageCount = doc.internal.getNumberOfPages();
+          doc.setFontSize(8);
+          doc.setFont("helvetica", "normal");
+          doc.setTextColor(148, 163, 184);
+          doc.text(
+            `Sri Shanti Mahadev Mandir ERP - Page ${data.pageNumber} of ${pageCount}`,
+            14,
+            doc.internal.pageSize.height - 10
+          );
+        },
+      };
+
+      if (typeof autoTable === "function") {
+        autoTable(doc, tableConfig);
+      } else if (typeof doc.autoTable === "function") {
+        doc.autoTable(tableConfig);
+      }
+
+      const filePrefix = hasActiveFilters ? "Filtered_Ledger" : "Complete_Ledger";
+      doc.save(`Temple_${filePrefix}_Statement_${new Date().toISOString().split("T")[0]}.pdf`);
+      toast.success(
+        hasActiveFilters
+          ? `Filtered ledger statement downloaded (${recordsToDownload.length} records)!`
+          : `Complete ledger statement downloaded (${recordsToDownload.length} records)!`
+      );
     } catch (error) {
-      console.error(error);
+      console.error("PDF generation failed:", error);
       toast.error("Failed to generate PDF statement");
     }
   };
@@ -307,9 +389,10 @@ const AccountLedgersView = () => {
             <button
               type="button"
               onClick={handleDownloadPDF}
+              title={hasActiveFilters ? `Download filtered statement (${filteredTransactions.length} records)` : `Download complete statement (${transactions.length} records)`}
               className="flex items-center gap-2 rounded-2xl bg-amber-600 hover:bg-amber-700 px-5 py-3 text-sm font-bold text-white shadow-md transition hover:scale-105"
             >
-              <FaDownload /> Download PDF Statement
+              <FaDownload /> {hasActiveFilters ? `Download Filtered Statement (${filteredTransactions.length})` : "Download PDF Statement"}
             </button>
             <button
               type="button"
@@ -591,9 +674,10 @@ const AccountLedgersView = () => {
             <button
               type="button"
               onClick={handleDownloadPDF}
+              title={hasActiveFilters ? `Download filtered statement (${filteredTransactions.length} records)` : `Download complete statement (${transactions.length} records)`}
               className="flex items-center gap-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 px-4 py-2 text-xs font-bold text-white shadow-sm transition"
             >
-              <FaDownload /> Download Statement (PDF)
+              <FaDownload /> {hasActiveFilters ? `Download Filtered (${filteredTransactions.length})` : "Download Statement (PDF)"}
             </button>
           </div>
         </div>

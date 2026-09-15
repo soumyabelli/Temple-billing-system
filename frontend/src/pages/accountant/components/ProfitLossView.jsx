@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { getProfitLoss, getTransactions } from "../../../services/accountService";
 import { toast } from "react-toastify";
 import { jsPDF } from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import {
   FaArrowUp,
@@ -266,14 +266,25 @@ const ProfitLossView = ({ hideHeader = false }) => {
         `${data.totalIncome ? ((amt / data.totalIncome) * 100).toFixed(1) : 0}%`,
       ]);
 
-      doc.autoTable({
-        startY: 62,
-        head: [["Income Source", "Amount", "Share (%)"]],
-        body: incomeRows,
-        theme: "striped",
-        headStyles: { fillColor: [22, 101, 52], textColor: 255, fontStyle: "bold" },
-        styles: { fontSize: 9, cellPadding: 3 },
-      });
+      if (typeof autoTable === "function") {
+        autoTable(doc, {
+          startY: 62,
+          head: [["Income Source", "Amount", "Share (%)"]],
+          body: incomeRows,
+          theme: "striped",
+          headStyles: { fillColor: [22, 101, 52], textColor: 255, fontStyle: "bold" },
+          styles: { fontSize: 9, cellPadding: 3 },
+        });
+      } else if (typeof doc.autoTable === "function") {
+        doc.autoTable({
+          startY: 62,
+          head: [["Income Source", "Amount", "Share (%)"]],
+          body: incomeRows,
+          theme: "striped",
+          headStyles: { fillColor: [22, 101, 52], textColor: 255, fontStyle: "bold" },
+          styles: { fontSize: 9, cellPadding: 3 },
+        });
+      }
 
       const expenseRows = Object.entries(data.expenseByCategory || {}).map(([cat, amt]) => [
         cat,
@@ -287,14 +298,25 @@ const ProfitLossView = ({ hideHeader = false }) => {
       doc.setTextColor(50, 50, 50);
       doc.text("Expenses Breakdown by Category", 14, finalY);
 
-      doc.autoTable({
-        startY: finalY + 4,
-        head: [["Expense Category", "Amount", "Share (%)"]],
-        body: expenseRows,
-        theme: "striped",
-        headStyles: { fillColor: [153, 27, 27], textColor: 255, fontStyle: "bold" },
-        styles: { fontSize: 9, cellPadding: 3 },
-      });
+      if (typeof autoTable === "function") {
+        autoTable(doc, {
+          startY: finalY + 4,
+          head: [["Expense Category", "Amount", "Share (%)"]],
+          body: expenseRows,
+          theme: "striped",
+          headStyles: { fillColor: [153, 27, 27], textColor: 255, fontStyle: "bold" },
+          styles: { fontSize: 9, cellPadding: 3 },
+        });
+      } else if (typeof doc.autoTable === "function") {
+        doc.autoTable({
+          startY: finalY + 4,
+          head: [["Expense Category", "Amount", "Share (%)"]],
+          body: expenseRows,
+          theme: "striped",
+          headStyles: { fillColor: [153, 27, 27], textColor: 255, fontStyle: "bold" },
+          styles: { fontSize: 9, cellPadding: 3 },
+        });
+      }
 
       doc.save(`Temple_Profit_Loss_Statement_${new Date().toISOString().split("T")[0]}.pdf`);
       toast.success("P&L Financial Statement downloaded!");
