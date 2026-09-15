@@ -199,10 +199,12 @@ const createBooking = async (req, res) => {
       return res.status(400).json({ error: "Booking amount must be a positive number." });
     }
 
-    // Validate datetime is a future time
+    // Validate datetime is valid (allow today or future date)
     const parsed = new Date(datetime);
-    if (Number.isNaN(parsed.getTime()) || parsed.getTime() <= Date.now()) {
-      return res.status(400).json({ error: "Booking datetime must be a future date/time." });
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    if (Number.isNaN(parsed.getTime()) || parsed < startOfToday) {
+      return res.status(400).json({ error: "Booking datetime must be today or a future date/time." });
     }
 
     const allowedPaymentMethods = ["UPI", "Cash", "Card", "Bank Transfer", "Net Banking"];
@@ -212,7 +214,8 @@ const createBooking = async (req, res) => {
     }
 
     const hasKeys = process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET;
-    const isOnline = pm && pm !== "Cash";
+    const isCounter = req.body.source === "Counter" || req.body.isCashier || req.body.skipRazorpay;
+    const isOnline = pm && pm !== "Cash" && !isCounter;
     const bookingStatus = "Confirmed";
     const paymentStatus = "Paid";
 

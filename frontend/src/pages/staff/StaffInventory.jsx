@@ -299,8 +299,8 @@ const StaffInventory = () => {
                       }}
                     >
                       <option value="">Select Item</option>
-                      {catalog.map((item) => (
-                        <option key={item.name} value={item.name}>
+                      {catalog.map((item, idx) => (
+                        <option key={item._id || `${item.name}-${idx}`} value={item.name}>
                           {item.name} ({item.stock} {item.unit} available)
                         </option>
                       ))}
@@ -392,8 +392,8 @@ const StaffInventory = () => {
                         return <div className="empty-cell">No low stock items.</div>;
                       }
 
-                      return lowStockItems.map((item) => (
-                        <div key={item.name} className="inventory-status-item">
+                      return lowStockItems.map((item, idx) => (
+                        <div key={item._id || `${item.name}-${idx}`} className="inventory-status-item">
                           <div>
                             <h3>{item.name}</h3>
                             <p style={{ fontSize: "12px", color: "#64748b", margin: "2px 0 0" }}>

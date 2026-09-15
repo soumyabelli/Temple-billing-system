@@ -10,7 +10,7 @@ const services = [
 
 export default function QuickBillingPage() {
  const [selectedItems, setSelectedItems] = useState([]);
- const [paymentMethod, setPaymentMethod] = useState("Cash");
+ const [paymentMethod, setPaymentMethod] = useState("UPI");
 
  const addItem = (service) => {
  setSelectedItems([
@@ -178,7 +178,6 @@ export default function QuickBillingPage() {
  setPaymentMethod(e.target.value)
  }
  >
- <option>Cash</option>
  <option>UPI</option>
  <option>Card</option>
  <option>Net Banking</option>

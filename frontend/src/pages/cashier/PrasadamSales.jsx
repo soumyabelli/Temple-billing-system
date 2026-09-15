@@ -434,7 +434,6 @@ const PrasadamSales = () => {
  className="w-full rounded-2xl border border-[#ead7bb] bg-[#fffaf4] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 px-4 py-3 text-base outline-none focus:border-[#f28c18]"
  >
  <option>UPI</option>
- <option>Cash</option>
  <option>Card</option>
  <option>Net Banking</option>
  </select>

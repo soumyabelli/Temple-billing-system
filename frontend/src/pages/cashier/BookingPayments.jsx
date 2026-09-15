@@ -25,7 +25,7 @@ const emptyForm = {
  devoteePhone: "",
  cartItems: [],
  datetime: "",
- paymentMethod: "Cash",
+ paymentMethod: "UPI",
  notes: "",
 };
 
@@ -161,7 +161,7 @@ const BookingPayments = () => {
  {
  title: "Today Bookings",
  value: bookings.filter((booking) => isToday(booking.createdAt)).length,
- note: `${bookings.filter((booking) => isToday(booking.createdAt) && (booking.status || "Pending") === "Pending").length} pending`,
+ note: "Recorded bookings today",
  tone: "orange",
  },
  {
@@ -175,12 +175,6 @@ const BookingPayments = () => {
  value: bookings.filter((booking) => (booking.status || "Pending") === "Confirmed").length,
  note: "Approved by counter",
  tone: "green",
- },
- {
- title: "Pending",
- value: bookings.filter((booking) => (booking.status || "Pending") === "Pending").length,
- note: "Awaiting approval",
- tone: "blue",
  },
  ],
  [bookings]
@@ -229,12 +223,14 @@ const BookingPayments = () => {
  devoteeName: form.devoteeName.trim(),
  devoteeEmail: form.devoteeEmail.trim() || undefined,
  devoteePhone: form.devoteePhone.trim() || undefined,
- service: "Multiple Items", // Fallback for schema
+ service: form.cartItems[0]?.name || "Pooja Booking",
  datetime: form.datetime || buildMinDateTime(),
  amount: totalAmount,
  paymentMethod: form.paymentMethod,
  notes: form.notes.trim(),
- status: "Pending",
+ status: "Confirmed",
+ source: "Counter",
+ isCashier: true,
  isCombined: true,
  items: form.cartItems,
  });
@@ -552,7 +548,6 @@ const BookingPayments = () => {
  onChange={(e) => setForm((prev) => ({ ...prev, paymentMethod: e.target.value }))}
  className="w-full rounded-2xl border border-[#ead7bb] bg-[#fffaf4] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 px-4 py-3 text-base outline-none focus:border-[#f28c18]"
  >
- <option>Cash</option>
  <option>UPI</option>
  <option>Card</option>
  <option>Bank Transfer</option>
