@@ -1776,3 +1776,27 @@ Message: Pooja booking confirmed! Service: Rudrabhisheka on 2026-09-26T10:27. Am
 To: 9876543210
 Message: Pooja booking confirmed! Service: Gana Homa on 2026-09-15T10:27. Amount: ₹750. Please bring receipt at temple. -Temple
 
+[2026-09-15T10:10:13.814Z] EMAIL
+To: kualalveda23@gmail.com
+Subject: Pooja Booking Confirmation
+Pooja Booking Confirmation
+Service: Combined Order: Satyanarayana Pooja (x1), Gana Homa (x1), Laddu Prasadam (x4)
+Date & Time: 2026-09-15T11:09:39.531Z
+Amount: ₹3454
+
+Please bring the receipt at the time of visiting the temple to perform the pooja.
+Thank you!
+
+[2026-09-15T10:10:13.820Z] SMS
+To: 9449913978
+Message: Pooja booking confirmed! Service: Combined Order: Satyanarayana Pooja (x1), Gana Homa (x1), Laddu Prasadam (x4) on 2026-09-15T11:09:39.531Z. Amount: ₹3454. Please bring receipt at temple. -Temple
+
+[2026-09-15T10:10:14.071Z] EMAIL
+To: kualalveda23@gmail.com
+Subject: [Sri Shanti Mahadev Mandir] Booking Confirmed
+Booking Confirmed
+
+Your Combined Order: Satyanarayana Pooja (x1), Gana Homa (x1), Laddu Prasadam (x4) booking has been confirmed successfully.
+
+Sri Shanti Mahadev Mandir
+
