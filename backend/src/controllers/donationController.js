@@ -166,11 +166,35 @@ const getDonationStats = async (req, res) => {
     const collected = collectedDonations.length;
     const notCollected = donations.filter((d) => d.status === "Not Collected" || d.status === "Pending").length;
 
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfMonth = new Date(currentYear, currentMonth, 1);
+
+    const monthDonations = collectedDonations.filter((d) => {
+      const dt = new Date(d.createdAt || d.date);
+      return dt >= startOfMonth;
+    });
+    const currentMonthAmount = monthDonations.reduce((acc, item) => acc + (Number(item.amount) || 0), 0);
+    const currentMonthDonors = monthDonations.length;
+
+    const todayDonations = collectedDonations.filter((d) => {
+      const dt = new Date(d.createdAt || d.date);
+      return dt >= startOfToday;
+    });
+    const todayAmount = todayDonations.reduce((acc, item) => acc + (Number(item.amount) || 0), 0);
+    const todayDonors = todayDonations.length;
+
     res.status(200).json({
       success: true,
       stats: {
         totalAmount,
         totalDonors,
+        currentMonthAmount,
+        currentMonthDonors,
+        todayAmount,
+        todayDonors,
         completed: collected,
         collected,
         pending: notCollected,
