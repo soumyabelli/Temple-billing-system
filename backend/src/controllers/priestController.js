@@ -940,7 +940,11 @@ exports.getNotifications = async (req, res) => {
 
     const queryFilters = [
       { audienceId: priestId },
-      { audienceRole: { $in: ["priest", "staff", "employee", "all"] } }
+      {
+        audienceRole: { $in: ["priest", "staff", "employee", "all"] },
+        audienceEmail: { $in: [null, "", undefined] },
+        audienceId: { $in: [null, "", undefined] },
+      }
     ];
     if (user?.email) {
       queryFilters.push({ audienceEmail: user.email.toLowerCase().trim() });
@@ -949,8 +953,37 @@ exports.getNotifications = async (req, res) => {
     const notifications = await Notification.find({
       $or: queryFilters
     })
+      .select({
+        title: 1,
+        message: 1,
+        audienceId: 1,
+        audienceEmail: 1,
+        audienceRole: 1,
+        category: 1,
+        date: 1,
+        viewed: 1,
+        viewedAt: 1,
+        read: 1,
+        readAt: 1,
+        createdAt: 1,
+        updatedAt: 1,
+        emailSent: 1,
+        attachmentType: {
+          $cond: [
+            { $and: [{ $ne: ["$attachment", null] }, { $ne: ["$attachment", ""] }] },
+            {
+              $cond: [
+                { $regexMatch: { input: { $ifNull: ["$attachment", ""] }, regex: "pdf" } },
+                "pdf",
+                "image"
+              ]
+            },
+            null
+          ]
+        }
+      })
       .sort({ createdAt: -1 })
-      .allowDiskUse(true)
+      .limit(100)
       .lean();
 
     const formatted = notifications.map(n => ({
@@ -962,7 +995,11 @@ exports.getNotifications = async (req, res) => {
       date: n.date || n.createdAt,
       createdAt: n.createdAt,
       read: n.read || n.viewed,
-      attachment: n.attachment || null,
+      attachment: n.attachmentType
+        ? n.attachmentType === "pdf"
+          ? `http://localhost:5000/api/notifications/attachment/${n._id}?file=document.pdf`
+          : `http://localhost:5000/api/notifications/attachment/${n._id}`
+        : null,
       audienceEmail: n.audienceEmail,
       emailSent: n.emailSent,
     }));

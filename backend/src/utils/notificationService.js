@@ -328,31 +328,16 @@ const createEmployeeBroadcastNotifications = async ({ title, message, category, 
     }).catch((err) => console.warn("Employee broadcast BCC email error:", err.message));
   }
 
-  const docs = [...recipients.values()].map((recipient) => ({
+  return Notification.create({
     title: String(title).trim(),
     message: String(message).trim(),
-    audienceId: recipient.audienceId,
-    audienceEmail: recipient.audienceEmail || undefined,
-    audienceRole: recipient.audienceRole || "staff",
+    audienceRole: "staff",
     category: category ? String(category).trim() : "event",
     attachment: attachment || undefined,
     read: false,
-    emailSent: Boolean(recipient.audienceEmail),
-    emailSentAt: recipient.audienceEmail ? new Date() : null,
-  }));
-
-  if (!docs.length) {
-    return Notification.create({
-      title: String(title).trim(),
-      message: String(message).trim(),
-      audienceRole: "staff",
-      category: category ? String(category).trim() : "event",
-      attachment: attachment || undefined,
-      read: false,
-    });
-  }
-
-  return Notification.create(docs);
+    emailSent: validEmails.length > 0,
+    emailSentAt: validEmails.length > 0 ? new Date() : null,
+  });
 };
 
 const createStaffBroadcastNotifications = createEmployeeBroadcastNotifications;
@@ -389,31 +374,16 @@ const createBroadcastNotifications = async ({ title, message, category, role = "
     }).catch((err) => console.warn("Devotee broadcast BCC email error:", err.message));
   }
 
-  const docs = [...recipients.values()].map((recipient) => ({
+  return Notification.create({
     title: String(title).trim(),
     message: String(message).trim(),
-    audienceId: recipient.audienceId,
-    audienceEmail: recipient.audienceEmail || undefined,
-    audienceRole: recipient.audienceRole || "devotee",
+    audienceRole: role ? String(role).trim().toLowerCase() : "devotee",
     category: category ? String(category).trim() : "event",
     attachment: attachment || undefined,
     read: false,
-    emailSent: Boolean(recipient.audienceEmail),
-    emailSentAt: recipient.audienceEmail ? new Date() : null,
-  }));
-
-  if (!docs.length) {
-    return Notification.create({
-      title: String(title).trim(),
-      message: String(message).trim(),
-      audienceRole: role ? String(role).trim().toLowerCase() : "devotee",
-      category: category ? String(category).trim() : "event",
-      attachment: attachment || undefined,
-      read: false,
-    });
-  }
-
-  return Notification.create(docs);
+    emailSent: validEmails.length > 0,
+    emailSentAt: validEmails.length > 0 ? new Date() : null,
+  });
 };
 
 module.exports = {

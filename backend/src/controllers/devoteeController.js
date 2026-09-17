@@ -861,8 +861,50 @@ const getNotifications = async (req, res) => {
 
         const notifications = await Notification.find({
           $or: filters,
-        }).sort({ createdAt: -1 });
-        return res.status(200).json({ notifications });
+        })
+          .select({
+            title: 1,
+            message: 1,
+            audienceId: 1,
+            audienceEmail: 1,
+            audienceRole: 1,
+            category: 1,
+            date: 1,
+            viewed: 1,
+            viewedAt: 1,
+            read: 1,
+            readAt: 1,
+            createdAt: 1,
+            updatedAt: 1,
+            attachmentType: {
+              $cond: [
+                { $and: [{ $ne: ["$attachment", null] }, { $ne: ["$attachment", ""] }] },
+                {
+                  $cond: [
+                    { $regexMatch: { input: { $ifNull: ["$attachment", ""] }, regex: "pdf" } },
+                    "pdf",
+                    "image"
+                  ]
+                },
+                null
+              ]
+            }
+          })
+          .sort({ createdAt: -1 })
+          .limit(100)
+          .lean();
+
+        const formatted = notifications.map((n) => ({
+          ...n,
+          id: n._id,
+          attachment: n.attachmentType
+            ? n.attachmentType === "pdf"
+              ? `http://localhost:5000/api/notifications/attachment/${n._id}?file=document.pdf`
+              : `http://localhost:5000/api/notifications/attachment/${n._id}`
+            : null
+        }));
+
+        return res.status(200).json({ notifications: formatted });
       }
 
       // No email provided: return only general broadcasts
@@ -870,8 +912,50 @@ const getNotifications = async (req, res) => {
         audienceRole: { $in: ["devotee", "all"] },
         audienceEmail: { $in: [null, "", undefined] },
         audienceId: { $in: [null, "", undefined] },
-      }).sort({ createdAt: -1 });
-      return res.status(200).json({ notifications });
+      })
+        .select({
+          title: 1,
+          message: 1,
+          audienceId: 1,
+          audienceEmail: 1,
+          audienceRole: 1,
+          category: 1,
+          date: 1,
+          viewed: 1,
+          viewedAt: 1,
+          read: 1,
+          readAt: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          attachmentType: {
+            $cond: [
+              { $and: [{ $ne: ["$attachment", null] }, { $ne: ["$attachment", ""] }] },
+              {
+                $cond: [
+                  { $regexMatch: { input: { $ifNull: ["$attachment", ""] }, regex: "pdf" } },
+                  "pdf",
+                  "image"
+                ]
+              },
+              null
+            ]
+          }
+        })
+        .sort({ createdAt: -1 })
+        .limit(100)
+        .lean();
+
+      const formatted = notifications.map((n) => ({
+        ...n,
+        id: n._id,
+        attachment: n.attachmentType
+          ? n.attachmentType === "pdf"
+            ? `http://localhost:5000/api/notifications/attachment/${n._id}?file=document.pdf`
+            : `http://localhost:5000/api/notifications/attachment/${n._id}`
+          : null
+      }));
+
+      return res.status(200).json({ notifications: formatted });
     } else {
       // Offline/Local file fallback
       const notifications = await fileNotificationStore.findNotifications({ audienceEmail: email });

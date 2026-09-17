@@ -47,7 +47,13 @@ const getStaffIdCandidates = async (staffId) => {
 
 const buildStaffNotificationQuery = async (staffId) => {
   const targets = await getStaffNotificationTargets(staffId);
-  const filters = [{ audienceRole: "staff" }];
+  const filters = [
+    {
+      audienceRole: { $in: ["staff", "employee", "all"] },
+      audienceEmail: { $in: [null, "", undefined] },
+      audienceId: { $in: [null, "", undefined] },
+    }
+  ];
 
   if (targets.ids.length) {
     filters.push({ audienceId: { $in: targets.ids } });
@@ -217,13 +223,51 @@ exports.getStaffNotifications = async (req, res) => {
     const { staffId } = req.params;
     const query = await buildStaffNotificationQuery(staffId);
     const notifications = await Notification.find(query)
+      .select({
+        title: 1,
+        message: 1,
+        audienceId: 1,
+        audienceEmail: 1,
+        audienceRole: 1,
+        category: 1,
+        date: 1,
+        viewed: 1,
+        viewedAt: 1,
+        read: 1,
+        readAt: 1,
+        createdAt: 1,
+        updatedAt: 1,
+        attachmentType: {
+          $cond: [
+            { $and: [{ $ne: ["$attachment", null] }, { $ne: ["$attachment", ""] }] },
+            {
+              $cond: [
+                { $regexMatch: { input: { $ifNull: ["$attachment", ""] }, regex: "pdf" } },
+                "pdf",
+                "image"
+              ]
+            },
+            null
+          ]
+        }
+      })
       .sort({ createdAt: -1 })
-      .allowDiskUse(true)
+      .limit(100)
       .lean();
+
+    const formatted = notifications.map((n) => ({
+      ...n,
+      id: n._id,
+      attachment: n.attachmentType
+        ? n.attachmentType === "pdf"
+          ? `http://localhost:5000/api/notifications/attachment/${n._id}?file=document.pdf`
+          : `http://localhost:5000/api/notifications/attachment/${n._id}`
+        : null
+    }));
 
     return res.json({
       success: true,
-      notifications,
+      notifications: formatted,
     });
   } catch (error) {
     return res.status(500).json({
