@@ -82,6 +82,7 @@ import StaffDashboard from "./pages/staff/StaffDashboard";
 import LeaveHistory from "./pages/staff/LeaveHistory";
 import Attendance from "./pages/staff/Attendance";
 import LeaveRequest from "./pages/staff/LeaveRequest";
+import UnifiedLeaveManagement from "./components/shared/UnifiedLeaveManagement";
 import KitchenDashboard from "./pages/staff/KitchenDashboard";
 import StoreDashboard from "./pages/staff/StoreDashboard";
 import DevoteeDashboard from "./pages/devotee/DevoteeDashboard";
@@ -136,7 +137,7 @@ function App() {
         path="/leave-history"
         element={
           <ProtectedRoute allowedRoles={["staff"]}>
-            <LeaveHistory />
+            <UnifiedLeaveManagement role="staff" />
           </ProtectedRoute>
         }
       />
@@ -641,8 +642,8 @@ function App() {
         <Route path="payments" element={<PaymentsPage />} />
         <Route path="reports" element={<ReportsPage />} />
         <Route path="attendance" element={<Attendance />} />
-        <Route path="leave-requests" element={<div style={{ padding: "2rem" }}><LeaveHistory /></div>} />
-        <Route path="apply-leave" element={<div style={{ padding: "2rem" }}><LeaveRequest /></div>} />
+        <Route path="leave-requests" element={<div style={{ padding: "2rem" }}><UnifiedLeaveManagement role="cashier" /></div>} />
+        <Route path="apply-leave" element={<div style={{ padding: "2rem" }}><UnifiedLeaveManagement role="cashier" initialApplyOpen={true} /></div>} />
         <Route path="inventory" element={<InventoryPage />} />
         <Route path="inventory-requests" element={<CashierInventoryRequestsPage />} />
         <Route path="notifications" element={<NotificationsPage />} />

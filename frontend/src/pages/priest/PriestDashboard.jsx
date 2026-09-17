@@ -38,9 +38,7 @@ import PriestNotifications from "./PriestNotifications";
 import PriestProfile from "./PriestProfile";
 import PriestInventory from "./PriestInventory";
 import Attendance from "../staff/Attendance";
-import LeaveHistory from "../staff/LeaveHistory";
-import LeaveRequest from "../staff/LeaveRequest";
-import DutyTransferRequests from "./DutyTransferRequests";
+import UnifiedLeaveManagement from "../../components/shared/UnifiedLeaveManagement";
 import SevaSchedule from "./SevaSchedule";
 import CompletedServices from "./CompletedServices";
 import SpecialDuties from "./SpecialDuties";
@@ -1091,11 +1089,9 @@ const PriestDashboard = () => {
  case "Attendance":
  return <Attendance darkMode={darkMode} />;
  case "Leave Requests":
- return <LeaveHistory darkMode={darkMode} onApply={() => setActiveItem("Apply Leave")} />;
  case "Apply Leave":
- return <LeaveRequest darkMode={darkMode} onBack={() => setActiveItem("Leave Requests")} />;
  case "Duty Transfer Requests":
- return <DutyTransferRequests darkMode={darkMode} />;
+ return <UnifiedLeaveManagement role="priest" darkMode={darkMode} />;
  case "Notifications":
  return <PriestNotifications darkMode={darkMode} />;
  case "Profile":

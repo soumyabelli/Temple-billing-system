@@ -27,7 +27,6 @@ export const accountantSidebarPrimary = [
 export const accountantSidebarUtility = [
   { label: "Attendance", icon: FaClock },
   { label: "Leave Requests", icon: FaCalendarAlt },
-  { label: "Apply Leave", icon: FaFileSignature },
   { label: "Inventory Requests", icon: FaBoxes },
   { label: "Notifications", icon: FaBell },
   { label: "Profile", icon: FaUserCircle },

@@ -33,6 +33,7 @@ import {
 import Notifications from "./Notifications";
 import Attendance from "./Attendance";
 import StaffInventory from "./StaffInventory";
+import UnifiedLeaveManagement from "../../components/shared/UnifiedLeaveManagement";
 import templeBg from "../../assets/temple-bg.jpg";
 import "./StaffDashboard.css";
 
@@ -600,13 +601,6 @@ const StaffDashboard = () => {
           </button>
           <button
             type="button"
-            className={activeSection === "applyLeave" ? "nav-item active" : "nav-item"}
-            onClick={() => setActiveSection("applyLeave")}
-          >
-            <FiCalendar /> Apply Leave
-          </button>
-          <button
-            type="button"
             className={activeSection === "notifications" ? "nav-item active" : "nav-item"}
             onClick={() => setActiveSection("notifications")}
           >
@@ -819,13 +813,9 @@ const StaffDashboard = () => {
                     <FiClipboard />
                     <span>Duty List</span>
                   </button>
-                  <button type="button" onClick={() => setActiveSection("applyLeave")}>
-                    <FiCalendar />
-                    <span>Apply Leave</span>
-                  </button>
                   <button type="button" onClick={() => setActiveSection("leaveRequests")}>
-                    <FiFileText />
-                    <span>Leave Status</span>
+                    <FiCalendar />
+                    <span>Leave Requests</span>
                   </button>
                 </div>
               </div>
@@ -943,74 +933,9 @@ const StaffDashboard = () => {
           </section>
         ) : null}
 
-        {!loading && activeSection === "leaveRequests" ? (
-          <section className="leave-request-page">
-            <div className="leave-head">
-              <h2>My Leave Requests</h2>
-              <button type="button" onClick={() => setActiveSection("applyLeave")}>
-                Apply Leave
-              </button>
-            </div>
-
-            <div className="leave-stat-grid">
-              <article>
-                <h3>{leaveSummary.totalQuota}</h3>
-                <p>Total Quota (12+2)</p>
-              </article>
-              <article className="approved-box">
-                <h3>{leaveSummary.used}</h3>
-                <p>Used Leaves (Days)</p>
-              </article>
-              <article className="pending-box">
-                <h3>{leaveSummary.remaining}</h3>
-                <p>Remaining Balance</p>
-              </article>
-              <article className="rejected-box">
-                <h3>{leaveSummary.pending}</h3>
-                <p>Pending Requests</p>
-              </article>
-            </div>
-
-            <div className="table-card">
-              <div className="table-wrap">
-                <table className="task-table">
-                  <thead>
-                    <tr>
-                      <th>Type</th>
-                      <th>Reason</th>
-                      <th>Days</th>
-                      <th>Period</th>
-                      <th>Status</th>
-                      <th>Admin Reason</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {leaves.length === 0 ? (
-                      <tr>
-                        <td colSpan="6" className="empty-cell">
-                          No leave request submitted
-                        </td>
-                      </tr>
-                    ) : (
-                      leaves.map((leave) => (
-                        <tr key={leave._id}>
-                          <td>{leave.leaveType || "General"}</td>
-                          <td>{leave.reason}</td>
-                          <td>{leaveDaysCount(leave.fromDate, leave.toDate, profileForm?.weeklyOff)}</td>
-                          <td>{leavePeriod(leave.fromDate, leave.toDate)}</td>
-                          <td>
-                            <span className={`status-chip ${statusClassMap[leave.status] || ""}`}>
-                              {leave.status}
-                            </span>
-                          </td>
-                          <td>{leave.adminReason || "-"}</td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+        {!loading && (activeSection === "leaveRequests" || activeSection === "applyLeave") ? (
+          <section className="leave-request-page" style={{ padding: "0" }}>
+            <UnifiedLeaveManagement role="staff" darkMode={darkMode} initialApplyOpen={activeSection === "applyLeave"} />
           </section>
         ) : null}
 
@@ -1052,66 +977,7 @@ const StaffDashboard = () => {
           <Attendance />
         ) : null}
 
-        {!loading && activeSection === "applyLeave" ? (
-          <section className="apply-leave-page">
-            <h2>Apply Leave</h2>
-            <p>Submit your leave request to admin.</p>
-
-            <form onSubmit={handleLeaveSubmit} className="leave-form">
-              <label htmlFor="leaveType">Leave Type</label>
-              <select
-                id="leaveType"
-                value={leaveForm.leaveType}
-                onChange={(e) => setLeaveForm((prev) => ({ ...prev, leaveType: e.target.value }))}
-              >
-                {LEAVE_TYPES.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </select>
-
-              <label htmlFor="reason">Reason</label>
-              <input
-                id="reason"
-                type="text"
-                placeholder="Enter leave reason"
-                value={leaveForm.reason}
-                onChange={(e) => setLeaveForm((prev) => ({ ...prev, reason: e.target.value }))}
-              />
-
-              <div className="date-grid">
-                <div>
-                  <label htmlFor="fromDate">From Date</label>
-                  <input
-                    id="fromDate"
-                    type="date"
-                    value={leaveForm.fromDate}
-                    onChange={(e) => setLeaveForm((prev) => ({ ...prev, fromDate: e.target.value }))}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="toDate">To Date</label>
-                  <input
-                    id="toDate"
-                    type="date"
-                    value={leaveForm.toDate}
-                    onChange={(e) => setLeaveForm((prev) => ({ ...prev, toDate: e.target.value }))}
-                  />
-                </div>
-              </div>
-
-              <div className="form-actions">
-                <button type="submit" disabled={submittingLeave}>
-                  {submittingLeave ? "Submitting..." : "Send Leave Request"}
-                </button>
-                <button type="button" className="secondary-btn" onClick={() => setActiveSection("dashboard")}>
-                  Back to Dashboard
-                </button>
-              </div>
-            </form>
-          </section>
-        ) : null}
+        {/* UnifiedLeaveManagement replaces standalone apply leave section */}
       </main>
     </div>
   );

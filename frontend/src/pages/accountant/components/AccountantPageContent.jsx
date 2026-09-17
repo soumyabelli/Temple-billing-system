@@ -38,8 +38,7 @@ import { MdTempleBuddhist, MdOutlineVolunteerActivism } from "react-icons/md";
 
 import AccountantRevenueChart from "./AccountantRevenueChart";
 import Attendance from "../../staff/Attendance";
-import LeaveHistory from "../../staff/LeaveHistory";
-import LeaveRequest from "../../staff/LeaveRequest";
+import UnifiedLeaveManagement from "../../../components/shared/UnifiedLeaveManagement";
 import StaffInventory from "../../staff/StaffInventory";
 import AccountantInventory from "../AccountantInventory";
 import EmployeeProfileView from "../../../components/shared/EmployeeProfileView";
@@ -1649,15 +1648,10 @@ const AccountantPageContent = ({ activeItem, setActiveItem, user, currentDate, c
         </div>
       );
     case "Apply Leave":
-      return (
-        <div style={{ padding: "2rem" }}>
-          <LeaveRequest onBack={() => setActiveItem("Leave Requests")} darkMode={darkMode} />
-        </div>
-      );
     case "Leave Requests":
       return (
         <div style={{ padding: "2rem" }}>
-          <LeaveHistory onApply={() => setActiveItem("Apply Leave")} darkMode={darkMode} />
+          <UnifiedLeaveManagement role="accountant" darkMode={darkMode} />
         </div>
       );
     case "Inventory Requests":

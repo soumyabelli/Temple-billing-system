@@ -123,7 +123,20 @@ const getLeaveDaysCount = (fromDateStr, toDateStr, year, weeklyOff = null) => {
 
 exports.applyLeave = async (req, res) => {
   try {
-    const { staffId, staffName, reason, fromDate, toDate, leaveType } = req.body;
+    const {
+      staffId,
+      staffName,
+      staffEmail,
+      role = "staff",
+      reason,
+      fromDate,
+      toDate,
+      leaveType,
+      transferDuty,
+      substituteId,
+    } = req.body;
+
+    const normalizedRole = String(role || "staff").trim().toLowerCase();
 
     // ── Required field presence ──────────────────────────────────────────────
     const missing = [];
@@ -138,6 +151,46 @@ exports.applyLeave = async (req, res) => {
         success: false,
         message: `Missing required fields: ${missing.join(", ")}`,
       });
+    }
+
+    // ── Duty Transfer Mandatory Check ──────────────────────────────────────
+    const isTransferMandatory = ["priest", "accountant", "cashier"].includes(normalizedRole);
+    if (isTransferMandatory && (!substituteId || String(substituteId).trim() === "")) {
+      return res.status(400).json({
+        success: false,
+        message: `Duty transfer is mandatory for ${role}. Please select an available substitute to take over your duties.`,
+      });
+    }
+
+    // ── Resolve Substitute if Provided ──────────────────────────────────────
+    let resolvedSubstitute = null;
+    if (substituteId && String(substituteId).trim() !== "") {
+      const User = require("../models/User");
+      const Employee = require("../models/Employee");
+
+      let subUser = null;
+      let subEmp = null;
+      if (mongoose.Types.ObjectId.isValid(substituteId)) {
+        subUser = await User.findById(substituteId).select("name email role").lean();
+        subEmp = await Employee.findById(substituteId).select("name email role employeeId").lean();
+      }
+      if (!subUser && !subEmp) {
+        subEmp = await Employee.findOne({ employeeId: substituteId }).select("name email role employeeId").lean();
+        if (subEmp?.email) {
+          subUser = await User.findOne({ email: subEmp.email }).select("name email role").lean();
+        }
+      }
+
+      const subName = subEmp?.name || subUser?.name || "Colleague";
+      const subEmail = (subEmp?.email || subUser?.email || "").toLowerCase().trim();
+      const subRole = subEmp?.role || subUser?.role || normalizedRole;
+
+      resolvedSubstitute = {
+        id: String(substituteId).trim(),
+        name: subName,
+        email: subEmail,
+        role: subRole,
+      };
     }
 
     // ── Reason validation ────────────────────────────────────────────────────
@@ -245,6 +298,8 @@ exports.applyLeave = async (req, res) => {
     const leave = await Leave.create({
       staffId,
       staffName,
+      staffEmail: staffEmail || employee?.email || "",
+      role: normalizedRole,
       reason: trimmedReason,
       leaveType: String(leaveType).trim() || "General",
       fromDate,
@@ -253,14 +308,36 @@ exports.applyLeave = async (req, res) => {
       adminReason: "",
       reviewedBy: "",
       reviewedAt: null,
+      transferDuty: Boolean(resolvedSubstitute),
+      substituteId: resolvedSubstitute?.id || null,
+      substituteName: resolvedSubstitute?.name || "",
+      substituteRole: resolvedSubstitute?.role || "",
+      substituteEmail: resolvedSubstitute?.email || "",
+      transferStatus: resolvedSubstitute ? "Pending" : "None",
+      transferRejectReason: "",
+      transferResolvedAt: null,
     });
 
+    // Notify Admin of Leave Request
     await Notification.create({
-      title: "Leave Request",
-      message: `${leave.staffName} submitted a leave request`,
+      title: resolvedSubstitute ? "Leave & Duty Transfer Request" : "Leave Request",
+      message: resolvedSubstitute
+        ? `${leave.staffName} (${normalizedRole}) applied for leave (${fromDate} to ${toDate}) with duty transfer to ${resolvedSubstitute.name}.`
+        : `${leave.staffName} (${normalizedRole}) submitted a leave request (${fromDate} to ${toDate}).`,
       audienceRole: "admin",
       category: "leave",
     });
+
+    // If substitute assigned, send notification to that specific substitute employee
+    if (resolvedSubstitute) {
+      await Notification.create({
+        title: "Duty Transfer Request",
+        message: `${leave.staffName} (${normalizedRole}) has requested you to take over duty from ${fromDate} to ${toDate} due to leave. Please review and accept or reject.`,
+        audienceId: resolvedSubstitute.id,
+        audienceEmail: resolvedSubstitute.email || undefined,
+        category: "task",
+      });
+    }
 
     return res.json({
       success: true,
@@ -268,6 +345,8 @@ exports.applyLeave = async (req, res) => {
       quotaExceeded,
       message: quotaExceeded 
         ? `Warning: You have exceeded your leave limit of ${totalQuota} days for the year. Salary will be deducted for extra leaves.` 
+        : resolvedSubstitute
+        ? "Leave and duty transfer request submitted successfully."
         : "Leave applied successfully."
     });
   } catch (error) {
@@ -413,5 +492,213 @@ exports.updateLeaveStatus = async (req, res) => {
       success: false,
       message: error.message,
     });
+  }
+};
+
+exports.getAvailableSubstitutes = async (req, res) => {
+  try {
+    const { role = "staff", fromDate, toDate, excludeId, excludeEmail } = req.query;
+    const normalizedRole = String(role).trim().toLowerCase();
+
+    const User = require("../models/User");
+    const Employee = require("../models/Employee");
+
+    const [employees, users] = await Promise.all([
+      Employee.find({
+        role: new RegExp(`^${normalizedRole}$`, "i"),
+        status: { $ne: "Inactive" },
+        deletedAt: null,
+      }).select("_id employeeId name email role status").lean(),
+      User.find({
+        role: new RegExp(`^${normalizedRole}$`, "i"),
+        status: "Active",
+        accountEnabled: { $ne: false },
+      }).select("_id name email role status").lean(),
+    ]);
+
+    const candidateMap = new Map();
+
+    const addCandidate = (item) => {
+      const email = String(item.email || "").toLowerCase().trim();
+      const id = item._id.toString();
+      const employeeId = item.employeeId || id;
+      const key = email || id;
+
+      if (!candidateMap.has(key)) {
+        candidateMap.set(key, {
+          id: id,
+          employeeId: employeeId,
+          name: item.name,
+          email: email,
+          role: normalizedRole,
+          available: true,
+          reason: "Available",
+        });
+      }
+    };
+
+    employees.forEach((emp) => addCandidate(emp));
+    users.forEach((usr) => addCandidate(usr));
+
+    const excludeEmailNorm = String(excludeEmail || "").toLowerCase().trim();
+    const excludeIdStr = String(excludeId || "").trim();
+
+    let candidates = Array.from(candidateMap.values()).filter((c) => {
+      if (excludeEmailNorm && c.email && c.email === excludeEmailNorm) return false;
+      if (excludeIdStr && (c.id === excludeIdStr || c.employeeId === excludeIdStr)) return false;
+      return true;
+    });
+
+    if (fromDate && toDate) {
+      const overlappingLeaves = await Leave.find({
+        status: "Approved",
+        fromDate: { $lte: toDate },
+        toDate: { $gte: fromDate },
+      }).select("staffId staffEmail").lean();
+
+      const onLeaveStaffIds = new Set(overlappingLeaves.map((l) => l.staffId).filter(Boolean));
+      const onLeaveEmails = new Set(overlappingLeaves.map((l) => (l.staffEmail || "").toLowerCase().trim()).filter(Boolean));
+
+      candidates = candidates.map((c) => {
+        const isOnLeave =
+          onLeaveStaffIds.has(c.id) ||
+          onLeaveStaffIds.has(c.employeeId) ||
+          (c.email && onLeaveEmails.has(c.email));
+        return {
+          ...c,
+          available: !isOnLeave,
+          reason: isOnLeave ? "On approved leave during these dates" : "Available",
+        };
+      });
+    }
+
+    return res.status(200).json(candidates);
+  } catch (error) {
+    console.error("Error fetching available substitutes:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+exports.getIncomingTransfers = async (req, res) => {
+  try {
+    const { employeeId } = req.params;
+    const email = String(req.query.email || "").toLowerCase().trim();
+
+    const filters = [];
+    if (employeeId && employeeId !== "null" && employeeId !== "undefined") {
+      filters.push({ substituteId: employeeId });
+    }
+    if (email) {
+      filters.push({ substituteEmail: email });
+    }
+
+    if (mongoose.Types.ObjectId.isValid(employeeId)) {
+      const Employee = require("../models/Employee");
+      const emp = await Employee.findById(employeeId).lean();
+      if (emp?.email) {
+        filters.push({ substituteEmail: emp.email.toLowerCase().trim() });
+      }
+      if (emp?.employeeId) {
+        filters.push({ substituteId: emp.employeeId });
+      }
+    }
+
+    if (filters.length === 0) {
+      return res.status(200).json([]);
+    }
+
+    const transfers = await Leave.find({
+      transferDuty: true,
+      $or: filters,
+    })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return res.status(200).json(transfers);
+  } catch (error) {
+    console.error("Error fetching incoming transfers:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+exports.respondToDutyTransfer = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { action, reason = "" } = req.body;
+
+    if (!["Accepted", "Rejected"].includes(action)) {
+      return res.status(400).json({ success: false, message: "Action must be Accepted or Rejected" });
+    }
+
+    const leave = await Leave.findById(id);
+    if (!leave) {
+      return res.status(404).json({ success: false, message: "Leave request not found" });
+    }
+
+    if (!leave.transferDuty) {
+      return res.status(400).json({ success: false, message: "This leave does not have a duty transfer request" });
+    }
+
+    leave.transferStatus = action;
+    leave.transferRejectReason = action === "Rejected" ? String(reason || "").trim() : "";
+    leave.transferResolvedAt = new Date();
+    await leave.save();
+
+    if (action === "Accepted" && String(leave.role).toLowerCase() === "priest" && leave.substituteId) {
+      try {
+        const Booking = require("../models/Booking");
+        const Task = require("../models/Task");
+
+        const from = new Date(`${leave.fromDate}T00:00:00`);
+        const to = new Date(`${leave.toDate}T23:59:59`);
+
+        await Booking.updateMany(
+          {
+            assignedPriest: leave.staffId,
+            datetime: { $gte: from, $lte: to },
+            status: { $in: ["Booked", "Confirmed", "Assigned", "Upcoming"] },
+          },
+          {
+            $set: {
+              assignedPriest: leave.substituteId,
+              priestName: leave.substituteName || "Substitute Priest",
+            },
+          }
+        );
+
+        await Task.updateMany(
+          {
+            staffId: leave.staffId,
+            status: { $in: ["Pending", "Assigned", "Accepted"] },
+          },
+          {
+            $set: {
+              staffId: leave.substituteId,
+              staffName: leave.substituteName || "Substitute Priest",
+              staffEmail: leave.substituteEmail || "",
+            },
+          }
+        );
+      } catch (subErr) {
+        console.warn("Could not auto-reassign priest bookings/tasks:", subErr.message);
+      }
+    }
+
+    await Notification.create({
+      title: `Duty Transfer ${action}`,
+      message: `${leave.substituteName || "Your colleague"} has ${action.toLowerCase()} your duty transfer request for leave (${leave.fromDate} to ${leave.toDate}).${action === "Rejected" && reason ? ` Reason: ${reason}` : ""}`,
+      audienceId: leave.staffId,
+      audienceEmail: leave.staffEmail || undefined,
+      category: "task",
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: `Duty transfer request ${action.toLowerCase()} successfully`,
+      leave,
+    });
+  } catch (error) {
+    console.error("Error responding to duty transfer:", error);
+    return res.status(500).json({ success: false, message: error.message });
   }
 };

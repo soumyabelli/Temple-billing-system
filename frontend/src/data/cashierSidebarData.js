@@ -27,7 +27,6 @@ export const cashierSidebarItems = [
   { title: "Register Devotees", icon: FaUsers, path: "/cashier/register-devotees" },
   { title: "Attendance", icon: FaClock, path: "/cashier/attendance" },
   { title: "Leave Requests", icon: FaFileAlt, path: "/cashier/leave-requests" },
-  { title: "Apply Leave", icon: FaFileSignature, path: "/cashier/apply-leave" },
   { title: "Inventory Requests", icon: FaBoxes, path: "/cashier/inventory-requests" },
   { title: "Notifications", icon: FaBell, path: "/cashier/notifications" },
   { title: "Profile", icon: FaUserCircle, path: "/cashier/profile" },

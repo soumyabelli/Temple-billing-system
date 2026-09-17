@@ -54,6 +54,56 @@ const leaveSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    role: {
+      type: String,
+      default: "staff",
+      trim: true,
+    },
+    staffEmail: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    transferDuty: {
+      type: Boolean,
+      default: false,
+    },
+    substituteId: {
+      type: String,
+      default: null,
+      trim: true,
+      index: true,
+    },
+    substituteName: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    substituteRole: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    substituteEmail: {
+      type: String,
+      default: "",
+      trim: true,
+      index: true,
+    },
+    transferStatus: {
+      type: String,
+      enum: ["None", "Pending", "Accepted", "Rejected"],
+      default: "None",
+    },
+    transferRejectReason: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    transferResolvedAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );
