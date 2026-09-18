@@ -81,13 +81,18 @@ export const getCashierCatalogs = async () => ({
   defaultPrasadamTypes,
 });
 
+export const getAuthHeaders = () => {
+  const token = localStorage.getItem("token");
+  return token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+};
+
 export const fetchBookings = async () => {
-  const response = await axios.get(`${API_BASE}/devotee/bookings`);
+  const response = await axios.get(`${API_BASE}/devotee/bookings`, getAuthHeaders());
   return response.data?.bookings || [];
 };
 
 export const fetchRoomBookings = async () => {
-  const response = await axios.get(`${API_BASE}/devotee/bookings`);
+  const response = await axios.get(`${API_BASE}/devotee/bookings`, getAuthHeaders());
   const all = response.data?.bookings || [];
   return all.filter((b) =>
     String(b.service || "").toLowerCase().includes("room allotment")
@@ -95,73 +100,73 @@ export const fetchRoomBookings = async () => {
 };
 
 export const createBooking = async (payload) => {
-  const response = await axios.post(`${API_BASE}/devotee/bookings`, payload);
+  const response = await axios.post(`${API_BASE}/devotee/bookings`, payload, getAuthHeaders());
   return response.data || null;
 };
 
 export const updateBookingStatus = async (id, status) => {
-  const response = await axios.patch(`${API_BASE}/devotee/bookings/${id}/status`, { status });
+  const response = await axios.patch(`${API_BASE}/devotee/bookings/${id}/status`, { status }, getAuthHeaders());
   return response.data?.booking || null;
 };
 
 export const fetchDonations = async () => {
-  const response = await axios.get(`${API_BASE}/devotee/donations`);
+  const response = await axios.get(`${API_BASE}/devotee/donations`, getAuthHeaders());
   return response.data?.donations || [];
 };
 
 export const createDonation = async (payload) => {
-  const response = await axios.post(`${API_BASE}/devotee/donations`, payload);
+  const response = await axios.post(`${API_BASE}/devotee/donations`, payload, getAuthHeaders());
   return response.data || null;
 };
 
 export const fetchPrasadamOrders = async () => {
-  const response = await axios.get(`${API_BASE}/devotee/prasadam-orders`, { params: { channel: "cashier" } });
+  const response = await axios.get(`${API_BASE}/devotee/prasadam-orders`, { params: { channel: "cashier" }, ...getAuthHeaders() });
   return response.data?.orders || [];
 };
 
 export const createPrasadamOrder = async (payload) => {
-  const response = await axios.post(`${API_BASE}/devotee/prasadam-orders`, { ...(payload || {}), channel: "cashier" });
+  const response = await axios.post(`${API_BASE}/devotee/prasadam-orders`, { ...(payload || {}), channel: "cashier" }, getAuthHeaders());
   return response.data || null;
 };
 
 export const fetchPrasadamMaster = async () => {
-  const response = await axios.get(`${API_BASE}/prasadam`);
+  const response = await axios.get(`${API_BASE}/prasadam`, getAuthHeaders());
   return response.data?.items || [];
 };
 
 export const cancelPrasadamOrder = async (id) => {
-  const response = await axios.patch(`${API_BASE}/devotee/prasadam-orders/${id}/cancel`);
+  const response = await axios.patch(`${API_BASE}/devotee/prasadam-orders/${id}/cancel`, {}, getAuthHeaders());
   return response.data?.order || null;
 };
 
 export const fetchBills = async () => {
-  const response = await axios.get(`${API_BASE}/bills`);
+  const response = await axios.get(`${API_BASE}/bills`, getAuthHeaders());
   const data = response.data;
   return Array.isArray(data) ? data : data?.bills || data?.items || [];
 };
 
 export const createBill = async (payload) => {
-  const response = await axios.post(`${API_BASE}/bills`, payload);
+  const response = await axios.post(`${API_BASE}/bills`, payload, getAuthHeaders());
   return response.data || null;
 };
 
 export const verifyBillPayment = async (payload) => {
-  const response = await axios.post(`${API_BASE}/bills/verify`, payload);
+  const response = await axios.post(`${API_BASE}/bills/verify`, payload, getAuthHeaders());
   return response.data || null;
 };
 
 export const verifyBookingPayment = async (payload) => {
-  const response = await axios.post(`${API_BASE}/devotee/bookings/verify`, payload);
+  const response = await axios.post(`${API_BASE}/devotee/bookings/verify`, payload, getAuthHeaders());
   return response.data || null;
 };
 
 export const verifyPrasadamPayment = async (payload) => {
-  const response = await axios.post(`${API_BASE}/devotee/prasadam-orders/verify`, payload);
+  const response = await axios.post(`${API_BASE}/devotee/prasadam-orders/verify`, payload, getAuthHeaders());
   return response.data || null;
 };
 
 export const verifyDonationPayment = async (payload) => {
-  const response = await axios.post(`${API_BASE}/devotee/razorpay/verify`, payload);
+  const response = await axios.post(`${API_BASE}/devotee/razorpay/verify`, payload, getAuthHeaders());
   return response.data || null;
 };
 

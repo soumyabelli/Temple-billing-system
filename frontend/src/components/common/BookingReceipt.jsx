@@ -74,7 +74,9 @@ const BookingReceipt = ({
  "Please report 15 minutes before the Pooja time.",
  "Pooja once booked will not be cancelled.",
  "Prasadam will be provided after Pooja."
- ]
+ ],
+ cashReceived = null,
+ changeReturned = null
 }) => {
  const themeClass = isOnline ? 'theme-online' : 'theme-offline';
  
@@ -298,6 +300,18 @@ const BookingReceipt = ({
  <span>GRAND TOTAL</span>
  <span>₹ {grandTotal.toFixed(2)}</span>
  </div>
+ {paymentMode === "Cash" && cashReceived != null && Number(cashReceived) > 0 && (
+ <>
+ <div className="total-row" style={{ color: '#166534', fontWeight: 'bold' }}>
+ <span>Cash Received</span>
+ <span>₹ {Number(cashReceived).toFixed(2)}</span>
+ </div>
+ <div className="total-row" style={{ color: '#0369a1', fontWeight: 'bold' }}>
+ <span>Change Returned</span>
+ <span>₹ {Number(changeReturned || 0).toFixed(2)}</span>
+ </div>
+ </>
+ )}
  <div className="amount-words">
  ({amountInWords})
  </div>

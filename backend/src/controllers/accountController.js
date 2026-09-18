@@ -27,7 +27,7 @@ exports.createAccountHead = async (req, res) => {
 // --- Transactions ---
 exports.getTransactions = async (req, res) => {
   try {
-    const { financialYear, source, transactionType, startDate, endDate, status } = req.query;
+    const { financialYear, source, transactionType, startDate, endDate, status, limit } = req.query;
     let query = {};
     if (financialYear) query.financialYear = financialYear;
     if (source) query.source = source;
@@ -46,7 +46,11 @@ exports.getTransactions = async (req, res) => {
       query.date = { $lte: end };
     }
     
-    const transactions = await AccountTransaction.find(query).sort({ date: -1 }).populate("recordedBy", "name email");
+    let queryBuilder = AccountTransaction.find(query).sort({ date: -1 }).populate("recordedBy", "name email");
+    if (limit) {
+      queryBuilder = queryBuilder.limit(parseInt(limit, 10));
+    }
+    const transactions = await queryBuilder;
     res.status(200).json(transactions);
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch transactions", error: error.message });
@@ -304,6 +308,102 @@ exports.getAnnualReport = async (req, res) => {
 };
 
 // --- Cash Closing ---
+exports.getShiftSummary = async (req, res) => {
+  try {
+    const targetDate = req.query.date ? new Date(req.query.date) : new Date();
+    targetDate.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(targetDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    // 1. Auto-fetch Opening Cash from the latest previous CashClosing record
+    const lastClosing = await CashClosing.findOne({
+      status: { $ne: "Disputed" },
+      date: { $lt: targetDate }
+    }).sort({ date: -1, createdAt: -1 });
+
+    let autoOpeningCash = 0;
+    if (lastClosing) {
+      autoOpeningCash = Number(lastClosing.closingCash) || 0;
+    } else {
+      const anyLast = await CashClosing.findOne({
+        status: { $ne: "Disputed" }
+      }).sort({ createdAt: -1 });
+      if (anyLast && anyLast.date < targetDate) {
+        autoOpeningCash = Number(anyLast.closingCash) || 0;
+      }
+    }
+
+    // 2. Fetch today's transactions recorded by this cashier
+    const transactionFilter = {
+      transactionType: "Credit",
+      status: "Completed",
+      date: { $gte: targetDate, $lte: endOfDay }
+    };
+    if (req.user && req.user.role === "cashier") {
+      transactionFilter.$or = [
+        { recordedBy: req.user.id },
+        { recordedBy: null },
+        { cashierId: req.user.id }
+      ];
+    }
+
+    const transactions = await AccountTransaction.find(transactionFilter);
+
+    let cashCollected = 0;
+    let upiCollected = 0;
+    let cardCollected = 0;
+    let bankTransferCollected = 0;
+
+    transactions.forEach(t => {
+      const amt = Number(t.amount) || 0;
+      if (t.paymentMethod === "Cash") cashCollected += amt;
+      else if (t.paymentMethod === "UPI") upiCollected += amt;
+      else if (t.paymentMethod === "Card") cardCollected += amt;
+      else if (t.paymentMethod === "Bank Transfer") bankTransferCollected += amt;
+    });
+
+    const totalSystemCollection = cashCollected + upiCollected + cardCollected + bankTransferCollected;
+    const expectedClosingCash = autoOpeningCash + cashCollected;
+
+    // 3. Check if today's shift closing has already been submitted by this cashier
+    const closingFilter = {
+      date: { $gte: targetDate, $lte: endOfDay }
+    };
+    if (req.user && req.user.role === "cashier") {
+      closingFilter.recordedBy = req.user.id;
+    }
+    const existingClosing = await CashClosing.findOne(closingFilter)
+      .populate("recordedBy", "name email")
+      .populate("verifiedBy", "name email");
+
+    // 4. Fetch recent shift closings for this cashier
+    const recentClosingsQuery = {};
+    if (req.user && req.user.role === "cashier") {
+      recentClosingsQuery.recordedBy = req.user.id;
+    }
+    const recentClosings = await CashClosing.find(recentClosingsQuery)
+      .sort({ date: -1, createdAt: -1 })
+      .limit(5)
+      .populate("verifiedBy", "name");
+
+    res.status(200).json({
+      openingCash: autoOpeningCash,
+      cashCollected,
+      upiCollected,
+      cardCollected,
+      bankTransferCollected,
+      totalSystemCollection,
+      expectedClosingCash,
+      transactionsCount: transactions.length,
+      existingClosing,
+      recentClosings,
+      targetDate
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch shift summary", error: error.message });
+  }
+};
+
 exports.getCashClosings = async (req, res) => {
   try {
     const closings = await CashClosing.find().sort({ date: -1 }).populate("recordedBy", "name").populate("verifiedBy", "name");
@@ -315,7 +415,7 @@ exports.getCashClosings = async (req, res) => {
 
 exports.submitCashClosing = async (req, res) => {
   try {
-    const { openingCash, cashDeposited, closingCash, notes, date } = req.body;
+    let { openingCash, cashDeposited, closingCash, notes, date } = req.body;
     
     // Auto-calculate collections for today for this cashier
     const targetDate = date ? new Date(date) : new Date();
@@ -323,12 +423,20 @@ exports.submitCashClosing = async (req, res) => {
     const endOfDay = new Date(targetDate);
     endOfDay.setHours(23, 59, 59, 999);
 
-    const transactions = await AccountTransaction.find({
-      recordedBy: req.user.id,
+    const transactionQuery = {
       transactionType: "Credit",
       status: "Completed",
       date: { $gte: targetDate, $lte: endOfDay }
-    });
+    };
+    if (req.user && req.user.role === "cashier") {
+      transactionQuery.$or = [
+        { recordedBy: req.user.id },
+        { recordedBy: null },
+        { cashierId: req.user.id }
+      ];
+    }
+
+    const transactions = await AccountTransaction.find(transactionQuery);
 
     let cashCollected = 0;
     let upiCollected = 0;
@@ -345,28 +453,75 @@ exports.submitCashClosing = async (req, res) => {
 
     const totalSystemCollection = cashCollected + upiCollected + cardCollected + bankTransferCollected;
 
-    // Calculate discrepancy based on physical cash vs expected cash
-    // Expected Cash = Opening Cash + Cash Collected - Cash Deposited
-    const expectedClosing = Number(openingCash) + cashCollected - Number(cashDeposited);
-    const discrepancy = Number(closingCash) - expectedClosing;
+    // Automatic Opening Cash from previous closing if not provided
+    if (openingCash === undefined || openingCash === null || openingCash === "") {
+      const lastClosing = await CashClosing.findOne({
+        status: { $ne: "Disputed" },
+        date: { $lt: targetDate }
+      }).sort({ date: -1, createdAt: -1 });
 
-    const closing = new CashClosing({
-      date: targetDate,
-      openingCash,
-      cashCollected,
-      upiCollected,
-      cardCollected,
-      bankTransferCollected,
-      totalSystemCollection,
-      cashDeposited,
-      closingCash,
-      discrepancy,
-      notes,
+      if (lastClosing) {
+        openingCash = Number(lastClosing.closingCash) || 0;
+      } else {
+        const anyLast = await CashClosing.findOne({ status: { $ne: "Disputed" } }).sort({ createdAt: -1 });
+        openingCash = (anyLast && anyLast.date < targetDate) ? Number(anyLast.closingCash) || 0 : 0;
+      }
+    } else {
+      openingCash = Number(openingCash) || 0;
+    }
+
+    const deposit = Number(cashDeposited) || 0;
+
+    // Expected Closing = Opening Cash + Cash Collected - Cash Deposited
+    const expectedClosing = openingCash + cashCollected - deposit;
+
+    // If closingCash is not manually provided, automatically set it to expectedClosing (automatic entry in accounts!)
+    if (closingCash === undefined || closingCash === null || closingCash === "") {
+      closingCash = expectedClosing;
+    } else {
+      closingCash = Number(closingCash);
+    }
+
+    const discrepancy = closingCash - expectedClosing;
+
+    // Check if an existing closing for this cashier and date exists
+    let closing = await CashClosing.findOne({
       recordedBy: req.user.id,
-      status: "Pending Verification"
+      date: { $gte: targetDate, $lte: endOfDay }
     });
-    
-    await closing.save();
+
+    if (closing) {
+      // Update existing record
+      closing.openingCash = openingCash;
+      closing.cashCollected = cashCollected;
+      closing.upiCollected = upiCollected;
+      closing.cardCollected = cardCollected;
+      closing.bankTransferCollected = bankTransferCollected;
+      closing.totalSystemCollection = totalSystemCollection;
+      closing.cashDeposited = deposit;
+      closing.closingCash = closingCash;
+      closing.discrepancy = discrepancy;
+      if (notes !== undefined) closing.notes = notes;
+      closing.status = "Pending Verification";
+      await closing.save();
+    } else {
+      closing = new CashClosing({
+        date: targetDate,
+        openingCash,
+        cashCollected,
+        upiCollected,
+        cardCollected,
+        bankTransferCollected,
+        totalSystemCollection,
+        cashDeposited: deposit,
+        closingCash,
+        discrepancy,
+        notes,
+        recordedBy: req.user.id,
+        status: "Pending Verification"
+      });
+      await closing.save();
+    }
 
     await logAudit(
       req.user.id,
@@ -376,7 +531,7 @@ exports.submitCashClosing = async (req, res) => {
       req.ip
     );
 
-    res.status(201).json({ message: "Cash closing submitted successfully", closing });
+    res.status(201).json({ message: "Shift closing automatically entered into accounts successfully", closing });
   } catch (error) {
     res.status(500).json({ message: "Failed to submit cash closing", error: error.message });
   }

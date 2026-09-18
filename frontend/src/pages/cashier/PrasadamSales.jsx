@@ -17,6 +17,7 @@ import {
 import { useAuth } from "../../context/AuthContext";
 import { downloadReceiptPDF } from "../../utils/receiptGenerator";
 import { useNotifications } from "../../context/NotificationContext";
+import CashTenderCalculator from "../../components/common/CashTenderCalculator";
 
 const emptyForm = {
  devoteeName: "",
@@ -24,7 +25,7 @@ const emptyForm = {
  devoteePhone: "",
  itemName: "",
  quantity: 1,
- paymentMethod: "UPI",
+ paymentMethod: "Cash",
 };
 
 const statusStyles = {
@@ -43,6 +44,7 @@ const PrasadamSales = () => {
  const [bills, setBills] = useState([]);
  const [loading, setLoading] = useState(true);
  const [saving, setSaving] = useState(false);
+ const [cashTendered, setCashTendered] = useState("");
  const [message, setMessage] = useState("");
  const [query, setQuery] = useState("");
  const { user } = useAuth();
@@ -158,8 +160,20 @@ const PrasadamSales = () => {
  return;
  }
 
+ if (form.paymentMethod === "Cash") {
+ const tenderNum = cashTendered === "" ? totalAmount : Number(cashTendered);
+ if (tenderNum < totalAmount) {
+ setMessage(`Cash received (₹${tenderNum}) is less than total bill amount (₹${totalAmount}). Please collect ₹${(totalAmount - tenderNum).toFixed(2)} more from devotee.`);
+ return;
+ }
+ }
+
  setSaving(true);
  try {
+ const tenderAmt = form.paymentMethod === "Cash" ? (cashTendered === "" ? totalAmount : Number(cashTendered)) : null;
+ const changeAmt = tenderAmt ? Math.max(0, tenderAmt - totalAmount) : null;
+ const tenderNote = form.paymentMethod === "Cash" && tenderAmt ? `Cash Received: ₹${tenderAmt.toFixed(2)} | Change Returned: ₹${changeAmt.toFixed(2)}` : "";
+
  const orderRes = await createPrasadamOrder({
  devoteeName: form.devoteeName.trim(),
  email: form.devoteeEmail.trim() || undefined,
@@ -168,6 +182,7 @@ const PrasadamSales = () => {
  quantity: Number(form.quantity),
  unitPrice,
  paymentMethod: form.paymentMethod,
+ notes: tenderNote,
  });
 
  const { order, rzpOrder, key, simulated } = orderRes;
@@ -216,6 +231,7 @@ const PrasadamSales = () => {
  ...emptyForm,
  itemName: prasadamTypes[0]?.name || "",
  });
+ setCashTendered("");
  setMessage("Prasadam order saved successfully and paid.");
  await loadData();
  loadNotifications().catch(() => {});
@@ -266,7 +282,11 @@ const PrasadamSales = () => {
  ...emptyForm,
  itemName: prasadamTypes[0]?.name || "",
  });
- setMessage("Prasadam order saved successfully. The bill and history were updated.");
+ setCashTendered("");
+ const successMsg = form.paymentMethod === "Cash" && tenderAmt
+ ? `Prasadam order saved! Cash Received: ₹${tenderAmt}. Change to return: ₹${changeAmt.toFixed(2)}.`
+ : "Prasadam order saved successfully. The bill and history were updated.";
+ setMessage(successMsg);
  await loadData();
  loadNotifications().catch(() => {});
 
@@ -289,7 +309,9 @@ const PrasadamSales = () => {
  amountInWords: `Rs. ${order.totalAmount || (unitPrice * form.quantity)}`,
  devoteeMaterials: [],
  templeMaterials: [],
- notes: [],
+ notes: [tenderNote].filter(Boolean),
+ cashReceived: tenderAmt,
+ changeReturned: changeAmt,
  };
  downloadReceiptPDF(receiptData, `receipt-${receiptData.receiptNo}.pdf`).catch(err => console.error("Receipt generation failed", err));
 
@@ -430,12 +452,19 @@ const PrasadamSales = () => {
  <span className="mb-2 block text-sm font-bold text-slate-800">Payment mode</span>
  <select
  value={form.paymentMethod}
- onChange={(e) => setForm((prev) => ({ ...prev, paymentMethod: e.target.value }))}
+ onChange={(e) => {
+ const mode = e.target.value;
+ setForm((prev) => ({ ...prev, paymentMethod: mode }));
+ if (mode === "Cash" && totalAmount > 0) {
+ setCashTendered(totalAmount.toString());
+ }
+ }}
  className="w-full rounded-2xl border border-[#ead7bb] bg-[#fffaf4] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 px-4 py-3 text-base outline-none focus:border-[#f28c18]"
  >
- <option>UPI</option>
- <option>Card</option>
- <option>Net Banking</option>
+ <option value="Cash">Cash (Counter)</option>
+ <option value="UPI">UPI</option>
+ <option value="Card">Card</option>
+ <option value="Net Banking">Net Banking</option>
  </select>
  </label>
  <div className="rounded-2xl border border-[#f1dfc0] bg-[#fffaf4] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 px-4 py-3">
@@ -446,6 +475,17 @@ const PrasadamSales = () => {
  </p>
  </div>
  </div>
+
+ {/* Cash Tender Calculator for Prasadam */}
+ {form.paymentMethod === "Cash" && totalAmount > 0 && (
+ <div className="mt-4">
+ <CashTenderCalculator
+ totalAmount={totalAmount}
+ cashTendered={cashTendered}
+ onChange={setCashTendered}
+ />
+ </div>
+ )}
 
  {message ? (
  <div className="rounded-2xl border border-[#f4d0a3] bg-[#fff7eb] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 px-4 py-3 text-sm font-semibold text-[#8a5200]">

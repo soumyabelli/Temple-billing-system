@@ -8,7 +8,7 @@ router.get("/account-heads", authenticate, authorizeRoles("admin", "accountant")
 router.post("/account-heads", authenticate, authorizeRoles("accountant"), accountController.createAccountHead);
 
 // Transactions
-router.get("/transactions", authenticate, authorizeRoles("admin", "accountant"), accountController.getTransactions);
+router.get("/transactions", authenticate, authorizeRoles("admin", "accountant", "cashier"), accountController.getTransactions);
 router.get("/register", authenticate, authorizeRoles("admin", "accountant"), accountController.getRegister);
 router.post("/manual-expense", authenticate, authorizeRoles("accountant"), accountController.createManualExpense);
 router.put("/expense/:id/approve", authenticate, authorizeRoles("accountant"), accountController.approveExpense);
@@ -20,7 +20,8 @@ router.get("/profit-loss", authenticate, authorizeRoles("admin", "accountant"), 
 router.get("/monthly-report", authenticate, authorizeRoles("admin", "accountant"), accountController.getMonthlyReport);
 router.get("/annual-report", authenticate, authorizeRoles("admin", "accountant"), accountController.getAnnualReport);
 
-// Cash Closing
+// Cash Closing & Shift Reconciliation
+router.get("/shift-summary", authenticate, authorizeRoles("admin", "accountant", "cashier"), accountController.getShiftSummary);
 router.get("/cash-closing", authenticate, authorizeRoles("admin", "accountant", "cashier"), accountController.getCashClosings);
 router.post("/cash-closing", authenticate, authorizeRoles("cashier", "accountant"), accountController.submitCashClosing);
 router.put("/cash-closing/:id/verify", authenticate, authorizeRoles("accountant"), accountController.verifyCashClosing);

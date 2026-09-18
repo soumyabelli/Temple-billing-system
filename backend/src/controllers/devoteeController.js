@@ -7,6 +7,7 @@ const User = require("../models/User");
 const PrasadamOrder = require("../models/PrasadamOrder");
 const Prasadam = require("../models/Prasadam");
 const Bill = require("../models/Bill");
+const Room = require("../models/Room");
 const { isDbConnected } = require("../config/db");
 const fileUserStore = require("../store/fileUserStore");
 const fileBookingStore = require("../store/fileBookingStore");
@@ -21,6 +22,12 @@ const {
   createStaffNotification,
 } = require("../utils/notificationService");
 const { sendBookingConfirmation, sendDonationReceipt, sendPrasadamOrderConfirmation } = require("../utils/communicationService");
+const {
+  generateBookingReceiptPDF,
+  generateDonationReceiptPDF,
+  generatePrasadamReceiptPDF,
+  generateRoomBookingReceiptPDF,
+} = require("../utils/pdfGenerator");
 const { buildEmailLookup, normalizeEmail } = require("../utils/email");
 const { recordTransaction } = require("../services/accountingService");
 const InventoryRequest = require("../models/InventoryRequest");
@@ -425,13 +432,38 @@ const createBooking = async (req, res) => {
       });
     }
 
-    // Direct / Simulated Confirmations
-    // Send notification
+    // Generate official PDF receipt & base64 attachment
+    let base64Attachment = undefined;
+    const devoteeObj = { name: devoteeName, email: normalizedDevoteeEmail, phone: devoteePhone || contactNumber };
+    try {
+      const pdfBuffer = await generateBookingReceiptPDF(devoteeObj, {
+        ...booking.toObject ? booking.toObject() : booking,
+        service,
+        datetime,
+        amount: numericAmount,
+        status: bookingStatus,
+        paymentMethod: pm,
+        referenceNo: booking.referenceNo || `BK-${String(booking._id).slice(-6).toUpperCase()}`,
+        isCombined: booking.isCombined,
+        items: booking.items,
+        tenderedCash,
+        returnedChange,
+      });
+      if (pdfBuffer) {
+        base64Attachment = `data:application/pdf;base64,${pdfBuffer.toString("base64")}`;
+      }
+    } catch (pdfErr) {
+      console.warn("Failed to generate booking receipt PDF:", pdfErr.message);
+    }
+
+    // Devotee Website Notification (with downloadable receipt)
     await createStaffNotification({
-      title: "Booking Confirmed",
-      message: `Your ${service} booking has been confirmed successfully.`,
+      title: `Booking Confirmed: ${service}`,
+      message: `Your booking for "${service}" (₹${numericAmount}) has been confirmed successfully. You can download your official payment receipt anytime from this notification or your Devotee Receipts tab.`,
       audienceEmail: normalizedDevoteeEmail || undefined,
       category: "booking",
+      attachment: base64Attachment,
+      emailSent: true, // Handled by sendBookingConfirmation
     }).catch(() => { });
 
     // Also notify the cashier role
@@ -444,12 +476,13 @@ const createBooking = async (req, res) => {
 
     // Send multi-channel notifications (Email & SMS) if devotee info is available
     if (devoteeEmail || devoteePhone || contactNumber) {
-      const devotee = { name: devoteeName, email: normalizedDevoteeEmail, phone: devoteePhone || contactNumber };
-      sendBookingConfirmation(devotee, {
+      sendBookingConfirmation(devoteeObj, {
+        ...booking.toObject ? booking.toObject() : booking,
         service,
         datetime,
         amount: numericAmount,
         status: bookingStatus,
+        referenceNo: booking.referenceNo || `BK-${String(booking._id).slice(-6).toUpperCase()}`,
       }).catch((err) => console.warn("Failed to send booking confirmation:", err.message));
     }
 
@@ -474,29 +507,99 @@ const createBooking = async (req, res) => {
 
     if (isDbConnected() && paymentStatus === "Paid") {
       try {
+        const cashierUserId = req.user ? req.user.id : (req.body.cashierId || req.body.recordedBy || null);
+        const cashierUserName = req.user ? (req.user.name || "Cashier") : (req.body.cashierName || undefined);
+
         if (isCombined && items && items.length > 0) {
-          for (const item of items) {
+          let recordedSum = 0;
+          for (let idx = 0; idx < items.length; idx++) {
+            const item = items[idx];
+            const itemType = String(item.type || "").toLowerCase();
             let cat = "Pooja Income";
             let src = "Pooja Booking";
-            if (item.type === "Room" || item.type === "Accommodation") {
+            if (itemType === "room" || itemType === "accommodation") {
               cat = "Room Income";
               src = "Room Booking";
-            } else if (item.type === "Prasadam") {
+            } else if (itemType === "prasadam") {
               cat = "Prasadam Income";
               src = "Prasadam";
             }
+
+            const itemAmt = Number(item.amount || (Number(item.price) * (item.quantity || item.qty || 1)) || 0);
+            if (itemAmt <= 0) continue;
+            recordedSum += itemAmt;
 
             await recordTransaction({
               transactionType: "Credit",
               source: src,
               category: cat,
-              amount: Number(item.price) * (item.quantity || 1) || item.amount || 0,
+              amount: itemAmt,
               paymentMethod: pm || "Cash",
               status: "Completed",
-              description: `Combined Offline: ${item.name || item.service || src} for ${devoteeName}`,
+              description: `Combined #${idx + 1}: ${item.name || item.service || src} for ${devoteeName}`,
               referenceId: booking._id,
               referenceModel: "PoojaBooking",
-              recordedBy: req.user ? req.user.id : null,
+              recordedBy: cashierUserId,
+              cashierId: cashierUserId,
+              cashierName: cashierUserName,
+            });
+
+            // Update prasadam inventory stock for combined prasadam items
+            if (itemType === "prasadam") {
+              try {
+                const prasadamItem = await Prasadam.findOne({ name: { $regex: new RegExp(`^${item.name || item.service}$`, "i") } });
+                if (prasadamItem) {
+                  const qtyToDeduct = Number(item.quantity || item.qty || 1);
+                  prasadamItem.availableQuantity = Math.max(0, prasadamItem.availableQuantity - qtyToDeduct);
+                  await prasadamItem.save();
+
+                  if (prasadamItem.availableQuantity <= prasadamItem.minimumStock) {
+                    await createStaffBroadcastNotifications({
+                      title: "⚠️ Low Prasadam Stock",
+                      message: `${prasadamItem.name} stock is low. Current: ${prasadamItem.availableQuantity}.`,
+                      category: "inventory",
+                    }).catch(() => { });
+                  }
+                }
+              } catch (stockErr) {
+                console.warn("Failed to update prasadam stock for combined item:", stockErr.message);
+              }
+            }
+
+            // Update room occupancy for combined room items
+            if (itemType === "room" || itemType === "accommodation") {
+              try {
+                const roomNum = item.roomNumber || item.number;
+                if (roomNum) {
+                  const roomDoc = await Room.findOne({ number: roomNum });
+                  if (roomDoc && roomDoc.status === "Available") {
+                    roomDoc.status = "Occupied";
+                    roomDoc.devotee = devoteeName;
+                    roomDoc.phone = contactNumber;
+                    await roomDoc.save();
+                  }
+                }
+              } catch (roomErr) {
+                console.warn("Failed to update room status for combined item:", roomErr.message);
+              }
+            }
+          }
+
+          if (numericAmount > recordedSum) {
+            const remainder = numericAmount - recordedSum;
+            await recordTransaction({
+              transactionType: "Credit",
+              source: "Pooja Booking",
+              category: "Pooja Income",
+              amount: remainder,
+              paymentMethod: pm || "Cash",
+              status: "Completed",
+              description: `Combined Balance for ${devoteeName}`,
+              referenceId: booking._id,
+              referenceModel: "PoojaBooking",
+              recordedBy: cashierUserId,
+              cashierId: cashierUserId,
+              cashierName: cashierUserName,
             });
           }
         } else {
@@ -510,7 +613,9 @@ const createBooking = async (req, res) => {
             description: `Pooja Booking: ${service} for ${devoteeName}`,
             referenceId: booking._id,
             referenceModel: "PoojaBooking",
-            recordedBy: req.user ? req.user.id : null,
+            recordedBy: cashierUserId,
+            cashierId: cashierUserId,
+            cashierName: cashierUserName,
           });
         }
       } catch (err) {
@@ -573,13 +678,33 @@ const verifyBookingPayment = async (req, res) => {
       }
     }
 
-    // Send notifications
+    // Send notifications & receipts
     try {
+      const devoteeObj = { name: booking.devoteeName, email: booking.devoteeEmail, phone: booking.devoteePhone || booking.contactNumber };
+      let base64Attachment = undefined;
+      try {
+        const pdfBuffer = await generateBookingReceiptPDF(devoteeObj, {
+          ...booking.toObject ? booking.toObject() : booking,
+          service: booking.service,
+          datetime: booking.datetime,
+          amount: booking.amount,
+          status: "Confirmed",
+          referenceNo: booking.referenceNo || `BK-${String(booking._id).slice(-6).toUpperCase()}`,
+        });
+        if (pdfBuffer) {
+          base64Attachment = `data:application/pdf;base64,${pdfBuffer.toString("base64")}`;
+        }
+      } catch (pdfErr) {
+        console.warn("Failed to generate booking receipt PDF on verify:", pdfErr.message);
+      }
+
       await createStaffNotification({
-        title: "Booking Confirmed",
-        message: `Your ${booking.service} booking has been confirmed successfully.`,
+        title: `Booking Confirmed: ${booking.service}`,
+        message: `Your booking for "${booking.service}" (₹${booking.amount}) has been confirmed successfully. You can download your official payment receipt anytime from this notification or your Devotee Receipts tab.`,
         audienceEmail: booking.devoteeEmail || undefined,
         category: "booking",
+        attachment: base64Attachment,
+        emailSent: true,
       });
 
       await createStaffNotification({
@@ -590,12 +715,13 @@ const verifyBookingPayment = async (req, res) => {
       });
 
       if (booking.devoteeEmail || booking.devoteePhone || booking.contactNumber) {
-        const devotee = { name: booking.devoteeName, email: booking.devoteeEmail, phone: booking.devoteePhone || booking.contactNumber };
-        sendBookingConfirmation(devotee, {
+        sendBookingConfirmation(devoteeObj, {
+          ...booking.toObject ? booking.toObject() : booking,
           service: booking.service,
           datetime: booking.datetime,
           amount: booking.amount,
           status: "Confirmed",
+          referenceNo: booking.referenceNo || `BK-${String(booking._id).slice(-6).toUpperCase()}`,
         }).catch((err) => console.warn("Failed to send booking confirmation:", err.message));
       }
     } catch (notifErr) {
@@ -604,29 +730,99 @@ const verifyBookingPayment = async (req, res) => {
 
     if (isDbConnected() && booking.paymentStatus === "Paid") {
       try {
+        const cashierUserId = req.user ? req.user.id : null;
+        const cashierUserName = req.user ? (req.user.name || "Cashier") : undefined;
+
         if (booking.isCombined && booking.items && booking.items.length > 0) {
-          for (const item of booking.items) {
+          let recordedSum = 0;
+          for (let idx = 0; idx < booking.items.length; idx++) {
+            const item = booking.items[idx];
+            const itemType = String(item.type || "").toLowerCase();
             let cat = "Pooja Income";
             let src = "Pooja Booking";
-            if (item.type === "Room" || item.type === "Accommodation") {
+            if (itemType === "room" || itemType === "accommodation") {
               cat = "Room Income";
               src = "Room Booking";
-            } else if (item.type === "Prasadam") {
+            } else if (itemType === "prasadam") {
               cat = "Prasadam Income";
               src = "Prasadam";
             }
+
+            const itemAmt = Number(item.amount || (Number(item.price) * (item.quantity || item.qty || 1)) || 0);
+            if (itemAmt <= 0) continue;
+            recordedSum += itemAmt;
 
             await recordTransaction({
               transactionType: "Credit",
               source: src,
               category: cat,
-              amount: Number(item.price) * (item.quantity || 1) || item.amount || 0,
+              amount: itemAmt,
               paymentMethod: booking.paymentMethod || "Bank Transfer",
               status: "Completed",
-              description: `Combined: ${item.name || item.service || src} for ${booking.devoteeName} (${razorpay_payment_id})`,
+              description: `Combined #${idx + 1}: ${item.name || item.service || src} for ${booking.devoteeName} (${razorpay_payment_id})`,
               referenceId: booking._id,
               referenceModel: "PoojaBooking",
-              recordedBy: req.user ? req.user.id : null,
+              recordedBy: cashierUserId,
+              cashierId: cashierUserId,
+              cashierName: cashierUserName,
+            });
+
+            // Update prasadam inventory stock for combined prasadam items
+            if (itemType === "prasadam") {
+              try {
+                const prasadamItem = await Prasadam.findOne({ name: { $regex: new RegExp(`^${item.name || item.service}$`, "i") } });
+                if (prasadamItem) {
+                  const qtyToDeduct = Number(item.quantity || item.qty || 1);
+                  prasadamItem.availableQuantity = Math.max(0, prasadamItem.availableQuantity - qtyToDeduct);
+                  await prasadamItem.save();
+
+                  if (prasadamItem.availableQuantity <= prasadamItem.minimumStock) {
+                    await createStaffBroadcastNotifications({
+                      title: "⚠️ Low Prasadam Stock",
+                      message: `${prasadamItem.name} stock is low. Current: ${prasadamItem.availableQuantity}.`,
+                      category: "inventory",
+                    }).catch(() => { });
+                  }
+                }
+              } catch (stockErr) {
+                console.warn("Failed to update prasadam stock for combined item:", stockErr.message);
+              }
+            }
+
+            // Update room occupancy for combined room items
+            if (itemType === "room" || itemType === "accommodation") {
+              try {
+                const roomNum = item.roomNumber || item.number;
+                if (roomNum) {
+                  const roomDoc = await Room.findOne({ number: roomNum });
+                  if (roomDoc && roomDoc.status === "Available") {
+                    roomDoc.status = "Occupied";
+                    roomDoc.devotee = booking.devoteeName;
+                    roomDoc.phone = booking.devoteePhone || booking.contactNumber;
+                    await roomDoc.save();
+                  }
+                }
+              } catch (roomErr) {
+                console.warn("Failed to update room status for combined item:", roomErr.message);
+              }
+            }
+          }
+
+          if (booking.amount > recordedSum) {
+            const remainder = booking.amount - recordedSum;
+            await recordTransaction({
+              transactionType: "Credit",
+              source: "Pooja Booking",
+              category: "Pooja Income",
+              amount: remainder,
+              paymentMethod: booking.paymentMethod || "Bank Transfer",
+              status: "Completed",
+              description: `Combined Balance: ${booking.service} for ${booking.devoteeName} (${razorpay_payment_id})`,
+              referenceId: booking._id,
+              referenceModel: "PoojaBooking",
+              recordedBy: cashierUserId,
+              cashierId: cashierUserId,
+              cashierName: cashierUserName,
             });
           }
         } else {
@@ -640,7 +836,9 @@ const verifyBookingPayment = async (req, res) => {
             description: `Online Pooja Booking: ${booking.service} for ${booking.devoteeName} (${razorpay_payment_id})`,
             referenceId: booking._id,
             referenceModel: "PoojaBooking",
-            recordedBy: req.user ? req.user.id : null,
+            recordedBy: cashierUserId,
+            cashierId: cashierUserId,
+            cashierName: cashierUserName,
           });
         }
       } catch (err) {
@@ -776,6 +974,7 @@ const createDonation = async (req, res) => {
       });
     } else if (isDbConnected() && paymentStatus === "Paid") {
       // Offline paid donation
+      const cashierUserId = req.user ? req.user.id : (req.body.cashierId || req.body.recordedBy || null);
       await recordTransaction({
         transactionType: "Credit",
         source: "Donation",
@@ -786,15 +985,39 @@ const createDonation = async (req, res) => {
         description: `Donation: ${category} by ${donorName}`,
         referenceId: donation._id,
         referenceModel: "Donation",
-        recordedBy: req.user ? req.user.id : null,
+        recordedBy: cashierUserId,
+        cashierId: cashierUserId,
+        cashierName: req.user?.name || undefined,
       });
     }
 
-    // Direct / Simulated Completed Donation
+    // Generate official PDF receipt & base64 attachment
+    let base64Attachment = undefined;
+    const donorObj = { name: donorName.trim(), email: normalizedDonorEmail, phone: donorPhone || contactNumber };
+    try {
+      const pdfBuffer = await generateDonationReceiptPDF(donorObj, {
+        amount: numericAmount,
+        category,
+        transactionId: transactionId || "N/A",
+        paymentMethod: paymentMethod || "Cash",
+        createdAt: donation.createdAt || new Date(),
+        referenceNo: donation.referenceNo || `DN-${String(donation._id).slice(-6).toUpperCase()}`,
+      });
+      if (pdfBuffer) {
+        base64Attachment = `data:application/pdf;base64,${pdfBuffer.toString("base64")}`;
+      }
+    } catch (pdfErr) {
+      console.warn("Failed to generate donation receipt PDF:", pdfErr.message);
+    }
+
+    // Devotee Website Notification (with downloadable receipt)
     await createStaffNotification({
-      title: "Donation Received",
-      message: `${donorName.trim()} donated INR ${numericAmount} for ${category}.`,
+      title: `Donation Received: ₹${numericAmount}`,
+      message: `Thank you for your generous donation of ₹${numericAmount} towards "${category}". Your official 80G tax receipt is attached and available for download anytime from this notification or your Devotee Receipts tab.`,
       audienceEmail: normalizedDonorEmail || undefined,
+      category: "donation",
+      attachment: base64Attachment,
+      emailSent: true, // Handled by sendDonationReceipt
     }).catch(() => { });
 
     // Also notify the cashier role
@@ -807,11 +1030,12 @@ const createDonation = async (req, res) => {
 
     // Send multi-channel notifications (Email & SMS) if donor info is available
     if (donorEmail || donorPhone || contactNumber) {
-      const donor = { name: donorName.trim(), email: normalizedDonorEmail, phone: donorPhone || contactNumber };
-      await sendDonationReceipt(donor, {
+      await sendDonationReceipt(donorObj, {
         amount: numericAmount,
         category,
         transactionId: transactionId || "N/A",
+        paymentMethod: paymentMethod || "Cash",
+        referenceNo: donation.referenceNo || `DN-${String(donation._id).slice(-6).toUpperCase()}`,
       }).catch((err) => console.warn("Failed to send donation receipt:", err.message));
     }
 
@@ -1670,11 +1894,34 @@ const createPrasadamOrder = async (req, res) => {
       });
     }
 
-    // Direct / Simulated Confirmations
+    // Generate official PDF receipt & base64 attachment
+    let base64Attachment = undefined;
+    const devoteeObj = { name: devoteeName, email: normalizedOrderEmail, phone };
+    try {
+      const pdfBuffer = await generatePrasadamReceiptPDF(devoteeObj, {
+        item: itemName,
+        quantity: normalizedQty,
+        amount: totalAmount,
+        status: orderStatus,
+        paymentMethod: paymentMethod || "Cash",
+        createdAt: order.createdAt || new Date(),
+        referenceNo: order.orderNumber || `PR-${String(order._id).slice(-6).toUpperCase()}`,
+      });
+      if (pdfBuffer) {
+        base64Attachment = `data:application/pdf;base64,${pdfBuffer.toString("base64")}`;
+      }
+    } catch (pdfErr) {
+      console.warn("Failed to generate prasadam receipt PDF:", pdfErr.message);
+    }
+
+    // Devotee Website Notification (with downloadable receipt)
     await Notification.create({
-      title: "New Prasadam Order",
-      message: `${devoteeName} ordered ${itemName} x${normalizedQty}.`,
+      title: `Prasadam Order Confirmed: ${itemName}`,
+      message: `Your order for ${itemName} (Quantity: ${normalizedQty}, Total: ₹${totalAmount}) has been confirmed. You can download your pickup receipt anytime from this notification or your Devotee Receipts tab.`,
       audienceEmail: normalizedOrderEmail || undefined,
+      category: "prasadam",
+      attachment: base64Attachment,
+      emailSent: true, // Handled by sendPrasadamOrderConfirmation
     });
 
     // Also notify the cashier role
@@ -1687,12 +1934,12 @@ const createPrasadamOrder = async (req, res) => {
 
     // Send multi-channel notifications (Email & SMS) if devotee info is available
     if (email || phone) {
-      const devotee = { name: devoteeName, email: normalizedOrderEmail, phone };
-      await sendPrasadamOrderConfirmation(devotee, {
+      await sendPrasadamOrderConfirmation(devoteeObj, {
         item: itemName,
         quantity: normalizedQty,
         amount: totalAmount,
         status: orderStatus,
+        referenceNo: order.orderNumber || `PR-${String(order._id).slice(-6).toUpperCase()}`,
       }).catch((err) => console.warn("Failed to send prasadam order confirmation:", err.message));
     }
 
@@ -1705,6 +1952,28 @@ const createPrasadamOrder = async (req, res) => {
         message: `${prasadamItem.name} stock is low. Current: ${prasadamItem.availableQuantity}.`,
         category: "inventory",
       }).catch(() => { });
+    }
+
+    if (isDbConnected() && (orderStatus === "Placed" || isCashPayment)) {
+      try {
+        const cashierUserId = req.user ? req.user.id : (req.body.cashierId || req.body.recordedBy || null);
+        await recordTransaction({
+          transactionType: "Credit",
+          source: "Prasadam",
+          category: "Prasadam Income",
+          amount: totalAmount,
+          paymentMethod: paymentMethod || "Cash",
+          status: "Completed",
+          description: `Prasadam Sale: ${itemName} x${normalizedQty} for ${devoteeName}`,
+          referenceId: order._id,
+          referenceModel: "PrasadamOrder",
+          recordedBy: cashierUserId,
+          cashierId: cashierUserId,
+          cashierName: req.user?.name || undefined,
+        });
+      } catch (err) {
+        console.error("Failed to record accounting transaction for prasadam order:", err);
+      }
     }
 
     return res.status(201).json({
@@ -1759,12 +2028,34 @@ const verifyPrasadamPayment = async (req, res) => {
       }
     }
 
-    // Send notifications/emails
+    // Send notifications/emails with attached PDF
     try {
+      const devoteeObj = { name: order.devoteeName, email: order.email, phone: order.phone };
+      let base64Attachment = undefined;
+      try {
+        const pdfBuffer = await generatePrasadamReceiptPDF(devoteeObj, {
+          item: order.itemName,
+          quantity: order.quantity,
+          amount: order.amount,
+          status: "Placed",
+          paymentMethod: order.paymentMethod || "UPI",
+          createdAt: order.createdAt || new Date(),
+          referenceNo: order.orderNumber || `PR-${String(order._id).slice(-6).toUpperCase()}`,
+        });
+        if (pdfBuffer) {
+          base64Attachment = `data:application/pdf;base64,${pdfBuffer.toString("base64")}`;
+        }
+      } catch (pdfErr) {
+        console.warn("Failed to generate prasadam receipt PDF on verify:", pdfErr.message);
+      }
+
       await Notification.create({
-        title: "New Prasadam Order",
-        message: `${order.devoteeName} ordered ${order.itemName} x${order.quantity}.`,
+        title: `Prasadam Order Confirmed: ${order.itemName}`,
+        message: `${order.devoteeName} ordered ${order.itemName} x${order.quantity} (Total: ₹${order.amount}). You can download your official receipt anytime from this notification or your Devotee Receipts tab.`,
         audienceEmail: order.email || undefined,
+        category: "prasadam",
+        attachment: base64Attachment,
+        emailSent: true, // Handled by sendPrasadamOrderConfirmation
       });
 
       await createStaffNotification({
@@ -1775,12 +2066,12 @@ const verifyPrasadamPayment = async (req, res) => {
       });
 
       if (order.email || order.phone) {
-        const devotee = { name: order.devoteeName, email: order.email, phone: order.phone };
-        sendPrasadamOrderConfirmation(devotee, {
+        sendPrasadamOrderConfirmation(devoteeObj, {
           item: order.itemName,
           quantity: order.quantity,
           amount: order.amount,
           status: "Placed",
+          referenceNo: order.orderNumber || `PR-${String(order._id).slice(-6).toUpperCase()}`,
         }).catch((err) => console.warn("Failed to send prasadam order confirmation:", err.message));
       }
     } catch (notifErr) {
@@ -1871,16 +2162,42 @@ const createRazorpayOrder = async (req, res) => {
         }
       }
 
-      // Create notification and send receipt where possible
+      // Create notification with PDF receipt and send email
       try {
+        const donorObj = { name: donorName || "Anonymous", email: normalizedDonorEmail, phone: donorPhone };
+        let base64Attachment = undefined;
+        try {
+          const pdfBuffer = await generateDonationReceiptPDF(donorObj, {
+            amount: numericAmount,
+            category,
+            transactionId: donation.transactionId || "Simulated",
+            paymentMethod: donation.paymentMethod || "Online",
+            createdAt: donation.createdAt || new Date(),
+            referenceNo: donation.referenceNo || `DN-${String(donation._id).slice(-6).toUpperCase()}`,
+          });
+          if (pdfBuffer) {
+            base64Attachment = `data:application/pdf;base64,${pdfBuffer.toString("base64")}`;
+          }
+        } catch (pdfErr) {
+          console.warn("Failed to generate simulated donation PDF:", pdfErr.message);
+        }
+
         await Notification.create({
-          title: "Donation Received",
-          message: `${donorName || "Anonymous"} donated INR ${numericAmount} (simulated).`,
+          title: `Donation Received: ₹${numericAmount}`,
+          message: `Thank you for your generous donation of ₹${numericAmount} towards "${category}". Your official 80G tax receipt is attached and available for download anytime.`,
           audienceEmail: normalizedDonorEmail || undefined,
+          category: "donation",
+          attachment: base64Attachment,
+          emailSent: true,
         });
+
         if (donorEmail || donorPhone) {
-          const donor = { name: donorName, email: normalizedDonorEmail, phone: donorPhone };
-          await sendDonationReceipt(donor, { amount: numericAmount, category, transactionId: donation.transactionId });
+          await sendDonationReceipt(donorObj, {
+            amount: numericAmount,
+            category,
+            transactionId: donation.transactionId,
+            referenceNo: donation.referenceNo || `DN-${String(donation._id).slice(-6).toUpperCase()}`,
+          });
         }
       } catch (notifErr) {
         console.warn("Notification for simulated donation failed:", notifErr);
@@ -1975,16 +2292,42 @@ const verifyRazorpayPayment = async (req, res) => {
       }
     }
 
-    // Send receipt / notification
+    // Send receipt / notification with PDF
     try {
+      const donorObj = { name: donation.donorName, email: donation.donorEmail, phone: donation.donorPhone };
+      let base64Attachment = undefined;
+      try {
+        const pdfBuffer = await generateDonationReceiptPDF(donorObj, {
+          amount: donation.amount,
+          category: donation.category,
+          transactionId: donation.transactionId || "Online",
+          paymentMethod: donation.paymentMethod || "UPI",
+          createdAt: donation.createdAt || new Date(),
+          referenceNo: donation.referenceNo || `DN-${String(donation._id).slice(-6).toUpperCase()}`,
+        });
+        if (pdfBuffer) {
+          base64Attachment = `data:application/pdf;base64,${pdfBuffer.toString("base64")}`;
+        }
+      } catch (pdfErr) {
+        console.warn("Failed to generate online donation PDF:", pdfErr.message);
+      }
+
       await Notification.create({
-        title: "Donation Received",
-        message: `${donation.donorName || "A donor"} donated INR ${donation.amount}.`,
+        title: `Donation Received: ₹${donation.amount}`,
+        message: `Thank you for your generous donation of ₹${donation.amount} towards "${donation.category}". Your official 80G tax receipt is attached and available for download anytime.`,
         audienceEmail: donation.donorEmail || undefined,
+        category: "donation",
+        attachment: base64Attachment,
+        emailSent: true,
       });
+
       if (donation.donorEmail || donation.donorPhone) {
-        const donor = { name: donation.donorName, email: donation.donorEmail, phone: donation.donorPhone };
-        await sendDonationReceipt(donor, { amount: donation.amount, category: donation.category, transactionId: donation.transactionId });
+        await sendDonationReceipt(donorObj, {
+          amount: donation.amount,
+          category: donation.category,
+          transactionId: donation.transactionId,
+          referenceNo: donation.referenceNo || `DN-${String(donation._id).slice(-6).toUpperCase()}`,
+        });
       }
     } catch (notifErr) {
       console.warn("Notification after verify failed:", notifErr);

@@ -18,6 +18,7 @@ import { getPrasadamTypes } from "../../services/prasadamTypeService";
 import { useNotifications } from "../../context/NotificationContext";
 import { useAuth } from "../../context/AuthContext";
 import { downloadReceiptPDF } from "../../utils/receiptGenerator";
+import CashTenderCalculator from "../../components/common/CashTenderCalculator";
 
 const emptyForm = {
  devoteeName: "",
@@ -25,7 +26,7 @@ const emptyForm = {
  devoteePhone: "",
  cartItems: [],
  datetime: "",
- paymentMethod: "UPI",
+ paymentMethod: "Cash",
  notes: "",
 };
 
@@ -62,6 +63,7 @@ const BookingPayments = () => {
  const [showHistory, setShowHistory] = useState(false);
  const [activeCategory, setActiveCategory] = useState("pooja");
  const [expandedSections, setExpandedSections] = useState({ pooja: false, prasadam: false, room: false });
+ const [cashTendered, setCashTendered] = useState("");
  const [form, setForm] = useState({
  ...emptyForm,
  datetime: buildMinDateTime(),
@@ -208,164 +210,184 @@ const BookingPayments = () => {
  return form.cartItems.reduce((acc, item) => acc + (Number(item.amount) || 0), 0);
  }, [form.cartItems]);
 
- const handleSubmit = async (event) => {
- event.preventDefault();
- setMessage("");
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setMessage("");
 
- if (!form.devoteeName.trim() || form.cartItems.length === 0 || totalAmount <= 0) {
- setMessage("Please fill devotee name and add at least one item to the cart.");
- return;
- }
+    if (!form.devoteeName.trim() || form.cartItems.length === 0 || totalAmount <= 0) {
+      setMessage("Please fill devotee name and add at least one item to the cart.");
+      return;
+    }
 
- setSaving(true);
- try {
- const bookingRes = await createBooking({
- devoteeName: form.devoteeName.trim(),
- devoteeEmail: form.devoteeEmail.trim() || undefined,
- devoteePhone: form.devoteePhone.trim() || undefined,
- service: form.cartItems[0]?.name || "Pooja Booking",
- datetime: form.datetime || buildMinDateTime(),
- amount: totalAmount,
- paymentMethod: form.paymentMethod,
- notes: form.notes.trim(),
- status: "Confirmed",
- source: "Counter",
- isCashier: true,
- isCombined: true,
- items: form.cartItems,
- });
+    if (form.paymentMethod === "Cash") {
+      const tenderNum = cashTendered === "" ? totalAmount : Number(cashTendered);
+      if (tenderNum < totalAmount) {
+        setMessage(`Cash received (₹${tenderNum}) is less than total bill amount (₹${totalAmount}). Please collect ₹${(totalAmount - tenderNum).toFixed(2)} more from the devotee.`);
+        return;
+      }
+    }
 
- const { booking: createdBooking, order, key, simulated } = bookingRes;
+    setSaving(true);
+    try {
+      const tenderAmt = form.paymentMethod === "Cash" ? (cashTendered === "" ? totalAmount : Number(cashTendered)) : null;
+      const changeAmt = tenderAmt ? Math.max(0, tenderAmt - totalAmount) : null;
+      const tenderNote = form.paymentMethod === "Cash" && tenderAmt ? `Cash Tendered: ₹${tenderAmt.toFixed(2)} | Change Returned: ₹${changeAmt.toFixed(2)}` : "";
+      const finalNotes = [form.notes.trim(), tenderNote].filter(Boolean).join(" | ");
 
- if (!simulated && order) {
- const loadRazorpayScript = () =>
- new Promise((resolve) => {
- if (window.Razorpay) return resolve(true);
- const script = document.createElement("script");
- script.src = "https://checkout.razorpay.com/v1/checkout.js";
- script.onload = () => resolve(true);
- script.onerror = () => resolve(false);
- document.body.appendChild(script);
- });
+      const bookingRes = await createBooking({
+        devoteeName: form.devoteeName.trim(),
+        devoteeEmail: form.devoteeEmail.trim() || undefined,
+        devoteePhone: form.devoteePhone.trim() || undefined,
+        service: form.cartItems[0]?.name || "Pooja Booking",
+        datetime: form.datetime || buildMinDateTime(),
+        amount: totalAmount,
+        paymentMethod: form.paymentMethod,
+        notes: finalNotes,
+        status: "Confirmed",
+        source: "Counter",
+        isCashier: true,
+        isCombined: true,
+        items: form.cartItems,
+      });
 
- const loaded = await loadRazorpayScript();
- if (!loaded) {
- setMessage("Unable to load payment gateway. Try again later.");
- setSaving(false);
- return;
- }
+      const { booking: createdBooking, order, key, simulated } = bookingRes;
 
- const options = {
- key: key || "",
- amount: order.amount,
- currency: order.currency,
- name: "Temple Pooja Booking",
- description: "Multiple Items Cart",
- order_id: order.id,
- prefill: {
- name: form.devoteeName.trim(),
- email: form.devoteeEmail.trim(),
- contact: form.devoteePhone.trim(),
- },
- handler: async function (resp) {
- try {
- setSaving(true);
- await verifyBookingPayment({
- razorpay_order_id: resp.razorpay_order_id,
- razorpay_payment_id: resp.razorpay_payment_id,
- razorpay_signature: resp.razorpay_signature,
- bookingId: createdBooking._id,
- });
+      if (!simulated && order) {
+        const loadRazorpayScript = () =>
+          new Promise((resolve) => {
+            if (window.Razorpay) return resolve(true);
+            const script = document.createElement("script");
+            script.src = "https://checkout.razorpay.com/v1/checkout.js";
+            script.onload = () => resolve(true);
+            script.onerror = () => resolve(false);
+            document.body.appendChild(script);
+          });
 
- setForm({
- ...emptyForm,
- datetime: buildMinDateTime(),
- });
- setMessage("Pooja booking saved successfully and paid.");
- await loadData();
- loadNotifications().catch(() => { });
+        const loaded = await loadRazorpayScript();
+        if (!loaded) {
+          setMessage("Unable to load payment gateway. Try again later.");
+          setSaving(false);
+          return;
+        }
 
- // Generate Receipt
- const receiptData = {
- isOnline: false,
- receiptNo: createdBooking.bookingNumber || createdBooking.referenceNo || `BK-${Date.now().toString().slice(-6)}`,
- bookingDate: formatDateTime(createdBooking.createdAt || new Date()),
- paymentMode: createdBooking.paymentMethod || form.paymentMethod,
- transactionId: resp.razorpay_payment_id || "-",
- cashierName: user?.name || "Cashier",
- devoteeName: createdBooking.devoteeName || form.devoteeName,
- mobile: createdBooking.devoteePhone || createdBooking.contactNumber || form.devoteePhone || "-",
- email: createdBooking.devoteeEmail || form.devoteeEmail || "-",
- address: createdBooking.address || "-",
- poojaBookings: (createdBooking.items || form.cartItems).map((i, idx) => ({ slNo: idx + 1, name: i.name, date: formatDateTime(i.date || form.datetime), qty: i.qty || 1, amount: i.amount })),
- prasadamOrders: [],
- subTotal: createdBooking.amount || totalAmount,
- templeCharges: 0,
- grandTotal: createdBooking.amount || totalAmount,
- amountInWords: `Rs. ${createdBooking.amount || totalAmount}`,
- devoteeMaterials: [],
- templeMaterials: [],
- notes: [createdBooking.notes || form.notes].filter(Boolean),
- };
- downloadReceiptPDF(receiptData, `receipt-${receiptData.receiptNo}.pdf`).catch(err => console.error("Receipt generation failed", err));
+        const options = {
+          key: key || "",
+          amount: order.amount,
+          currency: order.currency,
+          name: "Temple Pooja Booking",
+          description: "Multiple Items Cart",
+          order_id: order.id,
+          prefill: {
+            name: form.devoteeName.trim(),
+            email: form.devoteeEmail.trim(),
+            contact: form.devoteePhone.trim(),
+          },
+          handler: async function (resp) {
+            try {
+              setSaving(true);
+              await verifyBookingPayment({
+                razorpay_order_id: resp.razorpay_order_id,
+                razorpay_payment_id: resp.razorpay_payment_id,
+                razorpay_signature: resp.razorpay_signature,
+                bookingId: createdBooking._id,
+              });
 
- } catch (err) {
- setMessage("Payment verification failed.");
- console.warn("verify booking payment handler error", err);
- } finally {
- setSaving(false);
- }
- },
- modal: {
- ondismiss: function () {
- setSaving(false);
- },
- },
- };
+              setForm({
+                ...emptyForm,
+                datetime: buildMinDateTime(),
+              });
+              setCashTendered("");
+              setMessage("Pooja booking saved successfully and paid.");
+              await loadData();
+              loadNotifications().catch(() => { });
 
- const rzp = new window.Razorpay(options);
- rzp.open();
- return;
- }
+              // Generate Receipt
+              const receiptData = {
+                isOnline: false,
+                receiptNo: createdBooking.bookingNumber || createdBooking.referenceNo || `BK-${Date.now().toString().slice(-6)}`,
+                bookingDate: formatDateTime(createdBooking.createdAt || new Date()),
+                paymentMode: createdBooking.paymentMethod || form.paymentMethod,
+                transactionId: resp.razorpay_payment_id || "-",
+                cashierName: user?.name || "Cashier",
+                devoteeName: createdBooking.devoteeName || form.devoteeName,
+                mobile: createdBooking.devoteePhone || createdBooking.contactNumber || form.devoteePhone || "-",
+                email: createdBooking.devoteeEmail || form.devoteeEmail || "-",
+                address: createdBooking.address || "-",
+                poojaBookings: (createdBooking.items || form.cartItems).map((i, idx) => ({ slNo: idx + 1, name: i.name, date: formatDateTime(i.date || form.datetime), qty: i.qty || 1, amount: i.amount })),
+                prasadamOrders: [],
+                subTotal: createdBooking.amount || totalAmount,
+                templeCharges: 0,
+                grandTotal: createdBooking.amount || totalAmount,
+                amountInWords: `Rs. ${createdBooking.amount || totalAmount}`,
+                devoteeMaterials: [],
+                templeMaterials: [],
+                notes: [createdBooking.notes || form.notes].filter(Boolean),
+              };
+              downloadReceiptPDF(receiptData, `receipt-${receiptData.receiptNo}.pdf`).catch(err => console.error("Receipt generation failed", err));
 
- setForm({
- ...emptyForm,
- datetime: buildMinDateTime(),
- });
- setMessage("Pooja booking saved successfully. The history and bill ledger were updated.");
- await loadData();
- loadNotifications().catch(() => { });
+            } catch (err) {
+              setMessage("Payment verification failed.");
+              console.warn("verify booking payment handler error", err);
+            } finally {
+              setSaving(false);
+            }
+          },
+          modal: {
+            ondismiss: function () {
+              setSaving(false);
+            },
+          },
+        };
 
- // Generate Receipt
- const receiptData = {
- isOnline: false,
- receiptNo: createdBooking.bookingNumber || createdBooking.referenceNo || `BK-${Date.now().toString().slice(-6)}`,
- bookingDate: formatDateTime(createdBooking.createdAt || new Date()),
- paymentMode: createdBooking.paymentMethod || form.paymentMethod,
- transactionId: "-",
- cashierName: user?.name || "Cashier",
- devoteeName: createdBooking.devoteeName || form.devoteeName,
- mobile: createdBooking.devoteePhone || createdBooking.contactNumber || form.devoteePhone || "-",
- email: createdBooking.devoteeEmail || form.devoteeEmail || "-",
- address: createdBooking.address || "-",
- poojaBookings: (createdBooking.items || form.cartItems).map((i, idx) => ({ slNo: idx + 1, name: i.name, date: formatDateTime(i.date || form.datetime), qty: i.qty || 1, amount: i.amount })),
- prasadamOrders: [],
- subTotal: createdBooking.amount || totalAmount,
- templeCharges: 0,
- grandTotal: createdBooking.amount || totalAmount,
- amountInWords: `Rs. ${createdBooking.amount || totalAmount}`,
- devoteeMaterials: [],
- templeMaterials: [],
- notes: [createdBooking.notes || form.notes].filter(Boolean),
- };
- downloadReceiptPDF(receiptData, `receipt-${receiptData.receiptNo}.pdf`).catch(err => console.error("Receipt generation failed", err));
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+        return;
+      }
 
- } catch (error) {
- setMessage(error.response?.data?.error || error.response?.data?.message || "Failed to save booking.");
- } finally {
- setSaving(false);
- }
- };
+      setForm({
+        ...emptyForm,
+        datetime: buildMinDateTime(),
+      });
+      setCashTendered("");
+      const successMsg = form.paymentMethod === "Cash" && tenderAmt
+        ? `Booking saved successfully! Cash Received: ₹${tenderAmt}. Change to return: ₹${changeAmt.toFixed(2)}.`
+        : "Pooja booking saved successfully. The history and bill ledger were updated.";
+      setMessage(successMsg);
+      await loadData();
+      loadNotifications().catch(() => { });
+
+      // Generate Receipt
+      const receiptData = {
+        isOnline: false,
+        receiptNo: createdBooking.bookingNumber || createdBooking.referenceNo || `BK-${Date.now().toString().slice(-6)}`,
+        bookingDate: formatDateTime(createdBooking.createdAt || new Date()),
+        paymentMode: createdBooking.paymentMethod || form.paymentMethod,
+        transactionId: "-",
+        cashierName: user?.name || "Cashier",
+        devoteeName: createdBooking.devoteeName || form.devoteeName,
+        mobile: createdBooking.devoteePhone || createdBooking.contactNumber || form.devoteePhone || "-",
+        email: createdBooking.devoteeEmail || form.devoteeEmail || "-",
+        address: createdBooking.address || "-",
+        poojaBookings: (createdBooking.items || form.cartItems).map((i, idx) => ({ slNo: idx + 1, name: i.name, date: formatDateTime(i.date || form.datetime), qty: i.qty || 1, amount: i.amount })),
+        prasadamOrders: [],
+        subTotal: createdBooking.amount || totalAmount,
+        templeCharges: 0,
+        grandTotal: createdBooking.amount || totalAmount,
+        amountInWords: `Rs. ${createdBooking.amount || totalAmount}`,
+        devoteeMaterials: [],
+        templeMaterials: [],
+        notes: [createdBooking.notes || form.notes, tenderNote].filter(Boolean),
+        cashReceived: tenderAmt,
+        changeReturned: changeAmt,
+      };
+      downloadReceiptPDF(receiptData, `receipt-${receiptData.receiptNo}.pdf`).catch(err => console.error("Receipt generation failed", err));
+
+    } catch (error) {
+      setMessage(error.response?.data?.error || error.response?.data?.message || "Failed to save booking.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
  return (
  <CashierPageShell
@@ -545,16 +567,34 @@ const BookingPayments = () => {
  <span className="mb-2 block text-sm font-bold text-slate-800">Payment mode</span>
  <select
  value={form.paymentMethod}
- onChange={(e) => setForm((prev) => ({ ...prev, paymentMethod: e.target.value }))}
+ onChange={(e) => {
+ const newMode = e.target.value;
+ setForm((prev) => ({ ...prev, paymentMethod: newMode }));
+ if (newMode === "Cash" && totalAmount > 0) {
+ setCashTendered(totalAmount.toString());
+ }
+ }}
  className="w-full rounded-2xl border border-[#ead7bb] bg-[#fffaf4] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 px-4 py-3 text-base outline-none focus:border-[#f28c18]"
  >
- <option>UPI</option>
- <option>Card</option>
- <option>Bank Transfer</option>
- <option>Net Banking</option>
+ <option value="Cash">Cash (Counter)</option>
+ <option value="UPI">UPI</option>
+ <option value="Card">Card</option>
+ <option value="Bank Transfer">Bank Transfer</option>
+ <option value="Net Banking">Net Banking</option>
  </select>
  </label>
  </div>
+
+ {/* Cash Tender & Change Calculator for Cashier */}
+ {form.paymentMethod === "Cash" && totalAmount > 0 && (
+ <div className="mt-4">
+ <CashTenderCalculator
+ totalAmount={totalAmount}
+ cashTendered={cashTendered}
+ onChange={setCashTendered}
+ />
+ </div>
+ )}
 
  {form.cartItems.length > 0 && (
  <div className="mt-6 overflow-hidden rounded-2xl border border-[#f0c58f] bg-[#fffaf4] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 shadow-sm">

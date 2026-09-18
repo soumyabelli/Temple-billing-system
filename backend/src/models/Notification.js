@@ -97,16 +97,27 @@ const buildTempleNotificationEmail = (
 
                     ${
                       attachmentDetails?.isPdf
-                        ? `
-                    <!-- PDF Invitation Attachment Box -->
+                        ? (() => {
+                            const isReceipt =
+                              (category && /receipt|booking|donation|prasadam|room/i.test(category)) ||
+                              (title && /receipt|booking|donation|prasadam|room/i.test(title));
+                            const boxTitle = isReceipt
+                              ? "Official Payment Receipt (PDF Attached)"
+                              : "Official Event Invitation (PDF Attached)";
+                            const boxDesc = isReceipt
+                              ? `Please find your official payment receipt and transaction details attached to this email (${attachmentDetails.filename || "Receipt.pdf"}). You can also download it anytime from your Devotee Portal.`
+                              : `Please find the complete invitation card and program schedule attached to this email (${attachmentDetails.filename || "Invitation.pdf"}).`;
+                            return `
+                    <!-- PDF Attachment Box -->
                     <div style="background-color: #fff9f2; border: 1.5px dashed #ea580c; border-radius: 12px; padding: 18px 20px; margin: 18px 0 22px 0; text-align: center;">
                       <div style="font-size: 32px; margin-bottom: 6px;">📄</div>
-                      <h3 style="margin: 0 0 6px 0; color: #9a3412; font-size: 16px; font-weight: 700;">Official Event Invitation (PDF Attached)</h3>
+                      <h3 style="margin: 0 0 6px 0; color: #9a3412; font-size: 16px; font-weight: 700;">${boxTitle}</h3>
                       <p style="margin: 0; color: #7c2d12; font-size: 13px; line-height: 1.5;">
-                        Please find the complete invitation card and program schedule attached to this email (${attachmentDetails.filename || "Invitation.pdf"}).
+                        ${boxDesc}
                       </p>
                     </div>
-                    `
+                    `;
+                          })()
                         : ""
                     }
 
@@ -215,8 +226,11 @@ notificationSchema.post("save", async function (doc) {
           const match = trimmedAtt.match(/^data:application\/pdf;base64,(.+)$/);
           if (match) {
             const buffer = Buffer.from(match[1], "base64");
-            const safeTitle = (doc.title || "Event").replace(/[^a-zA-Z0-9_-]/g, "_");
-            const filename = `Invitation_${safeTitle}.pdf`;
+            const isReceipt =
+              (doc.category && /receipt|booking|donation|prasadam|room/i.test(doc.category)) ||
+              (doc.title && /receipt|booking|donation|prasadam|room/i.test(doc.title));
+            const safeTitle = (doc.title || (isReceipt ? "Receipt" : "Event")).replace(/[^a-zA-Z0-9_-]/g, "_");
+            const filename = isReceipt ? `Receipt_${safeTitle}.pdf` : `Invitation_${safeTitle}.pdf`;
 
             attachments.push({
               filename,

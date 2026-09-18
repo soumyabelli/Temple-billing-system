@@ -23,6 +23,27 @@ const authenticate = async (req, res, next) => {
   }
 };
 
+const optionalAuthenticate = async (req, res, next) => {
+  const authHeader = req.headers.authorization || "";
+  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
+
+  if (!token) {
+    return next();
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "dev-secret");
+    const user = await User.findById(decoded.id).select("name role status accountEnabled");
+    if (user && (!user.accountEnabled || !canLoginForStatus(user.status))) {
+      return next();
+    }
+    req.user = { ...decoded, role: user?.role || decoded.role, name: user?.name };
+    return next();
+  } catch (error) {
+    return next();
+  }
+};
+
 const authorizeRoles = (...allowedRoles) => (req, res, next) => {
   if (!req.user || !allowedRoles.includes(req.user.role)) {
     return res.status(403).json({ message: "Forbidden" });
@@ -32,5 +53,7 @@ const authorizeRoles = (...allowedRoles) => (req, res, next) => {
 
 module.exports = {
   authenticate,
+  optionalAuthenticate,
   authorizeRoles,
 };
+

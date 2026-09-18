@@ -1,4 +1,5 @@
 const express = require("express");
+const { optionalAuthenticate } = require("../middleware/authMiddleware");
 const {
   getBookings,
   createBooking,
@@ -33,12 +34,13 @@ const {
 
 const router = express.Router();
 
-router.get("/bookings", getBookings);
-router.post("/bookings", createBooking);
-router.post("/bookings/verify", verifyBookingPayment);
+router.get("/bookings", optionalAuthenticate, getBookings);
+router.post("/bookings", optionalAuthenticate, createBooking);
+router.post("/bookings/verify", optionalAuthenticate, verifyBookingPayment);
 router.patch("/bookings/:id/status", updateBookingStatus);
-router.get("/donations", getDonations);
-router.post("/donations", createDonation);
+router.get("/donations", optionalAuthenticate, getDonations);
+router.post("/donations", optionalAuthenticate, createDonation);
+
 router.get("/notifications", getNotifications);
 router.post("/notifications/:id/send-email", sendNotificationEmail);
 router.patch("/notifications/:id/read", markNotificationAsRead);
@@ -60,8 +62,9 @@ router.get("/support", getSupportRequests);
 router.patch("/support/:id", replySupportRequest);
 router.patch("/support/:id/read", markSupportRequestAsRead);
 router.post("/notifications", createNotification);
-router.get("/prasadam-orders", getPrasadamOrders);
-router.post("/prasadam-orders", createPrasadamOrder);
-router.patch("/prasadam-orders/:id/cancel", cancelPrasadamOrder);
+router.get("/prasadam-orders", optionalAuthenticate, getPrasadamOrders);
+router.post("/prasadam-orders", optionalAuthenticate, createPrasadamOrder);
+router.patch("/prasadam-orders/:id/cancel", optionalAuthenticate, cancelPrasadamOrder);
 
 module.exports = router;
+

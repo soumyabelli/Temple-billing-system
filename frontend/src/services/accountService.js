@@ -76,7 +76,13 @@ export const getAnnualReport = async (params) => {
   return res.data;
 };
 
-// --- Cash Closing ---
+// --- Cash Closing & Shift Reconciliation ---
+export const getShiftSummary = async (date) => {
+  const query = date ? `?date=${encodeURIComponent(date)}` : "";
+  const res = await axios.get(`${API_URL}/shift-summary${query}`, getAuthHeaders());
+  return res.data;
+};
+
 export const getCashClosings = async () => {
   const res = await axios.get(`${API_URL}/cash-closing`, getAuthHeaders());
   return res.data;

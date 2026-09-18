@@ -60,17 +60,21 @@ const recordTransaction = async (payload) => {
 
     if (!amount || amount <= 0) return null;
 
-    // Idempotency check: if a transaction with the same referenceId, referenceModel, and category already exists, do not duplicate.
+    // Idempotency check: if a transaction with the same referenceId, referenceModel, category, and description already exists, do not duplicate.
     if (referenceId && referenceModel && category) {
-      const existing = await AccountTransaction.findOne({
+      const existingQuery = {
         referenceId,
         referenceModel,
         category,
         status: { $in: ["Completed", "Approved", "Pending Approval"] }
-      });
+      };
+      if (description) {
+        existingQuery.description = description;
+      }
+      const existing = await AccountTransaction.findOne(existingQuery);
       
       if (existing) {
-        console.log(`[Accounting] Transaction for ${referenceModel} ${referenceId} in ${category} already exists. Skipping duplicate.`);
+        console.log(`[Accounting] Transaction for ${referenceModel} ${referenceId} in ${category} (${description || ""}) already exists. Skipping duplicate.`);
         return existing;
       }
     }

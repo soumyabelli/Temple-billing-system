@@ -4625,17 +4625,17 @@ try {
  {(item.attachment.startsWith("data:image/") || (!item.attachment.startsWith("data:application/pdf") && !item.attachment.toLowerCase().endsWith(".pdf"))) ? (
  <img
  src={item.attachment}
- alt="Invitation Banner"
+ alt="Attachment Banner"
  className="max-h-56 w-auto rounded-xl object-contain border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-xs"
  />
  ) : (
  <a
  href={item.attachment}
- download={`Invitation-${(item.title || "Event").replace(/\s+/g, "_")}.pdf`}
+ download={`Receipt-${(item.title || "Document").replace(/[^a-zA-Z0-9_-]/g, "_")}.pdf`}
  onClick={(e) => e.stopPropagation()}
- className="inline-flex items-center gap-2 rounded-xl bg-teal-600 hover:bg-teal-700 px-3.5 py-1.5 text-xs font-bold text-white transition shadow-xs"
+ className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-600 via-orange-500 to-amber-700 hover:from-amber-700 hover:to-orange-600 px-4 py-2 text-xs font-bold text-white transition shadow-sm cursor-pointer hover:scale-[1.02] active:scale-95"
  >
- 📄 Download PDF Invitation
+ 📄 Download Payment Receipt (PDF)
  </a>
  )}
  </div>
@@ -4732,16 +4732,16 @@ try {
  {(selectedNotificationDetail.attachment.startsWith("data:image/") || (!selectedNotificationDetail.attachment.startsWith("data:application/pdf") && !selectedNotificationDetail.attachment.toLowerCase().endsWith(".pdf"))) ? (
  <img
  src={selectedNotificationDetail.attachment}
- alt="Invitation Banner"
+ alt="Attachment Banner"
  className="max-h-80 w-auto rounded-xl object-contain border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm"
  />
  ) : (
  <a
  href={selectedNotificationDetail.attachment}
- download={`Invitation-${(selectedNotificationDetail.title || "Event").replace(/\s+/g, "_")}.pdf`}
- className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-teal-700"
+ download={`Receipt-${(selectedNotificationDetail.title || "Document").replace(/[^a-zA-Z0-9_-]/g, "_")}.pdf`}
+ className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-600 via-orange-500 to-amber-700 hover:from-amber-700 hover:to-orange-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:scale-[1.02] active:scale-95 transition cursor-pointer"
  >
- 📄 Download Attached Document
+ 📄 Download Payment Receipt (PDF)
  </a>
  )}
  </div>
