@@ -174,7 +174,7 @@ async function allotRoom({ roomNumber, devoteeName, phone, email, devoteeEmail, 
     message: `Room ${room.number} (${room.type}) allotted to "${devoteeName}" — ₹${totalAmount} (${payMode || "Cash"}).`,
     audienceRole: "cashier",
     category: "booking",
-  }).catch(() => {});
+  }).catch(() => { });
 
   return { room, booking };
 }
