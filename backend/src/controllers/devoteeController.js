@@ -145,6 +145,8 @@ const normalizeOrderEmails = (order) => ({
 
 const createLedgerBill = async ({
   devoteeName,
+  devoteeEmail,
+  devoteePhone,
   sevaType,
   amount,
   paymentMode,
@@ -152,11 +154,21 @@ const createLedgerBill = async ({
   referenceNo,
   sourceId,
   notes,
+  items,
   status = "Paid",
 }) => {
   try {
+    const formattedItems = (items || []).map(i => ({
+      itemName: i.name || i.service || i.itemName || "Item",
+      itemType: String(i.type || i.itemType || "Pooja").charAt(0).toUpperCase() + String(i.type || i.itemType || "Pooja").slice(1),
+      amount: Number(i.amount || 0),
+      quantity: Number(i.qty || i.quantity || 1),
+    }));
+
     return await Bill.create({
       devoteeName,
+      devoteeEmail: devoteeEmail || undefined,
+      devoteePhone: devoteePhone || undefined,
       sevaType,
       amount,
       paymentMode,
@@ -164,7 +176,9 @@ const createLedgerBill = async ({
       referenceNo,
       sourceId,
       notes,
+      items: formattedItems,
       status,
+      billDate: new Date(),
     });
   } catch (error) {
     console.warn("Failed to create bill ledger entry:", error.message);
