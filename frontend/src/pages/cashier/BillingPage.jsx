@@ -197,28 +197,42 @@ const BillingPage = () => {
  setMessage("Bill saved successfully and paid.");
  await loadBills();
 
- const receiptData = {
- isOnline: false,
- receiptNo: getBillReference(bill),
- bookingDate: formatDateTime(bill.billDate || bill.createdAt || new Date()),
- paymentMode: bill.paymentMode || form.paymentMode,
- transactionId: resp.razorpay_payment_id || "-",
- cashierName: user?.name || "Cashier",
- devoteeName: bill.devoteeName || form.devoteeName || "-",
- mobile: bill.devoteePhone || form.devoteePhone || "-",
- email: bill.devoteeEmail || form.devoteeEmail || "-",
- address: bill.devoteeAddress || form.devoteeAddress || "-",
- poojaBookings: (bill.items || []).filter(i => i.itemType === "Pooja").map((i, idx) => ({ slNo: idx + 1, name: i.itemName, date: formatDateTime(bill.billDate), qty: 1, amount: i.amount })),
- prasadamOrders: (bill.items || []).filter(i => i.itemType === "Prasadam").map((i, idx) => ({ slNo: idx + 1, name: i.itemName, date: "-", qty: 1, amount: i.amount })),
- subTotal: bill.amount,
- templeCharges: 0,
- grandTotal: bill.amount,
- amountInWords: `Rs. ${bill.amount}`,
- devoteeMaterials: [],
- templeMaterials: [],
- notes: [bill.notes || form.notes, ...(bill.items || []).filter(i => !["Pooja", "Prasadam"].includes(i.itemType)).map(i => `${i.itemType}: ${i.itemName}`)].filter(Boolean)
- };
- downloadReceiptPDF(receiptData, `receipt-${receiptData.receiptNo}.pdf`).catch(err => console.error("Receipt generation failed", err));
+  const billItems = bill.items || [];
+  const poojaBookings = billItems.filter(i => i.itemType === "Pooja").map((i, idx) => ({ slNo: idx + 1, name: i.itemName, date: formatDateTime(bill.billDate || bill.createdAt), qty: i.quantity || 1, amount: Number(i.amount != null && !isNaN(Number(i.amount)) && Number(i.amount) > 0 ? i.amount : (Number(i.price || 0) * (i.quantity || 1))) || 0 }));
+  const prasadamOrders = billItems.filter(i => i.itemType === "Prasadam").map((i, idx) => ({ slNo: idx + 1, name: i.itemName, date: formatDateTime(bill.billDate || bill.createdAt), qty: i.quantity || 1, amount: Number(i.amount != null && !isNaN(Number(i.amount)) && Number(i.amount) > 0 ? i.amount : (Number(i.price || 0) * (i.quantity || 1))) || 0 }));
+  const roomBookings = billItems.filter(i => i.itemType === "Room").map((i, idx) => ({ slNo: idx + 1, name: i.itemName, date: formatDateTime(bill.billDate || bill.createdAt), qty: i.quantity || 1, amount: Number(i.amount != null && !isNaN(Number(i.amount)) && Number(i.amount) > 0 ? i.amount : (Number(i.price || 0) * (i.quantity || 1))) || 0 }));
+  const donations = billItems.filter(i => i.itemType === "Donation").map((i, idx) => ({ slNo: idx + 1, name: i.itemName, date: formatDateTime(bill.billDate || bill.createdAt), qty: 1, amount: Number(i.amount != null && !isNaN(Number(i.amount)) && Number(i.amount) > 0 ? i.amount : Number(i.price || 0)) || 0 }));
+
+  const receiptData = {
+    isOnline: false,
+    receiptNo: getBillReference(bill),
+    bookingDate: formatDateTime(bill.billDate || bill.createdAt || new Date()),
+    paymentMode: bill.paymentMode || form.paymentMode,
+    transactionId: resp.razorpay_payment_id || "-",
+    cashierName: user?.name || "Cashier",
+    devoteeName: bill.devoteeName || form.devoteeName || "-",
+    mobile: bill.devoteePhone || form.devoteePhone || "-",
+    email: bill.devoteeEmail || form.devoteeEmail || "-",
+    address: bill.devoteeAddress || form.devoteeAddress || "-",
+    devotee: {
+      name: bill.devoteeName || form.devoteeName || "Devotee",
+      phone: bill.devoteePhone || form.devoteePhone || "-",
+      email: bill.devoteeEmail || form.devoteeEmail || "-",
+      address: bill.devoteeAddress || form.devoteeAddress || "-",
+    },
+    poojaBookings,
+    prasadamOrders,
+    roomBookings,
+    donations,
+    subTotal: bill.amount,
+    templeCharges: 0,
+    grandTotal: bill.amount,
+    amountInWords: `Rs. ${bill.amount}`,
+    devoteeMaterials: [],
+    templeMaterials: [],
+    notes: [bill.notes || form.notes, ...(bill.items || []).filter(i => !["Pooja", "Prasadam", "Room", "Donation"].includes(i.itemType)).map(i => `${i.itemType}: ${i.itemName}`)].filter(Boolean)
+  };
+  downloadReceiptPDF(receiptData, `receipt-${receiptData.receiptNo}.pdf`).catch(err => console.error("Receipt generation failed", err));
 
  } catch (err) {
  setMessage("Payment verification failed.");
@@ -251,28 +265,42 @@ const BillingPage = () => {
  setMessage("Bill saved successfully.");
  await loadBills();
 
- const receiptData = {
- isOnline: false,
- receiptNo: getBillReference(bill),
- bookingDate: formatDateTime(bill.billDate || bill.createdAt || new Date()),
- paymentMode: bill.paymentMode || form.paymentMode,
- transactionId: "-",
- cashierName: user?.name || "Cashier",
- devoteeName: bill.devoteeName || form.devoteeName || "-",
- mobile: bill.devoteePhone || form.devoteePhone || "-",
- email: bill.devoteeEmail || form.devoteeEmail || "-",
- address: bill.devoteeAddress || form.devoteeAddress || "-",
- poojaBookings: (bill.items || []).filter(i => i.itemType === "Pooja").map((i, idx) => ({ slNo: idx + 1, name: i.itemName, date: formatDateTime(bill.billDate), qty: 1, amount: i.amount })),
- prasadamOrders: (bill.items || []).filter(i => i.itemType === "Prasadam").map((i, idx) => ({ slNo: idx + 1, name: i.itemName, date: "-", qty: 1, amount: i.amount })),
- subTotal: bill.amount,
- templeCharges: 0,
- grandTotal: bill.amount,
- amountInWords: `Rs. ${bill.amount}`,
- devoteeMaterials: [],
- templeMaterials: [],
- notes: [bill.notes || form.notes, ...(bill.items || []).filter(i => !["Pooja", "Prasadam"].includes(i.itemType)).map(i => `${i.itemType}: ${i.itemName}`)].filter(Boolean)
- };
- downloadReceiptPDF(receiptData, `receipt-${receiptData.receiptNo}.pdf`).catch(err => console.error("Receipt generation failed", err));
+  const billItems = bill.items || [];
+  const poojaBookings = billItems.filter(i => i.itemType === "Pooja").map((i, idx) => ({ slNo: idx + 1, name: i.itemName, date: formatDateTime(bill.billDate || bill.createdAt), qty: i.quantity || 1, amount: Number(i.amount != null && !isNaN(Number(i.amount)) && Number(i.amount) > 0 ? i.amount : (Number(i.price || 0) * (i.quantity || 1))) || 0 }));
+  const prasadamOrders = billItems.filter(i => i.itemType === "Prasadam").map((i, idx) => ({ slNo: idx + 1, name: i.itemName, date: formatDateTime(bill.billDate || bill.createdAt), qty: i.quantity || 1, amount: Number(i.amount != null && !isNaN(Number(i.amount)) && Number(i.amount) > 0 ? i.amount : (Number(i.price || 0) * (i.quantity || 1))) || 0 }));
+  const roomBookings = billItems.filter(i => i.itemType === "Room").map((i, idx) => ({ slNo: idx + 1, name: i.itemName, date: formatDateTime(bill.billDate || bill.createdAt), qty: i.quantity || 1, amount: Number(i.amount != null && !isNaN(Number(i.amount)) && Number(i.amount) > 0 ? i.amount : (Number(i.price || 0) * (i.quantity || 1))) || 0 }));
+  const donations = billItems.filter(i => i.itemType === "Donation").map((i, idx) => ({ slNo: idx + 1, name: i.itemName, date: formatDateTime(bill.billDate || bill.createdAt), qty: 1, amount: Number(i.amount != null && !isNaN(Number(i.amount)) && Number(i.amount) > 0 ? i.amount : Number(i.price || 0)) || 0 }));
+
+  const receiptData = {
+    isOnline: false,
+    receiptNo: getBillReference(bill),
+    bookingDate: formatDateTime(bill.billDate || bill.createdAt || new Date()),
+    paymentMode: bill.paymentMode || form.paymentMode,
+    transactionId: "-",
+    cashierName: user?.name || "Cashier",
+    devoteeName: bill.devoteeName || form.devoteeName || "-",
+    mobile: bill.devoteePhone || form.devoteePhone || "-",
+    email: bill.devoteeEmail || form.devoteeEmail || "-",
+    address: bill.devoteeAddress || form.devoteeAddress || "-",
+    devotee: {
+      name: bill.devoteeName || form.devoteeName || "Devotee",
+      phone: bill.devoteePhone || form.devoteePhone || "-",
+      email: bill.devoteeEmail || form.devoteeEmail || "-",
+      address: bill.devoteeAddress || form.devoteeAddress || "-",
+    },
+    poojaBookings,
+    prasadamOrders,
+    roomBookings,
+    donations,
+    subTotal: bill.amount,
+    templeCharges: 0,
+    grandTotal: bill.amount,
+    amountInWords: `Rs. ${bill.amount}`,
+    devoteeMaterials: [],
+    templeMaterials: [],
+    notes: [bill.notes || form.notes, ...(bill.items || []).filter(i => !["Pooja", "Prasadam", "Room", "Donation"].includes(i.itemType)).map(i => `${i.itemType}: ${i.itemName}`)].filter(Boolean)
+  };
+  downloadReceiptPDF(receiptData, `receipt-${receiptData.receiptNo}.pdf`).catch(err => console.error("Receipt generation failed", err));
 
  } catch (error) {
  setMessage(error.response?.data?.message || "Failed to save bill.");

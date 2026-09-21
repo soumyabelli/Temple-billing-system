@@ -1,6 +1,7 @@
 const Bill = require("../models/Bill");
 const { createStaffNotification } = require("../utils/notificationService");
 const { sendBillReceipt } = require("../utils/communicationService");
+const { resolveDevoteeDetails, buildDevoteeLookupMap } = require("../utils/devoteeLookup");
 
 const crypto = require("crypto");
 const Razorpay = require("razorpay");
@@ -8,7 +9,12 @@ const Razorpay = require("razorpay");
 const getBills = async (req, res) => {
   try {
     const bills = await Bill.find().sort({ billDate: -1 });
-    res.status(200).json(bills);
+    const resolver = await buildDevoteeLookupMap();
+    const enrichedBills = bills.map((b) => {
+      const plain = b.toObject ? b.toObject() : { ...b };
+      return resolver.enrich(plain);
+    });
+    res.status(200).json(enrichedBills);
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch bills", error: error.message });
   }
@@ -41,6 +47,17 @@ const createBill = async (req, res) => {
       return res.status(400).json({ message: "Either sevaType or items are required." });
     }
 
+    // Auto-resolve missing devotee details if devotee is registered
+    const resolvedDevotee = await resolveDevoteeDetails({
+      name: devoteeName,
+      email: devoteeEmail,
+      phone: devoteePhone,
+    });
+
+    const finalEmail = devoteeEmail?.trim() || resolvedDevotee.email || undefined;
+    const finalPhone = devoteePhone?.trim() || resolvedDevotee.phone || undefined;
+    const finalAddress = devoteeAddress?.trim() || resolvedDevotee.address || undefined;
+
     const numericAmount = Number(amount);
     const billStatus = isOnline ? "Pending" : "Paid";
     const hasKeys = process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET;
@@ -52,9 +69,9 @@ const createBill = async (req, res) => {
 
     const bill = await Bill.create({
       devoteeName: devoteeName.trim(),
-      devoteeEmail: devoteeEmail ? devoteeEmail.trim() : undefined,
-      devoteePhone: devoteePhone ? devoteePhone.trim() : undefined,
-      devoteeAddress: devoteeAddress ? devoteeAddress.trim() : undefined,
+      devoteeEmail: finalEmail,
+      devoteePhone: finalPhone,
+      devoteeAddress: finalAddress,
       sevaType: sevaType ? sevaType.trim() : undefined,
       items: items || [],
       amount: numericAmount,

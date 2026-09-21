@@ -292,6 +292,18 @@ const getBookingReceipt = async (req, res) => {
       return res.status(404).json({ message: "Booking not found." });
     }
 
+    const { resolveDevoteeDetails } = require("../utils/devoteeLookup");
+    const resolvedDevotee = await resolveDevoteeDetails({
+      name: booking.devoteeName,
+      email: booking.devoteeEmail,
+      phone: booking.devoteePhone || booking.contactNumber,
+      devoteeId: booking.devoteeId,
+    });
+
+    const finalMobile = booking.devoteePhone || booking.contactNumber || resolvedDevotee.phone || "-";
+    const finalEmail = booking.devoteeEmail || resolvedDevotee.email || "-";
+    const finalAddress = booking.devoteeAddress || booking.address || resolvedDevotee.address || "-";
+
     const gst = booking.gst || 0;
     const baseAmount = booking.amount || 0;
     const totalAmount = baseAmount + gst;
@@ -302,9 +314,10 @@ const getBookingReceipt = async (req, res) => {
       bookingNumber: booking.bookingNumber,
       transactionId: booking.transactionId || "N/A",
       devotee: {
-        name:   booking.devoteeName,
-        mobile: booking.devoteePhone || booking.contactNumber || "N/A",
-        email:  booking.devoteeEmail || "N/A",
+        name:   booking.devoteeName || resolvedDevotee.name || "Devotee",
+        mobile: finalMobile,
+        email:  finalEmail,
+        address: finalAddress,
       },
       pooja: {
         name:   booking.service,

@@ -16,6 +16,7 @@ import { downloadReceiptPDF } from "../../utils/receiptGenerator";
 import { getDevoteeDonations } from "../../services/devoteeService";
 import { getDashboardBookings, updateBookingStatusAdmin, getBookingReceipt } from "../../services/bookingService";
 import { getPoojaTypes, savePoojaType, updatePoojaType, removePoojaType } from "../../services/poojaTypeService";
+import { fetchDevotees } from "../../services/cashierService";
 import PoojaTypeSetupModal from "./components/PoojaTypeSetupModal";
 
 const formatCurrency = (value) => `Rs ${Number(value || 0).toLocaleString()}`;
@@ -78,19 +79,44 @@ const PoojaManagement = () => {
  }
  };
 
- useEffect(() => {
- const load = async () => {
- try {
- const [bRes, dRes] = await Promise.all([getDashboardBookings(), getDevoteeDonations()]);
- setBookings(bRes.latestBookings || []);
- setStatsData(bRes.stats || null);
- setDonations(dRes.donations || []);
- } catch (error) {
- console.warn("Unable to load pooja management data", error);
- }
- };
- load();
- }, []);
+  const [devotees, setDevotees] = useState([]);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [bRes, dRes, devList] = await Promise.all([
+          getDashboardBookings(),
+          getDevoteeDonations(),
+          fetchDevotees().catch(() => []),
+        ]);
+        setBookings(bRes.latestBookings || []);
+        setStatsData(bRes.stats || null);
+        setDonations(dRes.donations || []);
+        setDevotees(devList || []);
+      } catch (error) {
+        console.warn("Unable to load pooja management data", error);
+      }
+    };
+    load();
+    loadPoojaTypes();
+  }, []);
+
+  const devoteeMap = useMemo(() => {
+    const byName = new Map();
+    const byEmail = new Map();
+    const byPhone = new Map();
+
+    devotees.forEach((d) => {
+      if (d.name) byName.set(d.name.trim().toLowerCase(), d);
+      if (d.email) byEmail.set(d.email.trim().toLowerCase(), d);
+      if (d.phone) {
+        const cleanP = String(d.phone).replace(/\D/g, "").slice(-10);
+        if (cleanP) byPhone.set(cleanP, d);
+      }
+    });
+
+    return { byName, byEmail, byPhone };
+  }, [devotees]);
 
  const reloadData = async () => {
  const [bRes, dRes] = await Promise.all([getDashboardBookings(), getDevoteeDonations()]);
@@ -108,66 +134,125 @@ const PoojaManagement = () => {
  }
  };
 
- const handleDownloadReceipt = async (row) => {
- try {
- const rawBooking = row.raw || {};
- 
- let poojaBookings = [];
- let prasadamOrders = [];
- if (rawBooking.isCombined && rawBooking.items && rawBooking.items.length > 0) {
- poojaBookings = rawBooking.items.filter(i => i.type !== "prasadam").map((i, idx) => ({
- slNo: idx + 1,
- name: i.description || i.name,
- date: i.date || (rawBooking.datetime ? new Date(rawBooking.datetime).toLocaleDateString() : "-"),
- qty: i.quantity || 1,
- amount: (i.price || 0) * (i.quantity || 1)
- }));
- prasadamOrders = rawBooking.items.filter(i => i.type === "prasadam").map((i, idx) => ({
- slNo: idx + 1,
- name: i.description || i.name,
- date: "-",
- qty: i.quantity || 1,
- amount: (i.price || 0) * (i.quantity || 1)
- }));
- } else {
- poojaBookings = [{
- slNo: 1,
- name: rawBooking.service || "Pooja Booking",
- date: rawBooking.datetime ? new Date(rawBooking.datetime).toLocaleDateString() : "-",
- qty: 1,
- amount: rawBooking.amount || 0
- }];
- }
+  const formatItemDate = (itemDate, fallbackDate) => {
+    const d = itemDate && itemDate !== "-" ? itemDate : fallbackDate;
+    if (!d || d === "-") return "-";
+    const parsed = new Date(d);
+    if (!isNaN(parsed.getTime())) {
+      return parsed.toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
+      });
+    }
+    return String(d);
+  };
 
- const receiptPayload = {
- isOnline: rawBooking.source === "Online Portal" || false,
- receiptNo: row.receiptId || `RC-BK${String(rawBooking._id || '').slice(-6).toUpperCase()}`,
- bookingDate: rawBooking.createdAt ? new Date(rawBooking.createdAt).toLocaleDateString() : new Date().toLocaleDateString(),
- paymentMode: row.method || rawBooking.paymentMethod || "UPI",
- transactionId: rawBooking.transactionId || "-",
- cashierName: "Admin",
- devoteeName: row.devotee || rawBooking.devoteeName || rawBooking.customerName || "-",
- mobile: rawBooking.devoteePhone || rawBooking.contactNumber || "-",
- email: rawBooking.devoteeEmail || "-",
- address: rawBooking.devoteeAddress || "-",
- poojaBookings,
- prasadamOrders,
- subTotal: rawBooking.amount || 0,
- templeCharges: 0,
- grandTotal: (rawBooking.amount || 0) + (rawBooking.gst || 0),
- amountInWords: `Rs. ${(rawBooking.amount || 0) + (rawBooking.gst || 0)}`,
- devoteeMaterials: [],
- templeMaterials: [],
- notes: rawBooking.notes ? [String(rawBooking.notes)] : []
- };
+  const handleDownloadReceipt = async (row) => {
+    try {
+      const rawBooking = row.raw || {};
+      
+      let poojaBookings = [];
+      let prasadamOrders = [];
+      let roomBookings = [];
+      let donations = [];
 
- await downloadReceiptPDF(receiptPayload, `receipt-${receiptPayload.receiptNo}.pdf`);
+      const bookingDateText = formatItemDate(rawBooking.createdAt, new Date().toISOString());
 
- } catch (error) {
- console.error("Error generating receipt:", error);
- alert("Failed to generate receipt. Please try again.");
- }
- };
+      if (rawBooking.items && Array.isArray(rawBooking.items) && rawBooking.items.length > 0) {
+        rawBooking.items.forEach((i, idx) => {
+          const type = String(i.type || i.catalogType || i.itemType || "").toLowerCase();
+          const name = i.name || i.itemName || i.description || "Temple Service";
+          const itemQty = Number(i.quantity || i.qty || 1);
+          const itemAmount = Number(i.amount != null && !isNaN(Number(i.amount)) && Number(i.amount) > 0 
+            ? i.amount 
+            : (Number(i.price || 0) * itemQty)) || 0;
+          const itemDate = formatItemDate(i.date, rawBooking.datetime || rawBooking.createdAt);
+
+          const itemRow = { slNo: idx + 1, name, date: itemDate, qty: itemQty, amount: itemAmount };
+
+          if (type.includes("room") || type.includes("accommodation") || name.toLowerCase().includes("room")) {
+            roomBookings.push(itemRow);
+          } else if (type.includes("prasad") || name.toLowerCase().includes("prasadam") || name.toLowerCase().includes("laddu")) {
+            prasadamOrders.push(itemRow);
+          } else if (type.includes("donat") || name.toLowerCase().includes("donation") || name.toLowerCase().includes("fund")) {
+            donations.push(itemRow);
+          } else {
+            poojaBookings.push(itemRow);
+          }
+        });
+
+        poojaBookings.forEach((item, idx) => { item.slNo = idx + 1; });
+        prasadamOrders.forEach((item, idx) => { item.slNo = idx + 1; });
+        roomBookings.forEach((item, idx) => { item.slNo = idx + 1; });
+        donations.forEach((item, idx) => { item.slNo = idx + 1; });
+      } else {
+        poojaBookings = [{
+          slNo: 1,
+          name: rawBooking.service || "Pooja Booking",
+          date: formatItemDate(rawBooking.datetime, rawBooking.createdAt),
+          qty: 1,
+          amount: Number(rawBooking.amount || 0)
+        }];
+      }
+
+      const cleanN = (row.devotee || rawBooking.devoteeName || rawBooking.customerName || "").trim().toLowerCase();
+      const cleanE = (rawBooking.devoteeEmail || "").trim().toLowerCase();
+      const cleanP = String(rawBooking.devoteePhone || rawBooking.contactNumber || "").replace(/\D/g, "").slice(-10);
+
+      const devoteeMatch = (cleanN && devoteeMap.byName.get(cleanN))
+        || (cleanE && devoteeMap.byEmail.get(cleanE))
+        || (cleanP && devoteeMap.byPhone.get(cleanP))
+        || {};
+
+      const finalDevoteeName = row.devotee || rawBooking.devoteeName || rawBooking.customerName || devoteeMatch.name || "Devotee";
+      const finalMobile = (rawBooking.devoteePhone && rawBooking.devoteePhone !== "-")
+        ? rawBooking.devoteePhone
+        : (rawBooking.contactNumber && rawBooking.contactNumber !== "-" ? rawBooking.contactNumber : devoteeMatch.phone || "-");
+      const finalEmail = (rawBooking.devoteeEmail && rawBooking.devoteeEmail !== "-")
+        ? rawBooking.devoteeEmail
+        : (devoteeMatch.email || "-");
+      const finalAddress = (rawBooking.devoteeAddress && rawBooking.devoteeAddress !== "-")
+        ? rawBooking.devoteeAddress
+        : (rawBooking.address && rawBooking.address !== "-" ? rawBooking.address : devoteeMatch.address || devoteeMatch.place || "-");
+
+      const receiptPayload = {
+        isOnline: rawBooking.source === "Online Portal" || false,
+        receiptNo: row.receiptId || rawBooking.bookingNumber || rawBooking.referenceNo || `RC-BK${String(rawBooking._id || '').slice(-6).toUpperCase()}`,
+        bookingDate: bookingDateText,
+        paymentMode: row.method || rawBooking.paymentMethod || "UPI",
+        transactionId: rawBooking.transactionId || "-",
+        cashierName: rawBooking.cashierName || "Admin",
+        devoteeName: finalDevoteeName,
+        mobile: finalMobile,
+        email: finalEmail,
+        address: finalAddress,
+        devotee: {
+          name: finalDevoteeName,
+          phone: finalMobile,
+          email: finalEmail,
+          address: finalAddress,
+        },
+        poojaBookings,
+        prasadamOrders,
+        roomBookings,
+        donations,
+        subTotal: Number(rawBooking.amount || 0),
+        templeCharges: 0,
+        grandTotal: Number(rawBooking.amount || 0) + Number(rawBooking.gst || 0),
+        amountInWords: `Rs. ${Number(rawBooking.amount || 0) + Number(rawBooking.gst || 0)}`,
+        devoteeMaterials: [],
+        templeMaterials: [],
+        notes: rawBooking.notes ? [String(rawBooking.notes)] : []
+      };
+
+      await downloadReceiptPDF(receiptPayload, `receipt-${receiptPayload.receiptNo}.pdf`);
+
+    } catch (error) {
+      console.error("Error generating receipt:", error);
+      alert("Failed to generate receipt. Please try again.");
+    }
+  };
 
  const filteredBookings = useMemo(() => {
  const q = query.trim().toLowerCase();

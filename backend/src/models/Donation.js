@@ -23,6 +23,16 @@ const donationSchema = new mongoose.Schema(
       trim: true,
     },
 
+    donorAddress: {
+      type: String,
+      trim: true,
+    },
+
+    address: {
+      type: String,
+      trim: true,
+    },
+
     amount: {
       type: Number,
       required: true,

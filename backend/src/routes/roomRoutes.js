@@ -43,8 +43,20 @@ async function allotRoom({ roomNumber, devoteeName, phone, email, devoteeEmail, 
   if (!room) throw { status: 404, message: "Room not found" };
   if (room.status !== "Available") throw { status: 400, message: `Room ${roomNumber} is not available` };
 
+  const { resolveDevoteeDetails } = require("../utils/devoteeLookup");
   const rawEmail = email || devoteeEmail || req?.body?.email || req?.body?.devoteeEmail || req?.user?.email || null;
   const cleanEmail = rawEmail ? String(rawEmail).trim().toLowerCase() : undefined;
+
+  const resolvedDevotee = await resolveDevoteeDetails({
+    name: devoteeName,
+    email: cleanEmail,
+    phone,
+  });
+
+  const finalDevoteeName = (devoteeName || resolvedDevotee.name || "Devotee").trim();
+  const finalEmail = cleanEmail || resolvedDevotee.email || undefined;
+  const finalPhone = phone || resolvedDevotee.phone || undefined;
+  const finalAddress = req?.body?.address || req?.body?.devoteeAddress || resolvedDevotee.address || undefined;
 
   const checkin = checkinDate ? new Date(checkinDate) : new Date();
   const checkout = checkoutDate
@@ -56,8 +68,8 @@ async function allotRoom({ roomNumber, devoteeName, phone, email, devoteeEmail, 
   const serviceName = `Room Allotment: Room ${room.number} (${room.type})`;
 
   // Mark room as Occupied
-  room.devotee = devoteeName;
-  room.phone = phone;
+  room.devotee = finalDevoteeName;
+  room.phone = finalPhone;
   room.days = diffDays;
   room.payMode = payMode || "Cash";
   room.checkinDate = checkin;
@@ -67,9 +79,11 @@ async function allotRoom({ roomNumber, devoteeName, phone, email, devoteeEmail, 
 
   // Create a Booking record for history
   const booking = new Booking({
-    devoteeName: devoteeName,
-    devoteePhone: phone,
-    devoteeEmail: cleanEmail,
+    devoteeName: finalDevoteeName,
+    devoteePhone: finalPhone,
+    devoteeEmail: finalEmail,
+    devoteeAddress: finalAddress,
+    address: finalAddress,
     service: serviceName,
     datetime: checkin.toISOString(),
     amount: totalAmount,
@@ -87,10 +101,16 @@ async function allotRoom({ roomNumber, devoteeName, phone, email, devoteeEmail, 
   // Create Bill for Receipts ledger
   try {
     await Bill.create({
-      devoteeName,
-      devoteeEmail: cleanEmail,
-      devoteePhone: phone,
+      devoteeName: finalDevoteeName,
+      devoteeEmail: finalEmail,
+      devoteePhone: finalPhone,
+      devoteeAddress: finalAddress,
       sevaType: serviceName,
+      items: [{
+        itemType: "Room",
+        itemName: serviceName,
+        amount: totalAmount,
+      }],
       amount: totalAmount,
       paymentMode: payMode || "Cash",
       billType: "Room Booking",

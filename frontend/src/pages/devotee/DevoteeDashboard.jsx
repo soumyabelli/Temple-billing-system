@@ -10,6 +10,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import LogoutModal from "../../components/LogoutModal";
 import BookingReceipt from "../../components/common/BookingReceipt";
+import { downloadReceiptPDF } from "../../utils/receiptGenerator";
 import { getDonationTypes } from "../../services/donationTypeService";
 import { getPoojaTypes } from "../../services/poojaTypeService";
 import { FaBell, FaSignOutAlt } from "react-icons/fa";
@@ -1268,6 +1269,7 @@ const DevoteeDashboard = () => {
  setBookingContact("");
  setBookingNotes("");
  setBookingPaymentMethod("UPI");
+ handleReceiptDownload(createdBooking, "booking", true);
  setActivePage("My Bookings");
  } catch (err) {
  setBookingError(err?.response?.data?.error || "Payment verification failed.");
@@ -1312,6 +1314,7 @@ const DevoteeDashboard = () => {
  setBookingPaymentMethod("UPI");
  setSelectedTempleMaterials([]);
  setBookingSuccess("Booking successful! Your order has been placed and payment is confirmed. Please note: This payment is final and non-refundable. Please bring the receipt at the time of visiting the temple to perform the pooja.");
+ handleReceiptDownload(createdBooking, "booking", true);
  setActivePage("My Bookings");
  } catch (error) {
  console.warn("Unable to create booking", error);
@@ -1414,16 +1417,20 @@ const DevoteeDashboard = () => {
  const { booking: createdBooking, order, key, simulated } = bookingRes;
 
  const completeBookingLocally = async () => {
+ let bookedRoom = null;
  try {
- await axios.post("/api/rooms/book", {
+ const bookRes = await axios.post("/api/rooms/book", {
  roomNumber: targetRoom.number,
  devoteeName: activeName,
+ email: activeEmail,
+ devoteeEmail: activeEmail,
  phone: activePhone,
  days: diffDays,
  payMode: roomPaymentMethod,
  checkinDate: roomCheckIn,
  checkoutDate: roomCheckOut
  });
+ bookedRoom = bookRes.data?.booking;
  } catch (err) {
  console.warn("Failed to book room on backend database:", err);
  }
@@ -1439,6 +1446,20 @@ const DevoteeDashboard = () => {
  setBookingsData(bookingsRes.bookings || []);
  setAvailableRooms(roomsRes.data);
  } catch (e) {}
+
+ handleReceiptDownload(
+ bookedRoom || createdBooking || {
+ ...newBooking,
+ service: `Room Allotment: Room ${targetRoom.number} (${roomType})`,
+ amount: finalAmount,
+ days: diffDays,
+ checkinDate: roomCheckIn,
+ checkoutDate: roomCheckOut,
+ paymentMethod: roomPaymentMethod,
+ },
+ "room",
+ true
+ );
  };
 
  if (!simulated && order) {
@@ -1525,7 +1546,7 @@ const DevoteeDashboard = () => {
  try {
  // If user chooses Cash, record donation immediately as completed
  if (!donationMethod || donationMethod === "Cash") {
- await createDevoteeDonation({
+ const cashDonationRes = await createDevoteeDonation({
  donorName: profileData.name,
  donorEmail: profileData.email,
  donorPhone: profileData.phone,
@@ -1563,6 +1584,16 @@ const DevoteeDashboard = () => {
  setDonationContact("");
  setDonationNotes("");
  setSelectedEventId(null);
+ handleReceiptDownload(cashDonationRes?.donation || {
+ donorName: profileData.name,
+ donorEmail: profileData.email,
+ donorPhone: profileData.phone,
+ amount: donationAmount,
+ category: donationCategory,
+ paymentMethod: donationMethod || "Cash",
+ contactNumber: donationContact,
+ notes: donationNotes,
+ }, "donation", true);
  setActivePage("Receipts");
  return;
  }
@@ -1619,6 +1650,7 @@ const DevoteeDashboard = () => {
  setDonationContact("");
  setDonationNotes("");
  setSelectedEventId(null);
+ handleReceiptDownload(donation, "donation", true);
  setActivePage("Receipts");
  return;
  }
@@ -1679,6 +1711,7 @@ const DevoteeDashboard = () => {
  setDonationContact("");
  setDonationNotes("");
  setSelectedEventId(null);
+ handleReceiptDownload(donation, "donation", true);
  setActivePage("Receipts");
  } catch (err) {
  setDonationError(err?.response?.data?.error || "Payment verification failed.");
@@ -1890,145 +1923,198 @@ const DevoteeDashboard = () => {
  doc.save(filename);
  };
 
- const getReceiptDevotee = (item = {}) => ({
- name: item.devoteeName || item.donorName || profileData.name || "-",
- email: item.devoteeEmail || item.donorEmail || item.email || profileData.email || "-",
- phone: item.devoteePhone || item.donorPhone || item.phone || item.contactNumber || profileData.phone || "-",
- address: item.address || item.devoteeAddress || profileData.address || "-",
- });
+  const getReceiptDevotee = (item = {}) => ({
+    name: item.devoteeName || item.donorName || profileData.name || user?.name || "-",
+    email: item.devoteeEmail || item.donorEmail || item.email || profileData.email || user?.email || "-",
+    phone: item.devoteePhone || item.donorPhone || item.phone || item.contactNumber || profileData.phone || user?.phone || "-",
+    address: item.address || item.devoteeAddress || item.donorAddress || profileData.address || profileData.place || user?.address || user?.place || "-",
+  });
 
- const handleReceiptDownload = (item, type = "donation") => {
- let receiptNo = "";
- let title = "";
- let poojaBookings = [];
- let prasadamOrders = [];
- let notesArr = [];
- let transactionId = item.transactionId || "-";
- let isOnline = true;
- let paymentMode = item.paymentMethod || "UPI";
- let amount = parseFloat(item.amount) || 0;
- 
- if (type === "combined" || item.isCombined || (item.items && item.items.length > 0)) {
- receiptNo = item.bookingNumber || buildReceiptId("CB", item);
- title = "Combined Sacred Booking & Prasadam Bill";
- poojaBookings = (item.items || []).filter(i => i.type !== "prasadam").map((i, idx) => ({
- slNo: idx + 1,
- name: i.description || i.name,
- date: i.date ? formatDateDisplay(i.date) : "-",
- qty: i.quantity || 1,
- amount: (i.price || 0) * (i.quantity || 1)
- }));
- prasadamOrders = (item.items || []).filter(i => i.type === "prasadam").map((i, idx) => ({
- slNo: idx + 1,
- name: i.description || i.name,
- date: "-",
- qty: i.quantity || 1,
- amount: (i.price || 0) * (i.quantity || 1)
- }));
- notesArr = ["Non-refundable sacred offering. All selected poojas & prasadam items combined into 1 single receipt."];
- } else if (type === "booking") {
- receiptNo = item.bookingNumber || buildReceiptId("PB", item);
- title = "Pooja Booking Receipt";
- poojaBookings = [{
- slNo: 1,
- name: item.service || "Pooja Booking",
- date: item.datetime ? formatDateTimeDisplay(item.datetime) : "-",
- qty: 1,
- amount: amount
- }];
- if (item.notes) notesArr.push(item.notes);
- } else if (type === "prasadam") {
- receiptNo = buildReceiptId("PR", item);
- title = "Prasadam Receipt";
- prasadamOrders = [{
- slNo: 1,
- name: item.itemName || "Prasadam",
- date: "-",
- qty: item.quantity || 1,
- amount: amount
- }];
- } else {
- receiptNo = buildReceiptId("DN", item);
- title = item.eventTitle ? `Donation: ${item.eventTitle}` : "Donation Receipt";
- poojaBookings = [{
- slNo: 1,
- name: item.category || item.type || "Donation",
- date: item.date || item.createdAt ? formatDateDisplay(item.date || item.createdAt) : "-",
- qty: 1,
- amount: amount
- }];
- if (item.notes) notesArr.push(item.notes);
- }
+  const handleReceiptDownload = (item, type = "donation", autoDownload = false) => {
+    let receiptNo = "";
+    let title = "";
+    let poojaBookings = [];
+    let prasadamOrders = [];
+    let roomBookings = [];
+    let donations = [];
+    let notesArr = [];
+    let transactionId = item.transactionId || "-";
+    let isOnline = item.paymentMethod ? item.paymentMethod !== "Cash" : true;
+    let paymentMode = item.paymentMethod || item.paymentMode || "UPI";
+    let amount = parseFloat(item.amount) || 0;
 
- const devotee = getReceiptDevotee(item);
+    const isCombined = type === "combined" || item.isCombined || (item.items && item.items.length > 0);
+    const isRoom = type === "room" || (item.service && item.service.toLowerCase().includes("room")) || item.roomNumber;
+    const isPrasadam = type === "prasadam" || item.isPrasadam || (item.service && item.service.toLowerCase().includes("prasadam"));
+    const isDonation = type === "donation" || (!isCombined && !isRoom && !isPrasadam && (item.category || item.donorName || item.donorEmail));
 
- let devoteeMaterialsArr = [];
- let templeMaterialsArr = [];
- if (item.snapshotMaterials && Array.isArray(item.snapshotMaterials)) {
- const templeReqs = (item.templeMaterialRequests || []).map(r => r.itemName);
- item.snapshotMaterials.forEach(m => {
- const matString = `${m.itemName} (${m.qty} ${m.unit})`;
- if (templeReqs.includes(m.itemName) || m.responsibilityType === 'TEMPLE_PROVIDES') {
- if (!templeMaterialsArr.includes(matString)) templeMaterialsArr.push(matString);
- } else {
- if (!devoteeMaterialsArr.includes(matString)) devoteeMaterialsArr.push(matString);
- }
- });
- }
+    if (isCombined) {
+      receiptNo = item.bookingNumber || item.referenceNo || buildReceiptId("CB", item);
+      title = "Combined Sacred Booking & Offerings Bill";
 
- if (item.poojaRules && Array.isArray(item.poojaRules)) {
- item.poojaRules.forEach(rule => {
- if (!notesArr.includes(rule)) notesArr.push(rule);
- });
- }
+      (item.items || []).forEach((i) => {
+        const itemType = String(i.type || i.catalogType || i.itemType || "").toLowerCase();
+        const itemName = i.name || i.itemName || i.description || "Temple Service";
+        const itemQty = Number(i.quantity || i.qty || 1);
+        const itemAmt = Number(i.amount != null && !isNaN(Number(i.amount)) && Number(i.amount) > 0 
+          ? i.amount 
+          : (Number(i.price || 0) * itemQty)) || 0;
 
- setViewingReceiptData({
- isOnline,
- receiptNo,
- bookingDate: formatDateDisplay(item.createdAt || new Date()),
- paymentMode,
- transactionId,
- cashierName: "Online Portal",
- devoteeName: devotee.name,
- mobile: devotee.phone,
- email: devotee.email,
- address: devotee.address,
- poojaBookings,
- prasadamOrders,
- subTotal: amount,
- templeCharges: 0,
- grandTotal: amount,
- amountInWords: `Rs. ${amount}`,
- devoteeMaterials: devoteeMaterialsArr,
- templeMaterials: templeMaterialsArr,
- notes: notesArr
- });
- };
+        if (itemType.includes("room") || i.roomNumber || itemName.toLowerCase().includes("room")) {
+          roomBookings.push({
+            slNo: roomBookings.length + 1,
+            name: itemName,
+            checkin: i.checkinDate ? formatDateDisplay(i.checkinDate) : formatDateDisplay(item.createdAt || item.date),
+            checkout: i.checkoutDate ? formatDateDisplay(i.checkoutDate) : "-",
+            days: i.days || 1,
+            amount: itemAmt
+          });
+        } else if (itemType.includes("prasadam") || itemName.toLowerCase().includes("prasadam")) {
+          prasadamOrders.push({
+            slNo: prasadamOrders.length + 1,
+            name: itemName,
+            date: i.date ? formatDateDisplay(i.date) : formatDateDisplay(item.createdAt || item.date || item.billDate || new Date()),
+            qty: itemQty,
+            amount: itemAmt
+          });
+        } else if (itemType.includes("donat") || i.category) {
+          donations.push({
+            slNo: donations.length + 1,
+            category: itemName || i.category || "General Fund",
+            purpose: i.description || "Temple Fund",
+            amount: itemAmt
+          });
+        } else {
+          poojaBookings.push({
+            slNo: poojaBookings.length + 1,
+            name: itemName,
+            date: i.date ? formatDateDisplay(i.date) : "-",
+            qty: itemQty,
+            amount: itemAmt
+          });
+        }
+      });
 
- const handleDownloadReceiptView = async () => {
- const receiptElement = document.getElementById("receipt-preview-content");
- if (!receiptElement) return;
+      notesArr = ["Non-refundable sacred offering. All selected services combined into 1 official receipt."];
+    } else if (isRoom) {
+      receiptNo = item.bookingNumber || item.referenceNo || buildReceiptId("RM", item);
+      title = "Room Allotment & Accommodation Receipt";
+      roomBookings = [{
+        slNo: 1,
+        name: item.service || `Room Allotment: Room ${item.roomNumber || ""}`,
+        checkin: item.checkinDate ? formatDateDisplay(item.checkinDate) : "-",
+        checkout: item.checkoutDate ? formatDateDisplay(item.checkoutDate) : "-",
+        days: item.days || 1,
+        amount: amount
+      }];
+      if (item.notes) notesArr.push(item.notes);
+    } else if (isPrasadam) {
+      receiptNo = item.orderNumber || item.referenceNo || buildReceiptId("PR", item);
+      title = "Prasadam Receipt";
+      prasadamOrders = [{
+        slNo: 1,
+        name: item.itemName || item.service || "Prasadam",
+        date: formatDateDisplay(item.createdAt || item.date || item.orderDate || new Date()),
+        qty: item.quantity || 1,
+        amount: amount
+      }];
+      if (item.notes) notesArr.push(item.notes);
+    } else if (isDonation) {
+      receiptNo = item.referenceNo || buildReceiptId("DN", item);
+      title = item.eventTitle ? `Donation: ${item.eventTitle}` : "Donation Receipt";
+      donations = [{
+        slNo: 1,
+        category: item.category || item.type || "General Fund",
+        purpose: item.eventTitle ? `Event: ${item.eventTitle}` : "Temple Maintenance & Annadanam",
+        amount: amount
+      }];
+      if (item.notes) notesArr.push(item.notes);
+    } else {
+      receiptNo = item.bookingNumber || item.referenceNo || buildReceiptId("PB", item);
+      title = "Pooja Booking Receipt";
+      poojaBookings = [{
+        slNo: 1,
+        name: item.service || "Pooja Booking",
+        date: item.datetime ? formatDateTimeDisplay(item.datetime) : "-",
+        qty: 1,
+        amount: amount
+      }];
+      if (item.notes) notesArr.push(item.notes);
+    }
 
- try {
- const canvas = await html2canvas(receiptElement, {
- scale: 2,
- useCORS: true,
- logging: false,
- backgroundColor: "#ffffff"
- });
- const imgData = canvas.toDataURL("image/jpeg", 1.0);
- 
- const pdf = new jsPDF("p", "mm", "a4");
- const pdfWidth = pdf.internal.pageSize.getWidth();
- const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
- 
- pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight);
- pdf.save(`receipt-${viewingReceiptData?.receiptNo || 'download'}.pdf`);
- } catch (err) {
- console.error("Failed to generate PDF", err);
- alert("Failed to download receipt.");
- }
- };
+    const devotee = getReceiptDevotee(item);
+
+    let devoteeMaterialsArr = [];
+    let templeMaterialsArr = [];
+    if (item.snapshotMaterials && Array.isArray(item.snapshotMaterials)) {
+      const templeReqs = (item.templeMaterialRequests || []).map(r => r.itemName);
+      item.snapshotMaterials.forEach(m => {
+        const matString = `${m.itemName} (${m.qty} ${m.unit})`;
+        if (templeReqs.includes(m.itemName) || m.responsibilityType === 'TEMPLE_PROVIDES') {
+          if (!templeMaterialsArr.includes(matString)) templeMaterialsArr.push(matString);
+        } else {
+          if (!devoteeMaterialsArr.includes(matString)) devoteeMaterialsArr.push(matString);
+        }
+      });
+    }
+
+    if (item.poojaRules && Array.isArray(item.poojaRules)) {
+      item.poojaRules.forEach(rule => {
+        if (!notesArr.includes(rule)) notesArr.push(rule);
+      });
+    }
+
+    const receiptData = {
+      isOnline,
+      receiptNo,
+      bookingDate: formatDateDisplay(item.createdAt || item.date || item.billDate || new Date()),
+      paymentMode,
+      transactionId,
+      cashierName: "Online Portal",
+      devoteeName: devotee.name,
+      mobile: devotee.phone,
+      email: devotee.email,
+      address: devotee.address,
+      devotee: {
+        name: devotee.name,
+        phone: devotee.phone,
+        email: devotee.email,
+        address: devotee.address,
+      },
+      poojaBookings,
+      prasadamOrders,
+      roomBookings,
+      donations,
+      items: item.items || [],
+      subTotal: amount,
+      templeCharges: 0,
+      grandTotal: amount,
+      amountInWords: `Rs. ${amount}`,
+      devoteeMaterials: devoteeMaterialsArr,
+      templeMaterials: templeMaterialsArr,
+      notes: notesArr
+    };
+
+    setViewingReceiptData(receiptData);
+
+    if (autoDownload) {
+      downloadReceiptPDF(receiptData, {
+        filename: `receipt-${receiptNo || 'download'}.pdf`
+      }).catch((e) => console.warn("Auto-download receipt failed:", e));
+    }
+  };
+
+  const handleDownloadReceiptView = async () => {
+    if (!viewingReceiptData) return;
+    try {
+      await downloadReceiptPDF(viewingReceiptData, {
+        filename: `receipt-${viewingReceiptData?.receiptNo || 'download'}.pdf`
+      });
+    } catch (err) {
+      console.error("Failed to generate PDF", err);
+      alert("Failed to download receipt.");
+    }
+  };
 
  const applyReceiptPreset = (preset) => {
  setReceiptDatePreset(preset);
@@ -2295,6 +2381,7 @@ const DevoteeDashboard = () => {
  paymentMethod: "UPI",
  });
  setPrasadamMessage("Prasadam order placed successfully! Payment is confirmed. Please note: This payment is final and non-refundable.");
+ handleReceiptDownload(order, "prasadam", true);
  } catch (err) {
  setPrasadamMessage(err?.response?.data?.error || "Payment verification failed.");
  console.warn("verify prasadam order handler error", err);
@@ -2322,6 +2409,7 @@ const DevoteeDashboard = () => {
  paymentMethod: "UPI",
  });
  setPrasadamMessage("Prasadam order placed successfully! Payment is confirmed. Please note: This payment is final and non-refundable.");
+ handleReceiptDownload(order, "prasadam", true);
  } catch (error) {
  setPrasadamMessage(error?.response?.data?.error || "Unable to place prasadam order.");
  }
@@ -3324,7 +3412,7 @@ const DevoteeDashboard = () => {
  <td className="py-3 px-3">
  <button
  onClick={() => {
- window.alert(`Downloading Receipt ${record.id}...\nDevotee: ${record.devoteeName}\nTotal amount: ${formatCurrency(record.amount)}`);
+ handleReceiptDownload(record, "room", true);
  }}
  className="inline-flex items-center gap-1 rounded bg-[#fff3d8] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 px-2 py-1 text-xs font-semibold text-[#7f4b11] transition hover:bg-[#ffe4b4] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 "
  >
@@ -3426,7 +3514,7 @@ const DevoteeDashboard = () => {
  <div className="flex justify-center">
  <button
  type="button"
- onClick={() => handleReceiptDownload(row, row.isPrasadam ? "prasadam" : "booking")}
+ onClick={() => handleReceiptDownload(row, row.isPrasadam ? "prasadam" : (row.service?.toLowerCase().includes("room") ? "room" : ((row.isCombined || (row.items && row.items.length > 0)) ? "combined" : "booking")))}
  className="rounded-lg bg-[#1b7f77] hover:bg-[#1b7f77]/90 px-3 py-1.5 text-xs font-bold text-white transition shadow-sm"
  >
  Download
@@ -3833,7 +3921,7 @@ const DevoteeDashboard = () => {
         dateDisplay: formatDateDisplay(b.datetime || b.bookingDate || b.createdAt),
         oneLineSummary: isRoom ? `Room Booking: ${b.service}` : `Pooja Booking: ${b.poojaName || b.service || "Pooja Seva"}`,
         receiptId: b.receiptNumber || b.bookingNumber || buildReceiptId(isRoom ? "RB" : "PB", b),
-        downloadType: "booking",
+        downloadType: isRoom ? "room" : ((b.isCombined || (b.items && b.items.length > 0)) ? "combined" : "booking"),
         amount: b.amount,
         status: b.status,
         contactNumber: b.contactNumber,

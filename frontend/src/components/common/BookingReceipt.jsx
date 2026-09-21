@@ -48,37 +48,137 @@ const QRCodePlaceholder = ({ className }) => (
 );
 
 const BookingReceipt = ({
- isOnline = true,
- receiptNo = "REC-ON-2025-000123",
- bookingDate = "27 May 2025 10:45 AM",
- paymentMode = "UPI",
- transactionId = "UPI/512345678901",
- cashierName = "Deepthi S.",
- devoteeName = "Ramesh Bhat",
- mobile = "9876543210",
- email = "ramesh@example.com",
- address = "#12, Temple Street, Udupi - 576101",
- poojaBookings = [
- { slNo: 1, name: "Satyanarayana Pooja", date: "29 May 2025", qty: 1, amount: 500.00 }
- ],
- prasadamOrders = [
- { slNo: 2, name: "Laddu Prasadam", date: "-", qty: "2 Plate", amount: 100.00 }
- ],
- subTotal = 680.00,
- templeCharges = 50.00,
- grandTotal = 730.00,
- amountInWords = "Rupees Seven Hundred Thirty Only",
- devoteeMaterials = [],
- templeMaterials = [],
- notes = [
- "Please report 15 minutes before the Pooja time.",
- "Pooja once booked will not be cancelled.",
- "Prasadam will be provided after Pooja."
- ],
- cashReceived = null,
- changeReturned = null
+  isOnline = true,
+  receiptNo = "REC-ON-2025-000123",
+  bookingDate = "27 May 2025 10:45 AM",
+  paymentMode = "UPI",
+  transactionId = "UPI/512345678901",
+  cashierName = "Deepthi S.",
+  devotee,
+  devoteeName: propDevoteeName,
+  mobile: propMobile,
+  email: propEmail,
+  address: propAddress,
+  poojaBookings = [],
+  prasadamOrders = [],
+  roomBookings = [],
+  donations = [],
+  items = [],
+  subTotal = 0,
+  templeCharges = 0,
+  grandTotal = 0,
+  amountInWords = "",
+  devoteeMaterials = [],
+  templeMaterials = [],
+  notes = [
+    "Please report 15 minutes before the Pooja time.",
+    "Pooja once booked will not be cancelled.",
+    "Prasadam will be provided after Pooja."
+  ],
+  cashReceived = null,
+  changeReturned = null
 }) => {
- const themeClass = isOnline ? 'theme-online' : 'theme-offline';
+  const devoteeName = propDevoteeName || devotee?.name || "Devotee";
+  const mobile = (propMobile && propMobile !== "-") ? propMobile : (devotee?.phone || devotee?.mobile || "-");
+  const email = (propEmail && propEmail !== "-") ? propEmail : (devotee?.email || "-");
+  const address = (propAddress && propAddress !== "-") ? propAddress : (devotee?.address || devotee?.place || "-");
+
+  const themeClass = isOnline ? 'theme-online' : 'theme-offline';
+
+  const formatReceiptDate = (d) => {
+    if (!d || d === "-" || d === "Invalid Date") return bookingDate || "-";
+    const str = String(d).trim();
+    const parsed = new Date(str);
+    if (!isNaN(parsed.getTime())) {
+      return parsed.toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
+      });
+    }
+    return str;
+  };
+
+  const resolveItemAmount = (item) => {
+    const rawAmt = Number(item.amount);
+    if (!isNaN(rawAmt) && rawAmt > 0) return rawAmt;
+    const qty = Number(item.qty || item.quantity || 1);
+    const price = Number(item.price);
+    if (!isNaN(price) && price > 0) return price * qty;
+    return 0;
+  };
+
+  // Normalize and auto-categorize any incoming items
+  let allPooja = [...(poojaBookings || [])];
+  let allPrasadam = [...(prasadamOrders || [])];
+  let allRooms = [...(roomBookings || [])];
+  let allDonations = [...(donations || [])];
+
+  if (items && items.length > 0 && allPooja.length === 0 && allPrasadam.length === 0 && allRooms.length === 0 && allDonations.length === 0) {
+    items.forEach((item, idx) => {
+      const type = String(item.type || item.itemType || item.catalogType || "").toLowerCase();
+      const name = item.name || item.itemName || item.service || item.description || "Service Item";
+      const itemDate = formatReceiptDate(item.date);
+      const itemQty = item.qty || item.quantity || 1;
+      const itemAmount = resolveItemAmount(item);
+      const rowItem = { slNo: idx + 1, name, date: itemDate, qty: itemQty, amount: itemAmount };
+
+      if (type.includes("room") || type.includes("accommodation") || name.toLowerCase().includes("room") || name.toLowerCase().includes("suite") || name.toLowerCase().includes("cottage") || name.toLowerCase().includes("dormitory")) {
+        allRooms.push(rowItem);
+      } else if (type.includes("prasad") || name.toLowerCase().includes("prasadam") || name.toLowerCase().includes("laddu")) {
+        allPrasadam.push(rowItem);
+      } else if (type.includes("donat") || name.toLowerCase().includes("donation") || name.toLowerCase().includes("fund") || name.toLowerCase().includes("annadanam")) {
+        allDonations.push(rowItem);
+      } else {
+        allPooja.push(rowItem);
+      }
+    });
+  }
+
+  // Ensure sequential Sl. No. and proper date formatting per section
+  allPooja = allPooja.map((item, idx) => ({
+    ...item,
+    slNo: idx + 1,
+    date: formatReceiptDate(item.date),
+    amount: resolveItemAmount(item)
+  }));
+  allPrasadam = allPrasadam.map((item, idx) => ({
+    ...item,
+    slNo: idx + 1,
+    date: formatReceiptDate(item.date),
+    amount: resolveItemAmount(item)
+  }));
+  allRooms = allRooms.map((item, idx) => ({
+    ...item,
+    slNo: idx + 1,
+    date: formatReceiptDate(item.date || item.checkin),
+    amount: resolveItemAmount(item)
+  }));
+  allDonations = allDonations.map((item, idx) => ({
+    ...item,
+    slNo: idx + 1,
+    date: formatReceiptDate(item.date),
+    amount: resolveItemAmount(item)
+  }));
+
+  // Fallback: If caller passed items array with amounts but categorised arrays had 0
+  if ([...allPooja, ...allPrasadam, ...allRooms, ...allDonations].every(i => Number(i.amount) === 0) && items && items.length > 0) {
+    items.forEach((item) => {
+      const amt = resolveItemAmount(item);
+      if (amt > 0) {
+        const match = [...allPooja, ...allPrasadam, ...allRooms, ...allDonations].find(
+          x => x.name === (item.name || item.itemName || item.service || item.description)
+        );
+        if (match && match.amount === 0) {
+          match.amount = amt;
+        }
+      }
+    });
+  }
+
+  const calculatedItemsTotal = [...allPooja, ...allPrasadam, ...allRooms, ...allDonations].reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+  const computedSubTotal = Number(subTotal) > 0 ? Number(subTotal) : calculatedItemsTotal;
+  const computedGrandTotal = Number(grandTotal) > 0 ? Number(grandTotal) : (computedSubTotal + (Number(templeCharges) || 0));
  
  return (
  <div className={`receipt-wrapper ${themeClass}`}>
@@ -197,46 +297,88 @@ const BookingReceipt = ({
  <table className="receipt-table">
  <thead>
  <tr>
- <th style={{paddingTop: '30px', width: '10%'}}>Sl. No.</th>
- <th style={{paddingTop: '30px', width: '40%'}}>Item / Service</th>
- <th style={{paddingTop: '30px', width: '20%'}}>Date</th>
- <th style={{paddingTop: '30px', width: '15%'}}>Qty</th>
- <th style={{paddingTop: '30px', width: '15%'}}>Amount (₹)</th>
+ <th style={{ width: '10%' }}>Sl. No.</th>
+ <th style={{ width: '42%' }}>Item / Service</th>
+ <th style={{ width: '20%' }}>Date</th>
+ <th style={{ width: '12%' }}>Qty</th>
+ <th style={{ width: '16%' }}>Amount (₹)</th>
  </tr>
  </thead>
  <tbody>
- {poojaBookings.length > 0 && (
+ {allPooja.length > 0 && (
  <>
  <tr>
- <td colSpan="5" className="category-row">POOJA BOOKING</td>
+ <td colSpan="5" className="category-row">POOJA & SEVA BOOKINGS</td>
  </tr>
- {poojaBookings.map((item, idx) => (
+ {allPooja.map((item, idx) => (
  <tr key={`pooja-${idx}`}>
  <td>{item.slNo}</td>
- <td style={{textAlign: 'left'}}>{item.name}</td>
+ <td style={{ textAlign: 'left' }}>{item.name}</td>
  <td>{item.date}</td>
  <td>{item.qty}</td>
- <td style={{textAlign: 'right'}}>{item.amount.toFixed(2)}</td>
+ <td style={{ textAlign: 'right' }}>{Number(item.amount || 0).toFixed(2)}</td>
  </tr>
  ))}
  </>
  )}
  
- {prasadamOrders.length > 0 && (
+ {allPrasadam.length > 0 && (
  <>
  <tr>
- <td colSpan="5" className="category-row">PRASADAM ORDER</td>
+ <td colSpan="5" className="category-row">PRASADAM ORDERS</td>
  </tr>
- {prasadamOrders.map((item, idx) => (
+ {allPrasadam.map((item, idx) => (
  <tr key={`prasad-${idx}`}>
  <td>{item.slNo}</td>
- <td style={{textAlign: 'left'}}>{item.name}</td>
+ <td style={{ textAlign: 'left' }}>{item.name}</td>
  <td>{item.date}</td>
  <td>{item.qty}</td>
- <td style={{textAlign: 'right'}}>{item.amount.toFixed(2)}</td>
+ <td style={{ textAlign: 'right' }}>{Number(item.amount || 0).toFixed(2)}</td>
  </tr>
  ))}
  </>
+ )}
+
+ {allRooms.length > 0 && (
+ <>
+ <tr>
+ <td colSpan="5" className="category-row">ROOM & ACCOMMODATION</td>
+ </tr>
+ {allRooms.map((item, idx) => (
+ <tr key={`room-${idx}`}>
+ <td>{item.slNo}</td>
+ <td style={{ textAlign: 'left' }}>{item.name}</td>
+ <td>{item.date}</td>
+ <td>{item.qty}</td>
+ <td style={{ textAlign: 'right' }}>{Number(item.amount || 0).toFixed(2)}</td>
+ </tr>
+ ))}
+ </>
+ )}
+
+ {allDonations.length > 0 && (
+ <>
+ <tr>
+ <td colSpan="5" className="category-row">DONATIONS & OFFERINGS</td>
+ </tr>
+ {allDonations.map((item, idx) => (
+ <tr key={`donation-${idx}`}>
+ <td>{item.slNo}</td>
+ <td style={{ textAlign: 'left' }}>{item.name}</td>
+ <td>{item.date}</td>
+ <td>{item.qty}</td>
+ <td style={{ textAlign: 'right' }}>{Number(item.amount || 0).toFixed(2)}</td>
+ </tr>
+ ))}
+ </>
+ )}
+
+ {allPooja.length === 0 && allPrasadam.length === 0 && allRooms.length === 0 && allDonations.length === 0 && (
+ <tr>
+ <td colSpan="5" style={{ padding: '16px', color: '#666', fontStyle: 'italic' }}>
+ Temple Service / Offering Completed
+ </td>
+ </tr>
  )}
  </tbody>
  </table>
@@ -290,15 +432,15 @@ const BookingReceipt = ({
  <div className="totals-panel">
  <div className="total-row">
  <span>Sub Total</span>
- <span>₹ {subTotal.toFixed(2)}</span>
+ <span>₹ {computedSubTotal.toFixed(2)}</span>
  </div>
  <div className="total-row">
  <span>Temple Arrange Charges</span>
- <span>+ ₹ {templeCharges.toFixed(2)}</span>
+ <span>+ ₹ {Number(templeCharges || 0).toFixed(2)}</span>
  </div>
  <div className="grand-total-row">
  <span>GRAND TOTAL</span>
- <span>₹ {grandTotal.toFixed(2)}</span>
+ <span>₹ {computedGrandTotal.toFixed(2)}</span>
  </div>
  {paymentMode === "Cash" && cashReceived != null && Number(cashReceived) > 0 && (
  <>

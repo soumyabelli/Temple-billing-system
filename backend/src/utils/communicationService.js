@@ -155,57 +155,66 @@ const {
   generateDonationReceiptPDF,
   generatePrasadamReceiptPDF,
   generateRoomBookingReceiptPDF,
+  generateBillReceiptPDF,
 } = require("./pdfGenerator");
+const { normalizeReceiptData } = require("./receiptNormalizer");
+const { generateReceiptHTML } = require("./receiptHtmlTemplate");
+const { resolveDevoteeDetails } = require("./devoteeLookup");
 
 /**
  * Send booking confirmation across multiple channels
  * @param {Object} devotee - Devotee information
  * @param {Object} booking - Booking details
  */
-const sendBookingConfirmation = async (devotee, booking) => {
-  const subject = "Pooja Booking Confirmation";
-  const emailHtml = `
-    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-      <h2 style="color: #d4a574;">Pooja Booking Confirmation</h2>
-      <p>Dear ${devotee.name},</p>
-      <p>Your pooja booking has been confirmed!</p>
-      <div style="background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
-        <p><strong>Service:</strong> ${booking.service}</p>
-        <p><strong>Date & Time:</strong> ${booking.datetime}</p>
-        <p><strong>Amount:</strong> ₹${booking.amount}</p>
-        <p><strong>Status:</strong> ${booking.status}</p>
-      </div>
-      <p style="font-weight: bold; color: #d4a574; font-size: 1.1em; padding: 10px; border-left: 4px solid #d4a574; background: #fff8f0;">
-        Please find your official receipt attached to this email or download it anytime from your Devotee Portal.
-      </p>
-      <p>Thank you for choosing our temple. We look forward to serving you!</p>
-      <p>Best regards,<br>Temple Management</p>
-    </div>
-  `;
+const sendBookingConfirmation = async (devotee = {}, booking = {}) => {
+  let targetEmail = devotee.email || booking.devoteeEmail || "";
+  let targetPhone = devotee.phone || booking.devoteePhone || booking.contactNumber || "";
+  let targetAddress = devotee.address || booking.devoteeAddress || booking.address || "";
+  let targetName = devotee.name || booking.devoteeName || "";
 
-  const textMessage = `Pooja Booking Confirmation\nService: ${booking.service}\nDate & Time: ${booking.datetime}\nAmount: ₹${booking.amount}\n\nPlease bring your receipt when visiting the temple.\nThank you!`;
+  try {
+    const resolved = await resolveDevoteeDetails({
+      name: targetName,
+      email: targetEmail,
+      phone: targetPhone,
+    });
+    if (!targetEmail && resolved.email) targetEmail = resolved.email;
+    if (!targetPhone && resolved.phone) targetPhone = resolved.phone;
+    if (!targetAddress && resolved.address) targetAddress = resolved.address;
+    if (!targetName && resolved.name) targetName = resolved.name;
+  } catch (_) {}
 
-  const smsMessage = `Pooja booking confirmed! Service: ${booking.service} on ${booking.datetime}. Amount: ₹${booking.amount}. Please bring receipt at temple. -Temple`;
+  const enrichedDevotee = {
+    name: targetName || "Devotee",
+    email: targetEmail,
+    phone: targetPhone,
+    address: targetAddress,
+  };
+
+  const receiptData = normalizeReceiptData(enrichedDevotee, booking, "pooja");
+  const subject = `Pooja Booking Receipt - ${receiptData.receiptNo} | Sri Shanti Mahadev Mandir`;
+  const emailHtml = generateReceiptHTML(receiptData);
+
+  const textMessage = `Pooja Booking Confirmed\nReceipt No: ${receiptData.receiptNo}\nDevotee: ${receiptData.devotee.name}\nDate: ${receiptData.bookingDate}\nTotal Paid: Rs. ${receiptData.grandTotal}\n\nYour official receipt is attached to this email. May divine grace be with you! - Sri Shanti Mahadev Mandir`;
+  const smsMessage = `Pooja booking confirmed! Receipt: ${receiptData.receiptNo}. Amount: Rs. ${receiptData.grandTotal}. Receipt emailed. -Sri Shanti Mandir`;
 
   const results = [];
-
   let attachments = [];
   try {
-    const pdfBuffer = await generateBookingReceiptPDF(devotee, booking);
+    const pdfBuffer = await generateBookingReceiptPDF(enrichedDevotee, booking);
     attachments.push({
-      filename: `Receipt_${(booking.service || 'Pooja').replace(/[^a-zA-Z0-9]/g, '_')}.pdf`,
+      filename: `Receipt_${receiptData.receiptNo}.pdf`,
       content: pdfBuffer,
-      contentType: 'application/pdf'
+      contentType: "application/pdf",
     });
   } catch (err) {
     console.error("Failed to generate PDF for booking email attachment:", err.message);
   }
 
-  // Send email
-  if (devotee.email) {
+  if (targetEmail) {
     results.push(
       await sendEmail({
-        to: devotee.email,
+        to: targetEmail,
         subject,
         html: emailHtml,
         text: textMessage,
@@ -214,11 +223,10 @@ const sendBookingConfirmation = async (devotee, booking) => {
     );
   }
 
-  // Send SMS
-  if (devotee.phone) {
+  if (targetPhone) {
     results.push(
       await sendSMS({
-        to: devotee.phone,
+        to: targetPhone,
         message: smsMessage,
       })
     );
@@ -232,50 +240,55 @@ const sendBookingConfirmation = async (devotee, booking) => {
  * @param {Object} devotee - Devotee information
  * @param {Object} donation - Donation details
  */
-const sendDonationReceipt = async (devotee, donation) => {
-  const subject = "Temple Donation Receipt";
-  const emailHtml = `
-    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-      <h2 style="color: #d4a574;">Donation Receipt</h2>
-      <p>Dear ${devotee.name},</p>
-      <p>Thank you for your generous donation to Sri Shanti Mahadev Mandir!</p>
-      <div style="background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
-        <p><strong>Amount:</strong> ₹${donation.amount}</p>
-        <p><strong>Category:</strong> ${donation.category}</p>
-        <p><strong>Date:</strong> ${new Date().toLocaleDateString("en-IN")}</p>
-        <p><strong>Transaction ID:</strong> ${donation.paymentMethod === "Cash" ? "Offline Payment" : (donation.transactionId || "N/A")}</p>
-      </div>
-      <p style="font-weight: bold; color: #d4a574; font-size: 1.05em; padding: 10px; border-left: 4px solid #d4a574; background: #fff8f0;">
-        Your official 80G tax exemption donation receipt is attached to this email. You can also download it anytime from your Devotee Portal.
-      </p>
-      <p>Your contribution helps us maintain and serve the community better. May divine blessings be upon you and your family!</p>
-      <p>Best regards,<br>Sri Shanti Mahadev Mandir Administration</p>
-    </div>
-  `;
+const sendDonationReceipt = async (devotee = {}, donation = {}) => {
+  let targetEmail = devotee.email || donation.donorEmail || donation.email || "";
+  let targetPhone = devotee.phone || donation.donorPhone || donation.phone || "";
+  let targetAddress = devotee.address || donation.donorAddress || donation.address || "";
+  let targetName = devotee.name || donation.donorName || "";
 
-  const textMessage = `Donation Receipt\nAmount: ₹${donation.amount}\nCategory: ${donation.category}\nTransaction ID: ${donation.paymentMethod === "Cash" ? "Offline Payment" : (donation.transactionId || "N/A")}\nOfficial receipt attached. Thank you!`;
+  try {
+    const resolved = await resolveDevoteeDetails({
+      name: targetName,
+      email: targetEmail,
+      phone: targetPhone,
+    });
+    if (!targetEmail && resolved.email) targetEmail = resolved.email;
+    if (!targetPhone && resolved.phone) targetPhone = resolved.phone;
+    if (!targetAddress && resolved.address) targetAddress = resolved.address;
+    if (!targetName && resolved.name) targetName = resolved.name;
+  } catch (_) {}
 
-  const smsMessage = `Donation received! Amount: ₹${donation.amount}. Category: ${donation.category}. Thank you for your support! -Temple`;
+  const enrichedDevotee = {
+    name: targetName || "Devotee",
+    email: targetEmail,
+    phone: targetPhone,
+    address: targetAddress,
+  };
+
+  const receiptData = normalizeReceiptData(enrichedDevotee, donation, "donation");
+  const subject = `Temple Donation Receipt - ${receiptData.receiptNo} | Sri Shanti Mahadev Mandir`;
+  const emailHtml = generateReceiptHTML(receiptData);
+
+  const textMessage = `Temple Donation Received\nReceipt No: ${receiptData.receiptNo}\nDonor: ${receiptData.devotee.name}\nAmount: Rs. ${receiptData.grandTotal}\nPayment: ${receiptData.paymentMode}\n\nOfficial receipt attached. Thank you for your divine offering! - Sri Shanti Mahadev Mandir`;
+  const smsMessage = `Donation received! Receipt: ${receiptData.receiptNo}. Amount: Rs. ${receiptData.grandTotal}. Receipt emailed. -Sri Shanti Mandir`;
 
   const results = [];
-
   let attachments = [];
   try {
-    const pdfBuffer = await generateDonationReceiptPDF(devotee, donation);
+    const pdfBuffer = await generateDonationReceiptPDF(enrichedDevotee, donation);
     attachments.push({
-      filename: `Donation_Receipt_${(donation.category || 'Donation').replace(/[^a-zA-Z0-9]/g, '_')}.pdf`,
+      filename: `Donation_Receipt_${receiptData.receiptNo}.pdf`,
       content: pdfBuffer,
-      contentType: 'application/pdf'
+      contentType: "application/pdf",
     });
   } catch (err) {
     console.error("Failed to generate PDF for donation email attachment:", err.message);
   }
 
-  // Send email
-  if (devotee.email) {
+  if (targetEmail) {
     results.push(
       await sendEmail({
-        to: devotee.email,
+        to: targetEmail,
         subject,
         html: emailHtml,
         text: textMessage,
@@ -284,11 +297,10 @@ const sendDonationReceipt = async (devotee, donation) => {
     );
   }
 
-  // Send SMS
-  if (devotee.phone) {
+  if (targetPhone) {
     results.push(
       await sendSMS({
-        to: devotee.phone,
+        to: targetPhone,
         message: smsMessage,
       })
     );
@@ -302,52 +314,55 @@ const sendDonationReceipt = async (devotee, donation) => {
  * @param {Object} devotee - Devotee information
  * @param {Object} order - Order details
  */
-const sendPrasadamOrderConfirmation = async (devotee, order) => {
-  const subject = "Prasadam Order Confirmation & Receipt";
-  const itemName = order.item || order.itemName || "Temple Prasadam";
-  const quantity = order.quantity || 1;
-  const amount = order.amount || 0;
-  const emailHtml = `
-    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-      <h2 style="color: #d4a574;">Prasadam Order Confirmation</h2>
-      <p>Dear ${devotee.name},</p>
-      <p>Your holy Prasadam order has been received and confirmed!</p>
-      <div style="background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
-        <p><strong>Item:</strong> ${itemName}</p>
-        <p><strong>Quantity:</strong> ${quantity}</p>
-        <p><strong>Total Amount:</strong> ₹${amount}</p>
-        <p><strong>Status:</strong> ${order.status || "Placed"}</p>
-      </div>
-      <p style="font-weight: bold; color: #d4a574; font-size: 1.05em; padding: 10px; border-left: 4px solid #d4a574; background: #fff8f0;">
-        Please present the attached receipt at the Temple Prasadam Counter to collect your order. You can also download it anytime from your Devotee Portal.
-      </p>
-      <p>Best regards,<br>Sri Shanti Mahadev Mandir</p>
-    </div>
-  `;
+const sendPrasadamOrderConfirmation = async (devotee = {}, order = {}) => {
+  let targetEmail = devotee.email || order.email || order.devoteeEmail || "";
+  let targetPhone = devotee.phone || order.phone || order.devoteePhone || "";
+  let targetAddress = devotee.address || order.address || order.devoteeAddress || "";
+  let targetName = devotee.name || order.devoteeName || "";
 
-  const textMessage = `Prasadam Order Confirmed\nItem: ${itemName}\nQuantity: ${quantity}\nAmount: ₹${amount}\nReceipt attached. Thank you!`;
+  try {
+    const resolved = await resolveDevoteeDetails({
+      name: targetName,
+      email: targetEmail,
+      phone: targetPhone,
+    });
+    if (!targetEmail && resolved.email) targetEmail = resolved.email;
+    if (!targetPhone && resolved.phone) targetPhone = resolved.phone;
+    if (!targetAddress && resolved.address) targetAddress = resolved.address;
+    if (!targetName && resolved.name) targetName = resolved.name;
+  } catch (_) {}
 
-  const smsMessage = `Prasadam order confirmed! Item: ${itemName}. Qty: ${quantity}. Amount: ₹${amount}. Ready for pickup soon! -Temple`;
+  const enrichedDevotee = {
+    name: targetName || "Devotee",
+    email: targetEmail,
+    phone: targetPhone,
+    address: targetAddress,
+  };
+
+  const receiptData = normalizeReceiptData(enrichedDevotee, order, "prasadam");
+  const subject = `Prasadam Order Receipt - ${receiptData.receiptNo} | Sri Shanti Mahadev Mandir`;
+  const emailHtml = generateReceiptHTML(receiptData);
+
+  const textMessage = `Prasadam Order Confirmed\nReceipt No: ${receiptData.receiptNo}\nDevotee: ${receiptData.devotee.name}\nTotal: Rs. ${receiptData.grandTotal}\n\nPlease present the attached receipt at the Prasadam Counter. - Sri Shanti Mahadev Mandir`;
+  const smsMessage = `Prasadam order confirmed! Receipt: ${receiptData.receiptNo}. Total: Rs. ${receiptData.grandTotal}. Ready at counter. -Sri Shanti Mandir`;
 
   const results = [];
-
   let attachments = [];
   try {
-    const pdfBuffer = await generatePrasadamReceiptPDF(devotee, order);
+    const pdfBuffer = await generatePrasadamReceiptPDF(enrichedDevotee, order);
     attachments.push({
-      filename: `Prasadam_Receipt_${itemName.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`,
+      filename: `Prasadam_Receipt_${receiptData.receiptNo}.pdf`,
       content: pdfBuffer,
-      contentType: 'application/pdf'
+      contentType: "application/pdf",
     });
   } catch (err) {
     console.error("Failed to generate PDF for prasadam email attachment:", err.message);
   }
 
-  // Send email
-  if (devotee.email) {
+  if (targetEmail) {
     results.push(
       await sendEmail({
-        to: devotee.email,
+        to: targetEmail,
         subject,
         html: emailHtml,
         text: textMessage,
@@ -356,11 +371,10 @@ const sendPrasadamOrderConfirmation = async (devotee, order) => {
     );
   }
 
-  // Send SMS
-  if (devotee.phone) {
+  if (targetPhone) {
     results.push(
       await sendSMS({
-        to: devotee.phone,
+        to: targetPhone,
         message: smsMessage,
       })
     );
@@ -374,49 +388,55 @@ const sendPrasadamOrderConfirmation = async (devotee, order) => {
  * @param {Object} devotee - Devotee information
  * @param {Object} booking - Booking details
  */
-const sendRoomBookingConfirmation = async (devotee, booking) => {
-  const subject = "Room Allotment & Accommodation Receipt";
-  const emailHtml = `
-    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-      <h2 style="color: #d4a574;">Room Allotment & Booking Confirmation</h2>
-      <p>Dear ${devotee.name},</p>
-      <p>Your room booking at Sri Shanti Mahadev Mandir Guest House has been confirmed!</p>
-      <div style="background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
-        <p><strong>Accommodation:</strong> ${booking.service || "Dharmashala Room"}</p>
-        <p><strong>Check-In:</strong> ${booking.checkinDate ? new Date(booking.checkinDate).toLocaleDateString("en-IN") : "Today"}</p>
-        <p><strong>Check-Out:</strong> ${booking.checkoutDate ? new Date(booking.checkoutDate).toLocaleDateString("en-IN") : "Tomorrow"}</p>
-        <p><strong>Days:</strong> ${booking.days || 1}</p>
-        <p><strong>Total Tariff:</strong> ₹${booking.amount || 0}</p>
-        <p><strong>Status:</strong> ${booking.status || "Confirmed"}</p>
-      </div>
-      <p style="font-weight: bold; color: #d4a574; font-size: 1.05em; padding: 10px; border-left: 4px solid #d4a574; background: #fff8f0;">
-        Please present the attached official receipt or download it from your Devotee Portal when checking into the guest house office.
-      </p>
-      <p>We wish you a pleasant and spiritually uplifting stay!</p>
-      <p>Best regards,<br>Sri Shanti Mahadev Mandir Administration</p>
-    </div>
-  `;
+const sendRoomBookingConfirmation = async (devotee = {}, booking = {}) => {
+  let targetEmail = devotee.email || booking.devoteeEmail || booking.email || "";
+  let targetPhone = devotee.phone || booking.devoteePhone || booking.phone || "";
+  let targetAddress = devotee.address || booking.devoteeAddress || booking.address || "";
+  let targetName = devotee.name || booking.devoteeName || booking.guestName || "";
 
-  const textMessage = `Room Booking Confirmed\nAccommodation: ${booking.service || "Room"}\nAmount: ₹${booking.amount || 0}\nReceipt attached. Thank you!`;
-  const smsMessage = `Room booking confirmed! ${booking.service || "Room"}. Amount: ₹${booking.amount || 0}. Receipt attached. -Temple`;
+  try {
+    const resolved = await resolveDevoteeDetails({
+      name: targetName,
+      email: targetEmail,
+      phone: targetPhone,
+    });
+    if (!targetEmail && resolved.email) targetEmail = resolved.email;
+    if (!targetPhone && resolved.phone) targetPhone = resolved.phone;
+    if (!targetAddress && resolved.address) targetAddress = resolved.address;
+    if (!targetName && resolved.name) targetName = resolved.name;
+  } catch (_) {}
+
+  const enrichedDevotee = {
+    name: targetName || "Devotee",
+    email: targetEmail,
+    phone: targetPhone,
+    address: targetAddress,
+  };
+
+  const receiptData = normalizeReceiptData(enrichedDevotee, booking, "room");
+  const subject = `Room Allotment Receipt - ${receiptData.receiptNo} | Sri Shanti Mahadev Mandir`;
+  const emailHtml = generateReceiptHTML(receiptData);
+
+  const textMessage = `Room Booking Confirmed\nReceipt No: ${receiptData.receiptNo}\nGuest: ${receiptData.devotee.name}\nTotal: Rs. ${receiptData.grandTotal}\n\nPlease present the attached receipt at the Guest House Office. - Sri Shanti Mahadev Mandir`;
+  const smsMessage = `Room booked! Receipt: ${receiptData.receiptNo}. Total: Rs. ${receiptData.grandTotal}. Receipt emailed. -Sri Shanti Mandir`;
 
   const results = [];
   let attachments = [];
   try {
-    const pdfBuffer = await generateRoomBookingReceiptPDF(devotee, booking);
+    const pdfBuffer = await generateRoomBookingReceiptPDF(enrichedDevotee, booking);
     attachments.push({
-      filename: `Room_Receipt_${String(booking.referenceNo || 'Room').replace(/[^a-zA-Z0-9]/g, '_')}.pdf`,
+      filename: `Room_Receipt_${receiptData.receiptNo}.pdf`,
       content: pdfBuffer,
-      contentType: 'application/pdf'
+      contentType: "application/pdf",
     });
   } catch (err) {
     console.error("Failed to generate PDF for room booking email attachment:", err.message);
   }
 
-  if (devotee.email) {
+  if (targetEmail) {
     results.push(
       await sendEmail({
-        to: devotee.email,
+        to: targetEmail,
         subject,
         html: emailHtml,
         text: textMessage,
@@ -425,10 +445,10 @@ const sendRoomBookingConfirmation = async (devotee, booking) => {
     );
   }
 
-  if (devotee.phone) {
+  if (targetPhone) {
     results.push(
       await sendSMS({
-        to: devotee.phone,
+        to: targetPhone,
         message: smsMessage,
       })
     );
@@ -441,40 +461,72 @@ const sendRoomBookingConfirmation = async (devotee, booking) => {
  * Send Consolidated Bill receipt across multiple channels
  * @param {Object} bill - Bill details (with items, amount, etc.)
  */
-const sendBillReceipt = async (bill) => {
-  const subject = "Temple Billing Receipt";
-  const itemsHtml = (bill.items || []).map(i => `<tr><td>${i.itemType}</td><td>${i.itemName}</td><td>₹${i.amount}</td></tr>`).join('');
-  const emailHtml = `
-    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-      <h2 style="color: #d4a574;">Consolidated Receipt</h2>
-      <p>Dear ${bill.devoteeName},</p>
-      <p>Thank you for your booking! Here are your receipt details:</p>
-      <div style="background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
-        <p><strong>Receipt No:</strong> ${bill.referenceNo}</p>
-        <p><strong>Date:</strong> ${new Date(bill.billDate || bill.createdAt).toLocaleString()}</p>
-        <p><strong>Payment Mode:</strong> ${bill.paymentMode}</p>
-        <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
-          <tr style="background: #e2e8f0; text-align: left;"><th>Type</th><th>Item</th><th>Amount</th></tr>
-          ${itemsHtml}
-          ${bill.sevaType && bill.items?.length === 0 ? `<tr><td>Service</td><td>${bill.sevaType}</td><td>₹${bill.amount}</td></tr>` : ''}
-        </table>
-        <p style="text-align: right; font-size: 1.2em; margin-top: 10px;"><strong>Total Amount:</strong> ₹${bill.amount}</p>
-      </div>
-      <p>You can also download a PDF receipt by logging into your portal or requesting it from the counter.</p>
-      <p>Best regards,<br>Temple Management</p>
-    </div>
-  `;
+const sendBillReceipt = async (bill = {}) => {
+  let targetEmail = bill.devoteeEmail || bill.email || "";
+  let targetPhone = bill.devoteePhone || bill.phone || "";
+  let targetAddress = bill.devoteeAddress || bill.address || "";
+  let targetName = bill.devoteeName || "";
 
-  const textMessage = `Receipt ${bill.referenceNo}\nTotal Amount: ₹${bill.amount}\nThank you!`;
-  const smsMessage = `Receipt ${bill.referenceNo} generated for ₹${bill.amount}. -Temple`;
+  try {
+    const resolved = await resolveDevoteeDetails({
+      name: targetName,
+      email: targetEmail,
+      phone: targetPhone,
+    });
+    if (!targetEmail && resolved.email) targetEmail = resolved.email;
+    if (!targetPhone && resolved.phone) targetPhone = resolved.phone;
+    if (!targetAddress && resolved.address) targetAddress = resolved.address;
+    if (!targetName && resolved.name) targetName = resolved.name;
+  } catch (_) {}
+
+  const enrichedDevotee = {
+    name: targetName || "Devotee",
+    email: targetEmail,
+    phone: targetPhone,
+    address: targetAddress,
+  };
+
+  const receiptData = normalizeReceiptData(enrichedDevotee, bill, "bill");
+  const subject = `Official Temple Receipt - ${receiptData.receiptNo} | Sri Shanti Mahadev Mandir`;
+  const emailHtml = generateReceiptHTML(receiptData);
+
+  const textMessage = `Official Temple Receipt\nReceipt No: ${receiptData.receiptNo}\nDevotee: ${receiptData.devotee.name}\nTotal: Rs. ${receiptData.grandTotal}\nPayment: ${receiptData.paymentMode}\n\nYour official receipt is attached. May the divine grace always be with you! - Sri Shanti Mahadev Mandir`;
+  const smsMessage = `Receipt generated! No: ${receiptData.receiptNo}. Total: Rs. ${receiptData.grandTotal}. Receipt emailed. -Sri Shanti Mandir`;
 
   const results = [];
-  if (bill.devoteeEmail) {
-    results.push(await sendEmail({ to: bill.devoteeEmail, subject, html: emailHtml, text: textMessage }));
+  let attachments = [];
+  try {
+    const pdfBuffer = await generateBillReceiptPDF(enrichedDevotee, bill);
+    attachments.push({
+      filename: `Receipt_${receiptData.receiptNo}.pdf`,
+      content: pdfBuffer,
+      contentType: "application/pdf",
+    });
+  } catch (err) {
+    console.error("Failed to generate PDF for bill receipt attachment:", err.message);
   }
-  if (bill.devoteePhone) {
-    results.push(await sendSMS({ to: bill.devoteePhone, message: smsMessage }));
+
+  if (targetEmail) {
+    results.push(
+      await sendEmail({
+        to: targetEmail,
+        subject,
+        html: emailHtml,
+        text: textMessage,
+        attachments,
+      })
+    );
   }
+
+  if (targetPhone) {
+    results.push(
+      await sendSMS({
+        to: targetPhone,
+        message: smsMessage,
+      })
+    );
+  }
+
   return results;
 };
 

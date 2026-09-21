@@ -2,36 +2,36 @@
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   background: white;
   width: 100%;
-  max-width: 800px;
+  max-width: 820px;
   margin: 0 auto;
-  padding: 1.5rem;
+  padding: 0.75rem 1rem;
   box-sizing: border-box;
   color: #1a1a1a;
 }
 
 .receipt-container {
   border: 1px solid var(--theme-color);
-  padding: 2rem;
+  padding: 1.25rem 1.5rem;
   position: relative;
   background-color: white;
-  border-radius: 12px;
+  border-radius: 10px;
 }
 
 .receipt-inner-border {
   border: 1px solid var(--theme-color);
   position: absolute;
-  top: 6px;
-  left: 6px;
-  right: 6px;
-  bottom: 6px;
+  top: 5px;
+  left: 5px;
+  right: 5px;
+  bottom: 5px;
   pointer-events: none;
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
 .corner-flourish {
   position: absolute;
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   background-color: white;
   z-index: 10;
 }
@@ -62,19 +62,19 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 1rem;
-  margin-bottom: 1.5rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.85rem;
 }
 
 .temple-img {
-  width: 90px;
+  width: 75px;
   height: auto;
   fill: var(--theme-color);
 }
 
 .om-symbol {
-  width: 50px;
-  height: 50px;
+  width: 42px;
+  height: 42px;
   fill: var(--theme-color);
 }
 
@@ -85,46 +85,46 @@
 
 .temple-name {
   font-family: 'Georgia', serif;
-  font-size: 24px;
+  font-size: 21px;
   font-weight: 700;
   color: var(--theme-color);
-  margin: 0 0 5px 0;
-  letter-spacing: 1px;
+  margin: 0 0 3px 0;
+  letter-spacing: 0.5px;
 }
 
 .temple-address, .temple-contact {
-  font-size: 13px;
+  font-size: 12px;
   color: #333;
-  margin: 2px 0;
+  margin: 1px 0;
 }
 
 .chant-line {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--theme-color);
-  margin-top: 10px;
+  margin-top: 6px;
 }
 
 .top-badge-container {
   position: absolute;
-  top: -12px;
+  top: -11px;
   left: 50%;
   transform: translateX(-50%);
   background: white;
-  padding: 0 15px;
+  padding: 0 12px;
   z-index: 12;
 }
 
 .top-badge {
   background-color: var(--theme-color);
   color: white;
-  padding: 6px 20px;
-  border-radius: 20px;
-  font-size: 13px;
+  padding: 4px 16px;
+  border-radius: 16px;
+  font-size: 12px;
   font-weight: 700;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   letter-spacing: 0.5px;
 }
 
@@ -132,24 +132,24 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 15px;
-  margin: 15px 0;
+  gap: 12px;
+  margin: 10px 0;
 }
 
 .ornamental-line {
   height: 1px;
-  width: 50px;
+  width: 45px;
   background-color: var(--theme-color);
   position: relative;
 }
 .ornamental-line::after {
   content: '';
   position: absolute;
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   border: 1px solid var(--theme-color);
   transform: rotate(45deg);
-  top: -3px;
+  top: -2px;
 }
 .ornamental-line-left::after { right: -3px; }
 .ornamental-line-right::after { left: -3px; }
@@ -157,9 +157,9 @@
 .receipt-badge {
   background-color: var(--theme-color);
   color: white;
-  padding: 6px 30px;
-  border-radius: 20px;
-  font-size: 18px;
+  padding: 4px 24px;
+  border-radius: 16px;
+  font-size: 16px;
   font-weight: 700;
   letter-spacing: 1px;
 }
@@ -169,14 +169,14 @@
 .details-panel {
   display: flex !important;
   border: 1px solid var(--theme-light) !important;
-  border-radius: 8px !important;
-  margin-bottom: 20px !important;
+  border-radius: 6px !important;
+  margin-bottom: 12px !important;
   overflow: hidden !important;
 }
 
 .details-col {
   flex: 1;
-  padding: 15px;
+  padding: 10px 14px;
   min-width: 0;
 }
 
@@ -194,9 +194,9 @@
   flex-direction: row !important;
   flex-wrap: nowrap !important;
   align-items: baseline !important;
-  margin-bottom: 8px !important;
-  font-size: 13px !important;
-  line-height: 1.5 !important;
+  margin-bottom: 4px !important;
+  font-size: 12.5px !important;
+  line-height: 1.4 !important;
   gap: 0 !important;
 }
 
@@ -206,8 +206,8 @@
 .receipt-container .detail-label,
 .receipt-detail-label,
 .detail-label {
-  width: 115px !important;
-  min-width: 115px !important;
+  width: 105px !important;
+  min-width: 105px !important;
   flex-shrink: 0 !important;
   color: #555 !important;
   font-weight: 500 !important;
@@ -221,14 +221,14 @@
 .receipt-container .detail-colon,
 .receipt-detail-colon,
 .detail-colon {
-  width: 16px !important;
-  min-width: 16px !important;
+  width: 14px !important;
+  min-width: 14px !important;
   flex-shrink: 0 !important;
   color: #555 !important;
   font-weight: 600 !important;
   text-align: center !important;
   white-space: nowrap !important;
-  margin-right: 6px !important;
+  margin-right: 4px !important;
 }
 
 .receipt-wrapper .receipt-detail-value,
@@ -249,23 +249,23 @@
 .receipt-wrapper .receipt-detail-value.devotee-name,
 .receipt-container .receipt-detail-value.devotee-name {
   color: #111 !important;
-  font-size: 14px !important;
+  font-size: 13.5px !important;
 }
 
 .col-header {
   font-weight: 700;
   color: var(--theme-color);
-  margin-bottom: 10px;
-  padding-bottom: 4px;
-  font-size: 14px;
+  margin-bottom: 6px;
+  padding-bottom: 2px;
+  font-size: 13px;
   border-bottom: 1px dashed var(--theme-light);
 }
 
 .booking-details-wrapper {
   border: 1px solid var(--theme-light);
-  border-radius: 8px;
+  border-radius: 6px;
   overflow: hidden;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
   position: relative;
 }
 
@@ -273,25 +273,26 @@
   background-color: var(--theme-color);
   color: white;
   display: inline-block;
-  padding: 6px 15px;
-  font-size: 13px;
+  padding: 4px 12px;
+  font-size: 11px;
   font-weight: 700;
-  border-radius: 0 0 8px 0;
+  border-radius: 0 0 6px 0;
   position: absolute;
   top: 0;
   left: 0;
+  z-index: 2;
 }
 
 table.receipt-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 table.receipt-table th {
   background-color: var(--theme-bg);
   color: #333;
-  padding: 10px;
+  padding: 6px 8px;
   text-align: center;
   font-weight: 700;
   border-bottom: 1px solid var(--theme-light);
@@ -303,7 +304,7 @@ table.receipt-table th:last-child {
 }
 
 table.receipt-table td {
-  padding: 10px;
+  padding: 5px 8px;
   text-align: center;
   border-bottom: 1px solid var(--theme-light);
   border-right: 1px solid var(--theme-light);
@@ -316,38 +317,43 @@ table.receipt-table td:last-child {
 .category-row {
   background-color: var(--theme-bg);
   font-weight: 700;
+  font-size: 11.5px;
   text-align: left !important;
-  padding-left: 15px !important;
+  padding-left: 12px !important;
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+  color: var(--theme-color);
+  letter-spacing: 0.5px;
 }
 
 .footer-panels {
   display: flex;
-  gap: 15px;
-  margin-bottom: 20px;
+  gap: 10px;
+  margin-bottom: 10px;
 }
 
 .materials-panel {
   flex: 1.2;
   border: 1px solid var(--theme-light);
-  border-radius: 8px;
-  padding: 12px 15px;
+  border-radius: 6px;
+  padding: 8px 12px;
 }
 
 .materials-title {
   color: var(--theme-color);
   font-weight: 700;
-  font-size: 13px;
-  margin-bottom: 10px;
+  font-size: 11.5px;
+  margin-bottom: 6px;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
 }
 
 .materials-list {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 5px;
-  font-size: 12px;
+  gap: 3px;
+  font-size: 11px;
   list-style: none;
   padding: 0;
   margin: 0;
@@ -364,8 +370,8 @@ table.receipt-table td:last-child {
 .totals-panel {
   flex: 0.8;
   border: 1px solid var(--theme-light);
-  border-radius: 8px;
-  padding: 12px 15px;
+  border-radius: 6px;
+  padding: 8px 12px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -377,8 +383,8 @@ table.receipt-table td:last-child {
   display: flex !important;
   flex-direction: row !important;
   justify-content: space-between !important;
-  font-size: 13px !important;
-  margin-bottom: 8px !important;
+  font-size: 12px !important;
+  margin-bottom: 4px !important;
 }
 
 .receipt-wrapper .grand-total-row,
@@ -387,45 +393,45 @@ table.receipt-table td:last-child {
   display: flex !important;
   flex-direction: row !important;
   justify-content: space-between !important;
-  font-size: 16px !important;
+  font-size: 14.5px !important;
   font-weight: 800 !important;
   color: var(--theme-color) !important;
-  margin-top: 8px !important;
-  padding-top: 8px !important;
+  margin-top: 4px !important;
+  padding-top: 4px !important;
   border-top: 1px dashed var(--theme-light) !important;
 }
 
 .amount-words {
-  font-size: 11px;
+  font-size: 10.5px;
   color: #666;
   text-align: right;
   margin-top: 2px;
 }
 
 .notes-section {
-  font-size: 12px;
+  font-size: 11px;
   color: #444;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 
 .notes-title {
   font-weight: 700;
   color: var(--theme-color);
-  margin-bottom: 5px;
+  margin-bottom: 3px;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
 }
 
 .notes-section ul {
-  padding-left: 20px;
+  padding-left: 18px;
   margin: 0;
 }
 
 .bottom-info-banner {
   background-color: var(--theme-bg);
-  border-radius: 8px;
-  padding: 12px 15px;
+  border-radius: 6px;
+  padding: 6px 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -434,41 +440,41 @@ table.receipt-table td:last-child {
 .bottom-info-left {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 10px;
 }
 
 .computer-icon {
-  font-size: 32px;
+  font-size: 24px;
   color: #555;
 }
 
 .info-text-main {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   color: #333;
 }
 
 .info-text-sub {
-  font-size: 11px;
+  font-size: 10px;
   color: #666;
-  margin-top: 2px;
+  margin-top: 1px;
 }
 
 .qr-placeholder {
-  width: 60px;
-  height: 60px;
+  width: 46px;
+  height: 46px;
 }
 
 .visit-again {
   text-align: center;
   color: var(--theme-color);
   font-weight: 700;
-  font-size: 16px;
-  margin-top: 15px;
+  font-size: 13.5px;
+  margin-top: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 @media print {

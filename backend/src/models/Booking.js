@@ -26,6 +26,8 @@ const bookingSchema = new mongoose.Schema(
     devoteeName: { type: String, trim: true, required: true },
     devoteeEmail: { type: String, trim: true, lowercase: true },
     devoteePhone: { type: String, trim: true },
+    devoteeAddress: { type: String, trim: true },
+    address: { type: String, trim: true },
     service: { type: String, trim: true, required: true },
     datetime: { type: String, trim: true, required: true },
     amount: { type: Number, required: true, min: 0 },

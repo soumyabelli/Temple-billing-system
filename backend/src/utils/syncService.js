@@ -7,18 +7,38 @@ const syncLedgerBills = async () => {
   try {
     console.log("Starting financial ledger synchronization...");
 
+    const { resolveDevoteeDetails, backfillExistingBills } = require("./devoteeLookup");
+
     // 1. Sync Bookings
     const bookings = await Booking.find();
     let bookingCount = 0;
     for (const b of bookings) {
       const existing = await Bill.findOne({ sourceId: b._id.toString() });
       if (!existing) {
+        const resolved = await resolveDevoteeDetails({
+          name: b.devoteeName,
+          email: b.devoteeEmail,
+          phone: b.devoteePhone || b.contactNumber,
+          devoteeId: b.devoteeId,
+        });
+
+        const formattedItems = (b.items || []).map((i) => ({
+          itemName: i.name || i.service || i.itemName || "Item",
+          itemType: String(i.type || i.itemType || "Pooja").charAt(0).toUpperCase() + String(i.type || i.itemType || "Pooja").slice(1),
+          amount: Number(i.amount || 0),
+          quantity: Number(i.qty || i.quantity || 1),
+        }));
+
         await Bill.create({
-          devoteeName: b.devoteeName || "Unknown",
+          devoteeName: b.devoteeName || resolved.name || "Unknown",
+          devoteeEmail: b.devoteeEmail || resolved.email || undefined,
+          devoteePhone: b.devoteePhone || b.contactNumber || resolved.phone || undefined,
+          devoteeAddress: b.devoteeAddress || b.address || resolved.address || undefined,
           sevaType: b.service || "Pooja Seva",
+          items: formattedItems,
           amount: b.amount || 0,
           paymentMode: b.paymentMethod || "UPI",
-          billType: "Pooja Booking",
+          billType: b.isCombined ? "Combined Order" : "Pooja Booking",
           referenceNo: `BK-${String(b._id).slice(-6).toUpperCase()}`,
           sourceId: b._id.toString(),
           notes: b.notes || "",
@@ -38,8 +58,18 @@ const syncLedgerBills = async () => {
     for (const d of donations) {
       const existing = await Bill.findOne({ sourceId: d._id.toString() });
       if (!existing) {
+        const resolved = await resolveDevoteeDetails({
+          name: d.donorName,
+          email: d.donorEmail,
+          phone: d.donorPhone || d.contactNumber,
+          id: d.donatedBy,
+        });
+
         await Bill.create({
-          devoteeName: d.donorName || "Anonymous",
+          devoteeName: d.donorName || resolved.name || "Anonymous",
+          devoteeEmail: d.donorEmail || resolved.email || undefined,
+          devoteePhone: d.donorPhone || d.contactNumber || resolved.phone || undefined,
+          devoteeAddress: d.donorAddress || d.address || resolved.address || undefined,
           sevaType: d.category || "General",
           amount: d.amount || 0,
           paymentMode: d.paymentMethod || "UPI",
@@ -63,8 +93,18 @@ const syncLedgerBills = async () => {
     for (const o of orders) {
       const existing = await Bill.findOne({ sourceId: o._id.toString() });
       if (!existing) {
+        const resolved = await resolveDevoteeDetails({
+          name: o.devoteeName,
+          email: o.email,
+          phone: o.phone,
+          devoteeId: o.devoteeId,
+        });
+
         await Bill.create({
-          devoteeName: o.devoteeName || "Unknown",
+          devoteeName: o.devoteeName || resolved.name || "Unknown",
+          devoteeEmail: o.email || resolved.email || undefined,
+          devoteePhone: o.phone || resolved.phone || undefined,
+          devoteeAddress: o.address || resolved.address || undefined,
           sevaType: o.itemName || "Prasadam",
           amount: o.amount || 0,
           paymentMode: o.paymentMethod || "UPI",
@@ -81,6 +121,9 @@ const syncLedgerBills = async () => {
     if (orderCount > 0) {
       console.log(`Synced ${orderCount} missing bills for prasadam orders.`);
     }
+
+    // 4. Backfill any existing bills that are missing devotee details
+    await backfillExistingBills();
 
     console.log("Financial ledger synchronization completed.");
   } catch (error) {

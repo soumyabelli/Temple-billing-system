@@ -147,6 +147,7 @@ const createLedgerBill = async ({
   devoteeName,
   devoteeEmail,
   devoteePhone,
+  devoteeAddress,
   sevaType,
   amount,
   paymentMode,
@@ -158,6 +159,18 @@ const createLedgerBill = async ({
   status = "Paid",
 }) => {
   try {
+    const { resolveDevoteeDetails } = require("../utils/devoteeLookup");
+    const resolved = await resolveDevoteeDetails({
+      name: devoteeName,
+      email: devoteeEmail,
+      phone: devoteePhone,
+    });
+
+    const finalName = (devoteeName || resolved.name || "Devotee").trim();
+    const finalEmail = devoteeEmail || resolved.email || undefined;
+    const finalPhone = devoteePhone || resolved.phone || undefined;
+    const finalAddress = devoteeAddress || resolved.address || undefined;
+
     const formattedItems = (items || []).map(i => ({
       itemName: i.name || i.service || i.itemName || "Item",
       itemType: String(i.type || i.itemType || "Pooja").charAt(0).toUpperCase() + String(i.type || i.itemType || "Pooja").slice(1),
@@ -166,9 +179,10 @@ const createLedgerBill = async ({
     }));
 
     return await Bill.create({
-      devoteeName,
-      devoteeEmail: devoteeEmail || undefined,
-      devoteePhone: devoteePhone || undefined,
+      devoteeName: finalName,
+      devoteeEmail: finalEmail,
+      devoteePhone: finalPhone,
+      devoteeAddress: finalAddress,
       sevaType,
       amount,
       paymentMode,
@@ -207,12 +221,25 @@ const getBookings = async (req, res) => {
 
 const createBooking = async (req, res) => {
   try {
-    const { devoteeName, devoteeEmail, devoteePhone, service, datetime, amount, contactNumber, notes, devoteeId, eventId, paymentMethod, assignedPriest, isCombined, items, transactionId } = req.body;
+    const { devoteeName, devoteeEmail, devoteePhone, devoteeAddress, address, service, datetime, amount, contactNumber, notes, devoteeId, eventId, paymentMethod, assignedPriest, isCombined, items, transactionId } = req.body;
     const normalizedDevoteeEmail = normalizeEmail(devoteeEmail);
 
     if (!devoteeName || !service || !datetime || amount == null) {
       return res.status(400).json({ error: "Missing required booking fields." });
     }
+
+    const { resolveDevoteeDetails } = require("../utils/devoteeLookup");
+    const resolvedDevotee = await resolveDevoteeDetails({
+      name: devoteeName,
+      email: normalizedDevoteeEmail,
+      phone: devoteePhone || contactNumber,
+      devoteeId,
+    });
+
+    const finalDevoteeName = (devoteeName || resolvedDevotee.name || "Devotee").trim();
+    const finalEmail = normalizedDevoteeEmail || resolvedDevotee.email || undefined;
+    const finalPhone = devoteePhone || contactNumber || resolvedDevotee.phone || undefined;
+    const finalAddress = devoteeAddress || address || resolvedDevotee.address || undefined;
 
     // Validate amount
     const numericAmount = Number(amount);
@@ -370,9 +397,11 @@ const createBooking = async (req, res) => {
     const bookingPayload = {
       devoteeId: devoteeId || undefined,
       eventId: eventId || undefined,
-      devoteeName,
-      devoteeEmail: normalizedDevoteeEmail || undefined,
-      devoteePhone: devoteePhone || contactNumber,
+      devoteeName: finalDevoteeName,
+      devoteeEmail: finalEmail,
+      devoteePhone: finalPhone,
+      devoteeAddress: finalAddress,
+      address: finalAddress,
       service,
       datetime,
       amount: numericAmount,
@@ -408,12 +437,23 @@ const createBooking = async (req, res) => {
       booking = await fileBookingStore.createBooking(bookingPayload);
     }
 
+    const allBillItems = isCombined ? (items || []) : [{
+      name: service,
+      type: "Pooja",
+      qty: 1,
+      amount: numericAmount,
+    }];
+
     await createLedgerBill({
-      devoteeName,
-      sevaType: service,
+      devoteeName: finalDevoteeName,
+      devoteeEmail: finalEmail,
+      devoteePhone: finalPhone,
+      devoteeAddress: finalAddress,
+      sevaType: isCombined ? `Combined Order: ${allBillItems.map(i => `${i.name || i.service || "Item"} (x${i.qty || 1})`).join(", ")}` : service,
+      items: allBillItems,
       amount: numericAmount,
       paymentMode: pm || paymentMethod || "Cash",
-      billType: "Pooja Booking",
+      billType: isCombined ? "Combined Order" : "Pooja Booking",
       referenceNo: `BK-${String(booking._id).slice(-6).toUpperCase()}`,
       sourceId: booking._id.toString(),
       source: "Online Portal",
@@ -448,7 +488,12 @@ const createBooking = async (req, res) => {
 
     // Generate official PDF receipt & base64 attachment
     let base64Attachment = undefined;
-    const devoteeObj = { name: devoteeName, email: normalizedDevoteeEmail, phone: devoteePhone || contactNumber };
+    const devoteeObj = {
+      name: finalDevoteeName || devoteeName,
+      email: finalEmail || normalizedDevoteeEmail,
+      phone: finalPhone || devoteePhone || contactNumber,
+      address: finalAddress,
+    };
     try {
       const pdfBuffer = await generateBookingReceiptPDF(devoteeObj, {
         ...booking.toObject ? booking.toObject() : booking,
@@ -694,7 +739,12 @@ const verifyBookingPayment = async (req, res) => {
 
     // Send notifications & receipts
     try {
-      const devoteeObj = { name: booking.devoteeName, email: booking.devoteeEmail, phone: booking.devoteePhone || booking.contactNumber };
+      const devoteeObj = {
+        name: booking.devoteeName,
+        email: booking.devoteeEmail,
+        phone: booking.devoteePhone || booking.contactNumber,
+        address: booking.devoteeAddress || booking.address || "",
+      };
       let base64Attachment = undefined;
       try {
         const pdfBuffer = await generateBookingReceiptPDF(devoteeObj, {
@@ -893,6 +943,8 @@ const createDonation = async (req, res) => {
       donorName,
       donorEmail,
       donorPhone,
+      donorAddress,
+      address,
       amount,
       category = "General",
       paymentMethod = "UPI",
@@ -907,6 +959,19 @@ const createDonation = async (req, res) => {
     if (!donorName || amount == null) {
       return res.status(400).json({ error: "donorName and amount are required." });
     }
+
+    const { resolveDevoteeDetails } = require("../utils/devoteeLookup");
+    const resolvedDevotee = await resolveDevoteeDetails({
+      name: donorName,
+      email: normalizedDonorEmail,
+      phone: donorPhone || contactNumber,
+      id: donatedBy,
+    });
+
+    const finalDonorName = (donorName || resolvedDevotee.name || "Anonymous").trim();
+    const finalEmail = normalizedDonorEmail || resolvedDevotee.email || undefined;
+    const finalPhone = donorPhone || contactNumber || resolvedDevotee.phone || undefined;
+    const finalAddress = donorAddress || address || resolvedDevotee.address || undefined;
 
     const numericAmount = Number(String(amount).replace(/[^0-9.-]+/g, ""));
     if (Number.isNaN(numericAmount) || numericAmount <= 0) {
@@ -931,9 +996,11 @@ const createDonation = async (req, res) => {
 
     let donation;
     const donationPayload = {
-      donorName: donorName.trim(),
-      donorEmail: normalizedDonorEmail || undefined,
-      donorPhone: donorPhone || contactNumber,
+      donorName: finalDonorName,
+      donorEmail: finalEmail,
+      donorPhone: finalPhone,
+      donorAddress: finalAddress,
+      address: finalAddress,
       amount: numericAmount,
       category,
       paymentMethod,
@@ -952,7 +1019,10 @@ const createDonation = async (req, res) => {
     }
 
     await createLedgerBill({
-      devoteeName: donorName.trim(),
+      devoteeName: finalDonorName,
+      devoteeEmail: finalEmail,
+      devoteePhone: finalPhone,
+      devoteeAddress: finalAddress,
       sevaType: category,
       amount: numericAmount,
       paymentMode: paymentMethod || "UPI",
@@ -1820,11 +1890,24 @@ const getPrasadamOrders = async (req, res) => {
 
 const createPrasadamOrder = async (req, res) => {
   try {
-    const { devoteeName, email, phone, itemName, quantity, paymentMethod, devoteeId, channel } = req.body;
+    const { devoteeName, email, phone, address, devoteeAddress, itemName, quantity, paymentMethod, devoteeId, channel } = req.body;
     const normalizedOrderEmail = normalizeEmail(email);
     if (!devoteeName || !itemName) {
       return res.status(400).json({ error: "devoteeName and itemName are required." });
     }
+
+    const { resolveDevoteeDetails } = require("../utils/devoteeLookup");
+    const resolvedDevotee = await resolveDevoteeDetails({
+      name: devoteeName,
+      email: normalizedOrderEmail,
+      phone,
+      devoteeId,
+    });
+
+    const finalDevoteeName = (devoteeName || resolvedDevotee.name || "Devotee").trim();
+    const finalEmail = normalizedOrderEmail || resolvedDevotee.email || undefined;
+    const finalPhone = phone || resolvedDevotee.phone || undefined;
+    const finalAddress = devoteeAddress || address || resolvedDevotee.address || undefined;
 
     const normalizedQty = Number(quantity || 1);
     if (Number.isNaN(normalizedQty) || normalizedQty < 1) {
@@ -1852,17 +1935,18 @@ const createPrasadamOrder = async (req, res) => {
     const orderStatus = "Not Collected";
 
     let resolvedDevoteeId = devoteeId || undefined;
-    if (!resolvedDevoteeId && normalizedOrderEmail) {
-      const user = await User.findOne(buildEmailLookup("email", normalizedOrderEmail)).select("_id").lean();
+    if (!resolvedDevoteeId && finalEmail) {
+      const user = await User.findOne(buildEmailLookup("email", finalEmail)).select("_id").lean();
       if (user?._id) resolvedDevoteeId = user._id;
     }
 
     const order = await PrasadamOrder.create({
       channel: resolvedChannel,
       devoteeId: resolvedDevoteeId,
-      devoteeName,
-      email: normalizedOrderEmail || undefined,
-      phone: phone || undefined,
+      devoteeName: finalDevoteeName,
+      email: finalEmail,
+      phone: finalPhone,
+      address: finalAddress,
       itemName,
       quantity: normalizedQty,
       unitPrice,
@@ -1872,7 +1956,10 @@ const createPrasadamOrder = async (req, res) => {
     });
 
     await createLedgerBill({
-      devoteeName,
+      devoteeName: finalDevoteeName,
+      devoteeEmail: finalEmail,
+      devoteePhone: finalPhone,
+      devoteeAddress: finalAddress,
       sevaType: itemName,
       amount: totalAmount,
       paymentMode: paymentMethod || "UPI",

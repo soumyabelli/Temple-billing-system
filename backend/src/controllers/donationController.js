@@ -1,5 +1,6 @@
 const Donation = require("../models/Donation");
 const Bill = require("../models/Bill");
+const { sendDonationReceipt } = require("../utils/communicationService");
 
 // CREATE DONATION
 const createDonation = async (req, res) => {
@@ -30,7 +31,7 @@ const createDonation = async (req, res) => {
       });
     }
 
-    const numericAmount = Number(String(amount).replace(/[^0-9.-]+/g, ""));
+    const numericAmount = Number(amount);
 
     if (Number.isNaN(numericAmount) || numericAmount <= 0) {
       return res.status(400).json({
@@ -45,10 +46,26 @@ const createDonation = async (req, res) => {
       : undefined;
     const finalStatus = (status === "Completed" || status === "Collected") ? "Collected" : status;
 
+    const { resolveDevoteeDetails } = require("../utils/devoteeLookup");
+    const cleanEmail = donorEmail ? String(donorEmail).trim().toLowerCase() : undefined;
+    const resolvedDevotee = await resolveDevoteeDetails({
+      name: donorName,
+      email: cleanEmail,
+      phone: contactNumber,
+    });
+
+    const finalDonorName = (donorName || resolvedDevotee.name || "Anonymous").trim();
+    const finalEmail = cleanEmail || resolvedDevotee.email || undefined;
+    const finalPhone = contactNumber || resolvedDevotee.phone || undefined;
+    const finalAddress = req?.body?.address || req?.body?.donorAddress || resolvedDevotee.address || undefined;
+
     const donation = await Donation.create({
-      donorName: donorName.trim(),
-      donorEmail: donorEmail ? String(donorEmail).trim().toLowerCase() : undefined,
-      contactNumber,
+      donorName: finalDonorName,
+      donorEmail: finalEmail,
+      contactNumber: finalPhone,
+      donorPhone: finalPhone,
+      donorAddress: finalAddress,
+      address: finalAddress,
       amount: numericAmount,
       category,
       paymentMethod,
@@ -58,8 +75,16 @@ const createDonation = async (req, res) => {
     });
 
     await Bill.create({
-      devoteeName: donorName.trim(),
+      devoteeName: finalDonorName,
+      devoteeEmail: finalEmail,
+      devoteePhone: finalPhone,
+      devoteeAddress: finalAddress,
       sevaType: category || "General",
+      items: [{
+        itemType: "Donation",
+        itemName: `Donation: ${category || "General"}`,
+        amount: numericAmount,
+      }],
       amount: numericAmount,
       paymentMode: paymentMethod || "UPI",
       billType: "Donation",
@@ -69,6 +94,20 @@ const createDonation = async (req, res) => {
       status: finalStatus === "Collected" ? "Paid" : "Pending",
       billDate: new Date(),
     });
+
+    if (donorEmail || contactNumber) {
+      sendDonationReceipt(
+        { name: donorName.trim(), email: donorEmail ? String(donorEmail).trim().toLowerCase() : undefined, phone: contactNumber },
+        {
+          ...(donation.toObject ? donation.toObject() : donation),
+          amount: numericAmount,
+          category,
+          paymentMethod,
+          transactionId: finalTxnId,
+          referenceNo: `DN-${String(donation._id).slice(-6).toUpperCase()}`,
+        }
+      ).catch((e) => console.error("Donation email dispatch failed:", e.message));
+    }
 
     if (status === "Completed" || status === "Collected") {
       const { recordTransaction } = require("../services/accountingService");

@@ -8,6 +8,7 @@ import {
  verifyBookingPayment,
  fetchBills,
  fetchBookings,
+ fetchDevotees,
  formatCurrency,
  formatDateTime,
  isToday,
@@ -24,6 +25,7 @@ const emptyForm = {
  devoteeName: "",
  devoteeEmail: "",
  devoteePhone: "",
+ devoteeAddress: "",
  cartItems: [],
  datetime: "",
  paymentMethod: "Cash",
@@ -54,6 +56,7 @@ const BookingPayments = () => {
  const [poojaTypes, setPoojaTypes] = useState([]);
  const [bookings, setBookings] = useState([]);
  const [bills, setBills] = useState([]);
+ const [devotees, setDevotees] = useState([]);
  const [loading, setLoading] = useState(true);
  const [saving, setSaving] = useState(false);
  const [message, setMessage] = useState("");
@@ -64,17 +67,107 @@ const BookingPayments = () => {
  const [activeCategory, setActiveCategory] = useState("pooja");
  const [expandedSections, setExpandedSections] = useState({ pooja: false, prasadam: false, room: false });
  const [cashTendered, setCashTendered] = useState("");
+ const [itemQuantities, setItemQuantities] = useState({});
+ const [expandedRules, setExpandedRules] = useState({});
  const [form, setForm] = useState({
  ...emptyForm,
  datetime: buildMinDateTime(),
  });
 
+ const checkPoojaAvailability = (pooja, datetimeStr) => {
+ if (!datetimeStr || !pooja) return { available: true, label: "Available", reason: "" };
+
+ const parsed = new Date(datetimeStr);
+ if (isNaN(parsed.getTime())) return { available: true, label: "Available", reason: "" };
+
+ const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+ const selectedDay = dayNames[parsed.getDay()];
+
+ const y = parsed.getFullYear();
+ const m = String(parsed.getMonth() + 1).padStart(2, "0");
+ const d = String(parsed.getDate()).padStart(2, "0");
+ const selectedDateStr = `${y}-${m}-${d}`;
+
+ if (pooja.status && pooja.status.toLowerCase() === "inactive") {
+ return { available: false, label: "Inactive Pooja", reason: "This pooja is currently inactive in the temple master." };
+ }
+
+ const hasSpecificDates = Array.isArray(pooja.availableDates) && pooja.availableDates.length > 0;
+ const hasSpecificDays = Array.isArray(pooja.availableDays) && pooja.availableDays.length > 0;
+
+ // Specific dates condition
+ if (hasSpecificDates) {
+ const isDateMatch = pooja.availableDates.some((ad) => {
+ if (!ad) return false;
+ const cleanAd = String(ad).split("T")[0].trim();
+ return cleanAd === selectedDateStr;
+ });
+
+ if (isDateMatch) {
+ return {
+ available: true,
+ label: `Special Date: ${parsed.toLocaleDateString("en-IN", { day: "numeric", month: "short" })}`,
+ reason: "",
+ };
+ }
+
+ if (!hasSpecificDays) {
+ const formattedDates = pooja.availableDates
+ .map((ad) => {
+ const pd = new Date(ad);
+ return !isNaN(pd.getTime())
+ ? pd.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
+ : ad;
+ })
+ .join(", ");
+ return {
+ available: false,
+ label: `Only on ${formattedDates}`,
+ reason: `Special pooja only scheduled on: ${formattedDates}. Not available on ${selectedDay} (${selectedDateStr}).`,
+ };
+ }
+ }
+
+ // Specific days condition
+ if (hasSpecificDays) {
+ const isEveryday = pooja.availableDays.some((day) =>
+ ["everyday", "all", "all days", "daily"].includes(String(day).toLowerCase().trim())
+ );
+ if (isEveryday) {
+ return { available: true, label: "Available Everyday", reason: "" };
+ }
+
+ const isDayMatch = pooja.availableDays.some(
+ (day) => String(day).toLowerCase().trim() === selectedDay.toLowerCase()
+ );
+
+ if (isDayMatch) {
+ return { available: true, label: `Available on ${selectedDay}s`, reason: "" };
+ }
+
+ const allowedDaysStr = pooja.availableDays.join(", ");
+ return {
+ available: false,
+ label: `Not on ${selectedDay}s`,
+ reason: `Pooja is only scheduled on: ${allowedDaysStr}. Not available on ${selectedDay}.`,
+ };
+ }
+
+ return { available: true, label: "Available", reason: "" };
+ };
+
  const loadData = async () => {
  setLoading(true);
  try {
- const [bookingRows, billRows, poojaRes] = await Promise.allSettled([fetchBookings(), fetchBills(), getPoojaTypes()]);
+ const [bookingRows, billRows, poojaRes, devRows] = await Promise.allSettled([
+ fetchBookings(),
+ fetchBills(),
+ getPoojaTypes(),
+ fetchDevotees(),
+ ]);
  setBookings(bookingRows.status === "fulfilled" ? bookingRows.value : []);
  setBills(billRows.status === "fulfilled" ? billRows.value : []);
+ setDevotees(devRows.status === "fulfilled" ? (devRows.value || []) : []);
 
  const loadedPoojas = poojaRes.status === "fulfilled" ? (poojaRes.value.poojas || poojaRes.value || []) : [];
  const loadedPrasadams = getPrasadamTypes();
@@ -182,8 +275,37 @@ const BookingPayments = () => {
  [bookings]
  );
 
- const handleServiceSelect = (service) => {
- setForm((prev) => ({
+ const handleServiceSelect = (service, qtyToAdd = 1) => {
+ if (service.catalogType === "pooja") {
+ const avail = checkPoojaAvailability(service, form.datetime);
+ if (!avail.available) {
+ setMessage(`Cannot add "${service.name}": ${avail.reason}`);
+ return;
+ }
+ }
+
+ const validQty = Math.max(1, Number(qtyToAdd) || 1);
+
+ setForm((prev) => {
+ const existingIdx = prev.cartItems.findIndex(
+ (item) => item.name === service.name && item.type === (service.catalogType || "pooja")
+ );
+ if (existingIdx >= 0) {
+ const updated = [...prev.cartItems];
+ const item = updated[existingIdx];
+ const currentQty = item.qty || 1;
+ const newQty = currentQty + validQty;
+ const unitPrice = item.unitPrice || service.price || (currentQty ? item.amount / currentQty : item.amount) || 0;
+ updated[existingIdx] = {
+ ...item,
+ qty: newQty,
+ unitPrice,
+ amount: unitPrice * newQty,
+ };
+ return { ...prev, cartItems: updated };
+ }
+
+ return {
  ...prev,
  cartItems: [
  ...prev.cartItems,
@@ -191,11 +313,32 @@ const BookingPayments = () => {
  type: service.catalogType || "pooja",
  name: service.name,
  date: prev.datetime,
- qty: 1,
- amount: service.price || 0,
+ qty: validQty,
+ unitPrice: service.price || 0,
+ amount: (service.price || 0) * validQty,
  },
  ],
- }));
+ };
+ });
+ };
+
+ const handleUpdateItemQty = (index, newQty) => {
+ if (newQty <= 0) {
+ handleRemoveItem(index);
+ return;
+ }
+ setForm((prev) => {
+ const updated = [...prev.cartItems];
+ const item = updated[index];
+ const unitPrice = item.unitPrice || (item.qty ? item.amount / item.qty : item.amount) || 0;
+ updated[index] = {
+ ...item,
+ qty: newQty,
+ unitPrice,
+ amount: unitPrice * newQty,
+ };
+ return { ...prev, cartItems: updated };
+ });
  };
 
  const handleRemoveItem = (index) => {
@@ -219,6 +362,20 @@ const BookingPayments = () => {
       return;
     }
 
+    // Verify all poojas in cart are available on the selected date
+    for (const item of form.cartItems) {
+      if (item.type === "pooja") {
+        const poojaDef = poojaTypes.find((p) => p.name === item.name && p.catalogType === "pooja");
+        if (poojaDef) {
+          const avail = checkPoojaAvailability(poojaDef, form.datetime);
+          if (!avail.available) {
+            setMessage(`Cannot complete booking: "${item.name}" is not scheduled on this date. ${avail.reason}`);
+            return;
+          }
+        }
+      }
+    }
+
     if (form.paymentMethod === "Cash") {
       const tenderNum = cashTendered === "" ? totalAmount : Number(cashTendered);
       if (tenderNum < totalAmount) {
@@ -238,6 +395,8 @@ const BookingPayments = () => {
         devoteeName: form.devoteeName.trim(),
         devoteeEmail: form.devoteeEmail.trim() || undefined,
         devoteePhone: form.devoteePhone.trim() || undefined,
+        devoteeAddress: form.devoteeAddress.trim() || undefined,
+        address: form.devoteeAddress.trim() || undefined,
         service: form.cartItems[0]?.name || "Pooja Booking",
         datetime: form.datetime || buildMinDateTime(),
         amount: totalAmount,
@@ -301,6 +460,29 @@ const BookingPayments = () => {
               await loadData();
               loadNotifications().catch(() => { });
 
+              const rawItems = createdBooking.items || form.cartItems || [];
+              const poojaBookings = rawItems.filter(i => (i.type || i.catalogType || "pooja") === "pooja").map((i, idx) => ({
+                slNo: idx + 1,
+                name: i.name,
+                date: formatDateTime(i.date || form.datetime || createdBooking.createdAt),
+                qty: i.qty || 1,
+                amount: Number(i.amount != null && !isNaN(Number(i.amount)) && Number(i.amount) > 0 ? i.amount : (Number(i.price || 0) * (i.qty || 1))) || 0
+              }));
+              const prasadamOrders = rawItems.filter(i => (i.type || i.catalogType) === "prasadam").map((i, idx) => ({
+                slNo: idx + 1,
+                name: i.name,
+                date: formatDateTime(i.date || form.datetime || createdBooking.createdAt),
+                qty: i.qty || 1,
+                amount: Number(i.amount != null && !isNaN(Number(i.amount)) && Number(i.amount) > 0 ? i.amount : (Number(i.price || 0) * (i.qty || 1))) || 0
+              }));
+              const roomBookings = rawItems.filter(i => (i.type || i.catalogType) === "room").map((i, idx) => ({
+                slNo: idx + 1,
+                name: i.name,
+                date: formatDateTime(i.date || form.datetime || createdBooking.createdAt),
+                qty: i.qty || 1,
+                amount: Number(i.amount != null && !isNaN(Number(i.amount)) && Number(i.amount) > 0 ? i.amount : (Number(i.price || 0) * (i.qty || 1))) || 0
+              }));
+
               // Generate Receipt
               const receiptData = {
                 isOnline: false,
@@ -312,9 +494,17 @@ const BookingPayments = () => {
                 devoteeName: createdBooking.devoteeName || form.devoteeName,
                 mobile: createdBooking.devoteePhone || createdBooking.contactNumber || form.devoteePhone || "-",
                 email: createdBooking.devoteeEmail || form.devoteeEmail || "-",
-                address: createdBooking.address || "-",
-                poojaBookings: (createdBooking.items || form.cartItems).map((i, idx) => ({ slNo: idx + 1, name: i.name, date: formatDateTime(i.date || form.datetime), qty: i.qty || 1, amount: i.amount })),
-                prasadamOrders: [],
+                address: createdBooking.devoteeAddress || createdBooking.address || form.devoteeAddress || "-",
+                devotee: {
+                  name: createdBooking.devoteeName || form.devoteeName,
+                  phone: createdBooking.devoteePhone || createdBooking.contactNumber || form.devoteePhone || "-",
+                  email: createdBooking.devoteeEmail || form.devoteeEmail || "-",
+                  address: createdBooking.devoteeAddress || createdBooking.address || form.devoteeAddress || "-",
+                },
+                poojaBookings,
+                prasadamOrders,
+                roomBookings,
+                donations: [],
                 subTotal: createdBooking.amount || totalAmount,
                 templeCharges: 0,
                 grandTotal: createdBooking.amount || totalAmount,
@@ -356,6 +546,29 @@ const BookingPayments = () => {
       await loadData();
       loadNotifications().catch(() => { });
 
+      const rawItems = createdBooking.items || form.cartItems || [];
+      const poojaBookings = rawItems.filter(i => (i.type || i.catalogType || "pooja") === "pooja").map((i, idx) => ({
+        slNo: idx + 1,
+        name: i.name,
+        date: formatDateTime(i.date || form.datetime || createdBooking.createdAt),
+        qty: i.qty || 1,
+        amount: Number(i.amount != null && !isNaN(Number(i.amount)) && Number(i.amount) > 0 ? i.amount : (Number(i.price || 0) * (i.qty || 1))) || 0
+      }));
+      const prasadamOrders = rawItems.filter(i => (i.type || i.catalogType) === "prasadam").map((i, idx) => ({
+        slNo: idx + 1,
+        name: i.name,
+        date: formatDateTime(i.date || form.datetime || createdBooking.createdAt),
+        qty: i.qty || 1,
+        amount: Number(i.amount != null && !isNaN(Number(i.amount)) && Number(i.amount) > 0 ? i.amount : (Number(i.price || 0) * (i.qty || 1))) || 0
+      }));
+      const roomBookings = rawItems.filter(i => (i.type || i.catalogType) === "room").map((i, idx) => ({
+        slNo: idx + 1,
+        name: i.name,
+        date: formatDateTime(i.date || form.datetime || createdBooking.createdAt),
+        qty: i.qty || 1,
+        amount: Number(i.amount != null && !isNaN(Number(i.amount)) && Number(i.amount) > 0 ? i.amount : (Number(i.price || 0) * (i.qty || 1))) || 0
+      }));
+
       // Generate Receipt
       const receiptData = {
         isOnline: false,
@@ -367,9 +580,17 @@ const BookingPayments = () => {
         devoteeName: createdBooking.devoteeName || form.devoteeName,
         mobile: createdBooking.devoteePhone || createdBooking.contactNumber || form.devoteePhone || "-",
         email: createdBooking.devoteeEmail || form.devoteeEmail || "-",
-        address: createdBooking.address || "-",
-        poojaBookings: (createdBooking.items || form.cartItems).map((i, idx) => ({ slNo: idx + 1, name: i.name, date: formatDateTime(i.date || form.datetime), qty: i.qty || 1, amount: i.amount })),
-        prasadamOrders: [],
+        address: createdBooking.devoteeAddress || createdBooking.address || form.devoteeAddress || "-",
+        devotee: {
+          name: createdBooking.devoteeName || form.devoteeName,
+          phone: createdBooking.devoteePhone || createdBooking.contactNumber || form.devoteePhone || "-",
+          email: createdBooking.devoteeEmail || form.devoteeEmail || "-",
+          address: createdBooking.devoteeAddress || createdBooking.address || form.devoteeAddress || "-",
+        },
+        poojaBookings,
+        prasadamOrders,
+        roomBookings,
+        donations: [],
         subTotal: createdBooking.amount || totalAmount,
         templeCharges: 0,
         grandTotal: createdBooking.amount || totalAmount,
@@ -497,139 +718,362 @@ const BookingPayments = () => {
  </button>
  )}
  </div>
- <table className="w-full text-left text-sm">
- <tbody className="divide-y divide-[#f2e7d7]">
- {displayed.map((type) => (
- <tr key={type.name} className="transition hover:bg-[#fff7ec] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 ">
- <td className="px-4 py-3 font-extrabold text-slate-900 w-1/2">{type.name}</td>
- <td className="px-4 py-3 font-bold text-[#8a5200]">{formatCurrency(type.price)}</td>
- <td className="px-4 py-3 text-right">
- <button
- type="button"
- onClick={() => handleServiceSelect(type)}
- className="rounded-full bg-[#f28c18] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 px-4 py-1.5 text-xs font-bold text-white shadow-sm transition hover:opacity-90"
- >
- + Add
- </button>
- </td>
- </tr>
- ))}
- </tbody>
- </table>
- </div>
- );
- })}
- </div>
- </div>
+                  <table className="w-full text-left text-sm">
+                    <tbody className="divide-y divide-[#f2e7d7]">
+                      {displayed.map((type) => {
+                        const isPooja = type.catalogType === "pooja";
+                        const isPrasadam = type.catalogType === "prasadam";
+                        const avail = isPooja ? checkPoojaAvailability(type, form.datetime) : { available: true };
+                        const currentQty = itemQuantities[type.name] || 1;
+                        const inCartItem = form.cartItems.find(i => i.name === type.name && i.type === type.catalogType);
+                        const rulesList = Array.isArray(type.rules) ? type.rules.filter(r => r && String(r).trim().toLowerCase() !== "no") : [];
+                        const showRules = expandedRules[type.name];
 
- <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
- <div className="grid gap-4 md:grid-cols-2">
- <label className="block">
- <span className="mb-2 block text-sm font-bold text-slate-800">Devotee name</span>
- <input
- value={form.devoteeName}
- onChange={(e) => setForm((prev) => ({ ...prev, devoteeName: e.target.value }))}
- className="w-full rounded-2xl border border-[#ead7bb] bg-[#fffaf4] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 px-4 py-3 text-base outline-none focus:border-[#f28c18]"
- placeholder="Enter devotee name"
- />
- </label>
- <label className="block">
- <span className="mb-2 block text-sm font-bold text-slate-800">Phone number</span>
- <input
- value={form.devoteePhone}
- onChange={(e) => setForm((prev) => ({ ...prev, devoteePhone: e.target.value }))}
- className="w-full rounded-2xl border border-[#ead7bb] bg-[#fffaf4] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 px-4 py-3 text-base outline-none focus:border-[#f28c18]"
- placeholder="+91 98765 43210"
- />
- </label>
- <label className="block">
- <span className="mb-2 block text-sm font-bold text-slate-800">Email</span>
- <input
- type="email"
- value={form.devoteeEmail}
- onChange={(e) => setForm((prev) => ({ ...prev, devoteeEmail: e.target.value }))}
- className="w-full rounded-2xl border border-[#ead7bb] bg-[#fffaf4] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 px-4 py-3 text-base outline-none focus:border-[#f28c18]"
- placeholder="devotee@email.com"
- />
- </label>
- <label className="block">
- <span className="mb-2 block text-sm font-bold text-slate-800">Date</span>
- <input
- type="datetime-local"
- min={buildMinDateTime()}
- value={form.datetime}
- onChange={(e) => setForm((prev) => ({ ...prev, datetime: e.target.value }))}
- className="w-full rounded-2xl border border-[#ead7bb] bg-[#fffaf4] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 px-4 py-3 text-base outline-none focus:border-[#f28c18]"
- />
- <span className="mt-1 block text-xs text-slate-500">Set this date before adding a service above.</span>
- </label>
- <label className="block">
- <span className="mb-2 block text-sm font-bold text-slate-800">Payment mode</span>
- <select
- value={form.paymentMethod}
- onChange={(e) => {
- const newMode = e.target.value;
- setForm((prev) => ({ ...prev, paymentMethod: newMode }));
- if (newMode === "Cash" && totalAmount > 0) {
- setCashTendered(totalAmount.toString());
- }
- }}
- className="w-full rounded-2xl border border-[#ead7bb] bg-[#fffaf4] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 px-4 py-3 text-base outline-none focus:border-[#f28c18]"
- >
- <option value="Cash">Cash (Counter)</option>
- <option value="UPI">UPI</option>
- <option value="Card">Card</option>
- <option value="Bank Transfer">Bank Transfer</option>
- <option value="Net Banking">Net Banking</option>
- </select>
- </label>
- </div>
+                        return (
+                          <tr
+                            key={type.name}
+                            className={`transition ${!avail.available ? "bg-red-50/40 dark:bg-red-950/20" : "hover:bg-[#fff7ec] dark:bg-[#0f172a] dark:text-slate-200"}`}
+                          >
+                            <td className="px-4 py-3 align-top">
+                              <div className="flex items-center gap-2">
+                                <span className="font-extrabold text-slate-900 dark:text-slate-100">{type.name}</span>
+                                {inCartItem && (
+                                  <span className="bg-[#def7e3] text-[#166534] text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-300">
+                                    In Cart ({inCartItem.qty})
+                                  </span>
+                                )}
+                              </div>
 
- {/* Cash Tender & Change Calculator for Cashier */}
- {form.paymentMethod === "Cash" && totalAmount > 0 && (
- <div className="mt-4">
- <CashTenderCalculator
- totalAmount={totalAmount}
- cashTendered={cashTendered}
- onChange={setCashTendered}
- />
- </div>
- )}
+                              {/* Pooja Schedule & Rules Metadata */}
+                              {isPooja && (
+                                <div className="mt-1.5 flex flex-wrap gap-1.5 text-xs">
+                                  {type.availableStartTime && type.availableEndTime && (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 border border-amber-200 dark:border-amber-800 font-medium">
+                                      <FaClock className="text-amber-600" size={10} />
+                                      {type.availableStartTime} - {type.availableEndTime}
+                                    </span>
+                                  )}
+                                  {type.duration && (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 font-medium">
+                                      ⏳ {type.duration}
+                                    </span>
+                                  )}
+                                  {type.availableDays && type.availableDays.length > 0 && (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/40 text-blue-900 dark:text-blue-200 border border-blue-200 dark:border-blue-800 font-medium">
+                                      📅 Days: {type.availableDays.join(", ")}
+                                    </span>
+                                  )}
+                                  {type.availableDates && type.availableDates.length > 0 && (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-950/40 text-purple-900 dark:text-purple-200 border border-purple-200 dark:border-purple-800 font-medium">
+                                      🗓️ Special Dates: {type.availableDates.join(", ")}
+                                    </span>
+                                  )}
+                                  {type.dressCode && (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800 font-medium">
+                                      👔 {type.dressCode}
+                                    </span>
+                                  )}
+                                  {rulesList.length > 0 && (
+                                    <button
+                                      type="button"
+                                      onClick={() => setExpandedRules(prev => ({ ...prev, [type.name]: !prev[type.name] }))}
+                                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-orange-100 dark:bg-orange-950/50 text-orange-900 dark:text-orange-200 font-bold hover:bg-orange-200 transition"
+                                    >
+                                      📜 Rules ({rulesList.length}) {showRules ? "▲" : "▼"}
+                                    </button>
+                                  )}
+                                </div>
+                              )}
 
- {form.cartItems.length > 0 && (
- <div className="mt-6 overflow-hidden rounded-2xl border border-[#f0c58f] bg-[#fffaf4] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 shadow-sm">
- <div className="border-b border-[#f0c58f] bg-[#fff4e6] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 px-4 py-3 text-sm font-bold text-slate-800">
- Cart Items ({form.cartItems.length})
- </div>
- <ul className="divide-y divide-[#f2e7d7]">
- {form.cartItems.map((item, index) => (
- <li key={index} className="flex items-center justify-between px-4 py-3">
- <div>
- <p className="font-bold text-slate-900">{item.name}</p>
- <p className="text-xs font-semibold text-slate-500">
- {item.type.toUpperCase()} • {formatDateTime(item.date)}
- </p>
- </div>
- <div className="flex items-center gap-4">
- <p className="font-bold text-[#8a5200]">{formatCurrency(item.amount)}</p>
- <button
- type="button"
- onClick={() => handleRemoveItem(index)}
- className="text-red-500 hover:text-red-700"
- >
- Remove
- </button>
- </div>
- </li>
- ))}
- </ul>
- <div className="bg-[#fff4e6] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 px-4 py-3 text-right">
- <p className="text-sm font-bold text-slate-600">
- Total Amount: <span className="text-lg text-slate-950">{formatCurrency(totalAmount)}</span>
- </p>
- </div>
- </div>
- )}
+                              {/* Expandable Rules List */}
+                              {isPooja && rulesList.length > 0 && showRules && (
+                                <div className="mt-2 p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-xs text-amber-950 dark:text-amber-100">
+                                  <p className="font-bold mb-1 text-amber-900 dark:text-amber-200">Pooja Rules & Guidelines:</p>
+                                  <ul className="list-disc list-inside space-y-0.5">
+                                    {rulesList.map((r, i) => (
+                                      <li key={i}>{r}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+
+                              {/* Availability Status Badge */}
+                              {isPooja && (
+                                <div className="mt-1.5">
+                                  {avail.available ? (
+                                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                                      <FaCheckCircle size={10} /> {avail.label}
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-red-700 dark:text-red-300 bg-red-100/90 dark:bg-red-950/50 px-2.5 py-0.5 rounded-full border border-red-300 dark:border-red-800" title={avail.reason}>
+                                      ⛔ {avail.label} — <span className="font-normal">{avail.reason}</span>
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                            </td>
+
+                            <td className="px-4 py-3 align-top font-bold text-[#8a5200] dark:text-amber-400 whitespace-nowrap">
+                              {formatCurrency(type.price)}
+                            </td>
+
+                            <td className="px-4 py-3 align-top text-right whitespace-nowrap">
+                              <div className="flex items-center justify-end gap-2">
+                                {/* Quantity Stepper for Prasadam or Room */}
+                                {(isPrasadam || type.catalogType === "room") && (
+                                  <div className="flex items-center bg-white dark:bg-[#1e293b] border border-[#ead7bb] dark:border-slate-700 rounded-full px-1.5 py-0.5 shadow-sm">
+                                    <button
+                                      type="button"
+                                      onClick={() => setItemQuantities(prev => ({ ...prev, [type.name]: Math.max(1, (prev[type.name] || 1) - 1) }))}
+                                      className="w-5 h-5 flex items-center justify-center rounded-full text-slate-600 dark:text-slate-300 hover:bg-[#fff4e6] font-bold text-xs"
+                                    >
+                                      -
+                                    </button>
+                                    <input
+                                      type="number"
+                                      min="1"
+                                      max="1000"
+                                      value={currentQty}
+                                      onChange={(e) => {
+                                        const v = Math.max(1, parseInt(e.target.value) || 1);
+                                        setItemQuantities(prev => ({ ...prev, [type.name]: v }));
+                                      }}
+                                      className="w-9 text-center font-bold text-slate-800 dark:text-slate-200 text-xs bg-transparent outline-none"
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => setItemQuantities(prev => ({ ...prev, [type.name]: (prev[type.name] || 1) + 1 }))}
+                                      className="w-5 h-5 flex items-center justify-center rounded-full text-slate-600 dark:text-slate-300 hover:bg-[#fff4e6] font-bold text-xs"
+                                    >
+                                      +
+                                    </button>
+                                  </div>
+                                )}
+
+                                {/* Action Add Button */}
+                                {avail.available ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleServiceSelect(type, isPrasadam || type.catalogType === "room" ? currentQty : 1)}
+                                    className="rounded-full bg-[#f28c18] dark:bg-[#f28c18] px-4 py-1.5 text-xs font-bold text-white shadow-sm transition hover:opacity-90 active:scale-95 cursor-pointer"
+                                  >
+                                    + Add {(isPrasadam || type.catalogType === "room") && currentQty > 1 ? `(${currentQty})` : ""}
+                                  </button>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    disabled
+                                    title={avail.reason}
+                                    className="rounded-full bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500 px-3 py-1.5 text-xs font-bold cursor-not-allowed border border-slate-300 dark:border-slate-700"
+                                  >
+                                    Not Available
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+          <datalist id="devotee-suggestions">
+            {devotees.map((d, idx) => (
+              <option key={idx} value={d.name}>
+                {d.phone ? `${d.phone} • ` : ""}{d.email ? `${d.email} • ` : ""}{d.address || d.place || ""}
+              </option>
+            ))}
+          </datalist>
+          <div className="grid gap-4 md:grid-cols-2">
+            <label className="block">
+              <span className="mb-2 block text-sm font-bold text-slate-800">Devotee name</span>
+              <input
+                list="devotee-suggestions"
+                value={form.devoteeName}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  const match = devotees.find(d => d.name?.trim().toLowerCase() === val.trim().toLowerCase());
+                  if (match) {
+                    setForm(prev => ({
+                      ...prev,
+                      devoteeName: val,
+                      devoteePhone: match.phone || prev.devoteePhone,
+                      devoteeEmail: match.email || prev.devoteeEmail,
+                      devoteeAddress: match.address || match.place || prev.devoteeAddress,
+                    }));
+                  } else {
+                    setForm(prev => ({ ...prev, devoteeName: val }));
+                  }
+                }}
+                className="w-full rounded-2xl border border-[#ead7bb] bg-[#fffaf4] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 px-4 py-3 text-base outline-none focus:border-[#f28c18]"
+                placeholder="Enter devotee name"
+              />
+            </label>
+            <label className="block">
+              <span className="mb-2 block text-sm font-bold text-slate-800">Phone number</span>
+              <input
+                value={form.devoteePhone}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  const cleanP = val.replace(/\D/g, '').slice(-10);
+                  const match = cleanP.length >= 7 ? devotees.find(d => String(d.phone || '').replace(/\D/g, '').slice(-10) === cleanP) : null;
+                  if (match) {
+                    setForm(prev => ({
+                      ...prev,
+                      devoteePhone: val,
+                      devoteeName: prev.devoteeName || match.name,
+                      devoteeEmail: prev.devoteeEmail || match.email,
+                      devoteeAddress: prev.devoteeAddress || match.address || match.place,
+                    }));
+                  } else {
+                    setForm(prev => ({ ...prev, devoteePhone: val }));
+                  }
+                }}
+                className="w-full rounded-2xl border border-[#ead7bb] bg-[#fffaf4] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 px-4 py-3 text-base outline-none focus:border-[#f28c18]"
+                placeholder="+91 98765 43210"
+              />
+            </label>
+            <label className="block">
+              <span className="mb-2 block text-sm font-bold text-slate-800">Email</span>
+              <input
+                type="email"
+                value={form.devoteeEmail}
+                onChange={(e) => setForm((prev) => ({ ...prev, devoteeEmail: e.target.value }))}
+                className="w-full rounded-2xl border border-[#ead7bb] bg-[#fffaf4] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 px-4 py-3 text-base outline-none focus:border-[#f28c18]"
+                placeholder="devotee@email.com"
+              />
+            </label>
+            <label className="block">
+              <span className="mb-2 block text-sm font-bold text-slate-800">Address / City</span>
+              <input
+                value={form.devoteeAddress}
+                onChange={(e) => setForm((prev) => ({ ...prev, devoteeAddress: e.target.value }))}
+                className="w-full rounded-2xl border border-[#ead7bb] bg-[#fffaf4] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 px-4 py-3 text-base outline-none focus:border-[#f28c18]"
+                placeholder="e.g. Kapu, Udupi"
+              />
+            </label>
+            <label className="block">
+              <span className="mb-2 block text-sm font-bold text-slate-800">
+                Date & Time {form.datetime && !isNaN(new Date(form.datetime).getTime()) ? `(${new Date(form.datetime).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "short" })})` : ""}
+              </span>
+              <input
+                type="datetime-local"
+                min={buildMinDateTime()}
+                value={form.datetime}
+                onChange={(e) => setForm((prev) => ({ ...prev, datetime: e.target.value }))}
+                className="w-full rounded-2xl border border-[#ead7bb] bg-[#fffaf4] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 px-4 py-3 text-base outline-none focus:border-[#f28c18]"
+              />
+              <span className="mt-1 block text-xs text-slate-500">
+                Pooja availability and schedule re-validate automatically when you pick this date.
+              </span>
+            </label>
+            <label className="block">
+              <span className="mb-2 block text-sm font-bold text-slate-800">Payment mode</span>
+              <select
+                value={form.paymentMethod}
+                onChange={(e) => {
+                  const newMode = e.target.value;
+                  setForm((prev) => ({ ...prev, paymentMethod: newMode }));
+                  if (newMode === "Cash" && totalAmount > 0) {
+                    setCashTendered(totalAmount.toString());
+                  }
+                }}
+                className="w-full rounded-2xl border border-[#ead7bb] bg-[#fffaf4] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 px-4 py-3 text-base outline-none focus:border-[#f28c18]"
+              >
+                <option value="Cash">Cash (Counter)</option>
+                <option value="UPI">UPI</option>
+                <option value="Card">Card</option>
+                <option value="Bank Transfer">Bank Transfer</option>
+                <option value="Net Banking">Net Banking</option>
+              </select>
+            </label>
+          </div>
+
+          {/* Cash Tender & Change Calculator for Cashier */}
+          {form.paymentMethod === "Cash" && totalAmount > 0 && (
+            <div className="mt-4">
+              <CashTenderCalculator
+                totalAmount={totalAmount}
+                cashTendered={cashTendered}
+                onChange={setCashTendered}
+              />
+            </div>
+          )}
+
+          {form.cartItems.length > 0 && (
+            <div className="mt-6 overflow-hidden rounded-2xl border border-[#f0c58f] bg-[#fffaf4] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 shadow-sm">
+              <div className="border-b border-[#f0c58f] bg-[#fff4e6] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 px-4 py-3 text-sm font-bold text-slate-800 flex justify-between items-center">
+                <span>Cart Items ({form.cartItems.length})</span>
+                <span className="text-xs font-normal text-slate-600">Adjust count anytime below</span>
+              </div>
+              <ul className="divide-y divide-[#f2e7d7]">
+                {form.cartItems.map((item, index) => (
+                  <li key={index} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+                    <div>
+                      <p className="font-bold text-slate-900 dark:text-slate-100">{item.name}</p>
+                      <p className="text-xs font-semibold text-slate-500">
+                        {item.type.toUpperCase()} • {formatDateTime(item.date)}
+                        {item.unitPrice ? ` (₹${Number(item.unitPrice).toFixed(2)} each)` : ""}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {/* Quantity Stepper in Cart */}
+                      <div className="flex items-center gap-1 bg-white dark:bg-[#1e293b] border border-[#ead7bb] dark:border-slate-700 rounded-full px-2 py-0.5 shadow-sm">
+                        <span className="text-[11px] font-semibold text-slate-500 mr-0.5">Qty:</span>
+                        <button
+                          type="button"
+                          onClick={() => handleUpdateItemQty(index, (item.qty || 1) - 1)}
+                          className="w-5 h-5 flex items-center justify-center rounded-full text-slate-700 dark:text-slate-300 hover:bg-[#fff4e6] font-bold text-xs"
+                          title="Decrease count"
+                        >
+                          -
+                        </button>
+                        <input
+                          type="number"
+                          min="1"
+                          max="1000"
+                          value={item.qty || 1}
+                          onChange={(e) => handleUpdateItemQty(index, parseInt(e.target.value) || 1)}
+                          className="w-10 text-center font-bold text-slate-900 dark:text-slate-100 text-xs bg-transparent outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleUpdateItemQty(index, (item.qty || 1) + 1)}
+                          className="w-5 h-5 flex items-center justify-center rounded-full text-slate-700 dark:text-slate-300 hover:bg-[#fff4e6] font-bold text-xs"
+                          title="Increase count"
+                        >
+                          +
+                        </button>
+                      </div>
+
+                      <p className="font-bold text-[#8a5200] dark:text-amber-400 min-w-[75px] text-right">
+                        {formatCurrency(item.amount)}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveItem(index)}
+                        className="text-red-500 hover:text-red-700 text-sm font-semibold ml-1 cursor-pointer"
+                        title="Remove item"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              <div className="bg-[#fff4e6] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 px-4 py-3 text-right">
+                <p className="text-sm font-bold text-slate-600">
+                  Total Amount: <span className="text-lg text-slate-950 dark:text-slate-100 font-extrabold">{formatCurrency(totalAmount)}</span>
+                </p>
+              </div>
+            </div>
+          )}
 
  <label className="block">
  <span className="mb-2 block text-sm font-bold text-slate-800">Notes</span>

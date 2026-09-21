@@ -12,6 +12,7 @@ import {
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { downloadReceiptPDF } from "../../utils/receiptGenerator";
+import BookingReceipt from "../../components/common/BookingReceipt";
 import {
  Area,
  AreaChart,
@@ -31,6 +32,7 @@ import {
  fetchBookings,
  fetchDonations,
  fetchPrasadamOrders,
+ fetchDevotees,
  formatCurrency,
  formatDateTime,
  getBillReference,
@@ -93,6 +95,8 @@ const ReceiptsPage = () => {
  const [fromDate, setFromDate] = useState("");
  const [toDate, setToDate] = useState("");
  const [showAllReceipts, setShowAllReceipts] = useState(false);
+ const [selectedReceipt, setSelectedReceipt] = useState(null);
+ const [downloadingPdf, setDownloadingPdf] = useState(false);
 
  useEffect(() => {
    setShowAllReceipts(false);
@@ -100,21 +104,24 @@ const ReceiptsPage = () => {
 
  // Reports state
  const [range, setRange] = useState("monthly");
+ const [devotees, setDevotees] = useState([]);
 
  const loadData = async () => {
  setLoading(true);
  try {
- const [billRows, bookingRows, donationRows, orderRows] = await Promise.allSettled([
+ const [billRows, bookingRows, donationRows, orderRows, devoteeRows] = await Promise.allSettled([
  fetchBills(),
  fetchBookings(),
  fetchDonations(),
  fetchPrasadamOrders(),
+ fetchDevotees(),
  ]);
 
  setBills(billRows.status === "fulfilled" ? billRows.value : []);
  setBookings(bookingRows.status === "fulfilled" ? bookingRows.value : []);
  setDonations(donationRows.status === "fulfilled" ? donationRows.value : []);
  setPrasadamOrders(orderRows.status === "fulfilled" ? orderRows.value : []);
+ setDevotees(devoteeRows.status === "fulfilled" ? (devoteeRows.value || []) : []);
  } finally {
  setLoading(false);
  }
@@ -123,6 +130,23 @@ const ReceiptsPage = () => {
  useEffect(() => {
  loadData();
  }, []);
+
+ const devoteeMap = useMemo(() => {
+ const byName = new Map();
+ const byEmail = new Map();
+ const byPhone = new Map();
+
+ devotees.forEach((d) => {
+ if (d.name) byName.set(d.name.trim().toLowerCase(), d);
+ if (d.email) byEmail.set(d.email.trim().toLowerCase(), d);
+ if (d.phone) {
+ const cleanP = String(d.phone).replace(/\D/g, "").slice(-10);
+ if (cleanP) byPhone.set(cleanP, d);
+ }
+ });
+
+ return { byName, byEmail, byPhone };
+ }, [devotees]);
 
  // Ledger grouping & filters
  const sections = useMemo(() => {
@@ -279,107 +303,195 @@ const ReceiptsPage = () => {
  }
  };
 
- const handlePrintReceipt = async (bill, index) => {
- try {
- const type = inferBillType(bill);
- const isOnline = bill.source === "Online Portal" || false;
- const refNo = getBillReference(bill, index);
- const amount = Number(bill.amount) || 0;
- 
- let poojaBookings = [];
- let prasadamOrders = [];
- 
- if (type === "Pooja Booking" || type === "Combined") {
- poojaBookings = [{
- slNo: 1,
- name: bill.sevaType || "Pooja Booking",
- date: formatDateTime(bill.billDate || bill.createdAt),
- qty: 1,
- amount: amount
- }];
- } else if (type === "Prasadam Sale") {
- prasadamOrders = [{
- slNo: 1,
- name: bill.sevaType || "Prasadam",
- date: "-",
- qty: 1,
- amount: amount
- }];
- } else {
- poojaBookings = [{
- slNo: 1,
- name: bill.sevaType || type,
- date: formatDateTime(bill.billDate || bill.createdAt),
- qty: 1,
- amount: amount
- }];
- }
+  const buildReceiptData = (bill, index) => {
+    const type = inferBillType(bill);
+    const isOnline = bill.source === "Online Portal" || false;
+    const refNo = getBillReference(bill, index);
+    const amount = Number(bill.amount) || 0;
 
- const receiptData = {
- isOnline,
- receiptNo: refNo,
- bookingDate: formatDateTime(bill.billDate || bill.createdAt),
- paymentMode: bill.paymentMode || "Cash",
- transactionId: (bill.paymentMode === "Cash") ? "-" : (bill.transactionId || bill.razorpayPaymentId || bill.paymentId || "-"),
- cashierName: bill.cashierName || "Cashier",
- devoteeName: bill.devoteeName || bill.customerName || "-",
- mobile: bill.mobile || bill.devoteePhone || bill.contactNumber || "-",
- email: bill.email || bill.devoteeEmail || "-",
- address: bill.address || bill.devoteeAddress || "-",
- poojaBookings,
- prasadamOrders,
- subTotal: amount,
- templeCharges: 0,
- grandTotal: amount,
- amountInWords: `Rs. ${amount}`,
- devoteeMaterials: [],
- templeMaterials: [],
- notes: bill.notes ? [String(bill.notes)] : []
- };
+    let poojaBookings = [];
+    let prasadamOrders = [];
+    let roomBookings = [];
+    let donations = [];
 
- await downloadReceiptPDF(receiptData, `receipt-${refNo}.pdf`);
- } catch (err) {
- console.error("Failed to generate PDF:", err);
- alert("Failed to generate PDF receipt.");
- }
- };
+    if (bill.items && Array.isArray(bill.items) && bill.items.length > 0) {
+      bill.items.forEach((item, idx) => {
+        const itemCategory = String(item.itemType || item.type || "").toLowerCase();
+        const itemName = item.itemName || item.name || item.service || "Temple Service";
+        const rawDate = item.date && item.date !== "-" ? item.date : (bill.billDate || bill.createdAt);
+        const itemDate = !isNaN(new Date(rawDate).getTime()) ? formatDateTime(rawDate) : String(rawDate || "-");
+        const itemQty = Number(item.quantity || item.qty || 1);
+        const itemAmt = Number(item.amount != null && !isNaN(Number(item.amount)) && Number(item.amount) > 0 
+          ? item.amount 
+          : (Number(item.price || 0) * itemQty)) || 0;
+        const row = { slNo: idx + 1, name: itemName, date: itemDate, qty: itemQty, amount: itemAmt };
 
- const renderTableRow = (bill, index) => {
- const type = inferBillType(bill);
- return (
- <tr key={bill._id || bill.referenceNo || index} className="border-b border-[#f2e7d7]">
- <td className="px-4 py-3 font-bold text-slate-950">{getBillReference(bill, index)}</td>
- <td className="px-4 py-3 font-semibold text-slate-800">{bill.devoteeName}</td>
- <td className="px-4 py-3">{type}</td>
- <td className="px-4 py-3">{bill.sevaType}</td>
- <td className="px-4 py-3 font-bold text-slate-950">{formatCurrency(bill.amount)}</td>
- <td className="px-4 py-3">{bill.paymentMode || "-"}</td>
- <td className="px-4 py-3 text-slate-700">{formatDateTime(bill.billDate || bill.createdAt)}</td>
- <td className="px-4 py-3">
- <span
- className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${
- statusTone[bill.status || "Paid"] || statusTone.Paid
- }`}
- >
- {bill.status || "Paid"}
- </span>
- </td>
- <td className="px-4 py-3 text-center">
- <div className="flex items-center justify-center gap-2">
+        if (itemCategory.includes("room") || itemCategory.includes("accommodation") || itemName.toLowerCase().includes("room")) {
+          roomBookings.push(row);
+        } else if (itemCategory.includes("prasad") || itemName.toLowerCase().includes("prasadam") || itemName.toLowerCase().includes("laddu")) {
+          prasadamOrders.push(row);
+        } else if (itemCategory.includes("donat") || itemName.toLowerCase().includes("donation") || itemName.toLowerCase().includes("fund")) {
+          donations.push(row);
+        } else {
+          poojaBookings.push(row);
+        }
+      });
+      poojaBookings.forEach((item, idx) => item.slNo = idx + 1);
+      prasadamOrders.forEach((item, idx) => item.slNo = idx + 1);
+      roomBookings.forEach((item, idx) => item.slNo = idx + 1);
+      donations.forEach((item, idx) => item.slNo = idx + 1);
+    } else if (type === "Pooja Booking" || type === "Combined") {
+      poojaBookings = [{
+        slNo: 1,
+        name: bill.sevaType || "Pooja Booking",
+        date: formatDateTime(bill.billDate || bill.createdAt),
+        qty: 1,
+        amount: amount
+      }];
+    } else if (type === "Prasadam Sale") {
+      prasadamOrders = [{
+        slNo: 1,
+        name: bill.sevaType || "Prasadam",
+        date: formatDateTime(bill.billDate || bill.createdAt),
+        qty: 1,
+        amount: amount
+      }];
+    } else if (type === "Room Booking" || type.toLowerCase().includes("room")) {
+      roomBookings = [{
+        slNo: 1,
+        name: bill.sevaType || "Room Booking",
+        date: formatDateTime(bill.billDate || bill.createdAt),
+        qty: 1,
+        amount: amount
+      }];
+    } else if (type === "Donation") {
+      donations = [{
+        slNo: 1,
+        name: bill.sevaType || "Donation",
+        date: formatDateTime(bill.billDate || bill.createdAt),
+        qty: 1,
+        amount: amount
+      }];
+    } else {
+      poojaBookings = [{
+        slNo: 1,
+        name: bill.sevaType || type,
+        date: formatDateTime(bill.billDate || bill.createdAt),
+        qty: 1,
+        amount: amount
+      }];
+    }
 
- <button
- type="button"
- onClick={() => handlePrintReceipt(bill, index)}
- className="inline-flex items-center gap-1 rounded-lg border border-[#f0c58f] bg-temple-100 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 px-3 py-1 text-xs font-bold text-slate-900 transition hover:bg-[#fff8ef] dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 "
- title="Print Receipt"
- >
- <FaPrint className="text-xs" /> Print
- </button>
- </div>
- </td>
- </tr>
- );
- };
+    const cleanN = (bill.devoteeName || bill.customerName || "").trim().toLowerCase();
+    const cleanE = (bill.devoteeEmail || bill.email || "").trim().toLowerCase();
+    const cleanP = String(bill.devoteePhone || bill.mobile || bill.contactNumber || "").replace(/\D/g, "").slice(-10);
+
+    const devoteeMatch = (cleanN && devoteeMap.byName.get(cleanN))
+      || (cleanE && devoteeMap.byEmail.get(cleanE))
+      || (cleanP && devoteeMap.byPhone.get(cleanP))
+      || {};
+
+    const finalDevoteeName = bill.devoteeName || bill.customerName || devoteeMatch.name || "Devotee";
+    const finalMobile = (bill.mobile && bill.mobile !== "-")
+      ? bill.mobile
+      : (bill.devoteePhone || bill.contactNumber || devoteeMatch.phone || "-");
+    const finalEmail = (bill.email && bill.email !== "-")
+      ? bill.email
+      : (bill.devoteeEmail || devoteeMatch.email || "-");
+    const finalAddress = (bill.address && bill.address !== "-")
+      ? bill.address
+      : (bill.devoteeAddress || devoteeMatch.address || devoteeMatch.place || "-");
+
+    return {
+      isOnline,
+      receiptNo: refNo,
+      bookingDate: formatDateTime(bill.billDate || bill.createdAt),
+      paymentMode: bill.paymentMode || "Cash",
+      transactionId: (bill.paymentMode === "Cash") ? "-" : (bill.transactionId || bill.razorpayPaymentId || bill.paymentId || "-"),
+      cashierName: bill.cashierName || "Cashier",
+      devoteeName: finalDevoteeName,
+      mobile: finalMobile,
+      email: finalEmail,
+      address: finalAddress,
+      devotee: {
+        name: finalDevoteeName,
+        phone: finalMobile,
+        email: finalEmail,
+        address: finalAddress,
+      },
+      poojaBookings,
+      prasadamOrders,
+      roomBookings,
+      donations,
+      items: bill.items || [],
+      subTotal: amount,
+      templeCharges: 0,
+      grandTotal: amount,
+      amountInWords: `Rs. ${amount}`,
+      devoteeMaterials: [],
+      templeMaterials: [],
+      notes: bill.notes ? [String(bill.notes)] : []
+    };
+  };
+
+  const handlePrintReceipt = (bill, index) => {
+    const receiptData = buildReceiptData(bill, index);
+    setSelectedReceipt(receiptData);
+  };
+
+  const handleDirectDownload = async (bill, index) => {
+    try {
+      const receiptData = buildReceiptData(bill, index);
+      await downloadReceiptPDF(receiptData, `Receipt-${receiptData.receiptNo}.pdf`);
+    } catch (err) {
+      console.error("Failed to generate PDF:", err);
+      alert("Failed to generate PDF receipt.");
+    }
+  };
+
+  const renderTableRow = (bill, index) => {
+    const type = inferBillType(bill);
+    return (
+      <tr key={bill._id || bill.referenceNo || index} className="border-b border-[#f2e7d7]">
+        <td className="px-4 py-3 font-bold text-slate-950">{getBillReference(bill, index)}</td>
+        <td className="px-4 py-3 font-semibold text-slate-800">{bill.devoteeName}</td>
+        <td className="px-4 py-3">{type}</td>
+        <td className="px-4 py-3">{bill.sevaType}</td>
+        <td className="px-4 py-3 font-bold text-slate-950">{formatCurrency(bill.amount)}</td>
+        <td className="px-4 py-3">{bill.paymentMode || "-"}</td>
+        <td className="px-4 py-3 text-slate-700">{formatDateTime(bill.billDate || bill.createdAt)}</td>
+        <td className="px-4 py-3">
+          <span
+            className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${
+              statusTone[bill.status || "Paid"] || statusTone.Paid
+            }`}
+          >
+            {bill.status || "Paid"}
+          </span>
+        </td>
+        <td className="px-4 py-3 text-center">
+          <div className="flex items-center justify-center gap-2">
+            <button
+              type="button"
+              onClick={() => handlePrintReceipt(bill, index)}
+              className="inline-flex items-center gap-1 rounded-lg border border-[#f0c58f] bg-temple-100 dark:bg-[#0f172a] dark:text-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs font-bold text-slate-900 transition hover:bg-[#fff8ef] dark:hover:bg-slate-800 shadow-sm cursor-pointer"
+              title="View & Print Official Receipt"
+            >
+              <FaPrint className="text-xs text-amber-700" /> Print
+            </button>
+            <button
+              type="button"
+              onClick={() => handleDirectDownload(bill, index)}
+              className="inline-flex items-center gap-1 rounded-lg border border-teal-300 dark:border-teal-700 bg-teal-50 dark:bg-teal-950/40 text-teal-800 dark:text-teal-300 px-2.5 py-1.5 text-xs font-bold transition hover:bg-teal-100 dark:hover:bg-teal-900/60 shadow-sm cursor-pointer"
+              title="Download Official PDF Receipt"
+            >
+              <FaDownload className="text-xs" /> PDF
+            </button>
+          </div>
+        </td>
+      </tr>
+    );
+  };
 
  // Export CSV and PDF Handlers
  const handleDownloadLedgerPdf = () => {
@@ -557,6 +669,7 @@ const ReceiptsPage = () => {
  }, [activeSection, bills, rangeBills, rangeBookings, rangeDonations, rangePrasadamOrders, sections, range, pendingPaymentsCount]);
 
  return (
+ <>
  <CashierPageShell
  eyebrow={shellProps.eyebrow}
  image={templeBg}
@@ -1100,15 +1213,73 @@ const ReceiptsPage = () => {
  No report rows available for this period.
  </td>
  </tr>
- )}
- </tbody>
- </table>
- </div>
- </section>
- </>
- )}
- </CashierPageShell>
- );
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </>
+        )}
+      </CashierPageShell>
+
+  {/* Receipt Preview & Print Modal */}
+  {selectedReceipt && (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm print:p-0 print:bg-white print:static print:overflow-visible">
+      <div className="w-full max-w-4xl bg-white dark:bg-slate-900 rounded-3xl border border-amber-200 dark:border-slate-700 shadow-2xl p-6 relative max-h-[95vh] overflow-y-auto print:max-h-none print:shadow-none print:border-none print:p-0 print:overflow-visible print:static print:max-w-none">
+        {/* Modal Header - Hidden during print */}
+        <div className="flex flex-wrap justify-between items-center gap-3 mb-4 pb-3 border-b border-amber-200/60 dark:border-slate-800 print:hidden">
+          <div>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+              <span>🧾</span> Official Temple Receipt: <span className="font-mono text-amber-700 dark:text-amber-400">{selectedReceipt.receiptNo}</span>
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              {selectedReceipt.bookingDate} • Devotee: {selectedReceipt.devoteeName} ({selectedReceipt.paymentMode})
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => window.print()}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 px-4 py-2 text-xs font-bold text-white shadow transition hover:scale-105 active:scale-95 cursor-pointer"
+              title="Print official receipt directly"
+            >
+              <FaPrint className="text-sm" /> Print Receipt
+            </button>
+            <button
+              type="button"
+              onClick={async () => {
+                setDownloadingPdf(true);
+                try {
+                  await downloadReceiptPDF(selectedReceipt, `Receipt-${selectedReceipt.receiptNo}.pdf`);
+                } finally {
+                  setDownloadingPdf(false);
+                }
+              }}
+              disabled={downloadingPdf}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 px-4 py-2 text-xs font-bold text-white shadow transition hover:scale-105 active:scale-95 cursor-pointer disabled:opacity-50"
+              title="Download PDF to computer"
+            >
+              <FaDownload className="text-sm" /> {downloadingPdf ? "Generating..." : "Download PDF"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedReceipt(null)}
+              className="rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 px-4 py-2 text-xs font-bold text-slate-700 transition cursor-pointer"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+
+        {/* Receipt Component */}
+        <div id="receipt-preview-content" className="flex justify-center bg-gray-50 dark:bg-slate-950 p-2 sm:p-4 rounded-2xl print:p-0 print:bg-transparent print:w-full">
+          <BookingReceipt {...selectedReceipt} />
+        </div>
+      </div>
+    </div>
+  )}
+</>
+);
 };
 
 export default ReceiptsPage;
