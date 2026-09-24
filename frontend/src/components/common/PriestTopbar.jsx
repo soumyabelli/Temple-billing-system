@@ -21,8 +21,7 @@ const PriestTopbar = ({ darkMode, toggleDarkMode, onOpenMobileSidebar, onLogoutC
  if (!priestId) return;
 
  try {
- // Fetch notifications for priest if API is configured, otherwise fallback to mock count
- const response = await axios.get(`http://localhost:5000/api/notifications/priest/${priestId}`).catch(() => null);
+ const response = await axios.get(`http://localhost:5000/api/notifications/priest/${priestId}`, { params: user?.email ? { email: user.email } : {} }).catch(() => null);
  if (response && response.data) {
  const notifications = Array.isArray(response.data) ? response.data : [];
  setNotificationCount(notifications.filter((item) => !item.read && !item.viewed).length);
@@ -33,6 +32,8 @@ const PriestTopbar = ({ darkMode, toggleDarkMode, onOpenMobileSidebar, onLogoutC
  };
 
  loadNotifications();
+ const interval = setInterval(loadNotifications, 15000);
+ return () => clearInterval(interval);
  }, [user]);
 
  return (

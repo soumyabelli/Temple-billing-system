@@ -391,13 +391,32 @@ const assignPriest = async (req, res) => {
     const priest = await User.findById(priestId);
     
     const { createStaffNotification } = require("../utils/notificationService");
+    const { getDutyDateKeyAndMinutes } = require("../services/priestDutyService");
+    const { formattedTimings } = getDutyDateKeyAndMinutes(booking.datetime);
+
+    const assignMessage = [
+      `Namaste Sri ${priestName},`,
+      "",
+      `You have been assigned to conduct a pooja:`,
+      "",
+      `🙏 Devotee Name: ${booking.devoteeName}`,
+      `🪔 Pooja Name: ${booking.service}`,
+      `⏰ Timings: ${formattedTimings}`,
+      booking.devoteePhone ? `📞 Devotee Contact: ${booking.devoteePhone}` : null,
+      booking.notes ? `📝 Special Notes: ${booking.notes}` : null,
+      "",
+      `Please check your Priest Portal to view complete seva details and arrange the required materials.`,
+    ]
+      .filter((line) => line !== null)
+      .join("\n");
+
     await createStaffNotification({
-      title: "Pooja Assigned",
-      message: `You have been assigned to perform ${booking.service} on ${new Date(booking.datetime).toLocaleString()}`,
+      title: `🪔 Pooja Assigned: ${booking.service}`,
+      message: assignMessage,
       audienceId: priestId,
       audienceEmail: priest?.email,
       audienceRole: "priest",
-      category: "duty",
+      category: "booking",
     }).catch((err) => { console.error("Failed to notify priest:", err); });
 
     res.status(200).json({ message: "Priest assigned successfully", booking });

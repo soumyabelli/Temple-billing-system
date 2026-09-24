@@ -9,21 +9,23 @@ const PriestNotifications = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const loadNotifications = async () => {
+  const loadNotifications = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       setError("");
       const data = await getNotifications();
       setNotifications(Array.isArray(data) ? data : []);
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to load notifications");
+      if (!silent) setError(err.response?.data?.message || "Failed to load notifications");
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadNotifications();
+    loadNotifications(false);
+    const interval = setInterval(() => loadNotifications(true), 15000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleRead = async (id) => {

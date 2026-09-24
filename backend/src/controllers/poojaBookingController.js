@@ -1,6 +1,7 @@
 const PoojaBooking = require("../models/PoojaBooking");
 const Pooja = require("../models/Pooja");
 const InventoryItem = require("../models/InventoryItem");
+const { notifyOnDutyPriestsForPoojaBooking } = require("../services/priestDutyService");
 
 // Create a new pooja booking
 const createBooking = async (req, res) => {
@@ -96,7 +97,12 @@ const createBooking = async (req, res) => {
       referenceId: savedBooking._id,
       referenceModel: "PoojaBooking",
       recordedBy: req.user.id,
-      status: "Completed"
+      status: "Completed",
+    });
+
+    // Notify on-duty priest(s) scheduled at this pooja timing
+    await notifyOnDutyPriestsForPoojaBooking(savedBooking).catch((err) => {
+      console.warn("Failed to notify on-duty priest(s) in poojaBookingController:", err.message);
     });
 
     res.status(201).json({ message: "Pooja booked successfully", booking: savedBooking });

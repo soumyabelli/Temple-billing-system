@@ -91,7 +91,20 @@ const PriestDashboard = () => {
  };
 
  useEffect(() => {
- fetchDashboardData();
+  fetchDashboardData();
+  const interval = setInterval(() => {
+    getPriestDashboard().then((data) => {
+      if (data) {
+        if (data.stats) setStats(data.stats);
+        if (data.todaySchedule) setTodaySchedule(data.todaySchedule);
+        if (data.upcomingPoojas) setUpcomingPoojas(data.upcomingPoojas);
+        if (data.completedServices) setCompletedServices(data.completedServices);
+        if (data.sevaDuties) setSevaDuties(data.sevaDuties);
+        if (data.announcements) setAnnouncements(data.announcements);
+      }
+    }).catch(() => {});
+  }, 20000);
+  return () => clearInterval(interval);
  }, []);
 
  const getStatusColor = (status) => {

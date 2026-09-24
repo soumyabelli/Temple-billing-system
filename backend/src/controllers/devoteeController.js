@@ -34,6 +34,7 @@ const InventoryRequest = require("../models/InventoryRequest");
 const InventoryItem = require("../models/InventoryItem");
 const Employee = require("../models/Employee");
 const Pooja = require("../models/Pooja");
+const { notifyOnDutyPriestsForPoojaBooking } = require("../services/priestDutyService");
 
 const generateInventoryRequestsForBooking = async (booking) => {
   try {
@@ -533,6 +534,11 @@ const createBooking = async (req, res) => {
       category: "booking",
     }).catch(() => { });
 
+    // Notify on-duty priest(s) scheduled at this pooja timing
+    await notifyOnDutyPriestsForPoojaBooking(booking).catch((err) => {
+      console.warn("Failed to notify on-duty priest(s) for booking:", err.message);
+    });
+
     // Send multi-channel notifications (Email & SMS) if devotee info is available
     if (devoteeEmail || devoteePhone || contactNumber) {
       sendBookingConfirmation(devoteeObj, {
@@ -776,6 +782,11 @@ const verifyBookingPayment = async (req, res) => {
         message: `New booking for "${booking.devoteeName}" — ${booking.service} — ₹${booking.amount} (${booking.paymentMethod || "UPI"}) is recorded.`,
         audienceRole: "cashier",
         category: "booking",
+      });
+
+      // Notify on-duty priest(s) scheduled at this pooja timing
+      await notifyOnDutyPriestsForPoojaBooking(booking).catch((err) => {
+        console.warn("Failed to notify on-duty priest(s) on booking verification:", err.message);
       });
 
       if (booking.devoteeEmail || booking.devoteePhone || booking.contactNumber) {
