@@ -326,12 +326,6 @@ const CashierDashboard = () => {
               </div>
             </div>
 
-            <div className="hidden md:flex items-center">
-              <input
-                className="w-[360px] max-w-[42vw] rounded-xl border border-orange-100 bg-temple-100 px-4 py-2 outline-none focus:ring-2 focus:ring-orange-200"
-                placeholder="Search devotee, bill, receipt..."
-              />
-            </div>
 
             <div className="flex items-center gap-3">
               <button className="rounded-xl p-2 hover:bg-orange-50" aria-label="Notifications">

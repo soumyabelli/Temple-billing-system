@@ -5182,8 +5182,8 @@ try {
  : "bg-temple-100/70 border-white/60 text-[#2c1d12] shadow-[0_10px_30px_rgba(80,40,10,0.06)]"
  }`}>
  <div className="flex flex-wrap items-center justify-between gap-3">
- {/* Left side: Mobile Menu Hamburger & Search */}
- <div className="flex flex-1 min-w-[240px] max-w-[500px] items-center gap-3">
+ {/* Left side: Mobile Menu Hamburger */}
+ <div className="flex items-center gap-3">
  <button
  type="button"
  onClick={() => setMobileOpen(true)}
@@ -5196,22 +5196,6 @@ try {
  >
  <MdMenu size={22} />
  </button>
-
- <div className={`relative flex-1 flex items-center rounded-xl border transition-colors ${
- darkMode 
- ? "border-slate-700/80 bg-slate-800/80 text-slate-100 focus-within:border-amber-500/60" 
- : "border-[#e8d8c2] bg-temple-100/90 text-[#3d3d3d] focus-within:border-amber-400"
- }`}>
- <svg viewBox="0 0 24 24" className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 fill-none stroke-current opacity-60 stroke-2">
- <circle cx="11" cy="11" r="7"></circle>
- <path d="m20 20-3.5-3.5"></path>
- </svg>
- <input
- type="text"
- placeholder="Search sacred services, poojas, bookings..."
- className="w-full bg-transparent py-2.5 pl-10 pr-3 text-sm outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500"
- />
- </div>
  </div>
 
  {/* Right side: DateTime, Theme Toggle, Notifications, Profile, Logout */}

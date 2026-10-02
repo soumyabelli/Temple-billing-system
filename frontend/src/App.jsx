@@ -83,7 +83,6 @@ import LeaveHistory from "./pages/staff/LeaveHistory";
 import Attendance from "./pages/staff/Attendance";
 import LeaveRequest from "./pages/staff/LeaveRequest";
 import UnifiedLeaveManagement from "./components/shared/UnifiedLeaveManagement";
-import KitchenDashboard from "./pages/staff/KitchenDashboard";
 import StoreDashboard from "./pages/staff/StoreDashboard";
 import DevoteeDashboard from "./pages/devotee/DevoteeDashboard";
 
@@ -771,14 +770,6 @@ function App() {
         element={
           <ProtectedRoute allowedRoles={["staff"]}>
             <StoreDashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/staff/kitchen"
-        element={
-          <ProtectedRoute allowedRoles={["staff"]}>
-            <KitchenDashboard />
           </ProtectedRoute>
         }
       />

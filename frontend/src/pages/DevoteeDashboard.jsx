@@ -223,23 +223,12 @@ const DevoteeDashboard = () => {
         <main className="flex-1 px-6 py-6 lg:px-7">
           <header className="rounded-2xl border border-amber-200/60 bg-white/70 backdrop-blur-xl px-5 py-4 shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="flex min-w-[360px] flex-1 items-center gap-4">
+              <div className="flex items-center gap-4">
                 <button type="button" className="hidden text-[#d97706] hover:text-[#b45309] transition lg:block">
                   <svg viewBox="0 0 24 24" className="h-7 w-7 fill-current">
                     <path d="M3 6h18v2H3zM3 11h18v2H3zM3 16h18v2H3z"></path>
                   </svg>
                 </button>
-                <div className="relative w-full max-w-[460px]">
-                  <input
-                    type="text"
-                    placeholder="Search here..."
-                    className="w-full rounded-xl border border-amber-200/60 bg-white/80 py-2.5 pl-11 pr-4 text-sm text-slate-800 outline-none placeholder:text-slate-400 focus:border-[#d97706] focus:ring-2 focus:ring-[#d97706]/20 transition-all"
-                  />
-                  <svg viewBox="0 0 24 24" className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 fill-none stroke-[#d97706] stroke-2">
-                    <circle cx="11" cy="11" r="7"></circle>
-                    <path d="m20 20-3.5-3.5"></path>
-                  </svg>
-                </div>
               </div>
               <div className="flex items-center gap-4">
                 <div className="relative mr-1 hidden lg:block">

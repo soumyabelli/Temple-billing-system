@@ -205,12 +205,6 @@ const CashierDashboard = () => {
  </div>
  </div>
 
- <div className="header-center">
- <div className="search-bar-wrapper">
- <FaSearch className="search-icon" />
- <input type="text" placeholder="Search anything..." />
- </div>
- </div>
 
  <div className="header-right">
  <div className="icon-badge-btn">

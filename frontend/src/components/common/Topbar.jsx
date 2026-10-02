@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { FaBell } from "react-icons/fa";
-import { FiSearch } from "react-icons/fi";
 import { MdKeyboardArrowDown, MdLightMode, MdDarkMode, MdMenu } from "react-icons/md";
 import { FaSignOutAlt } from "react-icons/fa";
 import { useAuth } from "../../context/AuthContext";
@@ -66,11 +65,6 @@ const Topbar = ({ darkMode, toggleDarkMode, onOpenMobileSidebar, onLogoutClick }
         >
           <MdMenu size={20} />
         </button>
-
-        <div className={`w-[220px] md:w-[340px] px-4 py-2.5 rounded-xl border flex items-center gap-3 ${darkMode ? "border-slate-700 text-slate-200 bg-[#0f172a]" : "border-[#ece8e1] text-gray-500 bg-temple-100/70"}`}>
-          <FiSearch className={darkMode ? "text-slate-400" : "text-gray-500"} />
-          <input type="text" placeholder="Search here..." className={`w-full bg-transparent outline-none text-sm ${darkMode ? "text-slate-100 placeholder:text-slate-500" : "text-slate-800"}`} />
-        </div>
       </div>
 
       <div className="flex items-center gap-3 md:gap-5">
