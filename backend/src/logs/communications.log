@@ -2341,3 +2341,8 @@ Your approved request for Flowers (Marigold) (1 Bunch) has been issued from inve
 
 Sri Shanti Mahadev Mandir
 
+[2026-10-02T15:26:42.304Z] EMAIL
+To: vedavathi@gmail.com
+Subject: Verify Your Temple Devotee Registration
+Please click the following link to verify your email and complete devotee registration: http://localhost:5000/api/auth/verify-registration?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiVmVkYXZhdGhpIiwiZW1haWwiOiJ2ZWRhdmF0aGlAZ21haWwuY29tIiwicGhvbmUiOiI5NTg2NTU2NTQ0IiwiYWRkcmVzcyI6Ik1hbHBlIiwicGxhY2UiOiJVZHVwaSIsInBhc3N3b3JkIjoiJDJiJDEwJFl1a2w3R01JbC9Vd2FDeW5pVXhMSS5vRDFjR0kzQ2pMUk1vbDlkMDZ1cUJkRUpiVEtlOUFLIiwicm9sZSI6ImRldm90ZWUiLCJpYXQiOjE3OTA5NTQ3OTQsImV4cCI6MTc5MDk1NTY5NH0.tKq50SwSzhdvckO4NrVmYDPryTjkj4xpwaf931W03Dc
+

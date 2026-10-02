@@ -37,6 +37,7 @@ const sanitizeUser = (userDoc) => ({
   menuAccess: userDoc.menuAccess || [],
   createdAt: userDoc.createdAt || userDoc.createdAt?.toISOString?.() || undefined,
   mustChangePassword: Boolean(userDoc.mustChangePassword),
+  isVerified: userDoc.isVerified !== false,
 });
 
 const findUserByEmail = async (email) => {
@@ -65,12 +66,12 @@ const findUserByPhone = async (phone) => {
 
 
 
-const createUserRecord = async ({ name, email, password, role, phone, address, place }) => {
+const createUserRecord = async ({ name, email, password, role, phone, address, place, isVerified = true }) => {
   const normalizedEmail = normalizeDevoteeEmail(email);
   if (isDbConnected()) {
-    return User.create({ name, email: normalizedEmail, password, role, phone, address, place, provider: "local" });
+    return User.create({ name, email: normalizedEmail, password, role, phone, address, place, provider: "local", isVerified });
   }
-  return createFileUser({ name, email: normalizedEmail, password, role, phone, address, place, provider: "local" });
+  return createFileUser({ name, email: normalizedEmail, password, role, phone, address, place, provider: "local", isVerified });
 };
 
 const updateUserRecord = async (id, updates) => {
@@ -152,7 +153,7 @@ const htmlTemplate = (title, message, isSuccess) => `
     <div class="icon">${isSuccess ? "✅" : "❌"}</div>
     <h1>${title}</h1>
     <p>${message}</p>
-    <a href="http://localhost:5173/" class="btn">Go to Login</a>
+    <a href="http://localhost:5173/auth-login" class="btn">Go to Login</a>
   </div>
 </body>
 </html>
@@ -256,8 +257,7 @@ const sendVerificationLink = async (req, res) => {
     }
 
     return res.status(200).json({
-      message: "Verification link sent successfully to your email. Please check your inbox.",
-      verificationLink: verificationLink
+      message: "Verification link sent successfully to your email. Please check your inbox and click the link to complete registration.",
     });
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -299,6 +299,7 @@ const verifyRegistration = async (req, res) => {
       place,
       password, // Already hashed in sendVerificationLink
       role,
+      isVerified: true,
     });
 
     // Notify cashier role about new devotee registration
@@ -454,6 +455,12 @@ const loginUser = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid password" });
+    }
+
+    if (user.role === "devotee" && user.isVerified === false) {
+      return res.status(403).json({
+        message: "Your email has not been verified yet. Please check your email inbox and click the verification link to activate your account.",
+      });
     }
 
     const employee = user.role !== "devotee"

@@ -18,7 +18,6 @@ const RegisterPage = () => {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [linkSent, setLinkSent] = useState(false);
-  const [verificationUrl, setVerificationUrl] = useState("");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -75,10 +74,7 @@ const RegisterPage = () => {
     setLoading(true);
     try {
       const res = await sendVerificationLink(formData);
-      alert(res.message || "Verification link sent successfully to your email.");
-      if (res.verificationLink) {
-        setVerificationUrl(res.verificationLink);
-      }
+      alert(res.message || "Verification link sent successfully to your email. Please check your inbox.");
       setLinkSent(true);
     } catch (error) {
       alert(error.response?.data?.message || "Failed to send verification link. Please check your email and try again.");
@@ -95,34 +91,18 @@ const RegisterPage = () => {
       {linkSent ? (
         <div className="w-full max-w-md bg-temple-100/70 backdrop-blur-2xl border border-white/60 shadow-[0_20px_70px_rgba(130,50,0,0.18)] rounded-3xl p-8 md:p-10 text-center">
           <div className="text-6xl mb-6">📧</div>
-          <h1 className="text-3xl font-extrabold text-amber-900 mb-4">Verification Sent</h1>
+          <h1 className="text-3xl font-extrabold text-amber-900 mb-4">Verification Link Sent</h1>
           <p className="text-amber-950 font-medium mb-8">
-            We have sent a verification link to your email address:<br />
+            We have sent a verification link to your registered email address:<br />
             <strong className="text-orange-700">{formData.email}</strong>.
             <br /><br />
-            Please open your inbox and click the verification link to complete your devotee registration.
+            Please open your email inbox and click the verification link to confirm your account. You will only be allowed to log in and access the website after your email has been confirmed.
           </p>
-          {verificationUrl && (
-            <div className="mt-4 p-5 bg-amber-50/80 border border-amber-200/60 rounded-2xl text-left mb-8 shadow-sm">
-              <p className="text-sm font-semibold text-amber-900 mb-2 flex items-center gap-1.5">
-                <span>🧑‍💻</span> Development Mode Bypass:
-              </p>
-              <p className="text-xs text-amber-800/90 leading-relaxed mb-4">
-                Since you are running the project locally, click the button below to complete the registration directly without needing to retrieve the email:
-              </p>
-              <a
-                href={verificationUrl}
-                className="block w-full text-center bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white text-sm font-bold py-3 px-4 rounded-xl shadow-md transition-all duration-200"
-              >
-                Verify & Register Instantly
-              </a>
-            </div>
-          )}
           <button
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/auth-login")}
             className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-5 py-3.5 rounded-xl font-bold shadow-xl transition-all"
           >
-            Back to Login
+            Go to Login
           </button>
         </div>
       ) : (
